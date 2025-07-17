@@ -1,0 +1,24 @@
+# 루트 .gitignore
+# 공통
+.env
+.DS_Store
+*.log
+*.bak
+
+# node_modules 무시 (frontend/backend 모두 포함)
+**/node_modules/
+
+# 빌드 결과물
+**/dist/
+**/build/
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+
+# 테스트 커버리지
+coverage/
+
+# OS별
+Thumbs.db
