@@ -12,8 +12,7 @@ const Dashboard: React.FC = () => (
       대시보드
     </Typography>
     <Grid container spacing={3}>
-      // 임시 코드: Grid 타입 확인 type DebugGridType = typeof Grid;
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }} component="div">
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -26,8 +25,7 @@ const Dashboard: React.FC = () => (
           </CardContent>
         </Card>
       </Grid>
-      // 임시 코드: Grid 타입 확인 type DebugGridType = typeof Grid;
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }} component="div">
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>
