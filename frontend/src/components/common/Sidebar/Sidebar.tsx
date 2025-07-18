@@ -10,10 +10,14 @@ import {
   Divider,
   Typography,
 } from '@mui/material';
+
+import URL from '../../../constants/url';
+
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import BaseDataIcon from '@mui/icons-material/Settings';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import FactoryIcon from '@mui/icons-material/Factory';
-import SyncIcon from '@mui/icons-material/Sync';
+import MoniterIcon from '@mui/icons-material/Monitor';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -23,22 +27,27 @@ const Sidebar: React.FC = () => {
     {
       text: '대시보드',
       icon: <DashboardIcon />,
-      path: '/',
+      path: URL.MAIN, // 대시보드 경로
+    },
+    {
+      text: '기준정보',
+      icon: <BaseDataIcon />,
+      path: URL.BASE_DATA,
     },
     {
       text: '생산지시',
       icon: <AssignmentIcon />,
-      path: '/production-orders',
+      path: URL.PRODUCTION_ORDERS,
     },
     {
       text: '생산실적',
       icon: <FactoryIcon />,
-      path: '/production-results',
+      path: URL.PRODUCTION_RESULTS,
     },
     {
       text: '인터페이스 모니터',
-      icon: <SyncIcon />,
-      path: '/interface',
+      icon: <MoniterIcon />,
+      path: URL.INTERFACE,
     },
   ];
 
