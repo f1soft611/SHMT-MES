@@ -73,10 +73,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             SHMT-MES 시스템
           </Typography>
-          
+
           {/* 사용자 정보 및 로그아웃 */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
+            <Typography
+              variant="body2"
+              sx={{ display: { xs: 'none', sm: 'block' } }}
+            >
               {user?.username}님 안녕하세요
             </Typography>
             <Button

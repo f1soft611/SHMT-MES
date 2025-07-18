@@ -60,8 +60,8 @@ const Login: React.FC = () => {
     try {
       // TODO: 실제 로그인 API 호출 로직 구현
       // 임시로 간단한 로그인 처리
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
+
       // 임시 로그인 성공 조건 (나중에 실제 API로 변경)
       if (data.username === 'admin' && data.password === 'admin123') {
         // 로그인 성공 시 Auth Context에 사용자 정보 저장

@@ -37,7 +37,7 @@ function App() {
             <Routes>
               {/* 로그인 페이지 (보호되지 않은 경로) */}
               <Route path={URL.LOGIN} element={<Login />} />
-              
+
               {/* 보호된 경로들 (로그인 필요) */}
               <Route
                 path="/*"
@@ -63,7 +63,10 @@ function App() {
                           path={`${URL.PRODUCTION_RESULTS}/:id/edit`}
                           element={<ProductionResultForm />}
                         />
-                        <Route path={URL.INTERFACE} element={<InterfaceMonitor />} />
+                        <Route
+                          path={URL.INTERFACE}
+                          element={<InterfaceMonitor />}
+                        />
                       </Routes>
                     </Layout>
                   </ProtectedRoute>
