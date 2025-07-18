@@ -8,8 +8,16 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
+  Button,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Person, ExitToApp } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import Sidebar from '../Sidebar/Sidebar';
 
 interface LayoutProps {
@@ -22,9 +30,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    handleProfileMenuClose();
   };
 
   return (
@@ -45,9 +70,47 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             SHMT-MES 시스템
           </Typography>
+          
+          {/* 사용자 정보 및 로그아웃 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
+              {user?.username}님 안녕하세요
+            </Typography>
+            <Button
+              onClick={handleProfileMenuOpen}
+              sx={{ minWidth: 'auto', p: 1 }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+                <Person />
+              </Avatar>
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleProfileMenuClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              <MenuItem disabled>
+                <Person sx={{ mr: 2 }} />
+                {user?.username}
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <ExitToApp sx={{ mr: 2 }} />
+                로그아웃
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
 
