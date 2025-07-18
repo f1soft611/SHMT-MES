@@ -4,7 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './styles/theme';
+
+import URL from './constants/url';
+
 import Layout from './components/common/Layout/Layout';
+import BaseData from './pages/BaseData/BaseData';
 import Dashboard from './pages/Dashboard/Dashboard';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
@@ -28,24 +32,25 @@ function App() {
         <Router>
           <Layout>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path={URL.MAIN} element={<Dashboard />} />
+              <Route path={URL.BASE_DATA} element={<BaseData />} />
               <Route
-                path="/production-orders"
+                path={URL.PRODUCTION_ORDERS}
                 element={<ProductionOrderList />}
               />
               <Route
-                path="/production-results"
+                path={URL.PRODUCTION_RESULTS}
                 element={<ProductionResultList />}
               />
               <Route
-                path="/production-results/new"
+                path={`${URL.PRODUCTION_RESULTS}/new`}
                 element={<ProductionResultForm />}
               />
               <Route
-                path="/production-results/:id/edit"
+                path={`${URL.PRODUCTION_RESULTS}/:id/edit`}
                 element={<ProductionResultForm />}
               />
-              <Route path="/interface" element={<InterfaceMonitor />} />
+              <Route path={URL.INTERFACE} element={<InterfaceMonitor />} />
             </Routes>
           </Layout>
         </Router>
