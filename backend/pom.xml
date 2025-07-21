@@ -280,6 +280,14 @@
 			<classifier>jdk8</classifier>
 		</dependency>
 
+		<!-- mssql driver -->
+
+		<dependency>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<version>12.6.1.jre8</version>
+		</dependency>
+
 		<!-- mysql driver -->
 
         <dependency>

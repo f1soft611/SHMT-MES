@@ -22,3 +22,4 @@ coverage/
 
 # OS별
 Thumbs.db
+.vercel

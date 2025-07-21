@@ -127,6 +127,9 @@ public class EgovLoginApiController {
 
 		// 1. JWT 로그인 처리
 		LoginVO loginResultVO = loginService.actionLogin(loginVO);
+
+		log.info(loginResultVO.getId());
+		log.info(loginResultVO.getPassword());
 		
 		if (loginResultVO != null && loginResultVO.getId() != null && !loginResultVO.getId().equals("")) {
 			if(loginResultVO.getGroupNm().equals("ROLE_ADMIN")) {//로그인 결과에서 스프링시큐리티용 그룹명값에 따른 권한부여
