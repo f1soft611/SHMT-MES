@@ -80,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               variant="body2"
               sx={{ display: { xs: 'none', sm: 'block' } }}
             >
-              {user?.username}님 안녕하세요
+              {user?.name}님 안녕하세요
             </Typography>
             <Button
               onClick={handleProfileMenuOpen}
@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <MenuItem disabled>
                 <Person sx={{ mr: 2 }} />
-                {user?.username}
+                {user?.name}
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>

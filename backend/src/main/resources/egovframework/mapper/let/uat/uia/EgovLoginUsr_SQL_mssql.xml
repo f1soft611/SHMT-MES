@@ -13,7 +13,10 @@
 		<result property="password" column="password"/>
 		<result property="userSe" column="userSe"/>
 		<result property="orgnztId" column="orgnztId"/>
-		<result property="uniqId" column="uniqId"/>		
+		<result property="uniqId" column="uniqId"/>
+		<!-- 누락된 필드 추가 -->
+		<result property="groupId" column="groupId"/>
+		<result property="groupNm" column="groupNm"/>
 	</resultMap>
 	
 	<!-- 아이디 찾기를 위한 resultMap 
@@ -28,25 +31,21 @@
 	-->
 	<!-- 일반 로그인 -->
 	<select id="actionLogin" resultMap="login">
-		<if test="userSe == &quot;USR&quot;">
-
-			SELECT 	a.EMPLOYEE_NO AS id
-				, 	a.BASE_NAME AS name
-				, 	b.PASSWORD AS password
-				, 	'' AS ihidNum
-				, 	a.E_MAIL AS email
-				, 	'USR' AS userSe
-				, 	a.FACTORY_CODE AS orgnztId
-				, 	'' AS uniqId
-				, 	'ADMIN' AS groupId
-				, 	'관리자' AS groupNm
-				FROM TIN114 a
-					LEFT JOIN TCO303 b
-					ON a.EMPLOYEE_NO = b.EMPLOYEE_NO
-			WHERE a.EMPLOYEE_NO = #{id}
-			AND b.PASSWORD = CONVERT(NVARCHAR(MAX),HASHBYTES('SHA2_512', #{password}))
-
-		</if>
+		SELECT 	a.EMPLOYEE_NO AS id
+			 , 	a.BASE_NAME AS name
+			 , 	b.PASSWORD AS password
+			 , 	'' AS ihidNum
+			 , 	a.E_MAIL AS email
+			 , 	'USR' AS userSe
+			 , 	a.FACTORY_CODE AS orgnztId
+			 , 	'' AS uniqId
+			 , 	'ADMIN' AS groupId
+			 , 	'관리자' AS groupNm
+		FROM TIN114 a
+				 LEFT JOIN TCO303 b
+						   ON a.EMPLOYEE_NO = b.EMPLOYEE_NO
+		WHERE b.LOGIN_ID = #{id}
+		  AND b.PASSWORD = #{password}
 	</select>
 	
 	<!-- 인증서 로그인
