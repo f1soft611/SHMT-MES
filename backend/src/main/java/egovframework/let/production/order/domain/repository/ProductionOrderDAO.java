@@ -30,7 +30,7 @@ import java.util.List;
 public class ProductionOrderDAO extends EgovAbstractMapper {
 
     /**
-     * 조건에 맞는 게시물 목록을 조회 한다.
+     * 조건에 맞는 생산 지시 목록을 조회 한다.
      *
      * @param productionOrderVO
      * @return
@@ -39,4 +39,15 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     public List<ProductionOrderVO> selectProductionOrderList(ProductionOrderVO productionOrderVO) throws Exception {
 		return selectList("ProductionOrderDAO.selectProductionOrderList", productionOrderVO);
 	}
+
+    /**
+     * 조건에 맞는 생산 지시 목록에 대한 전체 건수를 조회 한다.
+     *
+     * @param productionOrderVO
+     * @return
+     * @throws Exception
+     */
+    public int selectProductionOrderListCnt(ProductionOrderVO productionOrderVO) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProductionOrderListCnt", productionOrderVO);
+    }
 }
