@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 const InterfaceMonitor: React.FC = () => {
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
         인터페이스 모니터
       </Typography>
       <Typography variant="body1">
