@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 const ProductionResultList: React.FC = () => {
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>
         생산실적 목록
       </Typography>
       <Typography variant="body1">
