@@ -1,13 +1,23 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { authService, LoginRequest } from '../services/authService';
 
 interface User {
-  username: string;
+  id: string;
+  name: string;
+  userSe: string;
+  groupNm: string;
 }
 
 interface AuthContextType {
-  isAuthenticated: boolean;
   user: User | null;
-  login: (user: User) => void;
+  isAuthenticated: boolean;
+  login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -19,60 +29,49 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 앱 시작 시 로컬 스토리지에서 인증 상태 확인
-    const checkAuthStatus = () => {
-      const authStatus = localStorage.getItem('isAuthenticated');
-      const userData = localStorage.getItem('user');
-      
-      if (authStatus === 'true' && userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          setIsAuthenticated(true);
-          setUser(parsedUser);
-        } catch (error) {
-          console.error('Failed to parse user data:', error);
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('user');
-        }
-      }
-      setLoading(false);
-    };
+    // 앱 시작 시 저장된 사용자 정보 확인
+    const savedUser = authService.getUser();
+    const token = authService.getToken();
 
-    checkAuthStatus();
+    if (savedUser && token) {
+      setUser(savedUser);
+    }
+
+    setLoading(false);
   }, []);
 
-  const login = (userData: User) => {
-    setIsAuthenticated(true);
-    setUser(userData);
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('user', JSON.stringify(userData));
+  const login = async (credentials: LoginRequest) => {
+    try {
+      const response = await authService.login(credentials);
+
+      if (response.resultCode === '200') {
+        setUser(response.resultVO);
+      } else {
+        throw new Error(response.resultMessage || '로그인에 실패했습니다.');
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
+    authService.logout();
     setUser(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        user,
-        login,
-        logout,
-        loading,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    loading,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

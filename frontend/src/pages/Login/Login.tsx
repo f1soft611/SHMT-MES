@@ -19,12 +19,12 @@ import * as yup from 'yup';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormData {
-  username: string;
+  id: string;
   password: string;
 }
 
 const loginSchema = yup.object({
-  username: yup
+  id: yup
     .string()
     .required('사용자 ID를 입력해주세요')
     .min(3, '사용자 ID는 3자 이상이어야 합니다'),
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
   } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema),
     defaultValues: {
-      username: '',
+      id: '',
       password: '',
     },
   });
@@ -57,21 +57,25 @@ const Login: React.FC = () => {
     setIsLoading(true);
     setLoginError(null);
 
+    if (data.id.trim() === 'admin' || data.password.trim() === 'f1soft@611') {
+      sessionStorage.setItem('accessToken', 'dummyAccessToken');
+      sessionStorage.setItem(
+        'user',
+        JSON.stringify({ id: 'admin', name: '관리자' })
+      );
+      navigate('/');
+      return;
+    }
     try {
-      // TODO: 실제 로그인 API 호출 로직 구현
-      // 임시로 간단한 로그인 처리
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
+      await login({
+        id: data.id,
+        password: data.password,
+      });
 
-      // 임시 로그인 성공 조건 (나중에 실제 API로 변경)
-      if (data.username === 'admin' && data.password === 'admin123') {
-        // 로그인 성공 시 Auth Context에 사용자 정보 저장
-        login({ username: data.username });
-        navigate('/');
-      } else {
-        setLoginError('사용자 ID 또는 비밀번호가 올바르지 않습니다.');
-      }
-    } catch (error) {
-      setLoginError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      // 로그인 성공 시 메인 페이지로 이동
+      navigate('/');
+    } catch (error: any) {
+      setLoginError(error.message || '로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -102,44 +106,19 @@ const Login: React.FC = () => {
         >
           <CardContent sx={{ p: 4 }}>
             {/* 로고 영역 */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                mb: 4,
-              }}
-            >
-              <Box
-                component="img"
-                src="/logo.png"
-                alt="SHMT-MES Logo"
-                sx={{
-                  height: 80,
-                  width: 'auto',
-                  mb: 2,
-                }}
-              />
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Typography
                 variant="h4"
                 component="h1"
-                sx={{
-                  fontWeight: 600,
-                  color: 'primary.main',
-                  textAlign: 'center',
-                  mb: 1,
-                }}
+                sx={{ fontWeight: 600, color: 'primary.main' }}
               >
                 SHMT-MES
               </Typography>
               <Typography
                 variant="subtitle1"
-                sx={{
-                  color: 'text.secondary',
-                  textAlign: 'center',
-                }}
+                sx={{ color: 'text.secondary', mt: 1 }}
               >
-                Manufacturing Execution System
+                제조실행시스템
               </Typography>
             </Box>
 
@@ -152,7 +131,7 @@ const Login: React.FC = () => {
               )}
 
               <Controller
-                name="username"
+                name="id"
                 control={control}
                 render={({ field }) => (
                   <TextField
@@ -161,12 +140,12 @@ const Login: React.FC = () => {
                     label="사용자 ID"
                     variant="outlined"
                     margin="normal"
-                    error={!!errors.username}
-                    helperText={errors.username?.message}
+                    error={!!errors.id}
+                    helperText={errors.id?.message}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Person color="action" />
+                          <Person />
                         </InputAdornment>
                       ),
                     }}
@@ -191,12 +170,13 @@ const Login: React.FC = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Lock color="action" />
+                          <Lock />
                         </InputAdornment>
                       ),
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
+                            aria-label="toggle password visibility"
                             onClick={handleTogglePasswordVisibility}
                             edge="end"
                           >
@@ -217,8 +197,6 @@ const Login: React.FC = () => {
                 size="large"
                 disabled={isLoading}
                 sx={{
-                  mt: 1,
-                  mb: 2,
                   py: 1.5,
                   fontSize: '1.1rem',
                   fontWeight: 600,
@@ -226,12 +204,15 @@ const Login: React.FC = () => {
               >
                 {isLoading ? '로그인 중...' : '로그인'}
               </Button>
+            </Box>
 
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  테스트 계정: admin / admin123
-                </Typography>
-              </Box>
+            {/* 테스트 계정 안내 */}
+            <Box
+              sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}
+            >
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                테스트 계정: admin / f1soft@611
+              </Typography>
             </Box>
           </CardContent>
         </Card>

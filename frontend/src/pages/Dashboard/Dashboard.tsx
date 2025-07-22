@@ -8,7 +8,7 @@ import Button from '@mui/material/Button';
 
 const Dashboard: React.FC = () => (
   <Box>
-    <Typography variant="h4" sx={{ mb: 3 }}>
+    <Typography variant="h5" sx={{ mb: 3 }}>
       대시보드
     </Typography>
     <Grid container spacing={3}>
