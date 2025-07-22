@@ -13,6 +13,17 @@ export const theme = createTheme({
     },
   },
   typography: {
+    fontFamily: [
+      'Pretendard GOV',
+      'Pretendard',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
     h4: {
       fontWeight: 600,
     },
