@@ -4,6 +4,7 @@ import egovframework.com.cmm.LoginVO;
 import egovframework.let.cop.bbs.domain.model.Board;
 import egovframework.let.cop.bbs.domain.model.BoardVO;
 import egovframework.let.cop.bbs.dto.request.BbsManageDeleteBoardRequestDTO;
+import egovframework.let.production.order.domain.model.ProductionOrderVO;
 
 import java.util.Map;
 
@@ -29,11 +30,11 @@ public interface EgovProductionOrderService {
 	 * 조건에 맞는 생산 지시 목록을 조회 한다.
 	 * @return
 	 * 
-	 * @param prdouctionOrderVO
+	 * @param productionOrderVO
 	 * @param attrbFlag
 	 * @exception Exception Exception
 	 */
-	public Map<String, Object> selectProductionOrderList(PrdouctionOrderVO prdouctionOrderVO, String attrbFlag)
+	public Map<String, Object> selectProductionOrderList(ProductionOrderVO productionOrderVO, String attrbFlag)
 	  throws Exception;
 
 }

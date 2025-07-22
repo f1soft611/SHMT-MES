@@ -5,18 +5,15 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
-import egovframework.let.cop.bbs.domain.model.BoardVO;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
-import egovframework.let.cop.bbs.dto.response.BbsDetailResponse;
-import egovframework.let.cop.bbs.enums.BbsDetailRequestType;
-import egovframework.let.cop.com.service.BoardUseInfVO;
-import egovframework.let.cop.com.service.EgovBBSUseInfoManageService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import egovframework.let.production.order.domain.model.ProductionOrderVO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
@@ -54,17 +51,19 @@ public class EgovProductionOrderApiController {
     private final EgovJwtTokenUtil jwtTokenUtil;
     private final ResultVoHelper resultVoHelper;
     private final EgovProductionOrderService productionOrderService;
+    private final EgovPropertyService propertyService;
 
     /**
      * 게시판 사용정보 목록을 조회한다.
      *
-     * @param productionOrderVO
+     * @param boardMasterSearchVO
      * @return resultVO
      * @throws Exception
      */
     @Operation(
             summary = "생산 지시 목록 조회",
             description = "생산 지시 목록을 조회",
+            security = {@SecurityRequirement(name = "Authorization")},
             tags = {"EgovProductionOrderApiController"}
     )
     @ApiResponses(value = {
@@ -72,17 +71,17 @@ public class EgovProductionOrderApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
     @GetMapping(value ="/production-orders")
-    public ResultVO selectBoardArticles(@ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
+    public ResultVO selectProductionOrderList(@ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
                                         @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
 
 //        BbsDetailResponse response = bbsAttrbService.selectBBSMasterInf(boardMasterSearchVO.getBbsId(), user.getUniqId(), BbsDetailRequestType.DETAIL);
-//        PaginationInfo paginationInfo = new PaginationInfo();
-//        paginationInfo.setCurrentPageNo(boardMasterSearchVO.getPageIndex());
-//        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
-//        paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
+        PaginationInfo paginationInfo = new PaginationInfo();
+        paginationInfo.setCurrentPageNo(boardMasterSearchVO.getPageIndex());
+        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
+        paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 //
-//        BoardVO boardVO = new BoardVO();
+        ProductionOrderVO productionOrderVO = new ProductionOrderVO();
 //        boardVO.setPageIndex(boardMasterSearchVO.getPageIndex());
 //        boardVO.setBbsId(boardMasterSearchVO.getBbsId());
 //        boardVO.setSearchCnd(boardMasterSearchVO.getSearchCnd());
@@ -92,16 +91,13 @@ public class EgovProductionOrderApiController {
 //        boardVO.setLastIndex(paginationInfo.getLastRecordIndex());
 //        boardVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
 //
-//        Map<String, Object> resultMap = bbsMngService.selectBoardArticles(boardVO, "");
-//        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
-//        paginationInfo.setTotalRecordCount(totCnt);
-//        resultMap.put("boardVO", boardVO);
-//        resultMap.put("brdMstrVO", response);
-//        resultMap.put("paginationInfo", paginationInfo);
-//        resultMap.put("user", user);
-//
-//        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+        Map<String, Object> resultMap = productionOrderService.selectProductionOrderList(productionOrderVO, "");
+        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
+        paginationInfo.setTotalRecordCount(totCnt);
+        resultMap.put("productionOrderVO", productionOrderVO);
+        resultMap.put("paginationInfo", paginationInfo);
+        resultMap.put("user", user);
 
-        return null;
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
 }
