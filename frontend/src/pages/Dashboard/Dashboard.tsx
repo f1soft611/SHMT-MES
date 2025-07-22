@@ -255,7 +255,7 @@ const Dashboard: React.FC = () => {
         </Box>
       </WelcomeBox> */}
 
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+      <Typography variant="h4" sx={{ mb: 2 }}>
         생산 관리 대시보드
       </Typography>
 
