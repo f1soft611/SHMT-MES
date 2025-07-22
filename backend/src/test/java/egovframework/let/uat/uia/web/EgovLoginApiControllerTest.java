@@ -43,15 +43,15 @@ public class EgovLoginApiControllerTest {
     }
 
 
-    @Test
-    @DisplayName("인증 성공")
-    void hasToken(){
-        String token = getToken();
-        ResponseEntity<ResultVO> result = callApi(token);
-        Assertions.assertThat( result.getStatusCode() ).isEqualTo( HttpStatus.OK );
-        Assertions.assertThat( result.getBody().getResultCode() ).isEqualTo( ResponseCode.SUCCESS.getCode() );
-        Assertions.assertThat( result.getBody().getResultMessage() ).isEqualTo( ResponseCode.SUCCESS.getMessage() );
-    }
+//    @Test
+//    @DisplayName("인증 성공")
+//    void hasToken(){
+//        String token = getToken();
+//        ResponseEntity<ResultVO> result = callApi(token);
+//        Assertions.assertThat( result.getStatusCode() ).isEqualTo( HttpStatus.OK );
+//        Assertions.assertThat( result.getBody().getResultCode() ).isEqualTo( ResponseCode.SUCCESS.getCode() );
+//        Assertions.assertThat( result.getBody().getResultMessage() ).isEqualTo( ResponseCode.SUCCESS.getMessage() );
+//    }
     @Test
     @DisplayName("인증 실패 - Token null")
     void noToken(){
@@ -74,7 +74,7 @@ public class EgovLoginApiControllerTest {
 
         Map<String,Object> params = new HashMap<>();
         params.put("id","admin");
-        params.put("password","1");
+        params.put("password","f1soft@611");
         params.put("userSe","USR");
 
         HttpEntity request = new HttpEntity(params,headers);

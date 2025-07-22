@@ -1,11 +1,13 @@
 import axios from 'axios';
-import { ApiResponse, PaginatedResponse } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// 환경 변수에서 API 기본 URL 가져오기
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+const API_TIMEOUT = parseInt(process.env.REACT_APP_API_TIMEOUT || '10000');
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,7 +17,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // 인증 토큰이 있다면 추가
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,8 +32,9 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // 인증 오류 시 로그인 페이지로 리다이렉트
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      // sessionStorage.removeItem('accessToken');
+      // sessionStorage.removeItem('user');
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }

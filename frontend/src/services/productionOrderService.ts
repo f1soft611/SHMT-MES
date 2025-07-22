@@ -13,11 +13,19 @@ export const productionOrderService = {
       size: size.toString(),
       ...(status && { status }),
     });
-    
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<ProductionOrder>>>(
-      `/production-orders?${params}`
-    );
-    return response.data.data;
+
+    const response = await apiClient.get<
+      ApiResponse<PaginatedResponse<ProductionOrder>>
+    >(`/production-orders?${params}`);
+
+    // 옵셔널 체이닝 사용
+    const data = response.data?.data ?? response.data;
+
+    if (!data) {
+      throw new Error('응답 데이터를 찾을 수 없습니다.');
+    }
+
+    return data;
   },
 
   // 생산지시 상세 조회

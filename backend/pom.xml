@@ -124,13 +124,15 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<!-- war 배포 시 해당 주석 제거
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		-->
+		 -->
+
 		<!-- spring boot dependency end -->
 		
 		<!-- swagger -->
@@ -397,15 +399,15 @@
 		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
-				<artifactId>selenium-java</artifactId>
-				<scope>test</scope>
-			</dependency>
+			<artifactId>selenium-java</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
-		<finalName>sht_webapp</finalName>
+		<finalName>shmt-mes</finalName>
 		<pluginManagement>
 			<plugins>
                 <plugin>
@@ -419,15 +421,16 @@
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>
-				<!-- war 배포 시 maven-war-plugin 주석 해제 -->
-				<!--<plugin>
+				<!-- war 배포 시 maven-war-plugin 주석 해제
+				<plugin>
                 	<groupId>org.apache.maven.plugins</groupId>
                 	<artifactId>maven-war-plugin</artifactId>
 					<version>3.4.0</version>
                 	<configuration>
                 		<failOnMissingWebXml>false</failOnMissingWebXml>
                 	</configuration>
-                </plugin>-->    
+                </plugin>
+                 -->
             </plugins>
         </pluginManagement>
  
