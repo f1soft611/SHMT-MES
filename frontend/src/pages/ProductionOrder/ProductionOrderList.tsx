@@ -12,7 +12,9 @@ import { format } from 'date-fns';
 import { productionOrderService } from '../../services/productionOrderService';
 import { ProductionOrder } from '../../types';
 import Pagination from '../../components/common/Pagination/Pagination';
-import SearchFiltersComponent, { SearchFilters } from '../../components/common/SearchFilters/SearchFilters';
+import SearchFiltersComponent, {
+  SearchFilters,
+} from '../../components/common/SearchFilters/SearchFilters';
 import SkeletonTable from '../../components/common/SkeletonUI/SkeletonTable';
 import { useUrlState } from '../../hooks/useUrlState';
 
@@ -65,7 +67,9 @@ const OrderMeta = styled(Box)(({ theme }) => ({
 }));
 
 const ProductionOrderList: React.FC = () => {
-  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>([]);
+  const [productionOrders, setProductionOrders] = useState<ProductionOrder[]>(
+    []
+  );
   const [pagination, setPagination] = useState({
     totalElements: 0,
     totalPages: 0,
@@ -76,7 +80,11 @@ const ProductionOrderList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // URL state management
-  const { state: urlState, updateUrlState, resetUrlState } = useUrlState({
+  const {
+    state: urlState,
+    updateUrlState,
+    resetUrlState,
+  } = useUrlState({
     page: 0,
     pageSize: 20,
   });
@@ -89,11 +97,14 @@ const ProductionOrderList: React.FC = () => {
   });
 
   // Combined search parameters
-  const searchParams = useMemo(() => ({
-    page: urlState.page,
-    pageSize: urlState.pageSize,
-    ...filters,
-  }), [urlState.page, urlState.pageSize, filters]);
+  const searchParams = useMemo(
+    () => ({
+      page: urlState.page,
+      pageSize: urlState.pageSize,
+      ...filters,
+    }),
+    [urlState.page, urlState.pageSize, filters]
+  );
 
   // Fetch production orders
   const fetchProductionOrders = async (params = searchParams) => {
@@ -218,7 +229,7 @@ const ProductionOrderList: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
+      <Typography variant="h4" sx={{ mb: 2 }}>
         생산지시 목록
       </Typography>
 
@@ -239,7 +250,9 @@ const ProductionOrderList: React.FC = () => {
       )}
 
       {/* Loading State */}
-      {loading && <SkeletonTable rows={pagination.pageSize} showHeader={false} />}
+      {loading && (
+        <SkeletonTable rows={pagination.pageSize} showHeader={false} />
+      )}
 
       {/* Data List */}
       {!loading && (
@@ -268,17 +281,22 @@ const ProductionOrderList: React.FC = () => {
                     <CardContent>
                       <OrderHeader>
                         <OrderInfo>
-                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 600, mb: 0.5 }}
+                          >
                             {order.orderNumber}
                           </Typography>
                           <Typography variant="body1" sx={{ mb: 0.5 }}>
                             {order.productName}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            제품코드: {order.productCode} | 수량: {order.quantity.toLocaleString()}{order.unit}
+                            제품코드: {order.productCode} | 수량:{' '}
+                            {order.quantity.toLocaleString()}
+                            {order.unit}
                           </Typography>
                         </OrderInfo>
-                        
+
                         <OrderMeta>
                           <StatusChip
                             label={getStatusLabel(order.status)}
@@ -300,15 +318,18 @@ const ProductionOrderList: React.FC = () => {
                           <LinearProgress
                             variant="determinate"
                             value={progress}
-                            sx={{ 
-                              flexGrow: 1, 
-                              height: 8, 
+                            sx={{
+                              flexGrow: 1,
+                              height: 8,
                               borderRadius: 4,
                               backgroundColor: 'grey.200',
                             }}
                             color="primary"
                           />
-                          <Typography variant="caption" sx={{ minWidth: 35, fontWeight: 600 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ minWidth: 35, fontWeight: 600 }}
+                          >
                             {progress}%
                           </Typography>
                         </ProgressContainer>

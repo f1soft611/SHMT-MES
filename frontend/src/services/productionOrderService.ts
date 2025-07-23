@@ -42,7 +42,8 @@ export const productionOrderService = {
         throw new Error('응답 데이터를 찾을 수 없습니다.');
       }
 
-      return data;
+      return getMockProductionOrders(page, size, dateFrom, dateTo, keyword);
+      // return data;
     } catch (error) {
       console.warn('Backend not available, using mock data:', error);
       // Use mock data when backend is not available
@@ -56,11 +57,11 @@ export const productionOrderService = {
   ): Promise<PaginatedResponse<ProductionOrder>> => {
     const { page = 0, size = 20, ...filters } = searchParams;
     return productionOrderService.getProductionOrders(
-      page, 
-      size, 
-      filters.status, 
-      filters.dateFrom, 
-      filters.dateTo, 
+      page,
+      size,
+      filters.status,
+      filters.dateFrom,
+      filters.dateTo,
       filters.keyword
     );
   },

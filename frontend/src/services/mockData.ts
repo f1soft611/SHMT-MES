@@ -135,7 +135,7 @@ export const getMockProductionOrders = (
 
   // Filter by date range
   if (dateFrom || dateTo) {
-    filteredOrders = filteredOrders.filter(order => {
+    filteredOrders = filteredOrders.filter((order) => {
       const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
       const matchesFrom = !dateFrom || orderDate >= dateFrom;
       const matchesTo = !dateTo || orderDate <= dateTo;
@@ -146,10 +146,11 @@ export const getMockProductionOrders = (
   // Filter by keyword
   if (keyword) {
     const searchTerm = keyword.toLowerCase();
-    filteredOrders = filteredOrders.filter(order =>
-      order.orderNumber.toLowerCase().includes(searchTerm) ||
-      order.productName.toLowerCase().includes(searchTerm) ||
-      order.productCode.toLowerCase().includes(searchTerm)
+    filteredOrders = filteredOrders.filter(
+      (order) =>
+        order.orderNumber.toLowerCase().includes(searchTerm) ||
+        order.productName.toLowerCase().includes(searchTerm) ||
+        order.productCode.toLowerCase().includes(searchTerm)
     );
   }
 

@@ -36,31 +36,6 @@ const apiClient = axios.create({
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      // if (
-      //   credentials.id.trim() === 'admin' &&
-      //   credentials.password.trim() === 'f1soft@611'
-      // ) {
-      //   // 테스트용 하드코딩된 로그인 정보
-      //   const response: LoginResponse = {
-      //     resultVO: {
-      //       id: 'admin',
-      //       name: '관리자',
-      //       userSe: 'ADMIN',
-      //       groupNm: '운영팀',
-      //       uniqId: '12345',
-      //       orgnztId: 'org-001',
-      //     },
-      //     jToken: 'test-jwt-token',
-      //     resultCode: '200',
-      //     resultMessage: '로그인 성공',
-      //   };
-      //   sessionStorage.setItem('accessToken', response.jToken);
-      //   sessionStorage.setItem('user', JSON.stringify(response.resultVO));
-      //   console.log('하드코딩된 로그인 정보로 로그인 성공:', response);
-
-      //   return response;
-      // }
-
       const response = await apiClient.post<LoginResponse>(
         '/auth/login-jwt',
         credentials
