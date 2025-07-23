@@ -16,11 +16,9 @@ const apiClient = axios.create({
 // 요청 인터셉터
 apiClient.interceptors.request.use(
   (config) => {
-    console.log('API 요청:', config.method?.toUpperCase(), config.url);
     // 인증 토큰이 있다면 추가
     const token = sessionStorage.getItem('accessToken');
     if (token) {
-      console.log('토큰이 존재합니다:', token);
       config.headers.Authorization = `${token}`;
     }
     return config;
