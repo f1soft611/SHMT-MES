@@ -1,10 +1,10 @@
 package egovframework.com.cmm;
 
-import java.io.Serializable;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.io.Serializable;
 
 /**
  *  클래스
@@ -26,11 +26,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @Setter
 public class ComDefaultCodeVO implements Serializable {
     /**
-	 *  serialVersion UID
-	 */
-	private static final long serialVersionUID = -2020648489890016404L;
+     * *  serialVersion UID
+    */
+    private static final long serialVersionUID = -2020648489890016404L;
 
-	/** 코드 ID */
+    /** 코드 ID */
     private String codeId = "";
 
     /** 상세코드 */
