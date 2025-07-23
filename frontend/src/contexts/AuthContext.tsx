@@ -33,6 +33,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Demo mode: automatically authenticate user for testing
+    if (window.location.hostname === 'localhost') {
+      setUser({
+        id: 'demo-user',
+        name: 'Demo User',
+        userSe: 'ADMIN',
+        groupNm: '관리자',
+      });
+      setLoading(false);
+      return;
+    }
+
     // 앱 시작 시 저장된 사용자 정보 확인
     const savedUser = authService.getUser();
     const token = authService.getToken();

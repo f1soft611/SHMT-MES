@@ -11,7 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import LinearProgress from '@mui/material/LinearProgress';
-import Avatar from '@mui/material/Avatar';
+
 import { styled } from '@mui/material/styles';
 
 const CardHeader = styled(Box)({
@@ -54,16 +54,7 @@ const ProgressBox = styled(Box)({
   marginTop: 4,
 });
 
-const WelcomeBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 12,
-  marginBottom: 24,
-  padding: 16,
-  backgroundColor: theme.palette.primary.main,
-  borderRadius: 12,
-  color: 'white',
-}));
+
 
 // 현재 시간 기준 목 데이터 - 반도체 테스트 프로브 제조업체
 const mockData = {
@@ -199,14 +190,6 @@ const mockData = {
 };
 
 const Dashboard: React.FC = () => {
-  const currentTime = new Date().toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Asia/Seoul',
-  });
 
   const handleMoreClick = (section: string) => {
     console.log(`${section} 더보기 클릭`);
