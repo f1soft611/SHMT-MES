@@ -10,7 +10,10 @@ export interface InterfaceLogSearchParams {
 }
 
 // Mock data function for when backend is not available
-const getMockInterfaceLogs = (page: number = 0, size: number = 10): PaginatedResponse<InterfaceLog> => {
+const getMockInterfaceLogs = (
+  page: number = 0,
+  size: number = 10
+): PaginatedResponse<InterfaceLog> => {
   const mockLogs: InterfaceLog[] = [
     {
       logNo: 1,
@@ -88,8 +91,8 @@ export const interfaceLogService = {
       const response = await apiClient.get<any>(`/interface-logs?${params}`);
 
       // Transform backend response to frontend format
-      const backendData = response.data?.resultList || [];
-      const totalCount = parseInt(response.data?.resultCnt || '0');
+      const backendData = response.data?.result.resultList || [];
+      const totalCount = parseInt(response.data?.result.resultCnt || '0');
 
       const transformedData: InterfaceLog[] = backendData.map((item: any) => ({
         logNo: item.logNo,

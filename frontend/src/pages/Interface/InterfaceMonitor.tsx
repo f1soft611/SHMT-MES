@@ -45,7 +45,9 @@ const InterfaceMonitor: React.FC = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -86,12 +88,16 @@ const InterfaceMonitor: React.FC = () => {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 3 }}>
-        ERP_TO_MES 인터페이스 로그 모니터
+        인터페이스 로그 모니터
       </Typography>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <TextField
               placeholder="검색어를 입력하세요"
               value={searchKeyword}
@@ -139,7 +145,7 @@ const InterfaceMonitor: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    번호
+                    로그번호
                   </TableCell>
                   <TableCell align="center" style={{ fontWeight: 'bold' }}>
                     인터페이스명
