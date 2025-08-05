@@ -1,8 +1,10 @@
 package egovframework.let.interfacelog.service.impl;
 
+import egovframework.let.cop.bbs.domain.model.BoardVO;
 import egovframework.let.interfacelog.domain.model.InterfaceLogVO;
 import egovframework.let.interfacelog.domain.repository.InterfaceLogDAO;
 import egovframework.let.interfacelog.service.EgovInterfaceLogService;
+import egovframework.let.utl.fcc.service.EgovDateUtil;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,7 @@ import java.util.*;
 
 /**
  * 인터페이스 로그 관리를 위한 서비스 구현 클래스
- * @author AI Assistant
+ * @author 김기형
  * @since 2025.01.20
  * @version 1.0
  * @see
@@ -39,35 +41,42 @@ public class EgovInterfaceLogServiceImpl extends EgovAbstractServiceImpl impleme
 	@Override
 	public Map<String, Object> selectInterfaceLogList(InterfaceLogVO interfaceLogVO) throws Exception {
 
-		// 실제 DB 조회 대신 샘플 데이터 반환 (개발용)
+		List<InterfaceLogVO> list = interfaceLogDAO.selectInterfaceLogList(interfaceLogVO);
 		List<InterfaceLogVO> result = new ArrayList<>();
-		
-		// 요구사항의 예시 데이터 추가
-		InterfaceLogVO log1 = new InterfaceLogVO();
-		log1.setLogNo(1L);
-		log1.setInterfaceName("ERP_TO_MES");
-		log1.setStartTime("20250805143400");
-		log1.setEndTime("20250805143400");
-		log1.setResultStatus("SUCCESS");
-		result.add(log1);
-		
-		InterfaceLogVO log2 = new InterfaceLogVO();
-		log2.setLogNo(2L);
-		log2.setInterfaceName("ERP_TO_MES");
-		log2.setStartTime("20250805143500");
-		log2.setEndTime("20250805143500");
-		log2.setResultStatus("SUCCESS");
-		result.add(log2);
-		
-		InterfaceLogVO log3 = new InterfaceLogVO();
-		log3.setLogNo(3L);
-		log3.setInterfaceName("ERP_TO_MES");
-		log3.setStartTime("20250805143600");
-		log3.setEndTime("20250805143600");
-		log3.setResultStatus("FAILED");
-		result.add(log3);
 
-		int cnt = result.size();
+		InterfaceLogVO vo;
+		Iterator<InterfaceLogVO> iter = list.iterator();
+		while (iter.hasNext()) {
+			vo = iter.next();
+
+			result.add(vo);
+		}
+		// 요구사항의 예시 데이터 추가
+//		InterfaceLogVO log1 = new InterfaceLogVO();
+//		log1.setLogNo(1L);
+//		log1.setInterfaceName("ERP_TO_MES");
+//		log1.setStartTime("20250805143400");
+//		log1.setEndTime("20250805143400");
+//		log1.setResultStatus("SUCCESS");
+//		result.add(log1);
+//
+//		InterfaceLogVO log2 = new InterfaceLogVO();
+//		log2.setLogNo(2L);
+//		log2.setInterfaceName("ERP_TO_MES");
+//		log2.setStartTime("20250805143500");
+//		log2.setEndTime("20250805143500");
+//		log2.setResultStatus("SUCCESS");
+//		result.add(log2);
+//
+//		InterfaceLogVO log3 = new InterfaceLogVO();
+//		log3.setLogNo(3L);
+//		log3.setInterfaceName("ERP_TO_MES");
+//		log3.setStartTime("20250805143600");
+//		log3.setEndTime("20250805143600");
+//		log3.setResultStatus("FAILED");
+//		result.add(log3);
+
+		int cnt = interfaceLogDAO.selectInterfaceLogListCnt(interfaceLogVO);
 
 		Map<String, Object> map = new HashMap<String, Object>();
 

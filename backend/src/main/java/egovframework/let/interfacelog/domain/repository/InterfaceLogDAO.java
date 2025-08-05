@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * 인터페이스 로그 관리를 위한 데이터 접근 클래스
- * @author AI Assistant
+ * @author 김기형
  * @since 2025.01.20
  * @version 1.0
  * @see
@@ -34,7 +34,7 @@ public class InterfaceLogDAO extends EgovAbstractMapper {
      * @throws Exception
      */
     public List<InterfaceLogVO> selectInterfaceLogList(InterfaceLogVO interfaceLogVO) throws Exception {
-		return selectList("InterfaceLogDAO.selectInterfaceLogList", interfaceLogVO);
+		return selectList("InterfaceHistoryDAO.selectInterfaceLogList", interfaceLogVO);
 	}
 
     /**
@@ -45,6 +45,6 @@ public class InterfaceLogDAO extends EgovAbstractMapper {
      * @throws Exception
      */
     public int selectInterfaceLogListCnt(InterfaceLogVO interfaceLogVO) throws Exception {
-        return (Integer)selectOne("InterfaceLogDAO.selectInterfaceLogListCnt", interfaceLogVO);
+        return (Integer)selectOne("InterfaceHistoryDAO.selectInterfaceLogListCnt", interfaceLogVO);
     }
 }

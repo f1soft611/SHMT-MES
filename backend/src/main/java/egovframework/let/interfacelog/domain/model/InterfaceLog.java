@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 /**
  * 인터페이스 로그 관리를 위한 도메인 모델 클래스
- * @author AI Assistant
+ * @author 김기형
  * @since 2025.01.20
  * @version 1.0
  * @see
@@ -47,6 +47,9 @@ public class InterfaceLog implements Serializable {
 
 	@Schema(description = "결과상태")
 	private String resultStatus = "";
+
+	@Schema(description = "에러 메시지")
+	private String errorMessage = "";
 
 	@Schema(description = "등록일시")
 	private String registDate = "";

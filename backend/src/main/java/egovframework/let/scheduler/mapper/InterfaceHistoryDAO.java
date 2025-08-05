@@ -1,6 +1,6 @@
-package egovframework.com.scheduler.mapper;
+package egovframework.let.scheduler.mapper;
 
-import egovframework.com.scheduler.model.InterfaceHistory;
+import egovframework.let.scheduler.model.InterfaceHistory;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -33,7 +33,7 @@ public class InterfaceHistoryDAO extends EgovAbstractMapper {
      * @throws Exception
      */
     public List<InterfaceHistory> selectInterfaceHistoryList(InterfaceHistory interfaceHistoryVO) throws Exception {
-        return selectList("InterfaceHistoryDAO.selectInterfaceHistoryList", interfaceHistoryVO);
+        return selectList("InterfaceLogDAO.selectInterfaceHistoryList", interfaceHistoryVO);
     }
 
     /**
@@ -44,7 +44,7 @@ public class InterfaceHistoryDAO extends EgovAbstractMapper {
      * @throws Exception
      */
     public int selectInterfaceHistoryListCnt(InterfaceHistory interfaceHistoryVO) throws Exception {
-        return (Integer)selectOne("InterfaceHistoryDAO.selectInterfaceHistoryListCnt", interfaceHistoryVO);
+        return (Integer)selectOne("InterfaceLogDAO.selectInterfaceHistoryListCnt", interfaceHistoryVO);
     }
 
     /**

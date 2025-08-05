@@ -1,4 +1,4 @@
-package egovframework.com.scheduler.model;
+package egovframework.let.scheduler.model;
 
 /**
  * 인터페이스 이력에 대한 데이터 처리 모델 클래스
@@ -31,26 +31,29 @@ public class InterfaceHistory implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "이력 고유번호")
-    private Long id;
+    @Schema(description = "로그 번호")
+    private Long logNo = 0L;
 
-    @Schema(description = "인터페이스 작업명")
-    private String jobName = "";
+    @Schema(description = "인터페이스명")
+    private String interfaceName = "";
 
-    @Schema(description = "작업 시작시간")
+    @Schema(description = "시작시간")
     private String startTime = "";
 
-    @Schema(description = "작업 종료시간")
+    @Schema(description = "종료시간")
     private String endTime = "";
 
-    @Schema(description = "작업 상태 (SUCCESS, FAIL)")
-    private String status = "";
+    @Schema(description = "결과상태")
+    private String resultStatus = "";
 
     @Schema(description = "에러 메시지")
     private String errorMessage = "";
 
-    @Schema(description = "생성일시")
-    private String createdAt = "";
+    @Schema(description = "등록일시")
+    private String registDate = "";
+
+    @Schema(description = "등록자ID")
+    private String registerId = "";
 
     @Override
     public String toString(){

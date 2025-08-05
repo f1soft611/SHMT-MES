@@ -54,7 +54,7 @@ public class EgovProductionOrderApiController {
     private final EgovPropertyService propertyService;
 
     /**
-     * 게시판 사용정보 목록을 조회한다.
+     * 생산 지시 목록을 조회한다.
      *
      * @param boardMasterSearchVO
      * @return resultVO

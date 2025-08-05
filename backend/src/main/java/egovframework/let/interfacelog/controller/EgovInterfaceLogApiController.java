@@ -28,7 +28,7 @@ import java.util.Map;
 
 /**
  * 인터페이스 로그를 관리하기 위한 컨트롤러 클래스
- * @author AI Assistant
+ * @author 김기형
  * @since 2025.01.20
  * @version 1.0
  * @see
@@ -71,13 +71,15 @@ public class EgovInterfaceLogApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
     @GetMapping(value ="/interface-logs")
-    public ResultVO selectInterfaceLogList(@ModelAttribute BbsSearchRequestDTO searchVO,
+    public ResultVO selectInterfaceLogList(@ModelAttribute InterfaceLogVO searchVO,
                                         @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
 
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(searchVO.getPageIndex());
-        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
+        paginationInfo.setRecordCountPerPage(
+                searchVO.getPageUnit() > 0 ? searchVO.getPageUnit() : propertyService.getInt("Globals.pageUnit")
+        );
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 
         InterfaceLogVO interfaceLogVO = new InterfaceLogVO();

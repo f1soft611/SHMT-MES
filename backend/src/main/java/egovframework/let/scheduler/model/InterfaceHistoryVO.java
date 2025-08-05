@@ -1,4 +1,4 @@
-package egovframework.com.scheduler.model;
+package egovframework.let.scheduler.model;
 
 /**
  * 인터페이스 이력 조회/검색용 VO 클래스
@@ -31,37 +31,44 @@ public class InterfaceHistoryVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "이력 고유번호")
-    private Long id;
+    @Schema(description = "검색시작일")
+    private String searchBgnDe = "";
 
-    @Schema(description = "인터페이스 작업명")
-    private String jobName = "";
+    @Schema(description = "검색조건")
+    private String searchCnd = "";
 
-    @Schema(description = "작업 시작시간")
-    private String startTime = "";
+    @Schema(description = "검색종료일")
+    private String searchEndDe = "";
 
-    @Schema(description = "작업 종료시간")
-    private String endTime = "";
+    @Schema(description = "검색단어")
+    private String searchWrd = "";
 
-    @Schema(description = "작업 상태 (SUCCESS, FAIL)")
-    private String status = "";
+    @Schema(description = "정렬순서(DESC,ASC)")
+    private long sortOrdr = 0L;
 
-    @Schema(description = "에러 메시지")
-    private String errorMessage = "";
+    @Schema(description = "검색사용여부")
+    private String searchUseYn = "";
 
-    @Schema(description = "생성일시")
-    private String createdAt = "";
-
-    // [추가] 검색 조건, 페이징 등을 위한 필드
-    @Schema(description = "검색 시작일")
-    private String searchStartDate = "";
-    @Schema(description = "검색 종료일")
-    private String searchEndDate = "";
-
-    @Schema(description = "페이지 번호")
+    @Schema(description = "현재페이지")
     private int pageIndex = 1;
-    @Schema(description = "페이지 크기")
+
+    @Schema(description = "페이지갯수")
+    private int pageUnit = 10;
+
+    @Schema(description = "페이지사이즈")
     private int pageSize = 10;
+
+    @Schema(description = "첫페이지 인덱스")
+    private int firstIndex = 1;
+
+    @Schema(description = "마지막페이지 인덱스")
+    private int lastIndex = 1;
+
+    @Schema(description = "페이지당 레코드 개수")
+    private int recordCountPerPage = 10;
+
+    @Schema(description = "레코드 번호")
+    private int rowNo = 0;
 
     @Override
     public String toString(){

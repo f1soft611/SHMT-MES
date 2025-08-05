@@ -1,14 +1,17 @@
-package egovframework.com.scheduler.service.impl;
+package egovframework.let.scheduler.service.impl;
 
-import egovframework.com.scheduler.model.InterfaceHistory;
-import egovframework.com.scheduler.model.InterfaceHistoryVO;
-import egovframework.com.scheduler.mapper.InterfaceHistoryDAO;
-import egovframework.com.scheduler.service.EgovInterfaceHistoryService;
+import egovframework.let.scheduler.mapper.InterfaceHistoryDAO;
+import egovframework.let.scheduler.model.InterfaceHistory;
+import egovframework.let.scheduler.model.InterfaceHistoryVO;
+import egovframework.let.scheduler.service.EgovInterfaceHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 인터페이스 이력 관리를 위한 서비스 구현 클래스

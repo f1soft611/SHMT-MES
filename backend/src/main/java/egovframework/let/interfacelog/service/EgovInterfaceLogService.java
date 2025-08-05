@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * 인터페이스 로그를 관리하기 위한 서비스 인터페이스 클래스
- * @author AI Assistant
+ * @author 김기형
  * @since 2025.01.20
  * @version 1.0
  * @see
