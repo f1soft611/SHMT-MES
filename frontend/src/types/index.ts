@@ -33,12 +33,13 @@ export interface ProductionResult {
 
 // 인터페이스 관련 타입
 export interface InterfaceLog {
-  id: string;
-  type: 'PRODUCTION_ORDER' | 'PRODUCTION_RESULT';
-  direction: 'INBOUND' | 'OUTBOUND';
-  status: 'SUCCESS' | 'FAILED' | 'PENDING';
-  message: string;
-  timestamp: string;
+  logNo: number;
+  interfaceName: string;
+  startTime: string;
+  endTime: string;
+  resultStatus: 'SUCCESS' | 'FAILED' | 'PENDING';
+  registDate?: string;
+  registerId?: string;
 }
 
 // API 응답 타입
