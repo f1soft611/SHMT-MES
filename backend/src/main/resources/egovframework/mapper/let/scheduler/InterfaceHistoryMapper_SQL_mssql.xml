@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="InterfaceHistoryDAO">
+
+	<!-- InterfaceHistory용 resultMap (필요시 추가) -->
+	<resultMap id="interfaceHistoryResultMap" type="egovframework.let.scheduler.model.InterfaceHistory">
+		<result property="logNo" column="logNo"/>
+		<result property="interfaceName" column="interfaceName"/>
+		<result property="startTime" column="startTime"/>
+		<result property="endTime" column="endTime"/>
+		<result property="resultStatus" column="resultStatus"/>
+		<result property="errorMessage" column="errorMessage"/>
+	</resultMap>
+
+	<resultMap id="interfaceLogResultMap" type="egovframework.let.interfacelog.domain.model.InterfaceLogVO">
+		<result property="logNo" column="logNo"/>
+		<result property="interfaceName" column="interfaceName"/>
+		<result property="startTime" column="startTime"/>
+		<result property="endTime" column="endTime"/>
+		<result property="resultStatus" column="resultStatus"/>
+		<result property="errorMessage" column="errorMessage"/>
+	</resultMap>
+
+	<!-- InterfaceHistory INSERT 매퍼 -->
+	<insert id="insertInterfaceHistory" parameterType="egovframework.let.scheduler.model.InterfaceHistory">
+		INSERT INTO interfaceHistory
+			(interfaceName, startTime, endTime, resultStatus, errorMessage)
+		VALUES
+			(#{interfaceName}, #{startTime}, #{endTime}, #{resultStatus}, #{errorMessage})
+	</insert>
+
+	<select id="selectInterfaceLogList"
+			resultMap="interfaceLogResultMap"
+			parameterType="egovframework.let.interfacelog.domain.model.InterfaceLogVO">
+		SELECT
+			logNo,
+			interfaceName,
+			startTime,
+			endTime,
+			resultStatus,
+			errorMessage
+		FROM
+			interfaceHistory
+		ORDER BY startTime DESC
+		OFFSET #{firstIndex} ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+	</select>
+
+	<!-- 전체 건수 조회용 SELECT 매퍼 -->
+	<select id="selectInterfaceLogListCnt"
+			resultType="java.lang.Integer"
+			parameterType="egovframework.let.interfacelog.domain.model.InterfaceLogVO">
+		SELECT COUNT(*)
+		FROM interfaceHistory
+	</select>
+</mapper>
