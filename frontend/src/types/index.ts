@@ -40,6 +40,10 @@ export interface InterfaceLog {
   resultStatus: 'SUCCESS' | 'FAILED' | 'PENDING';
   registDate?: string;
   registerId?: string;
+  errorMessage?: string;
+  detailMessage?: string;
+  processingTime?: number; // ms
+  recordCount?: number;
 }
 
 // API 응답 타입
