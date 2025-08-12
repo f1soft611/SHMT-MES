@@ -146,41 +146,127 @@ export const interfaceLogService = {
     } catch (error) {
       console.warn('Backend not available, using mock detail data:', error);
       // Return mock detail data when backend is not available
-      return {
-        logNo: logNo,
-        interfaceName: 'ERP_TO_MES',
-        startTime: '20250805143400',
-        endTime: '20250805143400',
-        resultStatus: logNo % 3 === 0 ? 'FAILED' : 'SUCCESS',
-        registDate: '2025-08-05 14:34:00',
-        errorMessage: logNo % 3 === 0 ? 'Connection timeout error' : undefined,
-        requestData:
-          logNo % 3 !== 0
-            ? JSON.stringify(
+      if (logNo % 3 === 0) {
+        // Failed case
+        return {
+          logNo: logNo,
+          interfaceName: 'ERP_TO_MES',
+          startTime: '20250805143400',
+          endTime: '20250805143400',
+          resultStatus: 'FAILED',
+          registDate: '2025-08-05 14:34:00',
+          errorMessage: 'Connection timeout error',
+        };
+      } else if (logNo === 2 || logNo === 5) {
+        // Array data cases
+        return {
+          logNo: logNo,
+          interfaceName: 'ERP_TO_MES',
+          startTime: '20250805143400',
+          endTime: '20250805143400',
+          resultStatus: 'SUCCESS',
+          registDate: '2025-08-05 14:34:00',
+          requestData: JSON.stringify(
+            [
+              {
+                orderId: 'ORD-2025-001',
+                productCode: 'PROD001',
+                quantity: 100,
+                dueDate: '2025-08-10',
+              },
+              {
+                orderId: 'ORD-2025-002', 
+                productCode: 'PROD002',
+                quantity: 200,
+                dueDate: '2025-08-11',
+              },
+              {
+                orderId: 'ORD-2025-003',
+                productCode: 'PROD003', 
+                quantity: 150,
+                dueDate: '2025-08-12',
+              },
+            ],
+            null,
+            2
+          ),
+          responseData: JSON.stringify(
+            [
+              {
+                orderId: 'ORD-2025-001',
+                status: 'SUCCESS',
+                processedQuantity: 100,
+                timestamp: '2025-08-05T14:34:00Z',
+              },
+              {
+                orderId: 'ORD-2025-002',
+                status: 'SUCCESS', 
+                processedQuantity: 200,
+                timestamp: '2025-08-05T14:35:00Z',
+              },
+              {
+                orderId: 'ORD-2025-003',
+                status: 'SUCCESS',
+                processedQuantity: 150,
+                timestamp: '2025-08-05T14:36:00Z',
+              },
+            ],
+            null,
+            2
+          ),
+        };
+      } else {
+        // Mixed object cases with both properties and arrays
+        return {
+          logNo: logNo,
+          interfaceName: 'ERP_TO_MES',
+          startTime: '20250805143400',
+          endTime: '20250805143400',
+          resultStatus: 'SUCCESS',
+          registDate: '2025-08-05 14:34:00',
+          requestData: JSON.stringify(
+            {
+              orderId: 'ORD-2025-001',
+              productCode: 'PROD001',
+              quantity: 100,
+              dueDate: '2025-08-10',
+            },
+            null,
+            2
+          ),
+          responseData: JSON.stringify(
+            {
+              status: 'SUCCESS',
+              message: 'Order processed successfully',
+              processedQuantity: 100,
+              timestamp: '2025-08-05T14:34:00Z',
+              items: [
                 {
-                  orderId: 'ORD-2025-001',
-                  productCode: 'PROD001',
-                  quantity: 100,
-                  dueDate: '2025-08-10',
+                  itemId: 'ITEM-001',
+                  itemName: 'Product A',
+                  quantity: 50,
+                  status: 'COMPLETED'
                 },
-                null,
-                2
-              )
-            : undefined,
-        responseData:
-          logNo % 3 !== 0
-            ? JSON.stringify(
                 {
-                  status: 'SUCCESS',
-                  message: 'Order processed successfully',
-                  processedQuantity: 100,
-                  timestamp: '2025-08-05T14:34:00Z',
+                  itemId: 'ITEM-002', 
+                  itemName: 'Product B',
+                  quantity: 30,
+                  status: 'COMPLETED'
                 },
-                null,
-                2
-              )
-            : undefined,
-      };
+                {
+                  itemId: 'ITEM-003',
+                  itemName: 'Product C', 
+                  quantity: 20,
+                  status: 'PENDING'
+                }
+              ],
+              errors: []
+            },
+            null,
+            2
+          ),
+        };
+      }
     }
   },
 
