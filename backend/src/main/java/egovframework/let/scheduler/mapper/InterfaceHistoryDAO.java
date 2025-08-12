@@ -24,29 +24,6 @@ import java.util.List;
  */
 @Repository("InterfaceHistoryDAO")
 public class InterfaceHistoryDAO extends EgovAbstractMapper {
-
-    /**
-     * 조건에 맞는 인터페이스 이력 목록을 조회 한다.
-     *
-     * @param interfaceHistoryVO
-     * @return
-     * @throws Exception
-     */
-    public List<InterfaceHistory> selectInterfaceHistoryList(InterfaceHistory interfaceHistoryVO) throws Exception {
-        return selectList("InterfaceLogDAO.selectInterfaceHistoryList", interfaceHistoryVO);
-    }
-
-    /**
-     * 조건에 맞는 인터페이스 이력 목록에 대한 전체 건수를 조회 한다.
-     *
-     * @param interfaceHistoryVO
-     * @return
-     * @throws Exception
-     */
-    public int selectInterfaceHistoryListCnt(InterfaceHistory interfaceHistoryVO) throws Exception {
-        return (Integer)selectOne("InterfaceLogDAO.selectInterfaceHistoryListCnt", interfaceHistoryVO);
-    }
-
     /**
      * 인터페이스 이력을 등록 한다.
      *
