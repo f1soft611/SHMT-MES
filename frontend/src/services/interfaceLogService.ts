@@ -216,7 +216,7 @@ export const interfaceLogService = {
           ),
         };
       } else {
-        // Single object cases  
+        // Mixed object cases with both properties and arrays
         return {
           logNo: logNo,
           interfaceName: 'ERP_TO_MES',
@@ -240,6 +240,27 @@ export const interfaceLogService = {
               message: 'Order processed successfully',
               processedQuantity: 100,
               timestamp: '2025-08-05T14:34:00Z',
+              items: [
+                {
+                  itemId: 'ITEM-001',
+                  itemName: 'Product A',
+                  quantity: 50,
+                  status: 'COMPLETED'
+                },
+                {
+                  itemId: 'ITEM-002', 
+                  itemName: 'Product B',
+                  quantity: 30,
+                  status: 'COMPLETED'
+                },
+                {
+                  itemId: 'ITEM-003',
+                  itemName: 'Product C', 
+                  quantity: 20,
+                  status: 'PENDING'
+                }
+              ],
+              errors: []
             },
             null,
             2

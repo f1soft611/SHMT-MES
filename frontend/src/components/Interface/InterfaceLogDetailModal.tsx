@@ -14,7 +14,7 @@ import {
   Tab,
 } from '@mui/material';
 import { InterfaceLog } from '../../types';
-import ArrayDataTable from './ArrayDataTable';
+import JsonDataDisplay from './JsonDataDisplay';
 
 interface InterfaceLogDetailModalProps {
   open: boolean;
@@ -89,65 +89,9 @@ const InterfaceLogDetailModal: React.FC<InterfaceLogDetailModalProps> = ({
     }
   };
 
-  const formatJsonData = (jsonString?: string) => {
-    if (!jsonString) return null;
-    try {
-      const parsed = JSON.parse(jsonString);
-      return JSON.stringify(parsed, null, 2);
-    } catch (error) {
-      return jsonString;
-    }
-  };
-
-  const isArrayData = (jsonString?: string) => {
-    if (!jsonString) return false;
-    try {
-      const parsed = JSON.parse(jsonString);
-      return Array.isArray(parsed);
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const parseArrayData = (jsonString?: string) => {
-    if (!jsonString) return [];
-    try {
-      const parsed = JSON.parse(jsonString);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
-  };
-
   const renderDataDisplay = (data: string | undefined, title: string) => {
     if (!data) return null;
-
-    if (isArrayData(data)) {
-      const arrayData = parseArrayData(data);
-      return <ArrayDataTable data={arrayData} title={title} />;
-    } else {
-      return (
-        <Box>
-          <Typography variant="h6" gutterBottom color="primary">
-            {title} (JSON 객체)
-          </Typography>
-          <Box
-            sx={{
-              backgroundColor: '#f5f5f5',
-              padding: 2,
-              borderRadius: 1,
-              border: '1px solid #ddd',
-              maxHeight: 400,
-              overflow: 'auto',
-            }}
-          >
-            <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace' }}>
-              {formatJsonData(data)}
-            </pre>
-          </Box>
-        </Box>
-      );
-    }
+    return <JsonDataDisplay data={data} title={title} />;
   };
 
   if (!interfaceLog) return null;
