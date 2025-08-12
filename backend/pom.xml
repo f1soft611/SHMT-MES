@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.egovframe.template</groupId>
 	<artifactId>simpleHomePage</artifactId> 
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<version>1.0.0</version>
 	<name>egovframework</name>
 	<url>example.egovframework.com</url>
@@ -126,12 +126,12 @@
 		</dependency>
 
 		<!-- war 배포 시 해당 주석 제거
+		 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-tomcat</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		 -->
 
 		<!-- spring boot dependency end -->
 		
@@ -154,11 +154,12 @@
 			<version>${org.egovframe.rte.version}</version>
 			<exclusions>
 				<!-- war 배포 시 해당 주석 제거
+				 -->
 				<exclusion>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
-				-->
+
 				<exclusion>
 					<groupId>org.apache.commons</groupId>
 					<artifactId>commons-lang3</artifactId>
