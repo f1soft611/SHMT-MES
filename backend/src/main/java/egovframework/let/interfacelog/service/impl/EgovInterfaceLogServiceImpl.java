@@ -85,4 +85,14 @@ public class EgovInterfaceLogServiceImpl extends EgovAbstractServiceImpl impleme
 
 		return map;
 	}
+
+	/**
+	 * 특정 인터페이스 로그의 상세 정보를 조회 한다.
+	 *
+	 * @see egovframework.let.interfacelog.service.EgovInterfaceLogService#selectInterfaceLogDetail(Long)
+	 */
+	@Override
+	public InterfaceLogVO selectInterfaceLogDetail(Long logNo) throws Exception {
+		return interfaceLogDAO.selectInterfaceLogDetail(logNo);
+	}
 }

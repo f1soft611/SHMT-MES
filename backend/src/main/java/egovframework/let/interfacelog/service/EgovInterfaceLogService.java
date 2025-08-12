@@ -32,4 +32,12 @@ public interface EgovInterfaceLogService {
 	public Map<String, Object> selectInterfaceLogList(InterfaceLogVO interfaceLogVO)
 	  throws Exception;
 
+	/**
+	 * 특정 인터페이스 로그의 상세 정보를 조회 한다.
+	 * @param logNo
+	 * @return
+	 * @exception Exception Exception
+	 */
+	public InterfaceLogVO selectInterfaceLogDetail(Long logNo) throws Exception;
+
 }

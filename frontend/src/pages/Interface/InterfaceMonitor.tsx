@@ -17,17 +17,22 @@ import {
   InputAdornment,
   Card,
   CardContent,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useQuery } from '@tanstack/react-query';
 import { interfaceLogService } from '../../services/interfaceLogService';
 import { InterfaceLog } from '../../types';
+import InterfaceLogDetailModal from '../../components/Interface/InterfaceLogDetailModal';
 
 const InterfaceMonitor: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedLogNo, setSelectedLogNo] = useState<number | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const {
     data: interfaceLogsData,
@@ -38,6 +43,15 @@ const InterfaceMonitor: React.FC = () => {
     queryKey: ['interfaceLogs', page, rowsPerPage, searchKeyword],
     queryFn: () =>
       interfaceLogService.getInterfaceLogs(page, rowsPerPage, searchKeyword),
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+
+  const {
+    data: interfaceLogDetail,
+  } = useQuery({
+    queryKey: ['interfaceLogDetail', selectedLogNo],
+    queryFn: () => interfaceLogService.getInterfaceLogDetail(selectedLogNo!),
+    enabled: !!selectedLogNo && detailModalOpen,
     staleTime: 5 * 60 * 1000, // 5분
   });
 
@@ -55,6 +69,16 @@ const InterfaceMonitor: React.FC = () => {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
     setPage(0);
+  };
+
+  const handleDetailClick = (logNo: number) => {
+    setSelectedLogNo(logNo);
+    setDetailModalOpen(true);
+  };
+
+  const handleDetailModalClose = () => {
+    setDetailModalOpen(false);
+    setSelectedLogNo(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -159,6 +183,9 @@ const InterfaceMonitor: React.FC = () => {
                   <TableCell align="center" style={{ fontWeight: 'bold' }}>
                     결과상태
                   </TableCell>
+                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                    상세보기
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -179,11 +206,21 @@ const InterfaceMonitor: React.FC = () => {
                         size="small"
                       />
                     </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleDetailClick(log.logNo)}
+                      >
+                        상세보기
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {interfaceLogsData.content.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                       데이터가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -206,6 +243,13 @@ const InterfaceMonitor: React.FC = () => {
           />
         </Paper>
       )}
+
+      {/* Detail Modal */}
+      <InterfaceLogDetailModal
+        open={detailModalOpen}
+        onClose={handleDetailModalClose}
+        interfaceLog={interfaceLogDetail}
+      />
     </Box>
   );
 };
