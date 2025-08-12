@@ -20,6 +20,7 @@ import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -95,6 +96,41 @@ public class EgovInterfaceLogApiController {
         paginationInfo.setTotalRecordCount(totCnt);
         resultMap.put("interfaceLogVO", interfaceLogVO);
         resultMap.put("paginationInfo", paginationInfo);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 인터페이스 로그 상세 정보를 조회한다.
+     *
+     * @param logNo
+     * @return resultVO
+     * @throws Exception
+     */
+    @Operation(
+            summary = "인터페이스 로그 상세 조회",
+            description = "인터페이스 로그 상세 정보를 조회",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovInterfaceLogApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님"),
+            @ApiResponse(responseCode = "404", description = "데이터를 찾을 수 없음")
+    })
+    @GetMapping(value ="/interface-logs/{logNo}")
+    public ResultVO selectInterfaceLogDetail(@Parameter(description = "로그 번호") @PathVariable Long logNo,
+                                           @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
+            throws Exception {
+
+        InterfaceLogVO interfaceLogVO = interfaceLogService.selectInterfaceLogDetail(logNo);
+        if (interfaceLogVO == null) {
+            return resultVoHelper.buildFromMap(new HashMap<>(), ResponseCode.INPUT_CHECK_ERROR);
+        }
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("interfaceLog", interfaceLogVO);
         resultMap.put("user", user);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);

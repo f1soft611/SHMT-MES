@@ -47,4 +47,15 @@ public class InterfaceLogDAO extends EgovAbstractMapper {
     public int selectInterfaceLogListCnt(InterfaceLogVO interfaceLogVO) throws Exception {
         return (Integer)selectOne("InterfaceHistoryDAO.selectInterfaceLogListCnt", interfaceLogVO);
     }
+
+    /**
+     * 특정 인터페이스 로그의 상세 정보를 조회 한다.
+     *
+     * @param logNo
+     * @return
+     * @throws Exception
+     */
+    public InterfaceLogVO selectInterfaceLogDetail(Long logNo) throws Exception {
+        return selectOne("InterfaceHistoryDAO.selectInterfaceLogDetail", logNo);
+    }
 }

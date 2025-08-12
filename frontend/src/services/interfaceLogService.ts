@@ -102,6 +102,9 @@ export const interfaceLogService = {
         resultStatus: item.resultStatus,
         registDate: item.registDate,
         registerId: item.registerId,
+        errorMessage: item.errorMessage,
+        requestData: item.requestData,
+        responseData: item.responseData,
       }));
 
       return {
@@ -115,6 +118,55 @@ export const interfaceLogService = {
       console.warn('Backend not available, using mock data:', error);
       // Use mock data when backend is not available
       return getMockInterfaceLogs(page, size);
+    }
+  },
+
+  // 인터페이스 로그 상세 조회
+  getInterfaceLogDetail: async (logNo: number): Promise<InterfaceLog> => {
+    try {
+      const response = await apiClient.get<any>(`/interface-logs/${logNo}`);
+      
+      const backendData = response.data?.result.interfaceLog;
+      if (!backendData) {
+        throw new Error('Interface log not found');
+      }
+
+      return {
+        logNo: backendData.logNo,
+        interfaceName: backendData.interfaceName,
+        startTime: backendData.startTime,
+        endTime: backendData.endTime,
+        resultStatus: backendData.resultStatus,
+        registDate: backendData.registDate,
+        registerId: backendData.registerId,
+        errorMessage: backendData.errorMessage,
+        requestData: backendData.requestData,
+        responseData: backendData.responseData,
+      };
+    } catch (error) {
+      console.warn('Backend not available, using mock detail data:', error);
+      // Return mock detail data when backend is not available
+      return {
+        logNo: logNo,
+        interfaceName: 'ERP_TO_MES',
+        startTime: '20250805143400',
+        endTime: '20250805143400',
+        resultStatus: logNo % 3 === 0 ? 'FAILED' : 'SUCCESS',
+        registDate: '2025-08-05 14:34:00',
+        errorMessage: logNo % 3 === 0 ? 'Connection timeout error' : undefined,
+        requestData: logNo % 3 !== 0 ? JSON.stringify({
+          "orderId": "ORD-2025-001",
+          "productCode": "PROD001",
+          "quantity": 100,
+          "dueDate": "2025-08-10"
+        }, null, 2) : undefined,
+        responseData: logNo % 3 !== 0 ? JSON.stringify({
+          "status": "SUCCESS",
+          "message": "Order processed successfully",
+          "processedQuantity": 100,
+          "timestamp": "2025-08-05T14:34:00Z"
+        }, null, 2) : undefined,
+      };
     }
   },
 

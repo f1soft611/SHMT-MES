@@ -12,7 +12,12 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @Slf4j
 @ServletComponentScan
 @SpringBootApplication
-public class EgovBootApplication {
+public class EgovBootApplication extends SpringBootServletInitializer {
+
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+		return builder.sources(EgovBootApplication.class);
+	}
 
 	public static void main(String[] args) {
 		log.debug("##### EgovBootApplication Start #####");
@@ -20,7 +25,7 @@ public class EgovBootApplication {
 		SpringApplication springApplication = new SpringApplication(EgovBootApplication.class);
 		springApplication.setBannerMode(Banner.Mode.OFF);
 		//springApplication.setLogStartupInfo(false);
-		springApplication.run(args);
+		springApplication.run(EgovBootApplication.class, args);
 
 		log.debug("##### EgovBootApplication End ######");
 	}

@@ -57,6 +57,12 @@ public class InterfaceLog implements Serializable {
 	@Schema(description = "등록자ID")
 	private String registerId = "";
 
+	@Schema(description = "요청 데이터")
+	private String requestData = "";
+
+	@Schema(description = "응답 데이터")
+	private String responseData = "";
+
 	/**
 	 * toString 메소드를 대치한다.
 	 */
