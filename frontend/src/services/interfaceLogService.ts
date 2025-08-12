@@ -125,7 +125,7 @@ export const interfaceLogService = {
   getInterfaceLogDetail: async (logNo: number): Promise<InterfaceLog> => {
     try {
       const response = await apiClient.get<any>(`/interface-logs/${logNo}`);
-      
+
       const backendData = response.data?.result.interfaceLog;
       if (!backendData) {
         throw new Error('Interface log not found');
@@ -154,18 +154,32 @@ export const interfaceLogService = {
         resultStatus: logNo % 3 === 0 ? 'FAILED' : 'SUCCESS',
         registDate: '2025-08-05 14:34:00',
         errorMessage: logNo % 3 === 0 ? 'Connection timeout error' : undefined,
-        requestData: logNo % 3 !== 0 ? JSON.stringify({
-          "orderId": "ORD-2025-001",
-          "productCode": "PROD001",
-          "quantity": 100,
-          "dueDate": "2025-08-10"
-        }, null, 2) : undefined,
-        responseData: logNo % 3 !== 0 ? JSON.stringify({
-          "status": "SUCCESS",
-          "message": "Order processed successfully",
-          "processedQuantity": 100,
-          "timestamp": "2025-08-05T14:34:00Z"
-        }, null, 2) : undefined,
+        requestData:
+          logNo % 3 !== 0
+            ? JSON.stringify(
+                {
+                  orderId: 'ORD-2025-001',
+                  productCode: 'PROD001',
+                  quantity: 100,
+                  dueDate: '2025-08-10',
+                },
+                null,
+                2
+              )
+            : undefined,
+        responseData:
+          logNo % 3 !== 0
+            ? JSON.stringify(
+                {
+                  status: 'SUCCESS',
+                  message: 'Order processed successfully',
+                  processedQuantity: 100,
+                  timestamp: '2025-08-05T14:34:00Z',
+                },
+                null,
+                2
+              )
+            : undefined,
       };
     }
   },
