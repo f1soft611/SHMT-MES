@@ -10,8 +10,39 @@ import {
   Chip,
   Divider,
   Alert,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { InterfaceLog } from '../../types';
+import ArrayDataTable from './ArrayDataTable';
+
+interface InterfaceLogDetailModalProps {
+  open: boolean;
+  onClose: () => void;
+  interfaceLog?: InterfaceLog;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`data-tabpanel-${index}`}
+      aria-labelledby={`data-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
+    </div>
+  );
+}
 
 interface InterfaceLogDetailModalProps {
   open: boolean;
@@ -24,6 +55,12 @@ const InterfaceLogDetailModal: React.FC<InterfaceLogDetailModalProps> = ({
   onClose,
   interfaceLog,
 }) => {
+  const [tabValue, setTabValue] = React.useState(0);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   const formatDateTime = (dateTimeStr?: string) => {
     if (!dateTimeStr) return '-';
     if (dateTimeStr.length === 14) {
@@ -59,6 +96,57 @@ const InterfaceLogDetailModal: React.FC<InterfaceLogDetailModalProps> = ({
       return JSON.stringify(parsed, null, 2);
     } catch (error) {
       return jsonString;
+    }
+  };
+
+  const isArrayData = (jsonString?: string) => {
+    if (!jsonString) return false;
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed);
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const parseArrayData = (jsonString?: string) => {
+    if (!jsonString) return [];
+    try {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const renderDataDisplay = (data: string | undefined, title: string) => {
+    if (!data) return null;
+
+    if (isArrayData(data)) {
+      const arrayData = parseArrayData(data);
+      return <ArrayDataTable data={arrayData} title={title} />;
+    } else {
+      return (
+        <Box>
+          <Typography variant="h6" gutterBottom color="primary">
+            {title} (JSON 객체)
+          </Typography>
+          <Box
+            sx={{
+              backgroundColor: '#f5f5f5',
+              padding: 2,
+              borderRadius: 1,
+              border: '1px solid #ddd',
+              maxHeight: 400,
+              overflow: 'auto',
+            }}
+          >
+            <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace' }}>
+              {formatJsonData(data)}
+            </pre>
+          </Box>
+        </Box>
+      );
     }
   };
 
@@ -118,48 +206,33 @@ const InterfaceLogDetailModal: React.FC<InterfaceLogDetailModalProps> = ({
 
           {/* 성공한 경우: 요청/응답 데이터 표시 */}
           {interfaceLog.resultStatus === 'SUCCESS' && (
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-              {interfaceLog.requestData && (
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    요청 데이터 (JSON)
-                  </Typography>
-                  <Box
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      padding: 2,
-                      borderRadius: 1,
-                      border: '1px solid #ddd',
-                      maxHeight: 400,
-                      overflow: 'auto',
-                    }}
-                  >
-                    <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace' }}>
-                      {formatJsonData(interfaceLog.requestData)}
-                    </pre>
-                  </Box>
-                </Box>
-              )}
+            <Box>
+              {(interfaceLog.requestData || interfaceLog.responseData) && (
+                <Box>
+                  <Tabs value={tabValue} onChange={handleTabChange} aria-label="data tabs">
+                    {interfaceLog.requestData && (
+                      <Tab label="요청 데이터" id="data-tab-0" aria-controls="data-tabpanel-0" />
+                    )}
+                    {interfaceLog.responseData && (
+                      <Tab 
+                        label="응답 데이터" 
+                        id={`data-tab-${interfaceLog.requestData ? 1 : 0}`} 
+                        aria-controls={`data-tabpanel-${interfaceLog.requestData ? 1 : 0}`} 
+                      />
+                    )}
+                  </Tabs>
 
-              {interfaceLog.responseData && (
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    응답 데이터 (JSON)
-                  </Typography>
-                  <Box
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      padding: 2,
-                      borderRadius: 1,
-                      border: '1px solid #ddd',
-                      maxHeight: 400,
-                      overflow: 'auto',
-                    }}
-                  >
-                    <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace' }}>
-                      {formatJsonData(interfaceLog.responseData)}
-                    </pre>
-                  </Box>
+                  {interfaceLog.requestData && (
+                    <TabPanel value={tabValue} index={0}>
+                      {renderDataDisplay(interfaceLog.requestData, '요청 데이터')}
+                    </TabPanel>
+                  )}
+
+                  {interfaceLog.responseData && (
+                    <TabPanel value={tabValue} index={interfaceLog.requestData ? 1 : 0}>
+                      {renderDataDisplay(interfaceLog.responseData, '응답 데이터')}
+                    </TabPanel>
+                  )}
                 </Box>
               )}
             </Box>
@@ -180,23 +253,7 @@ const InterfaceLogDetailModal: React.FC<InterfaceLogDetailModalProps> = ({
               {/* 실패한 경우에도 요청 데이터가 있다면 표시 */}
               {interfaceLog.requestData && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="h6" gutterBottom>
-                    요청 데이터
-                  </Typography>
-                  <Box
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      padding: 2,
-                      borderRadius: 1,
-                      border: '1px solid #ddd',
-                      maxHeight: 300,
-                      overflow: 'auto',
-                    }}
-                  >
-                    <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace' }}>
-                      {formatJsonData(interfaceLog.requestData)}
-                    </pre>
-                  </Box>
+                  {renderDataDisplay(interfaceLog.requestData, '요청 데이터')}
                 </Box>
               )}
             </Box>
