@@ -18,6 +18,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Person, ExitToApp } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { PermissionProvider } from '../../../contexts/PermissionContext';
 import Sidebar from '../Sidebar/Sidebar';
 
 interface LayoutProps {
@@ -53,7 +54,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <PermissionProvider>
+      <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
         sx={{
@@ -149,6 +151,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </Box>
     </Box>
+    </PermissionProvider>
   );
 };
 
