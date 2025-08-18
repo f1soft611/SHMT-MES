@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
 
 import egovframework.let.uss.auth.service.EgovAuthManageService;
@@ -26,15 +25,6 @@ public class EgovAuthManageServiceImpl extends EgovAbstractServiceImpl implement
 
     @Resource(name = "authManageDAO")
     private AuthManageDAO authManageDAO;
-
-    @Resource(name = "egovMenuIdGnrService")
-    private EgovIdGnrService menuIdGnrService;
-
-    @Resource(name = "egovPermissionIdGnrService")
-    private EgovIdGnrService permissionIdGnrService;
-
-    @Resource(name = "egovRoleMenuIdGnrService")
-    private EgovIdGnrService roleMenuIdGnrService;
 
     /**
      * 메뉴 목록을 조회한다.
@@ -57,7 +47,7 @@ public class EgovAuthManageServiceImpl extends EgovAbstractServiceImpl implement
      */
     @Override
     public int insertMenu(MenuInfoVO menuInfoVO) throws Exception {
-        String menuId = menuIdGnrService.getNextStringId();
+        String menuId = generateMenuId();
         menuInfoVO.setMenuId(menuId);
         return authManageDAO.insertMenu(menuInfoVO);
     }
@@ -91,7 +81,7 @@ public class EgovAuthManageServiceImpl extends EgovAbstractServiceImpl implement
      */
     @Override
     public int insertPermissionType(PermissionTypeVO permissionTypeVO) throws Exception {
-        String permissionId = permissionIdGnrService.getNextStringId();
+        String permissionId = generatePermissionId();
         permissionTypeVO.setPermissionId(permissionId);
         return authManageDAO.insertPermissionType(permissionTypeVO);
     }
@@ -109,7 +99,7 @@ public class EgovAuthManageServiceImpl extends EgovAbstractServiceImpl implement
      */
     @Override
     public int insertRoleMenuPermission(RoleMenuPermissionVO roleMenuPermissionVO) throws Exception {
-        String roleMenuId = roleMenuIdGnrService.getNextStringId();
+        String roleMenuId = generateRoleMenuId();
         roleMenuPermissionVO.setRoleMenuId(roleMenuId);
         return authManageDAO.insertRoleMenuPermission(roleMenuPermissionVO);
     }
@@ -141,5 +131,26 @@ public class EgovAuthManageServiceImpl extends EgovAbstractServiceImpl implement
         
         String permission = authManageDAO.checkUserMenuPermission(params);
         return permission != null ? permission : "none";
+    }
+
+    /**
+     * 메뉴 ID 생성
+     */
+    private String generateMenuId() {
+        return "MENU" + String.format("%03d", System.currentTimeMillis() % 1000);
+    }
+
+    /**
+     * 권한 ID 생성
+     */
+    private String generatePermissionId() {
+        return "PERM_" + String.format("%03d", System.currentTimeMillis() % 1000);
+    }
+
+    /**
+     * 역할 메뉴 ID 생성
+     */
+    private String generateRoleMenuId() {
+        return "RMP" + String.format("%03d", System.currentTimeMillis() % 1000);
     }
 }

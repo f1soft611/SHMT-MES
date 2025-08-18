@@ -13,7 +13,6 @@ import {
   Collapse,
 } from '@mui/material';
 
-import URL from '../../../constants/url';
 import { usePermissions } from '../../../contexts/PermissionContext';
 
 import DashboardIcon from '@mui/icons-material/Dashboard';

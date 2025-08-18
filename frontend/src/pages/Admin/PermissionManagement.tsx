@@ -22,7 +22,6 @@ import {
   IconButton,
   Alert,
   Chip,
-  Grid,
   Card,
   CardContent,
   Checkbox,
@@ -153,9 +152,9 @@ const PermissionManagement: React.FC = () => {
           </Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
           {/* 역할 선택 */}
-          <Grid item xs={12} md={4}>
+          <Box sx={{ width: { xs: '100%', md: '33%' } }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -196,10 +195,10 @@ const PermissionManagement: React.FC = () => {
                 ))}
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
           {/* 메뉴별 권한 설정 */}
-          <Grid item xs={12} md={8}>
+          <Box sx={{ width: { xs: '100%', md: '67%' } }}>
             {selectedRole ? (
               <Card>
                 <CardContent>
@@ -283,8 +282,8 @@ const PermissionManagement: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* 현재 설정된 권한 목록 */}
         {selectedRole && rolePermissions.length > 0 && (

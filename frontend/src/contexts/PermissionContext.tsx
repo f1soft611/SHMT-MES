@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { MenuInfo, permissionService } from '../services/admin/permissionService';
 import { useAuth } from './AuthContext';
 
@@ -22,7 +22,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children
   const [userMenus, setUserMenus] = useState<MenuInfo[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadUserPermissions = async () => {
+  const loadUserPermissions = useCallback(async () => {
     if (!user?.groupId) return;
 
     try {
@@ -35,7 +35,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.groupId]);
 
   const checkPermission = (menuUrl: string): 'read' | 'write' | 'none' => {
     const menu = userMenus.find(m => m.menuUrl === menuUrl);
@@ -61,7 +61,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children
     if (user?.groupId) {
       loadUserPermissions();
     }
-  }, [user?.groupId]);
+  }, [user?.groupId, loadUserPermissions]);
 
   const value: PermissionContextType = {
     userMenus,
