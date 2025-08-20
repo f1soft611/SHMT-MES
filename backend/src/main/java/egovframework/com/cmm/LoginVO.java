@@ -78,6 +78,9 @@ public class LoginVO implements Serializable{
 	
 	@Schema(description = "그룹ID") //권한 그룹ID 추가
 	private String groupId;
+
+	@Schema(description = "그룹코드") //권한 그룹코드 추가
+	private String groupCode;
 	
 	@Schema(description = "그룹명") //권한 그룹명 추가
 	private String groupNm;
