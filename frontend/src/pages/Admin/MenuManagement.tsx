@@ -42,7 +42,9 @@ const MenuManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<MenuInfo | null>(null);
-  const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({});
+  const [expandedMenus, setExpandedMenus] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const [formData, setFormData] = useState({
     menuNm: '',
@@ -55,8 +57,16 @@ const MenuManagement: React.FC = () => {
   });
 
   const iconOptions = [
-    'Dashboard', 'Settings', 'Assignment', 'Factory', 'Monitor',
-    'AdminPanelSettings', 'Security', 'Menu', 'People', 'Build',
+    'Dashboard',
+    'Settings',
+    'Assignment',
+    'Factory',
+    'Monitor',
+    'AdminPanelSettings',
+    'Security',
+    'Menu',
+    'People',
+    'Build',
   ];
 
   const loadMenus = async () => {
@@ -136,7 +146,7 @@ const MenuManagement: React.FC = () => {
   };
 
   const toggleExpand = (menuId: string) => {
-    setExpandedMenus(prev => ({
+    setExpandedMenus((prev) => ({
       ...prev,
       [menuId]: !prev[menuId],
     }));
@@ -144,12 +154,14 @@ const MenuManagement: React.FC = () => {
 
   // 메뉴 계층 구조 구성
   const buildMenuHierarchy = () => {
-    const parentMenus = menus.filter(menu => !menu.parentMenuId);
-    const childMenus = menus.filter(menu => menu.parentMenuId);
+    const parentMenus = menus.filter((menu) => !menu.parentMenuId);
+    const childMenus = menus.filter((menu) => menu.parentMenuId);
 
-    return parentMenus.map(parent => ({
+    return parentMenus.map((parent) => ({
       ...parent,
-      children: childMenus.filter(child => child.parentMenuId === parent.menuId),
+      children: childMenus.filter(
+        (child) => child.parentMenuId === parent.menuId
+      ),
     }));
   };
 
@@ -158,7 +170,14 @@ const MenuManagement: React.FC = () => {
   return (
     <ProtectedRoute requiredPermission="write">
       <Box sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
           <Typography variant="h4" component="h1">
             메뉴 관리
           </Typography>
@@ -192,7 +211,7 @@ const MenuManagement: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {menuHierarchy.map(parent => (
+              {menuHierarchy.map((parent) => (
                 <React.Fragment key={parent.menuId}>
                   <TableRow>
                     <TableCell>
@@ -202,10 +221,17 @@ const MenuManagement: React.FC = () => {
                             size="small"
                             onClick={() => toggleExpand(parent.menuId)}
                           >
-                            {expandedMenus[parent.menuId] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            {expandedMenus[parent.menuId] ? (
+                              <ExpandLessIcon />
+                            ) : (
+                              <ExpandMoreIcon />
+                            )}
                           </IconButton>
                         )}
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', ml: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 'bold', ml: 1 }}
+                        >
                           {parent.menuNm}
                         </Typography>
                       </Box>
@@ -238,43 +264,44 @@ const MenuManagement: React.FC = () => {
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                  
-                  {expandedMenus[parent.menuId] && parent.children?.map(child => (
-                    <TableRow key={child.menuId}>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ ml: 6 }}>
-                          ├─ {child.menuNm}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{child.menuDc}</TableCell>
-                      <TableCell>{child.menuUrl}</TableCell>
-                      <TableCell>{child.menuOrdr}</TableCell>
-                      <TableCell>{child.iconNm}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={child.useAt === 'Y' ? '사용' : '미사용'}
-                          color={child.useAt === 'Y' ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(child)}
-                          disabled={loading}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(child.menuId)}
-                          disabled={loading}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+
+                  {expandedMenus[parent.menuId] &&
+                    parent.children?.map((child) => (
+                      <TableRow key={child.menuId}>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ ml: 6 }}>
+                            ├─ {child.menuNm}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{child.menuDc}</TableCell>
+                        <TableCell>{child.menuUrl}</TableCell>
+                        <TableCell>{child.menuOrdr}</TableCell>
+                        <TableCell>{child.iconNm}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={child.useAt === 'Y' ? '사용' : '미사용'}
+                            color={child.useAt === 'Y' ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(child)}
+                            disabled={loading}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDelete(child.menuId)}
+                            disabled={loading}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </React.Fragment>
               ))}
             </TableBody>
@@ -282,59 +309,81 @@ const MenuManagement: React.FC = () => {
         </TableContainer>
 
         {/* 메뉴 추가/수정 다이얼로그 */}
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {editingMenu ? '메뉴 수정' : '메뉴 추가'}
-          </DialogTitle>
+        <Dialog
+          open={open}
+          onClose={() => setOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>{editingMenu ? '메뉴 수정' : '메뉴 추가'}</DialogTitle>
           <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
+            >
               <TextField
                 label="메뉴명"
                 value={formData.menuNm}
-                onChange={(e) => setFormData({ ...formData, menuNm: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, menuNm: e.target.value })
+                }
                 required
                 fullWidth
               />
               <TextField
                 label="메뉴 설명"
                 value={formData.menuDc}
-                onChange={(e) => setFormData({ ...formData, menuDc: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, menuDc: e.target.value })
+                }
                 fullWidth
               />
               <FormControl fullWidth>
                 <InputLabel>상위 메뉴</InputLabel>
                 <Select
                   value={formData.parentMenuId}
-                  onChange={(e) => setFormData({ ...formData, parentMenuId: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, parentMenuId: e.target.value })
+                  }
                 >
                   <MenuItem value="">없음 (최상위 메뉴)</MenuItem>
-                  {menus.filter(m => !m.parentMenuId).map(menu => (
-                    <MenuItem key={menu.menuId} value={menu.menuId}>
-                      {menu.menuNm}
-                    </MenuItem>
-                  ))}
+                  {menus
+                    .filter((m) => !m.parentMenuId)
+                    .map((menu) => (
+                      <MenuItem key={menu.menuId} value={menu.menuId}>
+                        {menu.menuNm}
+                      </MenuItem>
+                    ))}
                 </Select>
               </FormControl>
               <TextField
                 label="메뉴 URL"
                 value={formData.menuUrl}
-                onChange={(e) => setFormData({ ...formData, menuUrl: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, menuUrl: e.target.value })
+                }
                 fullWidth
               />
               <TextField
                 label="순서"
                 type="number"
                 value={formData.menuOrdr}
-                onChange={(e) => setFormData({ ...formData, menuOrdr: parseInt(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    menuOrdr: parseInt(e.target.value) || 0,
+                  })
+                }
                 fullWidth
               />
               <FormControl fullWidth>
                 <InputLabel>아이콘</InputLabel>
                 <Select
                   value={formData.iconNm}
-                  onChange={(e) => setFormData({ ...formData, iconNm: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, iconNm: e.target.value })
+                  }
                 >
-                  {iconOptions.map(icon => (
+                  {iconOptions.map((icon) => (
                     <MenuItem key={icon} value={icon}>
                       {icon}
                     </MenuItem>
@@ -345,7 +394,9 @@ const MenuManagement: React.FC = () => {
                 <InputLabel>사용여부</InputLabel>
                 <Select
                   value={formData.useAt}
-                  onChange={(e) => setFormData({ ...formData, useAt: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, useAt: e.target.value })
+                  }
                 >
                   <MenuItem value="Y">사용</MenuItem>
                   <MenuItem value="N">미사용</MenuItem>
@@ -354,14 +405,14 @@ const MenuManagement: React.FC = () => {
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpen(false)}>취소</Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               variant="contained"
               disabled={loading || !formData.menuNm}
             >
               {editingMenu ? '수정' : '추가'}
             </Button>
+            <Button onClick={() => setOpen(false)}>취소</Button>
           </DialogActions>
         </Dialog>
       </Box>

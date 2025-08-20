@@ -43,7 +43,23 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userMenus, loading } = usePermissions();
-  const [openMenus, setOpenMenus] = React.useState<{ [key: string]: boolean }>({});
+  const [openMenus, setOpenMenus] = React.useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  // 하위 메뉴의 부모를 찾아서 오픈
+  React.useEffect(() => {
+    if (!loading && Array.isArray(userMenus)) {
+      const list = userMenus.filter((m) => !!m && !!m.accessible);
+      const childMenu = list.find((menu) => menu.menuUrl === location.pathname);
+      if (childMenu && childMenu.parentMenuId != null) {
+        setOpenMenus((prev) => ({
+          ...prev,
+          [String(childMenu.parentMenuId)]: true,
+        }));
+      }
+    }
+  }, [location.pathname, userMenus, loading]);
 
   // 메뉴 항목 구성
   const buildMenuItems = () => {
@@ -55,19 +71,17 @@ const Sidebar: React.FC = () => {
       );
     }
 
-    // 접근 가능한 메뉴만 필터링
-    const accessibleMenus = userMenus.filter(menu => menu.accessible);
-    
-    // 상위 메뉴와 하위 메뉴 분리
-    const parentMenus = accessibleMenus.filter(menu => !menu.parentMenuId);
-    const childMenus = accessibleMenus.filter(menu => menu.parentMenuId);
+    const list = Array.isArray(userMenus) ? userMenus : [];
+    const accessibleMenus = list.filter((m) => !!m && !!m.accessible);
 
-    // 메뉴 순서대로 정렬
+    const parentMenus = accessibleMenus.filter((menu) => !menu.parentMenuId);
+    const childMenus = accessibleMenus.filter((menu) => menu.parentMenuId);
+
     parentMenus.sort((a, b) => a.menuOrdr - b.menuOrdr);
 
     return parentMenus.map((parentMenu) => {
       const children = childMenus
-        .filter(child => child.parentMenuId === parentMenu.menuId)
+        .filter((child) => child.parentMenuId === parentMenu.menuId)
         .sort((a, b) => a.menuOrdr - b.menuOrdr);
 
       const hasChildren = children.length > 0;
@@ -75,9 +89,9 @@ const Sidebar: React.FC = () => {
 
       const handleParentClick = () => {
         if (hasChildren) {
-          setOpenMenus(prev => ({
+          setOpenMenus((prev) => ({
             ...prev,
-            [parentMenu.menuId]: !prev[parentMenu.menuId]
+            [parentMenu.menuId]: !prev[parentMenu.menuId],
           }));
         } else if (parentMenu.menuUrl) {
           navigate(parentMenu.menuUrl);
@@ -88,7 +102,9 @@ const Sidebar: React.FC = () => {
         <React.Fragment key={parentMenu.menuId}>
           <ListItem disablePadding>
             <ListItemButton
-              selected={!hasChildren && location.pathname === parentMenu.menuUrl}
+              selected={
+                !hasChildren && location.pathname === parentMenu.menuUrl
+              }
               onClick={handleParentClick}
             >
               <ListItemIcon>
@@ -98,7 +114,7 @@ const Sidebar: React.FC = () => {
               {hasChildren && (isOpen ? <ExpandLess /> : <ExpandMore />)}
             </ListItemButton>
           </ListItem>
-          
+
           {hasChildren && (
             <Collapse in={isOpen} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
@@ -107,10 +123,14 @@ const Sidebar: React.FC = () => {
                     <ListItemButton
                       sx={{ pl: 4 }}
                       selected={location.pathname === childMenu.menuUrl}
-                      onClick={() => childMenu.menuUrl && navigate(childMenu.menuUrl)}
+                      onClick={() =>
+                        childMenu.menuUrl && navigate(childMenu.menuUrl)
+                      }
                     >
                       <ListItemIcon>
-                        {iconMap[childMenu.iconNm || 'Dashboard'] || <DashboardIcon />}
+                        {iconMap[childMenu.iconNm || 'Dashboard'] || (
+                          <DashboardIcon />
+                        )}
                       </ListItemIcon>
                       <ListItemText primary={childMenu.menuNm} />
                     </ListItemButton>
@@ -132,9 +152,7 @@ const Sidebar: React.FC = () => {
         </Typography>
       </Box>
       <Divider />
-      <List>
-        {buildMenuItems()}
-      </List>
+      <List>{buildMenuItems()}</List>
     </Box>
   );
 };

@@ -6,12 +6,12 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 import Alert from '@mui/material/Alert';
+import TablePagination from '@mui/material/TablePagination';
 import { styled } from '@mui/material/styles';
 import { format } from 'date-fns';
 
 import { productionOrderService } from '../../services/productionOrderService';
 import { ProductionOrder } from '../../types';
-import Pagination from '../../components/common/Pagination/Pagination';
 import SearchFiltersComponent, {
   SearchFilters,
 } from '../../components/common/SearchFilters/SearchFilters';
@@ -150,12 +150,14 @@ const ProductionOrderList: React.FC = () => {
   }, [searchParams]);
 
   // Handlers
-  const handlePageChange = (page: number) => {
-    updateUrlState({ page });
+  const handlePageChange = (event: unknown, newPage: number) => {
+    updateUrlState({ page: newPage });
   };
 
-  const handlePageSizeChange = (pageSize: number) => {
-    updateUrlState({ page: 0, pageSize });
+  const handleRowsPerPageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    updateUrlState({ page: 0, pageSize: parseInt(event.target.value, 10) });
   };
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
@@ -339,15 +341,19 @@ const ProductionOrderList: React.FC = () => {
                 );
               })}
 
-              {/* Pagination */}
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                totalElements={pagination.totalElements}
-                pageSize={pagination.pageSize}
+              {/* MUI TablePagination */}
+              <TablePagination
+                component="div"
+                count={pagination.totalElements}
+                page={pagination.currentPage}
                 onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                pageSizeOptions={[10, 20, 50, 100]}
+                rowsPerPage={pagination.pageSize}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                rowsPerPageOptions={[10, 20, 50, 100]}
+                labelRowsPerPage="페이지당 행 수:"
+                labelDisplayedRows={({ from, to, count }) =>
+                  `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
+                }
               />
             </>
           )}

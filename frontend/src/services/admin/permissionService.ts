@@ -55,13 +55,15 @@ class PermissionService {
     if (menuNm) params.append('menuNm', menuNm);
     if (parentMenuId) params.append('parentMenuId', parentMenuId);
 
-    const response = await apiClient.get(`/api/admin/menus?${params.toString()}`);
-    return response.data.menuList;
+    const response = await apiClient.get(
+      `/api/admin/menus?${params.toString()}`
+    );
+    return response.data.result.menuList;
   }
 
   async getMenuDetail(menuId: string): Promise<MenuInfo> {
     const response = await apiClient.get(`/api/admin/menus/${menuId}`);
-    return response.data.menuInfo;
+    return response.data.result.menuInfo;
   }
 
   async createMenu(menuInfo: Partial<MenuInfo>): Promise<void> {
@@ -77,34 +79,52 @@ class PermissionService {
   }
 
   // 권한 유형 관리
-  async getPermissionTypes(permissionNm?: string, permissionLevel?: string): Promise<PermissionType[]> {
+  async getPermissionTypes(
+    permissionNm?: string,
+    permissionLevel?: string
+  ): Promise<PermissionType[]> {
     const params = new URLSearchParams();
     if (permissionNm) params.append('permissionNm', permissionNm);
     if (permissionLevel) params.append('permissionLevel', permissionLevel);
 
-    const response = await apiClient.get(`/api/admin/permissions?${params.toString()}`);
-    return response.data.permissionList;
+    const response = await apiClient.get(
+      `/api/admin/permissions?${params.toString()}`
+    );
+    return response.data.result.permissionList;
   }
 
-  async createPermissionType(permissionType: Partial<PermissionType>): Promise<void> {
+  async createPermissionType(
+    permissionType: Partial<PermissionType>
+  ): Promise<void> {
     await apiClient.post('/api/admin/permissions', permissionType);
   }
 
   // 역할 메뉴 권한 관리
-  async getRoleMenuPermissions(groupId?: string, menuId?: string): Promise<RoleMenuPermission[]> {
+  async getRoleMenuPermissions(
+    groupId?: string,
+    menuId?: string
+  ): Promise<RoleMenuPermission[]> {
     const params = new URLSearchParams();
     if (groupId) params.append('groupId', groupId);
     if (menuId) params.append('menuId', menuId);
 
-    const response = await apiClient.get(`/api/admin/role-permissions?${params.toString()}`);
-    return response.data.rolePermissionList;
+    const response = await apiClient.get(
+      `/api/admin/role-permissions?${params.toString()}`
+    );
+    return response.data.result.rolePermissionList;
   }
 
-  async createRoleMenuPermission(roleMenuPermission: Partial<RoleMenuPermission>): Promise<void> {
+  async createRoleMenuPermission(
+    roleMenuPermission: Partial<RoleMenuPermission>
+  ): Promise<void> {
     await apiClient.post('/api/admin/role-permissions', roleMenuPermission);
   }
 
-  async deleteRoleMenuPermission(groupId: string, menuId: string, permissionId?: string): Promise<void> {
+  async deleteRoleMenuPermission(
+    groupId: string,
+    menuId: string,
+    permissionId?: string
+  ): Promise<void> {
     const params = new URLSearchParams();
     params.append('groupId', groupId);
     params.append('menuId', menuId);
@@ -116,14 +136,19 @@ class PermissionService {
   // 사용자 메뉴 접근 권한
   async getUserAccessibleMenus(groupId: string): Promise<MenuInfo[]> {
     const response = await apiClient.get(`/api/admin/user-menus/${groupId}`);
-    return response.data.menuList;
+    return response.data.result.menuList;
   }
 
-  async checkUserMenuPermission(groupId: string, menuUrl: string): Promise<string> {
+  async checkUserMenuPermission(
+    groupId: string,
+    menuUrl: string
+  ): Promise<string> {
     const params = new URLSearchParams();
     params.append('menuUrl', menuUrl);
 
-    const response = await apiClient.get(`/api/admin/user-permissions/${groupId}?${params.toString()}`);
+    const response = await apiClient.get(
+      `/api/admin/user-permissions/${groupId}?${params.toString()}`
+    );
     return response.data.permission;
   }
 }

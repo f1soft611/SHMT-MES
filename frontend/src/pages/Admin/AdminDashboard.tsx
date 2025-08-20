@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -11,6 +10,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Dashboard as DashboardIcon,
   Security as SecurityIcon,
@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
         {/* 빠른 통계 */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {quickStats.map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -113,16 +113,21 @@ const AdminDashboard: React.FC = () => {
         {/* 관리 메뉴 */}
         <Grid container spacing={3}>
           {adminMenus.map((menu, index) => (
-            <Grid item xs={12} md={4} key={index}>
-              <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={() => navigate(menu.path)}>
+            <Grid key={index} size={{ xs: 12, md: 4 }}>
+              <Card
+                sx={{ height: '100%', cursor: 'pointer' }}
+                onClick={() => navigate(menu.path)}
+              >
                 <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                  <Box sx={{ mb: 2 }}>
-                    {menu.icon}
-                  </Box>
+                  <Box sx={{ mb: 2 }}>{menu.icon}</Box>
                   <Typography variant="h6" gutterBottom>
                     {menu.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
                     {menu.description}
                   </Typography>
                   <Button variant="contained" fullWidth>
@@ -145,36 +150,36 @@ const AdminDashboard: React.FC = () => {
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="메뉴 기반 권한 제어" 
-                  secondary="각 메뉴별로 읽기/쓰기 권한을 세분화하여 제어합니다." 
+                <ListItemText
+                  primary="메뉴 기반 권한 제어"
+                  secondary="각 메뉴별로 읽기/쓰기 권한을 세분화하여 제어합니다."
                 />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <SecurityIcon />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="역할 기반 접근 제어 (RBAC)" 
-                  secondary="사용자 역할에 따라 메뉴 접근 권한을 자동으로 관리합니다." 
+                <ListItemText
+                  primary="역할 기반 접근 제어 (RBAC)"
+                  secondary="사용자 역할에 따라 메뉴 접근 권한을 자동으로 관리합니다."
                 />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <MenuIcon />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="동적 메뉴 시스템" 
-                  secondary="사용자 권한에 따라 사이드바 메뉴가 동적으로 변경됩니다." 
+                <ListItemText
+                  primary="동적 메뉴 시스템"
+                  secondary="사용자 권한에 따라 사이드바 메뉴가 동적으로 변경됩니다."
                 />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <PeopleIcon />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="세분화된 권한 유형" 
-                  secondary="관리자, 생산실적등록, 생산실적조회 등 업무별 권한을 제공합니다." 
+                <ListItemText
+                  primary="세분화된 권한 유형"
+                  secondary="관리자, 생산실적등록, 생산실적조회 등 업무별 권한을 제공합니다."
                 />
               </ListItem>
             </List>
