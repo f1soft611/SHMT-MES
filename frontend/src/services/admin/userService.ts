@@ -89,7 +89,7 @@ class UserService {
       params.append('searchWrd', searchParams.searchWrd);
     }
 
-    const response = await apiClient.get(`/api/admin/members?${params.toString()}`);
+    const response = await apiClient.get(`/api/members?${params.toString()}`);
     return response.data.result;
   }
 
@@ -97,7 +97,7 @@ class UserService {
    * 사용자 상세정보를 조회한다
    */
   async getUserDetail(uniqId: string): Promise<User> {
-    const response = await apiClient.get(`/api/admin/members/update/${uniqId}`);
+    const response = await apiClient.get(`/api/members/update/${uniqId}`);
     return response.data.result.mberManageVO;
   }
 
@@ -110,7 +110,7 @@ class UserService {
     mberSttus_result: Array<{ code: string; codeNm: string }>;
     groupId_result: Array<{ code: string; codeNm: string }>;
   }> {
-    const response = await apiClient.get('/api/admin/members/insert');
+    const response = await apiClient.get('/api/members/insert');
     return response.data.result;
   }
 
@@ -118,21 +118,21 @@ class UserService {
    * 사용자를 등록한다
    */
   async createUser(userData: UserFormData): Promise<void> {
-    await apiClient.post('/api/admin/members/insert', userData);
+    await apiClient.post('/api/members/insert', userData);
   }
 
   /**
    * 사용자 정보를 수정한다
    */
   async updateUser(userData: UserFormData & { uniqId: string }): Promise<void> {
-    await apiClient.put('/api/admin/members/update', userData);
+    await apiClient.put('/api/members/update', userData);
   }
 
   /**
    * 사용자를 삭제한다
    */
   async deleteUser(uniqId: string): Promise<void> {
-    await apiClient.delete(`/api/admin/members/delete/${uniqId}`);
+    await apiClient.delete(`/api/members/delete/${uniqId}`);
   }
 
   /**
