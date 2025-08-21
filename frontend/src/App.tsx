@@ -20,6 +20,7 @@ import InterfaceMonitor from './pages/Interface/InterfaceMonitor';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
+import UserManagement from './pages/Admin/UserManagement';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,10 @@ function App() {
                         <Route
                           path={URL.ADMIN_MENUS}
                           element={<MenuManagement />}
+                        />
+                        <Route
+                          path={URL.ADMIN_USERS}
+                          element={<UserManagement />}
                         />
                       </Routes>
                     </Layout>
