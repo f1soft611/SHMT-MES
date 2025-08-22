@@ -17,6 +17,9 @@ import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
 import InterfaceMonitor from './pages/Interface/InterfaceMonitor';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import MenuManagement from './pages/Admin/MenuManagement';
+import PermissionManagement from './pages/Admin/PermissionManagement';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +69,15 @@ function App() {
                         <Route
                           path={URL.INTERFACE}
                           element={<InterfaceMonitor />}
+                        />
+                        <Route path={URL.ADMIN} element={<AdminDashboard />} />
+                        <Route
+                          path={URL.ADMIN_PERMISSIONS}
+                          element={<PermissionManagement />}
+                        />
+                        <Route
+                          path={URL.ADMIN_MENUS}
+                          element={<MenuManagement />}
                         />
                       </Routes>
                     </Layout>

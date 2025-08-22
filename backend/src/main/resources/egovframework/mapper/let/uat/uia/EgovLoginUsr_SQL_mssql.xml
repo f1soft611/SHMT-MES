@@ -39,11 +39,12 @@
 			 , 	'USR' AS userSe
 			 , 	a.FACTORY_CODE AS orgnztId
 			 , 	'' AS uniqId
-			 , 	'ADMIN' AS groupId
-			 , 	'관리자' AS groupNm
+			 , 	1 AS groupId
+		     ,	'ADMIN' AS groupCode
+			 , 	'시스템 관리자' AS groupNm
 		FROM TIN114 a
-				 LEFT JOIN TCO303 b
-						   ON a.EMPLOYEE_NO = b.EMPLOYEE_NO
+			LEFT JOIN TCO303 b
+			ON a.EMPLOYEE_NO = b.EMPLOYEE_NO
 		WHERE b.LOGIN_ID = #{id}
 		  AND b.PASSWORD = #{password}
 	</select>

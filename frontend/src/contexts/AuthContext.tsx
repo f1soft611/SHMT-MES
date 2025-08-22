@@ -12,6 +12,7 @@ interface User {
   name: string;
   userSe: string;
   groupNm: string;
+  groupId?: string; // Add groupId for permission system
 }
 
 interface AuthContextType {
