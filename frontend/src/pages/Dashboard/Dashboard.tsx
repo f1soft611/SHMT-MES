@@ -54,8 +54,6 @@ const ProgressBox = styled(Box)({
   marginTop: 4,
 });
 
-
-
 // 현재 시간 기준 목 데이터 - 반도체 테스트 프로브 제조업체
 const mockData = {
   productionOrders: [
@@ -190,7 +188,6 @@ const mockData = {
 };
 
 const Dashboard: React.FC = () => {
-
   const handleMoreClick = (section: string) => {
     console.log(`${section} 더보기 클릭`);
   };
@@ -238,9 +235,18 @@ const Dashboard: React.FC = () => {
         </Box>
       </WelcomeBox> */}
 
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        생산 관리 대시보드
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">생산 관리 대시보드</Typography>
+        </Box>
+      </Box>
 
       <Grid container spacing={3}>
         {/* 생산지시 현황 */}

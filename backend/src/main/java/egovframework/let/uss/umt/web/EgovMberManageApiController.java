@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import egovframework.com.cmm.service.CmmnDetailCode;
+import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -60,6 +62,7 @@ import lombok.RequiredArgsConstructor;
  *
  *      </pre>
  */
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "EgovMberManageApiController", description = "회원 관리")
@@ -118,26 +121,35 @@ public class EgovMberManageApiController {
 		int totCnt = mberManageService.selectMberListTotCnt(userSearchVO);
 		paginationInfo.setTotalRecordCount(totCnt);
 
-		// 회원 상태코드를 코드정보로부터 조회
-		ComDefaultCodeVO vo = new ComDefaultCodeVO();
-		vo.setCodeId("COM013");
-
-		// 그룹정보를 조회 - GROUP_ID정보(스프링부트에서는 실제로 이 값만 사용한다.)
-		vo.setTableNm("LETTNORGNZTINFO");
-
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		resultMap.put("paginationInfo", paginationInfo);
 		resultMap.put("user", user);
-		resultMap.put("entrprsMberSttus_result", cmmUseService.selectCmmCodeDetail(vo));
+
+		// 회원 상태코드를 코드정보로부터 조회
+		ComDefaultCodeVO vo = new ComDefaultCodeVO();
+
+		// 1. 회원 상태코드
+		vo.setCodeId("COM001");
+		resultMap.put("mberSttus_result", cmmUseService.selectCmmCodeDetail(vo));
+
+		// 2. 비밀번호 힌트
+		vo = new ComDefaultCodeVO();
+		vo.setCodeId("COM002");
+		resultMap.put("passwordHint_result", cmmUseService.selectCmmCodeDetail(vo));
+
+		// 3. 그룹 정보 (테이블 이용)
+		vo = new ComDefaultCodeVO();
+		vo.setTableNm("MES_GROUP_INFO");
 		resultMap.put("groupId_result", cmmUseService.selectGroupIdDetail(vo));
+
 		/*
 		 * 권한그룹이름 디버그
-		 * List<CmmnDetailCode> groupId_result = cmmUseService.selectGroupIdDetail(vo);
-		 * for(CmmnDetailCode result : groupId_result) {
-		 * log.debug("===>>> getCode = "+result.getCode());
-		 * log.debug("===>>> getCodeNm = "+result.getCodeNm());
-		 * }
 		 */
+//		 List<CmmnDetailCode> groupId_result = cmmUseService.selectGroupIdDetail(vo);
+//		 for(CmmnDetailCode result : groupId_result) {
+//			 log.debug("===>>> getCode = "+result.getCode());
+//			 log.debug("===>>> getCodeNm = "+result.getCodeNm());
+//		 }
 		resultMap.put("resultList", resultList);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
@@ -163,17 +175,16 @@ public class EgovMberManageApiController {
 
 		ComDefaultCodeVO vo = new ComDefaultCodeVO();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
+
 		// 패스워드힌트목록을 코드정보로부터 조회
-		vo.setCodeId("COM022");
+		vo.setCodeId("COM002");
 		resultMap.put("passwordHint_result", cmmUseService.selectCmmCodeDetail(vo));
-		// 성별구분코드를 코드정보로부터 조회
-		vo.setCodeId("COM014");
-		resultMap.put("sexdstnCode_result", cmmUseService.selectCmmCodeDetail(vo));
 		// 사용자상태코드를 코드정보로부터 조회
-		vo.setCodeId("COM013");
+		vo.setCodeId("COM001");
 		resultMap.put("mberSttus_result", cmmUseService.selectCmmCodeDetail(vo));
 		// 그룹정보를 조회 - GROUP_ID정보(스프링부트에서는 실제로 이 값만 사용한다.)
-		vo.setTableNm("LETTNORGNZTINFO");
+		vo.setTableNm("MES_GROUP_INFO");
+
 		resultMap.put("groupId_result", cmmUseService.selectGroupIdDetail(vo));
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
@@ -195,26 +206,23 @@ public class EgovMberManageApiController {
 			@ApiResponse(responseCode = "900", description = "입력값 무결성 오류")
 	})
 	@PostMapping("/members/insert")
-	public ResultVO insertMber(MberManageVO mberManageVO, BindingResult bindingResult) throws Exception {
+	public ResultVO insertMber(@RequestBody MberManageVO mberManageVO, BindingResult bindingResult) throws Exception {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		beanValidator.validate(mberManageVO, bindingResult);
+
+		System.out.println(mberManageVO + "------------------------------sss");
 
 		if (bindingResult.hasErrors()) {
 			ComDefaultCodeVO vo = new ComDefaultCodeVO();
 
 			// 패스워드힌트목록을 코드정보로부터 조회
-			vo.setCodeId("COM022");
+			vo.setCodeId("COM002");
 			resultMap.put("passwordHint_result", cmmUseService.selectCmmCodeDetail(vo));
-			// 성별구분코드를 코드정보로부터 조회
-			vo.setCodeId("COM014");
-			resultMap.put("sexdstnCode_result", cmmUseService.selectCmmCodeDetail(vo));
-
 			// 사용자상태코드를 코드정보로부터 조회
-			vo.setCodeId("COM013");
+			vo.setCodeId("COM001");
 			resultMap.put("mberSttus_result", cmmUseService.selectCmmCodeDetail(vo));
-
-			// 그룹정보를 조회 - GROUP_ID정보
-			vo.setTableNm("LETTNORGNZTINFO");
+			// 그룹정보를 조회 - GROUP_ID정보(스프링부트에서는 실제로 이 값만 사용한다.)
+			vo.setTableNm("MES_GROUP_INFO");
 			resultMap.put("groupId_result", cmmUseService.selectGroupIdDetail(vo));
 
 			resultMap.put("resultMsg", "fail.common.insert");
