@@ -282,9 +282,19 @@ const BaseData: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        기준정보
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">기준정보</Typography>
+        </Box>
+      </Box>
+
       <Grid container spacing={3}>
         {/* 공통코드 정보 */}
         <Grid size={{ xs: 12, md: 6 }} component="div">

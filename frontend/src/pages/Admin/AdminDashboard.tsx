@@ -75,15 +75,23 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <ProtectedRoute requiredPermission="write">
-      <Box sx={{ p: 3 }}>
-        {/* 헤더 */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            시스템 관리 대시보드
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            SHMT-MES 시스템의 권한 및 메뉴를 관리할 수 있습니다.
-          </Typography>
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              시스템 관리 대시보드
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              SHMT-MES 시스템의 권한 및 메뉴를 관리할 수 있습니다.
+            </Typography>
+          </Box>
         </Box>
 
         {/* 빠른 통계 */}

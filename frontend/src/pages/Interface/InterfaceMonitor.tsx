@@ -26,6 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import { interfaceLogService } from '../../services/interfaceLogService';
 import { InterfaceLog } from '../../types';
 import InterfaceLogDetailModal from '../../components/Interface/InterfaceLogDetailModal';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
 
 const InterfaceMonitor: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -46,9 +47,7 @@ const InterfaceMonitor: React.FC = () => {
     staleTime: 5 * 60 * 1000, // 5분
   });
 
-  const {
-    data: interfaceLogDetail,
-  } = useQuery({
+  const { data: interfaceLogDetail } = useQuery({
     queryKey: ['interfaceLogDetail', selectedLogNo],
     queryFn: () => interfaceLogService.getInterfaceLogDetail(selectedLogNo!),
     enabled: !!selectedLogNo && detailModalOpen,
@@ -110,147 +109,158 @@ const InterfaceMonitor: React.FC = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        인터페이스 로그 모니터
-      </Typography>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <TextField
-              placeholder="검색어를 입력하세요"
-              value={searchKeyword}
-              onChange={handleSearchChange}
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 300 }}
-            />
-            <Box>
-              <Chip
-                icon={<RefreshIcon />}
-                label="새로고침"
-                onClick={() => refetch()}
-                color="primary"
-                variant="outlined"
-                clickable
-              />
-            </Box>
+    <ProtectedRoute requiredPermission="write">
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h5">인터페이스 로그 모니터링</Typography>
           </Box>
-        </CardContent>
-      </Card>
-
-      {isLoading && (
-        <Box display="flex" justifyContent="center" p={3}>
-          <CircularProgress />
         </Box>
-      )}
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          데이터를 불러오는 중 오류가 발생했습니다.
-        </Alert>
-      )}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <TextField
+                placeholder="검색어를 입력하세요"
+                value={searchKeyword}
+                onChange={handleSearchChange}
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ width: 300 }}
+              />
+              <Box>
+                <Chip
+                  icon={<RefreshIcon />}
+                  label="새로고침"
+                  onClick={() => refetch()}
+                  color="primary"
+                  variant="outlined"
+                  clickable
+                />
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
 
-      {interfaceLogsData && !isLoading && (
-        <Paper>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    로그번호
-                  </TableCell>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    인터페이스명
-                  </TableCell>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    시작시간
-                  </TableCell>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    종료시간
-                  </TableCell>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    결과상태
-                  </TableCell>
-                  <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                    상세보기
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {interfaceLogsData.content.map((log: InterfaceLog) => (
-                  <TableRow key={log.logNo} hover>
-                    <TableCell align="center">{log.logNo}</TableCell>
-                    <TableCell align="center">{log.interfaceName}</TableCell>
-                    <TableCell align="center">
-                      {formatDateTime(log.startTime)}
-                    </TableCell>
-                    <TableCell align="center">
-                      {formatDateTime(log.endTime)}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={log.resultStatus}
-                        color={getStatusColor(log.resultStatus) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => handleDetailClick(log.logNo)}
-                      >
-                        상세보기
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {interfaceLogsData.content.length === 0 && (
+        {isLoading && (
+          <Box display="flex" justifyContent="center" p={3}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            데이터를 불러오는 중 오류가 발생했습니다.
+          </Alert>
+        )}
+
+        {interfaceLogsData && !isLoading && (
+          <Paper>
+            <TableContainer>
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                      데이터가 없습니다.
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      로그번호
+                    </TableCell>
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      인터페이스명
+                    </TableCell>
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      시작시간
+                    </TableCell>
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      종료시간
+                    </TableCell>
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      결과상태
+                    </TableCell>
+                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
+                      상세보기
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component="div"
-            count={interfaceLogsData.totalElements}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="페이지당 행 수:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
-            }
-          />
-        </Paper>
-      )}
+                </TableHead>
+                <TableBody>
+                  {interfaceLogsData.content.map((log: InterfaceLog) => (
+                    <TableRow key={log.logNo} hover>
+                      <TableCell align="center">{log.logNo}</TableCell>
+                      <TableCell align="center">{log.interfaceName}</TableCell>
+                      <TableCell align="center">
+                        {formatDateTime(log.startTime)}
+                      </TableCell>
+                      <TableCell align="center">
+                        {formatDateTime(log.endTime)}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={log.resultStatus}
+                          color={getStatusColor(log.resultStatus) as any}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => handleDetailClick(log.logNo)}
+                        >
+                          상세보기
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {interfaceLogsData.content.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                        데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              component="div"
+              count={interfaceLogsData.totalElements}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              labelRowsPerPage="페이지당 행 수:"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
+              }
+            />
+          </Paper>
+        )}
 
-      {/* Detail Modal */}
-      <InterfaceLogDetailModal
-        open={detailModalOpen}
-        onClose={handleDetailModalClose}
-        interfaceLog={interfaceLogDetail}
-      />
-    </Box>
+        {/* Detail Modal */}
+        <InterfaceLogDetailModal
+          open={detailModalOpen}
+          onClose={handleDetailModalClose}
+          interfaceLog={interfaceLogDetail}
+        />
+      </Box>
+    </ProtectedRoute>
   );
 };
 
