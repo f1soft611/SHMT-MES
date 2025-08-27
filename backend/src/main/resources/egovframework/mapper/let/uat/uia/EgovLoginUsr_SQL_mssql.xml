@@ -40,8 +40,8 @@
 			 , 	a.FACTORY_CODE AS orgnztId
 			 , 	'' AS uniqId
 			 , 	1 AS groupId
-		     ,	'ADMIN' AS groupCode
-			 , 	'시스템 관리자' AS groupNm
+		     ,	'ROLE_ADMIN' AS groupCode
+			 , 	'ROLE_ADMIN' AS groupNm
 		FROM TIN114 a
 			LEFT JOIN TCO303 b
 			ON a.EMPLOYEE_NO = b.EMPLOYEE_NO

@@ -231,9 +231,18 @@ const ProductionOrderList: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        생산지시 목록
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">생산지시목록</Typography>
+        </Box>
+      </Box>
 
       {/* Search Filters */}
       <SearchFiltersComponent

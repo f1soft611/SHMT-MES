@@ -50,7 +50,7 @@ const UserManagement: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // 검색 및 페이징
   const [searchParams, setSearchParams] = useState<UserSearchParams>({
     pageIndex: 1,
@@ -109,10 +109,10 @@ const UserManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       const result = await userService.getUsers(searchParams);
-      
+
       setUsers(result.resultList || []);
       setPagination(result.paginationInfo);
-      
+
       // 첫 로드 시 코드 데이터도 함께 설정
       if (result.mberSttus_result) {
         setCodeData({
@@ -149,7 +149,10 @@ const UserManagement: React.FC = () => {
     });
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
     setSearchParams({
       ...searchParams,
       pageIndex: value,
@@ -177,23 +180,23 @@ const UserManagement: React.FC = () => {
       groupId: '',
       email: '',
     });
-    
+
     // 코드 데이터가 없으면 로드
     if (codeData.mberSttus_result.length === 0) {
       await loadFormData();
     }
-    
+
     setOpen(true);
   };
 
   const handleEdit = async (user: User) => {
     setEditingUser(user);
-    
+
     // 사용자 상세 정보 로드
     try {
       setLoading(true);
       const userDetail = await userService.getUserDetail(user.uniqId);
-      
+
       setFormData({
         mberId: userDetail.mberId,
         mberNm: userDetail.mberNm,
@@ -213,12 +216,12 @@ const UserManagement: React.FC = () => {
         groupId: userDetail.groupId || '',
         email: userDetail.email || '',
       });
-      
+
       // 코드 데이터가 없으면 로드
       if (codeData.mberSttus_result.length === 0) {
         await loadFormData();
       }
-      
+
       setOpen(true);
     } catch (err: any) {
       setError(err.message || '사용자 정보를 불러오는데 실패했습니다.');
@@ -230,7 +233,7 @@ const UserManagement: React.FC = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      
+
       if (editingUser) {
         // 수정
         await userService.updateUser({
@@ -241,7 +244,7 @@ const UserManagement: React.FC = () => {
         // 등록
         await userService.createUser(formData);
       }
-      
+
       setOpen(false);
       await loadUsers();
     } catch (err: any) {
@@ -266,31 +269,32 @@ const UserManagement: React.FC = () => {
   };
 
   const getStatusLabel = (status: string) => {
-    const statusItem = codeData.mberSttus_result.find((item: any) => item.code === status);
+    const statusItem = codeData.mberSttus_result.find(
+      (item: any) => item.code === status
+    );
     return statusItem ? statusItem.codeNm : status;
   };
 
   const getGroupLabel = (groupId: string) => {
-    const groupItem = codeData.groupId_result.find((item: any) => item.code === groupId);
+    const groupItem = codeData.groupId_result.find(
+      (item: any) => item.code === groupId
+    );
     return groupItem ? groupItem.codeNm : groupId;
   };
 
   return (
     <ProtectedRoute requiredPermission="write">
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 3,
+            mb: 2,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PeopleIcon color="primary" sx={{ fontSize: 32 }} />
-            <Typography variant="h4" component="h1">
-              사용자 관리
-            </Typography>
+            <Typography variant="h5">사용자 관리</Typography>
           </Box>
           <Button
             variant="contained"
@@ -421,7 +425,9 @@ const UserManagement: React.FC = () => {
         {pagination.totalRecordCount > 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
             <Pagination
-              count={Math.ceil(pagination.totalRecordCount / pagination.recordCountPerPage)}
+              count={Math.ceil(
+                pagination.totalRecordCount / pagination.recordCountPerPage
+              )}
               page={pagination.currentPageNo}
               onChange={handlePageChange}
               color="primary"
@@ -437,7 +443,9 @@ const UserManagement: React.FC = () => {
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>{editingUser ? '사용자 수정' : '사용자 추가'}</DialogTitle>
+          <DialogTitle>
+            {editingUser ? '사용자 수정' : '사용자 추가'}
+          </DialogTitle>
           <DialogContent>
             <Box
               sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
@@ -453,7 +461,9 @@ const UserManagement: React.FC = () => {
                     required
                     fullWidth
                     disabled={!!editingUser}
-                    helperText={editingUser ? '사용자ID는 수정할 수 없습니다' : ''}
+                    helperText={
+                      editingUser ? '사용자ID는 수정할 수 없습니다' : ''
+                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -485,7 +495,11 @@ const UserManagement: React.FC = () => {
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
                           >
-                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            {showPassword ? (
+                              <VisibilityOffIcon />
+                            ) : (
+                              <VisibilityIcon />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -498,7 +512,10 @@ const UserManagement: React.FC = () => {
                     <Select
                       value={formData.passwordHint}
                       onChange={(e) =>
-                        setFormData({ ...formData, passwordHint: e.target.value })
+                        setFormData({
+                          ...formData,
+                          passwordHint: e.target.value,
+                        })
                       }
                     >
                       {codeData.passwordHint_result.map((hint: any) => (

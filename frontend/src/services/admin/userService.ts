@@ -78,7 +78,7 @@ class UserService {
    */
   async getUsers(searchParams?: UserSearchParams): Promise<UserListResponse> {
     const params = new URLSearchParams();
-    
+
     if (searchParams?.pageIndex) {
       params.append('pageIndex', searchParams.pageIndex.toString());
     }
@@ -89,7 +89,7 @@ class UserService {
       params.append('searchWrd', searchParams.searchWrd);
     }
 
-    const response = await apiClient.get(`/api/members?${params.toString()}`);
+    const response = await apiClient.get(`/members?${params.toString()}`);
     return response.data.result;
   }
 
@@ -97,7 +97,7 @@ class UserService {
    * 사용자 상세정보를 조회한다
    */
   async getUserDetail(uniqId: string): Promise<User> {
-    const response = await apiClient.get(`/api/members/update/${uniqId}`);
+    const response = await apiClient.get(`/members/update/${uniqId}`);
     return response.data.result.mberManageVO;
   }
 
@@ -110,7 +110,7 @@ class UserService {
     mberSttus_result: Array<{ code: string; codeNm: string }>;
     groupId_result: Array<{ code: string; codeNm: string }>;
   }> {
-    const response = await apiClient.get('/api/members/insert');
+    const response = await apiClient.get('/members/insert');
     return response.data.result;
   }
 
@@ -118,28 +118,28 @@ class UserService {
    * 사용자를 등록한다
    */
   async createUser(userData: UserFormData): Promise<void> {
-    await apiClient.post('/api/members/insert', userData);
+    await apiClient.post('/members/insert', userData);
   }
 
   /**
    * 사용자 정보를 수정한다
    */
   async updateUser(userData: UserFormData & { uniqId: string }): Promise<void> {
-    await apiClient.put('/api/members/update', userData);
+    await apiClient.put('/members/update', userData);
   }
 
   /**
    * 사용자를 삭제한다
    */
   async deleteUser(uniqId: string): Promise<void> {
-    await apiClient.delete(`/api/members/delete/${uniqId}`);
+    await apiClient.delete(`/members/delete/${uniqId}`);
   }
 
   /**
    * 사용자 ID 중복을 확인한다
    */
   async checkUserId(mberId: string): Promise<{ usableAt: string }> {
-    const response = await apiClient.get(`/api/etc/member_checkid/${mberId}`);
+    const response = await apiClient.get(`/etc/member_checkid/${mberId}`);
     return response.data.result;
   }
 }
