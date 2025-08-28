@@ -20,6 +20,7 @@ export interface LoginResponse {
     orgnztId?: string;
   };
   jToken: string;
+  refreshToken: string;
   resultCode: string;
   resultMessage: string;
 }
@@ -44,6 +45,7 @@ export const authService = {
       if (response.data.resultCode === '200' && response.data.jToken) {
         // JWT 토큰을 sessionStorage에 저장
         sessionStorage.setItem('accessToken', response.data.jToken);
+        sessionStorage.setItem('refreshToken', response.data.refreshToken);
         sessionStorage.setItem('user', JSON.stringify(response.data.resultVO));
       }
 
@@ -60,11 +62,16 @@ export const authService = {
 
   logout() {
     sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');
   },
 
   getToken(): string | null {
     return sessionStorage.getItem('accessToken');
+  },
+
+  getRefreshToken(): string | null {
+    return sessionStorage.getItem('refreshToken');
   },
 
   getUser() {
@@ -74,6 +81,29 @@ export const authService = {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  },
+
+  async refreshToken(): Promise<string | null> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      const response = await apiClient.post('/auth/refresh', {
+        refreshToken: refreshToken
+      });
+
+      if (response.data.resultCode === '200' && response.data.jToken) {
+        sessionStorage.setItem('accessToken', response.data.jToken);
+        return response.data.jToken;
+      }
+      return null;
+    } catch (error) {
+      console.error('토큰 리프레쉬 실패:', error);
+      this.logout();
+      return null;
+    }
   },
 
   // API 기본 URL 확인용 메서드 (디버깅용)
@@ -96,13 +126,23 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - 401 에러 시 자동 로그아웃
+// Response interceptor - 401 에러 시 토큰 리프레쉬 시도
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      authService.logout();
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      const newToken = await authService.refreshToken();
+      if (newToken) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      } else {
+        // 리프레쉬 실패 시 로그인 페이지로 이동
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

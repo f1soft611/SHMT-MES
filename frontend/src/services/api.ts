@@ -29,10 +29,32 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // 인증 오류 시 로그인 페이지로 리다이렉트
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      const refreshToken = sessionStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refreshToken: refreshToken
+          });
+          
+          if (refreshResponse.data.resultCode === '200' && refreshResponse.data.jToken) {
+            sessionStorage.setItem('accessToken', refreshResponse.data.jToken);
+            originalRequest.headers.Authorization = refreshResponse.data.jToken;
+            return apiClient(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('토큰 리프레쉬 실패:', refreshError);
+        }
+      }
+      
+      // 리프레쉬 실패 시 로그인 페이지로 리다이렉트
       sessionStorage.removeItem('accessToken');
+      sessionStorage.removeItem('refreshToken');
       sessionStorage.removeItem('user');
       window.location.href = '/login';
     }
