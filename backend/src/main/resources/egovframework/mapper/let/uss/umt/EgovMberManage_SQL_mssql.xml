@@ -47,9 +47,12 @@
             AND sttus LIKE '%' + #{sbscrbSttus} + '%'
         </if>
         <if test="searchCondition == 0">
-            AND userId LIKE '%' + #{searchKeyword} + '%'
+            AND (userId LIKE '%' + #{searchKeyword} + '%' OR userNm LIKE '%' + #{searchKeyword} + '%')
         </if>
         <if test="searchCondition == 1">
+            AND userId LIKE '%' + #{searchKeyword} + '%'
+        </if>
+        <if test="searchCondition == 2">
             AND userNm LIKE '%' + #{searchKeyword} + '%'
         </if>
         ORDER BY sbscrbDe DESC
