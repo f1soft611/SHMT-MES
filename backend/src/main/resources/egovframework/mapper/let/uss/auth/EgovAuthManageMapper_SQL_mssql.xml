@@ -21,7 +21,7 @@
             CASE WHEN EXISTS (SELECT 1 FROM MES_MENU_INFO c WHERE c.PARENT_MENU_ID = m.MENU_ID) THEN 1 ELSE 0 END as hasChildren
         FROM MES_MENU_INFO m
         LEFT JOIN MES_MENU_INFO p ON m.PARENT_MENU_ID = p.MENU_ID
-        WHERE m.USE_AT = 'Y'
+        WHERE 1=1
         <if test="menuNm != null and menuNm != ''">
             AND m.MENU_NM LIKE CONCAT('%', #{menuNm}, '%')
         </if>
@@ -64,10 +64,10 @@
             MENU_URL,
             ICON_NM,
             USE_AT,
-            FRST_REGIST_PNTTM,
-            FRST_REGISTER_ID,
-            LAST_UPDT_PNTTM,
-            LAST_UPDUSR_ID
+            CRT_DT,
+            CRT_ID,
+            UPD_DT,
+            UPD_ID
         ) VALUES (
             #{menuId},
             #{menuNm},
@@ -78,9 +78,9 @@
             #{menuUrl},
             #{iconNm},
             #{useAt},
-            NOW(),
+            GETDATE(),
             #{frstRegisterId},
-            NOW(),
+            GETDATE(),
             #{lastUpdusrId}
         )
     </insert>
@@ -96,8 +96,8 @@
             MENU_URL = #{menuUrl},
             ICON_NM = #{iconNm},
             USE_AT = #{useAt},
-            LAST_UPDT_PNTTM = NOW(),
-            LAST_UPDUSR_ID = #{lastUpdusrId}
+            UPD_DT = GETDATE(),
+            UPD_ID = #{lastUpdusrId}
         WHERE MENU_ID = #{menuId}
     </update>
 
@@ -138,19 +138,19 @@
             PERMISSION_DC,
             PERMISSION_LEVEL,
             USE_AT,
-            FRST_REGIST_PNTTM,
-            FRST_REGISTER_ID,
-            LAST_UPDT_PNTTM,
-            LAST_UPDUSR_ID
+            CRT_DT,
+            CRT_ID,
+            UPD_DT,
+            UPD_ID
         ) VALUES (
             #{permissionId},
             #{permissionNm},
             #{permissionDc},
             #{permissionLevel},
             #{useAt},
-            NOW(),
+            GETDATE(),
             #{frstRegisterId},
-            NOW(),
+            GETDATE(),
             #{lastUpdusrId}
         )
     </insert>
@@ -214,24 +214,22 @@
     <!-- 역할별 메뉴 권한 등록 -->
     <insert id="insertRoleMenuPermission" parameterType="egovframework.let.uss.auth.service.RoleMenuPermissionVO">
         INSERT INTO MES_ROLE_MENU_PERMISSION (
-            RMP_ID,
             GROUP_ID,
             MENU_ID,
             PERMISSION_ID,
             USE_AT,
-            FRST_REGIST_PNTTM,
-            FRST_REGISTER_ID,
-            LAST_UPDT_PNTTM,
-            LAST_UPDUSR_ID
+            CRT_DT,
+            CRT_ID,
+            UPD_DT,
+            UPD_ID
         ) VALUES (
-            #{roleMenuId},
             #{groupId},
             #{menuId},
             #{permissionId},
             #{useAt},
-            NOW(),
+            GETDATE(),
             #{frstRegisterId},
-            NOW(),
+            GETDATE(),
             #{lastUpdusrId}
         )
     </insert>
