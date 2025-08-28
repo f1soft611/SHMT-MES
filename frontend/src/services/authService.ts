@@ -126,6 +126,22 @@ apiClient.interceptors.request.use(
   }
 );
 
+// 토큰 리프레쉬 중인지 추적하는 변수
+let isRefreshing = false;
+let failedQueue: Array<{resolve: Function, reject: Function}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 // Response interceptor - 401 에러 시 토큰 리프레쉬 시도
 apiClient.interceptors.response.use(
   (response) => response,
@@ -133,13 +149,29 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // 이미 리프레쉬 중이면 큐에 추가
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
       
       const newToken = await authService.refreshToken();
       if (newToken) {
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+        isRefreshing = false;
         return apiClient(originalRequest);
       } else {
+        processQueue(error, null);
+        isRefreshing = false;
         // 리프레쉬 실패 시 로그인 페이지로 이동
         window.location.href = '/login';
       }
