@@ -31,22 +31,24 @@
 	-->
 	<!-- 일반 로그인 -->
 	<select id="actionLogin" resultMap="login">
-		SELECT 	a.EMPLOYEE_NO AS id
-			 , 	a.BASE_NAME AS name
-			 , 	b.PASSWORD AS password
-			 , 	'' AS ihidNum
-			 , 	a.E_MAIL AS email
-			 , 	'USR' AS userSe
-			 , 	a.FACTORY_CODE AS orgnztId
-			 , 	'' AS uniqId
-			 , 	1 AS groupId
-		     ,	'ROLE_ADMIN' AS groupCode
-			 , 	'ROLE_ADMIN' AS groupNm
-		FROM TIN114 a
-			LEFT JOIN TCO303 b
-			ON a.EMPLOYEE_NO = b.EMPLOYEE_NO
-		WHERE b.LOGIN_ID = #{id}
-		  AND b.PASSWORD = #{password}
+		SELECT
+			a.ESNTL_ID         AS id,
+			a.USER_NM          AS name,
+			a.PASSWORD         AS password,
+			a.IHIDNUM          AS ihidNum,
+			a.EMAIL_ADRES      AS email,
+			'USR'              AS userSe,
+			a.ORGNZT_ID        AS orgnztId,
+			a.EMPLYR_ID        AS uniqId,
+			b.GROUP_ID         AS groupId,
+			b.GROUP_CODE       AS groupCode,
+			b.GROUP_NM         AS groupNm
+		FROM
+			MES_USER_INFO a
+			LEFT JOIN MES_GROUP_INFO b ON a.GROUP_ID = b.GROUP_ID
+		WHERE
+			a.EMPLYR_ID = #{id}
+		  AND a.PASSWORD = #{password}
 	</select>
 	
 	<!-- 인증서 로그인
