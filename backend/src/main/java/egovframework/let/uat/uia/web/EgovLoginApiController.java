@@ -138,6 +138,7 @@ public class EgovLoginApiController {
 			log.debug("===>>> loginResultVO.getGroupNm() = "+loginResultVO.getGroupNm());//로그인 결과에서 스프링시큐리티용 그룹명값 출력
 			
 			String jwtToken = jwtTokenUtil.generateToken(loginResultVO);
+			String refreshToken = jwtTokenUtil.generateRefreshToken(loginResultVO);
 			
 			String username = jwtTokenUtil.getUserSeFromToken(jwtToken);
 	    	log.debug("Dec jwtToken username = "+username);
@@ -149,6 +150,7 @@ public class EgovLoginApiController {
 	    	
 			resultMap.put("resultVO", loginResultVO);
 			resultMap.put("jToken", jwtToken);
+			resultMap.put("refreshToken", refreshToken);
 			resultMap.put("resultCode", "200");
 			resultMap.put("resultMessage", "성공 !!!");
 			
@@ -156,6 +158,47 @@ public class EgovLoginApiController {
 			resultMap.put("resultVO", loginResultVO);
 			resultMap.put("resultCode", "300");
 			resultMap.put("resultMessage", egovMessageSource.getMessage("fail.common.login"));
+		}
+		
+		return resultMap;
+	}
+
+	@Operation(
+			summary = "JWT 토큰 리프레쉬",
+			description = "리프레쉬 토큰을 사용하여 새로운 액세스 토큰을 발급받습니다",
+			tags = {"EgovLoginApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "토큰 리프레쉬 성공"),
+			@ApiResponse(responseCode = "401", description = "리프레쉬 토큰이 유효하지 않음")
+	})
+	@PostMapping(value = "/auth/refresh")
+	public HashMap<String, Object> refreshToken(@RequestBody HashMap<String, String> request) throws Exception {
+		HashMap<String, Object> resultMap = new HashMap<String, Object>();
+		
+		String refreshToken = request.get("refreshToken");
+		
+		if (refreshToken == null || !jwtTokenUtil.isValidRefreshToken(refreshToken)) {
+			resultMap.put("resultCode", "401");
+			resultMap.put("resultMessage", "유효하지 않은 리프레쉬 토큰입니다");
+			return resultMap;
+		}
+		
+		try {
+			// 리프레쉬 토큰에서 사용자 정보 추출
+			LoginVO loginVO = jwtTokenUtil.getLoginVOFromToken(refreshToken);
+			
+			// 새로운 액세스 토큰 생성
+			String newAccessToken = jwtTokenUtil.generateToken(loginVO);
+			
+			resultMap.put("jToken", newAccessToken);
+			resultMap.put("resultCode", "200");
+			resultMap.put("resultMessage", "토큰 리프레쉬 성공");
+			
+		} catch (Exception e) {
+			log.error("토큰 리프레쉬 실패: " + e.getMessage());
+			resultMap.put("resultCode", "401");
+			resultMap.put("resultMessage", "토큰 리프레쉬 실패");
 		}
 		
 		return resultMap;
