@@ -1,0 +1,64 @@
+/* AG Grid 커스텀 스타일 */
+
+/* 헤더 중앙 정렬 */
+.ag-header-cell-centered .ag-header-cell-label {
+  justify-content: center;
+}
+
+/* 헤더 폰트 굵게 */
+.ag-header-cell-label {
+  font-weight: 600;
+}
+
+/* Material Design 색상 적용 */
+.ag-theme-material {
+  --ag-background-color: #fff;
+  --ag-header-background-color: #f5f5f5;
+  --ag-odd-row-background-color: #fafafa;
+  --ag-row-hover-color: #e3f2fd;
+  --ag-border-color: #e0e0e0;
+  --ag-header-foreground-color: #424242;
+  --ag-foreground-color: #424242;
+}
+
+/* 페이지네이션 스타일 개선 */
+.ag-theme-material .ag-paging-panel {
+  padding: 8px 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+/* 로딩 오버레이 스타일 */
+.ag-theme-material .ag-overlay-loading-wrapper {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* 필터 아이콘 색상 */
+.ag-theme-material .ag-icon-filter {
+  color: #1976d2;
+}
+
+/* 정렬 아이콘 색상 */
+.ag-theme-material .ag-icon-asc,
+.ag-theme-material .ag-icon-desc {
+  color: #1976d2;
+}
+
+/* 체크박스 색상 (필요시) */
+.ag-theme-material .ag-icon-checkbox-checked {
+  color: #1976d2;
+}
+
+/* 행 높이 조정 시 셀 내용 중앙 정렬 */
+.ag-theme-material .ag-cell {
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+/* 상태 칩과 버튼을 위한 중앙 정렬 */
+.ag-theme-material .ag-cell-wrapper {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}

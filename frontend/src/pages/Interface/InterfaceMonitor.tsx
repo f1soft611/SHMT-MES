@@ -1,39 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Chip,
   CircularProgress,
   Alert,
-  TablePagination,
   TextField,
   InputAdornment,
   Card,
   CardContent,
   Button,
+  Paper,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useQuery } from '@tanstack/react-query';
+import { AgGridReact } from 'ag-grid-react';
+import { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-material.css';
+import '../../styles/agGrid.css';
 import { interfaceLogService } from '../../services/interfaceLogService';
-import { InterfaceLog } from '../../types';
 import InterfaceLogDetailModal from '../../components/Interface/InterfaceLogDetailModal';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
 
 const InterfaceMonitor: React.FC = () => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedLogNo, setSelectedLogNo] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const {
     data: interfaceLogsData,
@@ -41,9 +38,9 @@ const InterfaceMonitor: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['interfaceLogs', page, rowsPerPage, searchKeyword],
+    queryKey: ['interfaceLogs', rowsPerPage, searchKeyword],
     queryFn: () =>
-      interfaceLogService.getInterfaceLogs(page, rowsPerPage, searchKeyword),
+      interfaceLogService.getInterfaceLogs(0, rowsPerPage, searchKeyword),
     staleTime: 5 * 60 * 1000, // 5분
   });
 
@@ -54,20 +51,18 @@ const InterfaceMonitor: React.FC = () => {
     staleTime: 5 * 60 * 1000, // 5분
   });
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const onGridReady = useCallback((params: GridReadyEvent) => {
+    setGridApi(params.api);
+  }, []);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(event.target.value);
-    setPage(0);
+    const value = event.target.value;
+    setSearchKeyword(value);
+    
+    // Apply quick filter to AG Grid
+    if (gridApi) {
+      gridApi.setGridOption('quickFilterText', value);
+    }
   };
 
   const handleDetailClick = (logNo: number) => {
@@ -107,6 +102,94 @@ const InterfaceMonitor: React.FC = () => {
     }
     return dateTimeStr;
   };
+
+  // Status 칩 렌더링 컴포넌트
+  const StatusRenderer = useCallback((props: any) => {
+    const status = props.value;
+    return (
+      <Chip
+        label={status}
+        color={getStatusColor(status) as any}
+        size="small"
+        sx={{ minWidth: 80 }}
+      />
+    );
+  }, []);
+
+  // 상세보기 버튼 렌더링 컴포넌트
+  const ActionRenderer = useCallback((props: any) => {
+    return (
+      <Button
+        variant="outlined"
+        size="small"
+        startIcon={<VisibilityIcon />}
+        onClick={() => handleDetailClick(props.data.logNo)}
+        sx={{ minWidth: 100 }}
+      >
+        상세보기
+      </Button>
+    );
+  }, []);
+
+  // AG Grid 컬럼 정의
+  const columnDefs: ColDef[] = useMemo(() => [
+    {
+      headerName: '로그번호',
+      field: 'logNo',
+      width: 120,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered'
+    },
+    {
+      headerName: '인터페이스명',
+      field: 'interfaceName',
+      width: 200,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered'
+    },
+    {
+      headerName: '시작시간',
+      field: 'startTime',
+      width: 180,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered',
+      valueFormatter: (params) => formatDateTime(params.value)
+    },
+    {
+      headerName: '종료시간',
+      field: 'endTime',
+      width: 180,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered',
+      valueFormatter: (params) => formatDateTime(params.value)
+    },
+    {
+      headerName: '결과상태',
+      field: 'resultStatus',
+      width: 140,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered',
+      cellRenderer: StatusRenderer
+    },
+    {
+      headerName: '상세보기',
+      field: 'action',
+      width: 140,
+      cellStyle: { textAlign: 'center' },
+      headerClass: 'ag-header-cell-centered',
+      cellRenderer: ActionRenderer,
+      sortable: false,
+      filter: false
+    }
+  ], [ActionRenderer, StatusRenderer]);
+
+  // AG Grid 기본 설정
+  const defaultColDef = useMemo(() => ({
+    sortable: true,
+    filter: true,
+    resizable: true,
+    minWidth: 100
+  }), []);
 
   return (
     <ProtectedRoute requiredPermission="write">
@@ -172,84 +255,54 @@ const InterfaceMonitor: React.FC = () => {
         )}
 
         {interfaceLogsData && !isLoading && (
-          <Paper>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      로그번호
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      인터페이스명
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      시작시간
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      종료시간
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      결과상태
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      상세보기
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {interfaceLogsData.content.map((log: InterfaceLog) => (
-                    <TableRow key={log.logNo} hover>
-                      <TableCell align="center">{log.logNo}</TableCell>
-                      <TableCell align="center">{log.interfaceName}</TableCell>
-                      <TableCell align="center">
-                        {formatDateTime(log.startTime)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {formatDateTime(log.endTime)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={log.resultStatus}
-                          color={getStatusColor(log.resultStatus) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<VisibilityIcon />}
-                          onClick={() => handleDetailClick(log.logNo)}
-                        >
-                          상세보기
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {interfaceLogsData.content.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                        데이터가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              component="div"
-              count={interfaceLogsData.totalElements}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="페이지당 행 수:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
-              }
-            />
+          <Paper sx={{ height: 600, width: '100%' }}>
+            <div 
+              className="ag-theme-material" 
+              style={{ 
+                height: '100%', 
+                width: '100%',
+              }}
+            >
+              <AgGridReact
+                rowData={interfaceLogsData.content}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                onGridReady={onGridReady}
+                pagination={true}
+                paginationPageSize={rowsPerPage}
+                paginationPageSizeSelector={[5, 10, 25, 50]}
+                rowHeight={60}
+                headerHeight={50}
+                animateRows={true}
+                suppressCellFocus={true}
+                overlayNoRowsTemplate={
+                  '<div style="padding: 20px; text-align: center; color: #666;">데이터가 없습니다.</div>'
+                }
+                localeText={{
+                  // 페이지네이션 한글화
+                  page: '페이지',
+                  more: '더보기',
+                  to: '~',
+                  of: '/',
+                  next: '다음',
+                  last: '마지막',
+                  first: '처음',
+                  previous: '이전',
+                  loadingOoo: '데이터 로딩중...',
+                  // 필터링 한글화
+                  searchOoo: '검색...',
+                  blanks: '공백',
+                  filterOoo: '필터...',
+                  applyFilter: '필터 적용',
+                  clearFilter: '필터 지우기',
+                  resetFilter: '필터 초기화',
+                  // 정렬 한글화
+                  sortAscending: '오름차순 정렬',
+                  sortDescending: '내림차순 정렬',
+                  sortUnSort: '정렬 해제'
+                }}
+              />
+            </div>
           </Paper>
         )}
 
