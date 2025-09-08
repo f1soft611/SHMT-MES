@@ -17,13 +17,17 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useQuery } from '@tanstack/react-query';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, GridReadyEvent, GridApi } from 'ag-grid-community';
+import { ColDef, GridReadyEvent, GridApi, ModuleRegistry } from 'ag-grid-community';
+import { ClientSideRowModelModule } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-material.css';
 import '../../styles/agGrid.css';
 import { interfaceLogService } from '../../services/interfaceLogService';
 import InterfaceLogDetailModal from '../../components/Interface/InterfaceLogDetailModal';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
+
+// Register AG Grid modules
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 const InterfaceMonitor: React.FC = () => {
   const [rowsPerPage] = useState(10);
