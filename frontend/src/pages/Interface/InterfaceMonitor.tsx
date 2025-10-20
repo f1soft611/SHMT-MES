@@ -2,35 +2,30 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Chip,
   CircularProgress,
   Alert,
-  TablePagination,
   TextField,
   InputAdornment,
   Card,
   CardContent,
   Button,
 } from '@mui/material';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useQuery } from '@tanstack/react-query';
 import { interfaceLogService } from '../../services/interfaceLogService';
-import { InterfaceLog } from '../../types';
 import InterfaceLogDetailModal from '../../components/Interface/InterfaceLogDetailModal';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
 
 const InterfaceMonitor: React.FC = () => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedLogNo, setSelectedLogNo] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -41,9 +36,9 @@ const InterfaceMonitor: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['interfaceLogs', page, rowsPerPage, searchKeyword],
+    queryKey: ['interfaceLogs', paginationModel.page, paginationModel.pageSize, searchKeyword],
     queryFn: () =>
-      interfaceLogService.getInterfaceLogs(page, rowsPerPage, searchKeyword),
+      interfaceLogService.getInterfaceLogs(paginationModel.page, paginationModel.pageSize, searchKeyword),
     staleTime: 5 * 60 * 1000, // 5분
   });
 
@@ -54,20 +49,9 @@ const InterfaceMonitor: React.FC = () => {
     staleTime: 5 * 60 * 1000, // 5분
   });
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
-    setPage(0);
+    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const handleDetailClick = (logNo: number) => {
@@ -107,6 +91,71 @@ const InterfaceMonitor: React.FC = () => {
     }
     return dateTimeStr;
   };
+
+  const columns: GridColDef[] = [
+    {
+      field: 'logNo',
+      headerName: '로그번호',
+      flex: 0.8,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'interfaceName',
+      headerName: '인터페이스명',
+      flex: 1.5,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'startTime',
+      headerName: '시작시간',
+      flex: 1.5,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => formatDateTime(value),
+    },
+    {
+      field: 'endTime',
+      headerName: '종료시간',
+      flex: 1.5,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => formatDateTime(value),
+    },
+    {
+      field: 'resultStatus',
+      headerName: '결과상태',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          color={getStatusColor(params.value) as any}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'actions',
+      headerName: '상세보기',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<VisibilityIcon />}
+          onClick={() => handleDetailClick(params.row.logNo)}
+        >
+          상세보기
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <ProtectedRoute requiredPermission="write">
@@ -172,83 +221,38 @@ const InterfaceMonitor: React.FC = () => {
         )}
 
         {interfaceLogsData && !isLoading && (
-          <Paper>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      로그번호
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      인터페이스명
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      시작시간
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      종료시간
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      결과상태
-                    </TableCell>
-                    <TableCell align="center" style={{ fontWeight: 'bold' }}>
-                      상세보기
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {interfaceLogsData.content.map((log: InterfaceLog) => (
-                    <TableRow key={log.logNo} hover>
-                      <TableCell align="center">{log.logNo}</TableCell>
-                      <TableCell align="center">{log.interfaceName}</TableCell>
-                      <TableCell align="center">
-                        {formatDateTime(log.startTime)}
-                      </TableCell>
-                      <TableCell align="center">
-                        {formatDateTime(log.endTime)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={log.resultStatus}
-                          color={getStatusColor(log.resultStatus) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<VisibilityIcon />}
-                          onClick={() => handleDetailClick(log.logNo)}
-                        >
-                          상세보기
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {interfaceLogsData.content.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                        데이터가 없습니다.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              component="div"
-              count={interfaceLogsData.totalElements}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="페이지당 행 수:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
-              }
+          <Paper sx={{ height: 600, width: '100%' }}>
+            <DataGrid
+              rows={interfaceLogsData.content}
+              columns={columns}
+              getRowId={(row) => row.logNo}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25, 50]}
+              rowCount={interfaceLogsData.totalElements}
+              paginationMode="server"
+              loading={isLoading}
+              disableRowSelectionOnClick
+              sx={{
+                border: 'none',
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
+                },
+              }}
+              localeText={{
+                noRowsLabel: '데이터가 없습니다',
+                footerRowSelected: (count) => `${count}개 선택됨`,
+              }}
+              slotProps={{
+                pagination: {
+                  labelRowsPerPage: '페이지당 행 수:',
+                  labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) =>
+                    `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
+                },
+              }}
             />
           </Paper>
         )}
