@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkplaceDAO">
+
+	<resultMap id="workplaceResult" type="egovframework.let.basedata.workplace.domain.model.Workplace">
+		<result property="workplaceId" column="WORKPLACE_ID"/>
+		<result property="workplaceCode" column="WORKPLACE_CODE"/>
+		<result property="workplaceName" column="WORKPLACE_NAME"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="location" column="LOCATION"/>
+		<result property="workplaceType" column="WORKPLACE_TYPE"/>
+		<result property="status" column="STATUS"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="WorkplaceDAO.selectWorkplaceList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultMap="workplaceResult">
+		SELECT
+			WORKPLACE_ID,
+			WORKPLACE_CODE,
+			WORKPLACE_NAME,
+			DESCRIPTION,
+			LOCATION,
+			WORKPLACE_TYPE,
+			STATUS,
+			USE_YN,
+			REG_USER_ID,
+			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
+			UPD_USER_ID,
+			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+		FROM TB_WORKPLACE
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '0'">
+					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+				<when test="searchCnd == '1'">
+					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+				<when test="searchCnd == '2'">
+					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+			</choose>
+		</if>
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY REG_DT DESC
+		<if test="firstIndex != null and recordCountPerPage != null">
+			LIMIT #{firstIndex}, #{recordCountPerPage}
+		</if>
+	</select>
+
+	<select id="WorkplaceDAO.selectWorkplaceListCnt" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_WORKPLACE
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '0'">
+					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+				<when test="searchCnd == '1'">
+					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+				<when test="searchCnd == '2'">
+					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+				</when>
+			</choose>
+		</if>
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+	</select>
+
+	<select id="WorkplaceDAO.selectWorkplace" parameterType="string" resultMap="workplaceResult">
+		SELECT
+			WORKPLACE_ID,
+			WORKPLACE_CODE,
+			WORKPLACE_NAME,
+			DESCRIPTION,
+			LOCATION,
+			WORKPLACE_TYPE,
+			STATUS,
+			USE_YN,
+			REG_USER_ID,
+			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
+			UPD_USER_ID,
+			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+		FROM TB_WORKPLACE
+		WHERE WORKPLACE_ID = #{workplaceId}
+	</select>
+
+	<insert id="WorkplaceDAO.insertWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
+		INSERT INTO TB_WORKPLACE (
+			WORKPLACE_ID,
+			WORKPLACE_CODE,
+			WORKPLACE_NAME,
+			DESCRIPTION,
+			LOCATION,
+			WORKPLACE_TYPE,
+			STATUS,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+			#{workplaceId},
+			#{workplaceCode},
+			#{workplaceName},
+			#{description},
+			#{location},
+			#{workplaceType},
+			IFNULL(#{status}, 'ACTIVE'),
+			IFNULL(#{useYn}, 'Y'),
+			#{regUserId},
+			NOW()
+		)
+	</insert>
+
+	<update id="WorkplaceDAO.updateWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
+		UPDATE TB_WORKPLACE
+		SET
+			WORKPLACE_CODE = #{workplaceCode},
+			WORKPLACE_NAME = #{workplaceName},
+			DESCRIPTION = #{description},
+			LOCATION = #{location},
+			WORKPLACE_TYPE = #{workplaceType},
+			STATUS = #{status},
+			USE_YN = #{useYn},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = NOW()
+		WHERE WORKPLACE_ID = #{workplaceId}
+	</update>
+
+	<delete id="WorkplaceDAO.deleteWorkplace" parameterType="string">
+		DELETE FROM TB_WORKPLACE
+		WHERE WORKPLACE_ID = #{workplaceId}
+	</delete>
+
+</mapper>

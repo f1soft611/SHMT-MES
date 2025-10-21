@@ -1818,4 +1818,36 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 작업장 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovWorkplaceIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_WORKPLACE")
+			.setPreFix("WP_")
+			.setCipers(17)
+			.setFillChar('0')
+			.build();
+	}
+
+	/** 작업장 작업자 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovWorkplaceWorkerIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_WORKPLACE_WORKER")
+			.setPreFix("WPW_")
+			.setCipers(16)
+			.setFillChar('0')
+			.build();
+	}
+
 }
