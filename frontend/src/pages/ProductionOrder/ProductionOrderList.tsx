@@ -255,7 +255,7 @@ const ProductionOrderList: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}

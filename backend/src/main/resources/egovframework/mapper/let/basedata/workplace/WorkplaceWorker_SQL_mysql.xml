@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkplaceWorkerDAO">
+
+	<resultMap id="workplaceWorkerResult" type="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
+		<result property="workplaceWorkerId" column="WORKPLACE_WORKER_ID"/>
+		<result property="workplaceId" column="WORKPLACE_ID"/>
+		<result property="workerId" column="WORKER_ID"/>
+		<result property="workerName" column="WORKER_NAME"/>
+		<result property="position" column="POSITION"/>
+		<result property="role" column="ROLE"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="WorkplaceWorkerDAO.selectWorkplaceWorkerList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorkerVO" resultMap="workplaceWorkerResult">
+		SELECT
+			WORKPLACE_WORKER_ID,
+			WORKPLACE_ID,
+			WORKER_ID,
+			WORKER_NAME,
+			POSITION,
+			ROLE,
+			USE_YN,
+			REG_USER_ID,
+			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
+			UPD_USER_ID,
+			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+		FROM TB_WORKPLACE_WORKER
+		WHERE WORKPLACE_ID = #{workplaceId}
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY REG_DT DESC
+	</select>
+
+	<insert id="WorkplaceWorkerDAO.insertWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
+		INSERT INTO TB_WORKPLACE_WORKER (
+			WORKPLACE_WORKER_ID,
+			WORKPLACE_ID,
+			WORKER_ID,
+			WORKER_NAME,
+			POSITION,
+			ROLE,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+			#{workplaceWorkerId},
+			#{workplaceId},
+			#{workerId},
+			#{workerName},
+			#{position},
+			#{role},
+			IFNULL(#{useYn}, 'Y'),
+			#{regUserId},
+			NOW()
+		)
+	</insert>
+
+	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorker" parameterType="string">
+		DELETE FROM TB_WORKPLACE_WORKER
+		WHERE WORKPLACE_WORKER_ID = #{workplaceWorkerId}
+	</delete>
+
+	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorkersByWorkplaceId" parameterType="string">
+		DELETE FROM TB_WORKPLACE_WORKER
+		WHERE WORKPLACE_ID = #{workplaceId}
+	</delete>
+
+</mapper>
