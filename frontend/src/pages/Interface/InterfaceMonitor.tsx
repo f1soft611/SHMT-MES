@@ -12,7 +12,14 @@ import {
   CardContent,
   Button,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridRowParams,
+  GridCellEditStopParams,
+  GridRowModel,
+} from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -36,9 +43,18 @@ const InterfaceMonitor: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['interfaceLogs', paginationModel.page, paginationModel.pageSize, searchKeyword],
+    queryKey: [
+      'interfaceLogs',
+      paginationModel.page,
+      paginationModel.pageSize,
+      searchKeyword,
+    ],
     queryFn: () =>
-      interfaceLogService.getInterfaceLogs(paginationModel.page, paginationModel.pageSize, searchKeyword),
+      interfaceLogService.getInterfaceLogs(
+        paginationModel.page,
+        paginationModel.pageSize,
+        searchKeyword
+      ),
     staleTime: 5 * 60 * 1000, // 5분
   });
 
@@ -62,6 +78,17 @@ const InterfaceMonitor: React.FC = () => {
   const handleDetailModalClose = () => {
     setDetailModalOpen(false);
     setSelectedLogNo(null);
+  };
+
+  // 셀 편집 완료 시 호출되는 함수
+  const handleProcessRowUpdate = (newRow: GridRowModel) => {
+    console.log('업데이트된 행 데이터:', newRow);
+    return newRow;
+  };
+
+  // 편집 에러 처리
+  const handleProcessRowUpdateError = (error: Error) => {
+    console.error('행 업데이트 중 오류 발생:', error);
   };
 
   const getStatusColor = (status: string) => {
@@ -103,9 +130,53 @@ const InterfaceMonitor: React.FC = () => {
     {
       field: 'interfaceName',
       headerName: '인터페이스명',
-      flex: 1.5,
+      flex: 1,
       align: 'center',
       headerAlign: 'center',
+      editable: true, // 추가
+      renderEditCell: (
+        params // 추가
+      ) => (
+        <TextField
+          value={params.value}
+          onChange={(e) =>
+            params.api.setEditCellValue({
+              id: params.id,
+              field: params.field,
+              value: e.target.value,
+            })
+          }
+          size="small"
+          fullWidth
+          autoFocus // 추가: 자동 포커스
+          variant="standard" // 변경: outlined → standard (보더 제거)
+          placeholder="인터페이스명을 입력하세요"
+          InputProps={{
+            disableUnderline: true, // 추가: 밑줄 제거
+          }}
+          sx={{
+            '& .MuiInputBase-input': {
+              padding: '8px 16px', // 셀과 동일한 패딩
+              textAlign: 'center', // 중앙 정렬 유지
+            },
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              params.api.stopCellEditMode({
+                id: params.id,
+                field: params.field,
+              });
+            }
+            if (e.key === 'Escape') {
+              params.api.stopCellEditMode({
+                id: params.id,
+                field: params.field,
+                ignoreModifications: true,
+              });
+            }
+          }}
+        />
+      ),
     },
     {
       field: 'startTime',
@@ -221,7 +292,7 @@ const InterfaceMonitor: React.FC = () => {
         )}
 
         {interfaceLogsData && !isLoading && (
-          <Paper sx={{ height: 600, width: '100%' }}>
+          <Paper sx={{ height: '100%', width: '100%' }}>
             <DataGrid
               rows={interfaceLogsData.content}
               columns={columns}
@@ -233,13 +304,23 @@ const InterfaceMonitor: React.FC = () => {
               paginationMode="server"
               loading={isLoading}
               disableRowSelectionOnClick
+              processRowUpdate={handleProcessRowUpdate} // 추가
+              onProcessRowUpdateError={handleProcessRowUpdateError} // 추가
               sx={{
                 border: 'none',
+                flex: 1,
                 '& .MuiDataGrid-cell:focus': {
                   outline: 'none',
                 },
                 '& .MuiDataGrid-row:hover': {
                   backgroundColor: 'action.hover',
+                },
+                '& .MuiDataGrid-cell--editable': {
+                  backgroundColor: 'rgba(0, 123, 255, 0.04)',
+                },
+                '& .MuiDataGrid-cell--editing': {
+                  backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                  border: 'none !important', // 추가: 편집 중 보더 제거
                 },
               }}
               localeText={{
@@ -249,7 +330,15 @@ const InterfaceMonitor: React.FC = () => {
               slotProps={{
                 pagination: {
                   labelRowsPerPage: '페이지당 행 수:',
-                  labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) =>
+                  labelDisplayedRows: ({
+                    from,
+                    to,
+                    count,
+                  }: {
+                    from: number;
+                    to: number;
+                    count: number;
+                  }) =>
                     `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
                 },
               }}

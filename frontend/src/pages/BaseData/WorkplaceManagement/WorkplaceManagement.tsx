@@ -39,11 +39,17 @@ import workplaceService from '../../../services/workplaceService';
 
 const WorkplaceManagement: React.FC = () => {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
-  const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(null);
+  const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(
+    null
+  );
   const [openDialog, setOpenDialog] = useState(false);
   const [openWorkerDialog, setOpenWorkerDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -173,10 +179,19 @@ const WorkplaceManagement: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        작업장 관리
-      </Typography>
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">작업장 관리</Typography>
+        </Box>
+      </Box>
 
       {/* 검색 영역 */}
       <Card sx={{ mb: 3 }}>
@@ -188,7 +203,12 @@ const WorkplaceManagement: React.FC = () => {
                 <Select
                   value={searchParams.searchCnd}
                   label="검색 조건"
-                  onChange={(e) => setSearchParams({ ...searchParams, searchCnd: e.target.value })}
+                  onChange={(e) =>
+                    setSearchParams({
+                      ...searchParams,
+                      searchCnd: e.target.value,
+                    })
+                  }
                 >
                   <MenuItem value="0">작업장 코드</MenuItem>
                   <MenuItem value="1">작업장명</MenuItem>
@@ -202,7 +222,12 @@ const WorkplaceManagement: React.FC = () => {
                 size="small"
                 label="검색어"
                 value={searchParams.searchWrd}
-                onChange={(e) => setSearchParams({ ...searchParams, searchWrd: e.target.value })}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    searchWrd: e.target.value,
+                  })
+                }
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </Box>
@@ -212,7 +237,9 @@ const WorkplaceManagement: React.FC = () => {
                 <Select
                   value={searchParams.status}
                   label="상태"
-                  onChange={(e) => setSearchParams({ ...searchParams, status: e.target.value })}
+                  onChange={(e) =>
+                    setSearchParams({ ...searchParams, status: e.target.value })
+                  }
                 >
                   <MenuItem value="">전체</MenuItem>
                   <MenuItem value="ACTIVE">활성</MenuItem>
@@ -277,13 +304,19 @@ const WorkplaceManagement: React.FC = () => {
                     <TableCell>
                       <Chip
                         label={getStatusLabel(workplace.status || 'ACTIVE')}
-                        color={getStatusColor(workplace.status || 'ACTIVE') as any}
+                        color={
+                          getStatusColor(workplace.status || 'ACTIVE') as any
+                        }
                         size="small"
                       />
                     </TableCell>
                     <TableCell>{workplace.regDt}</TableCell>
                     <TableCell align="center">
-                      <Stack direction="row" spacing={1} justifyContent="center">
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="center"
+                      >
                         <IconButton
                           size="small"
                           color="primary"
@@ -319,8 +352,15 @@ const WorkplaceManagement: React.FC = () => {
       </Paper>
 
       {/* 작업장 등록/수정 다이얼로그 */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{dialogMode === 'create' ? '작업장 등록' : '작업장 수정'}</DialogTitle>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {dialogMode === 'create' ? '작업장 등록' : '작업장 수정'}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
@@ -412,7 +452,11 @@ const WorkplaceManagement: React.FC = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -427,7 +471,11 @@ interface WorkplaceWorkerDialogProps {
   onClose: () => void;
 }
 
-const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, workplace, onClose }) => {
+const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
+  open,
+  workplace,
+  onClose,
+}) => {
   const { useCallback } = React;
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [newWorker, setNewWorker] = useState<WorkplaceWorker>({
@@ -437,7 +485,11 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
     position: '',
     role: 'MEMBER',
   });
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -445,7 +497,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
 
   const fetchWorkers = useCallback(async () => {
     try {
-      const response = await workplaceService.getWorkplaceWorkers(workplace.workplaceId!);
+      const response = await workplaceService.getWorkplaceWorkers(
+        workplace.workplaceId!
+      );
       if (response.resultCode === '200' && response.result?.resultList) {
         setWorkers(response.result.resultList);
       }
@@ -471,7 +525,10 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
     }
 
     try {
-      await workplaceService.addWorkplaceWorker(workplace.workplaceId!, newWorker);
+      await workplaceService.addWorkplaceWorker(
+        workplace.workplaceId!,
+        newWorker
+      );
       showSnackbar('작업자가 추가되었습니다.', 'success');
       setNewWorker({
         workplaceId: workplace.workplaceId!,
@@ -490,7 +547,10 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
   const handleRemoveWorker = async (workplaceWorkerId: string) => {
     if (window.confirm('작업자를 제외하시겠습니까?')) {
       try {
-        await workplaceService.removeWorkplaceWorker(workplace.workplaceId!, workplaceWorkerId);
+        await workplaceService.removeWorkplaceWorker(
+          workplace.workplaceId!,
+          workplaceWorkerId
+        );
         showSnackbar('작업자가 제외되었습니다.', 'success');
         fetchWorkers();
       } catch (error) {
@@ -503,9 +563,7 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          작업자 관리 - {workplace.workplaceName}
-        </DialogTitle>
+        <DialogTitle>작업자 관리 - {workplace.workplaceName}</DialogTitle>
         <DialogContent>
           {/* 작업자 추가 폼 */}
           <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
@@ -513,14 +571,20 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
               <Typography variant="subtitle2" gutterBottom>
                 작업자 추가
               </Typography>
-              <Stack direction="row" spacing={2} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{ mt: 0.5, flexWrap: 'wrap' }}
+              >
                 <Box sx={{ flex: '1 1 150px' }}>
                   <TextField
                     fullWidth
                     size="small"
                     label="작업자 ID"
                     value={newWorker.workerId}
-                    onChange={(e) => setNewWorker({ ...newWorker, workerId: e.target.value })}
+                    onChange={(e) =>
+                      setNewWorker({ ...newWorker, workerId: e.target.value })
+                    }
                   />
                 </Box>
                 <Box sx={{ flex: '1 1 150px' }}>
@@ -529,7 +593,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
                     size="small"
                     label="작업자명"
                     value={newWorker.workerName}
-                    onChange={(e) => setNewWorker({ ...newWorker, workerName: e.target.value })}
+                    onChange={(e) =>
+                      setNewWorker({ ...newWorker, workerName: e.target.value })
+                    }
                   />
                 </Box>
                 <Box sx={{ flex: '1 1 120px' }}>
@@ -538,7 +604,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
                     size="small"
                     label="직책"
                     value={newWorker.position}
-                    onChange={(e) => setNewWorker({ ...newWorker, position: e.target.value })}
+                    onChange={(e) =>
+                      setNewWorker({ ...newWorker, position: e.target.value })
+                    }
                   />
                 </Box>
                 <Box sx={{ flex: '1 1 120px' }}>
@@ -547,7 +615,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
                     <Select
                       value={newWorker.role}
                       label="역할"
-                      onChange={(e) => setNewWorker({ ...newWorker, role: e.target.value })}
+                      onChange={(e) =>
+                        setNewWorker({ ...newWorker, role: e.target.value })
+                      }
                     >
                       <MenuItem value="LEADER">팀장</MenuItem>
                       <MenuItem value="MEMBER">팀원</MenuItem>
@@ -597,7 +667,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
                       <TableCell>
                         <Chip
                           label={worker.role === 'LEADER' ? '팀장' : '팀원'}
-                          color={worker.role === 'LEADER' ? 'primary' : 'default'}
+                          color={
+                            worker.role === 'LEADER' ? 'primary' : 'default'
+                          }
                           size="small"
                         />
                       </TableCell>
@@ -606,7 +678,9 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({ open, wor
                         <IconButton
                           size="small"
                           color="error"
-                          onClick={() => handleRemoveWorker(worker.workplaceWorkerId!)}
+                          onClick={() =>
+                            handleRemoveWorker(worker.workplaceWorkerId!)
+                          }
                         >
                           <DeleteIcon />
                         </IconButton>
