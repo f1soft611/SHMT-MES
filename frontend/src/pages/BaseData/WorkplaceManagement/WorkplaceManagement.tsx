@@ -364,12 +364,7 @@ const WorkplaceManagement: React.FC = () => {
           rows={workplaces}
           columns={columns}
           getRowId={(row) => row.workplaceId || ''}
-          pageSizeOptions={[5, 10, 25, 50]}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
-          }}
+          hideFooterPagination
           disableRowSelectionOnClick
           sx={{
             border: 'none',
@@ -383,21 +378,6 @@ const WorkplaceManagement: React.FC = () => {
           localeText={{
             noRowsLabel: '조회된 데이터가 없습니다',
             footerRowSelected: (count) => `${count}개 선택됨`,
-          }}
-          slotProps={{
-            pagination: {
-              labelRowsPerPage: '페이지당 행 수:',
-              labelDisplayedRows: ({
-                from,
-                to,
-                count,
-              }: {
-                from: number;
-                to: number;
-                count: number;
-              }) =>
-                `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
-            },
           }}
         />
       </Paper>
@@ -757,12 +737,7 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
               rows={workers}
               columns={workerColumns}
               getRowId={(row) => row.workplaceWorkerId || ''}
-              pageSizeOptions={[5, 10, 25]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-              }}
+              hideFooterPagination
               disableRowSelectionOnClick
               sx={{
                 border: 'none',
@@ -776,21 +751,6 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
               localeText={{
                 noRowsLabel: '등록된 작업자가 없습니다',
                 footerRowSelected: (count) => `${count}개 선택됨`,
-              }}
-              slotProps={{
-                pagination: {
-                  labelRowsPerPage: '페이지당 행 수:',
-                  labelDisplayedRows: ({
-                    from,
-                    to,
-                    count,
-                  }: {
-                    from: number;
-                    to: number;
-                    count: number;
-                  }) =>
-                    `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
-                },
               }}
             />
           </Paper>
