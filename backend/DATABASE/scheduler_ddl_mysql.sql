@@ -6,10 +6,10 @@ CREATE TABLE scheduler_config (
   cron_expression VARCHAR(100) NOT NULL,
   job_class_name VARCHAR(255) NOT NULL,
   is_enabled CHAR(1) NOT NULL DEFAULT 'Y',
-  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_by VARCHAR(20) NOT NULL,
-  updated_date DATETIME,
-  updated_by VARCHAR(20),
+  reg_dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reg_user_id VARCHAR(20) NOT NULL,
+  upd_dt DATETIME,
+  upd_user_id VARCHAR(20),
   PRIMARY KEY (scheduler_id),
   UNIQUE KEY uk_scheduler_name (scheduler_name)
 );
@@ -24,7 +24,7 @@ CREATE TABLE scheduler_history (
   status VARCHAR(20) NOT NULL,
   error_message TEXT,
   execution_time_ms BIGINT,
-  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reg_dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (history_id),
   KEY idx_scheduler_id (scheduler_id),
   KEY idx_start_time (start_time),

@@ -6,10 +6,10 @@ CREATE TABLE scheduler_config (
   cron_expression VARCHAR(100) NOT NULL,
   job_class_name VARCHAR(255) NOT NULL,
   is_enabled CHAR(1) NOT NULL DEFAULT 'Y',
-  created_date DATETIME NOT NULL DEFAULT GETDATE(),
-  created_by VARCHAR(20) NOT NULL,
-  updated_date DATETIME,
-  updated_by VARCHAR(20),
+  reg_dt DATETIME NOT NULL DEFAULT GETDATE(),
+  reg_user_id VARCHAR(20) NOT NULL,
+  upd_dt DATETIME,
+  upd_user_id VARCHAR(20),
   PRIMARY KEY (scheduler_id),
   CONSTRAINT uk_scheduler_name UNIQUE (scheduler_name)
 );
@@ -24,7 +24,7 @@ CREATE TABLE scheduler_history (
   status VARCHAR(20) NOT NULL,
   error_message TEXT,
   execution_time_ms BIGINT,
-  created_date DATETIME NOT NULL DEFAULT GETDATE(),
+  reg_dt DATETIME NOT NULL DEFAULT GETDATE(),
   PRIMARY KEY (history_id),
   CONSTRAINT fk_scheduler_history_config FOREIGN KEY (scheduler_id) 
     REFERENCES scheduler_config (scheduler_id) ON DELETE CASCADE
