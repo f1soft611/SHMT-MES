@@ -2,7 +2,8 @@ package egovframework.let.scheduler.mapper;
 
 import egovframework.let.scheduler.model.SchedulerHistory;
 import egovframework.let.scheduler.model.SchedulerHistoryVO;
-import egovframework.rte.psl.dataaccess.mapper.Mapper;
+import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,8 +13,8 @@ import java.util.List;
  * @since 2025.10.23
  * @version 1.0
  */
-@Mapper("schedulerHistoryDAO")
-public interface SchedulerHistoryDAO {
+@Repository("schedulerHistoryDAO")
+public class SchedulerHistoryDAO extends EgovAbstractMapper {
 
     /**
      * 스케쥴러 실행 이력 목록을 조회한다.
@@ -21,7 +22,9 @@ public interface SchedulerHistoryDAO {
      * @return 실행 이력 목록
      * @throws Exception
      */
-    List<SchedulerHistoryVO> selectSchedulerHistoryList(SchedulerHistoryVO searchVO) throws Exception;
+    public List<SchedulerHistoryVO> selectSchedulerHistoryList(SchedulerHistoryVO searchVO) throws Exception {
+        return selectList("SchedulerHistoryDAO.selectSchedulerHistoryList", searchVO);
+    }
 
     /**
      * 스케쥴러 실행 이력 총 개수를 조회한다.
@@ -29,7 +32,9 @@ public interface SchedulerHistoryDAO {
      * @return 실행 이력 총 개수
      * @throws Exception
      */
-    int selectSchedulerHistoryListCnt(SchedulerHistoryVO searchVO) throws Exception;
+    public int selectSchedulerHistoryListCnt(SchedulerHistoryVO searchVO) throws Exception {
+        return (Integer) selectOne("SchedulerHistoryDAO.selectSchedulerHistoryListCnt", searchVO);
+    }
 
     /**
      * 스케쥴러 실행 이력 상세정보를 조회한다.
@@ -37,19 +42,25 @@ public interface SchedulerHistoryDAO {
      * @return 실행 이력 정보
      * @throws Exception
      */
-    SchedulerHistory selectSchedulerHistoryDetail(Long historyId) throws Exception;
+    public SchedulerHistory selectSchedulerHistoryDetail(Long historyId) throws Exception {
+        return selectOne("SchedulerHistoryDAO.selectSchedulerHistoryDetail", historyId);
+    }
 
     /**
      * 스케쥴러 실행 이력을 등록한다.
      * @param history
      * @throws Exception
      */
-    void insertSchedulerHistory(SchedulerHistory history) throws Exception;
+    public void insertSchedulerHistory(SchedulerHistory history) throws Exception {
+        insert("SchedulerHistoryDAO.insertSchedulerHistory", history);
+    }
 
     /**
      * 스케쥴러 실행 이력을 수정한다.
      * @param history
      * @throws Exception
      */
-    void updateSchedulerHistory(SchedulerHistory history) throws Exception;
+    public void updateSchedulerHistory(SchedulerHistory history) throws Exception {
+        update("SchedulerHistoryDAO.updateSchedulerHistory", history);
+    }
 }
