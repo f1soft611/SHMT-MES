@@ -7,6 +7,7 @@ import egovframework.let.scheduler.domain.model.SchedulerHistory;
 import egovframework.let.scheduler.service.DynamicSchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -15,6 +16,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +37,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
     private final SchedulerConfigDAO schedulerConfigDAO;
     private final SchedulerHistoryDAO schedulerHistoryDAO;
+    private final ApplicationContext applicationContext;
     
     private TaskScheduler taskScheduler;
     private final Map<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
@@ -146,11 +149,76 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
     }
 
     private void executeJob(SchedulerConfig config) throws Exception {
-        // TODO: 실제 작업 클래스를 동적으로 로드하여 실행
-        // 현재는 샘플 로직으로 대체
-        log.info("스케쥴러 작업 실행: {} - {}", config.getSchedulerName(), config.getJobClassName());
+        String jobClassName = config.getJobClassName();
+        log.info("스케쥴러 작업 실행: {} - {}", config.getSchedulerName(), jobClassName);
         
-        // 샘플: 1초 대기
-        Thread.sleep(1000);
+        try {
+            // jobClassName 형식: egovframework.let.scheduler.service.ErpToMesInterfaceService 또는
+            //                   egovframework.let.scheduler.service.ErpToMesInterfaceService.executeInterface
+            
+            String serviceName;
+            String methodName = null;
+            
+            // 메서드명이 포함된 경우 분리
+            if (jobClassName.contains(".") && 
+                Character.isLowerCase(jobClassName.charAt(jobClassName.lastIndexOf('.') + 1))) {
+                int lastDotIndex = jobClassName.lastIndexOf('.');
+                serviceName = jobClassName.substring(0, lastDotIndex);
+                methodName = jobClassName.substring(lastDotIndex + 1);
+            } else {
+                serviceName = jobClassName;
+            }
+            
+            // 클래스 이름에서 서비스 빈 이름 추출
+            String beanName = getBeanNameFromClassName(serviceName);
+            
+            // Spring 컨텍스트에서 서비스 빈 조회
+            Object serviceBean = applicationContext.getBean(beanName);
+            
+            if (serviceBean == null) {
+                throw new IllegalArgumentException("서비스 빈을 찾을 수 없습니다: " + beanName);
+            }
+            
+            // 메서드 실행
+            if (methodName != null && !methodName.isEmpty()) {
+                // 특정 메서드 호출
+                Method method = serviceBean.getClass().getMethod(methodName);
+                method.invoke(serviceBean);
+                log.info("메서드 실행 완료: {}.{}", beanName, methodName);
+            } else {
+                // executeInterface 메서드를 기본으로 호출
+                try {
+                    Method executeMethod = serviceBean.getClass().getMethod("executeInterface");
+                    executeMethod.invoke(serviceBean);
+                    log.info("executeInterface 메서드 실행 완료: {}", beanName);
+                } catch (NoSuchMethodException e) {
+                    // execute 메서드 시도
+                    try {
+                        Method executeMethod = serviceBean.getClass().getMethod("execute");
+                        executeMethod.invoke(serviceBean);
+                        log.info("execute 메서드 실행 완료: {}", beanName);
+                    } catch (NoSuchMethodException e2) {
+                        throw new IllegalArgumentException(
+                            "서비스에 executeInterface() 또는 execute() 메서드가 없습니다: " + beanName);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("스케쥴러 작업 실행 실패: {}", config.getSchedulerName(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * 클래스 전체 경로에서 Spring Bean 이름을 추출
+     * 예: egovframework.let.scheduler.service.ErpToMesInterfaceService -> erpToMesInterfaceService
+     */
+    private String getBeanNameFromClassName(String className) {
+        // 클래스 전체 경로에서 마지막 클래스명만 추출
+        String simpleClassName = className.substring(className.lastIndexOf('.') + 1);
+        
+        // 첫 글자를 소문자로 변환하여 Bean 이름 생성
+        return Character.toLowerCase(simpleClassName.charAt(0)) + simpleClassName.substring(1);
     }
 }
