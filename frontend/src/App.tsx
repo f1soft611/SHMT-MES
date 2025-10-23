@@ -18,6 +18,7 @@ import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
 import InterfaceMonitor from './pages/Interface/InterfaceMonitor';
+import SchedulerManagement from './pages/Scheduler/SchedulerManagement';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
@@ -75,6 +76,10 @@ function App() {
                         <Route
                           path={URL.INTERFACE}
                           element={<InterfaceMonitor />}
+                        />
+                        <Route
+                          path={URL.SCHEDULER}
+                          element={<SchedulerManagement />}
                         />
                         <Route path={URL.ADMIN} element={<AdminDashboard />} />
                         <Route

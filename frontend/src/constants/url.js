@@ -7,6 +7,7 @@ const URL = {
   PRODUCTION_ORDERS: '/production-orders', //생산지시
   PRODUCTION_RESULTS: '/production-results', //생산실적
   INTERFACE: '/interface', //인터페이스
+  SCHEDULER: '/scheduler', //스케쥴러 관리
   ERROR: '/error', //오류 페이지
   NOT_FOUND: '/not-found', //페이지를 찾을 수 없음
   
