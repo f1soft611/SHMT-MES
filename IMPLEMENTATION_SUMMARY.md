@@ -64,7 +64,7 @@ backend/src/main/java/egovframework/let/scheduler/
 │   ├── SchedulerConfigVO.java                 # 설정 VO
 │   ├── SchedulerHistory.java                  # 이력 모델
 │   └── SchedulerHistoryVO.java                # 이력 VO
-└── InterfaceScheduler.java                    # 기존 샘플 (deprecated)
+└── README.md                                  # 사용자 가이드
 
 backend/src/main/resources/egovframework/mapper/let/scheduler/
 ├── SchedulerConfigMapper_SQL_mysql.xml        # 설정 MyBatis 매퍼

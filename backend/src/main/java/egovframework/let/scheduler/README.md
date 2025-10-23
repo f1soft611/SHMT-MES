@@ -123,8 +123,17 @@ source backend/DATABASE/scheduler_ddl_mysql.sql;
 
 ## 기존 샘플 스케쥴러
 
-기존의 `InterfaceScheduler.java`는 deprecated 처리되었습니다.
+기존의 정적 스케쥴러 시스템(InterfaceScheduler, InterfaceHistory 등)은 제거되었습니다.
 새로운 동적 스케쥴러 관리 시스템을 사용하세요.
+
+**제거된 파일들:**
+- `InterfaceScheduler.java` - 정적 @Scheduled 샘플
+- `InterfaceHistory.java`, `InterfaceHistoryVO.java` - 구 이력 모델
+- `InterfaceHistoryDAO.java` - 구 DAO
+- `EgovInterfaceHistoryService.java`, `ErpToMesInterfaceService.java` - 구 서비스
+- `InterfaceHistoryMapper_SQL_mssql.xml` - 구 매퍼
+
+모든 스케쥴러는 이제 Web UI를 통해 등록하고 관리합니다.
 
 ## 문의
 
