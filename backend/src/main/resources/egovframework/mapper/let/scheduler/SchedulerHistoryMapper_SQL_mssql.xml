@@ -13,7 +13,7 @@
         <result property="status" column="status"/>
         <result property="errorMessage" column="error_message"/>
         <result property="executionTimeMs" column="execution_time_ms"/>
-        <result property="createdDate" column="created_date"/>
+        <result property="regDt" column="reg_dt"/>
     </resultMap>
 
     <resultMap id="schedulerHistoryVOResultMap" type="egovframework.let.scheduler.domain.model.SchedulerHistoryVO">
@@ -25,7 +25,7 @@
         <result property="status" column="status"/>
         <result property="errorMessage" column="error_message"/>
         <result property="executionTimeMs" column="execution_time_ms"/>
-        <result property="createdDate" column="created_date"/>
+        <result property="regDt" column="reg_dt"/>
     </resultMap>
 
     <!-- 스케쥴러 실행 이력 목록 조회 -->
@@ -40,7 +40,7 @@
             status,
             error_message,
             execution_time_ms,
-            created_date
+            reg_dt
         FROM scheduler_history
         WHERE 1=1
         <if test="schedulerId != null">
@@ -89,7 +89,7 @@
             status,
             error_message,
             execution_time_ms,
-            created_date
+            reg_dt
         FROM scheduler_history
         WHERE history_id = #{historyId}
     </select>
@@ -107,7 +107,7 @@
             status,
             error_message,
             execution_time_ms,
-            created_date
+            reg_dt
         ) VALUES (
             #{schedulerId},
             #{schedulerName},
