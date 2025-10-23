@@ -21,16 +21,14 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
-import {
-  DataGrid,
-  GridColDef,
-} from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   People as PeopleIcon,
   Search as SearchIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { Workplace, WorkplaceWorker } from '../../../types/workplace';
 import workplaceService from '../../../services/workplaceService';
@@ -64,18 +62,25 @@ const WorkplaceManagement: React.FC = () => {
     useYn: 'Y',
   });
 
-  // 검색 상태
+  // 실제 검색에 사용되는 파라미터
   const [searchParams, setSearchParams] = useState({
     searchCnd: '1',
     searchWrd: '',
     status: '',
   });
 
-  // 작업장 목록 조회
+  // 입력 필드용 상태 (화면 입력용)
+  const [inputValues, setInputValues] = useState({
+    searchCnd: '1',
+    searchWrd: '',
+    status: '',
+  });
+
+  // 작업장 목록 조회 (searchParams 의존성으로 자동 실행)
   const fetchWorkplaces = useCallback(async () => {
     try {
       const response = await workplaceService.getWorkplaceList(searchParams);
-      if (response.resultCode === '200' && response.result?.resultList) {
+      if (response.resultCode === 200 && response.result?.resultList) {
         setWorkplaces(response.result.resultList);
       }
     } catch (error) {
@@ -84,6 +89,7 @@ const WorkplaceManagement: React.FC = () => {
     }
   }, [searchParams]);
 
+  // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
     fetchWorkplaces();
   }, [fetchWorkplaces]);
@@ -94,6 +100,30 @@ const WorkplaceManagement: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  // 검색 실행 (입력값을 검색 파라미터로 복사)
+  const handleSearch = () => {
+    setSearchParams({ ...inputValues });
+  };
+
+  // 검색 조건 초기화
+  const handleReset = () => {
+    const resetValues = {
+      searchCnd: '1',
+      searchWrd: '',
+      status: '',
+    };
+    setInputValues(resetValues);
+    setSearchParams(resetValues);
+  };
+
+  // 입력 필드 변경 핸들러
+  const handleInputChange = (field: string, value: string) => {
+    setInputValues({
+      ...inputValues,
+      [field]: value,
+    });
   };
 
   const handleOpenCreateDialog = () => {
@@ -127,13 +157,18 @@ const WorkplaceManagement: React.FC = () => {
   const handleSave = async () => {
     try {
       if (dialogMode === 'create') {
-        await workplaceService.createWorkplace(formData);
-        showSnackbar('작업장이 등록되었습니다.', 'success');
+        const result = await workplaceService.createWorkplace(formData);
+        if (result.resultCode === 200) {
+          showSnackbar('작업장이 등록되었습니다.', 'success');
+        } else {
+          showSnackbar(result.result.message, 'error');
+        }
       } else {
         await workplaceService.updateWorkplace(formData.workplaceId!, formData);
         showSnackbar('작업장이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
+      // 저장 후 현재 검색 조건으로 다시 조회
       fetchWorkplaces();
     } catch (error) {
       console.error('Failed to save workplace:', error);
@@ -146,6 +181,7 @@ const WorkplaceManagement: React.FC = () => {
       try {
         await workplaceService.deleteWorkplace(workplaceId);
         showSnackbar('작업장이 삭제되었습니다.', 'success');
+        // 삭제 후 현재 검색 조건으로 다시 조회
         fetchWorkplaces();
       } catch (error) {
         console.error('Failed to delete workplace:', error);
@@ -162,10 +198,6 @@ const WorkplaceManagement: React.FC = () => {
   const handleCloseWorkerDialog = () => {
     setOpenWorkerDialog(false);
     setSelectedWorkplace(null);
-  };
-
-  const handleSearch = () => {
-    fetchWorkplaces();
   };
 
   const getStatusColor = (status: string) => {
@@ -234,32 +266,41 @@ const WorkplaceManagement: React.FC = () => {
       headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleOpenWorkerDialog(params.row)}
-            title="작업자 관리"
-          >
-            <PeopleIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleOpenEditDialog(params.row)}
-            title="수정"
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.workplaceId!)}
-            title="삭제"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenWorkerDialog(params.row)}
+              title="작업자 관리"
+            >
+              <PeopleIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenEditDialog(params.row)}
+              title="수정"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.workplaceId!)}
+              title="삭제"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       ),
     },
   ];
@@ -287,13 +328,10 @@ const WorkplaceManagement: React.FC = () => {
               <FormControl fullWidth size="small">
                 <InputLabel>검색 조건</InputLabel>
                 <Select
-                  value={searchParams.searchCnd}
+                  value={inputValues.searchCnd}
                   label="검색 조건"
                   onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      searchCnd: e.target.value,
-                    })
+                    handleInputChange('searchCnd', e.target.value)
                   }
                 >
                   <MenuItem value="0">작업장 코드</MenuItem>
@@ -302,30 +340,26 @@ const WorkplaceManagement: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
+
             <Box sx={{ flex: '1 1 200px' }}>
               <TextField
                 fullWidth
                 size="small"
                 label="검색어"
-                value={searchParams.searchWrd}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    searchWrd: e.target.value,
-                  })
-                }
+                value={inputValues.searchWrd}
+                onChange={(e) => handleInputChange('searchWrd', e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="검색어를 입력하세요"
               />
             </Box>
+
             <Box sx={{ flex: '1 1 150px' }}>
               <FormControl fullWidth size="small">
                 <InputLabel>상태</InputLabel>
                 <Select
-                  value={searchParams.status}
+                  value={inputValues.status}
                   label="상태"
-                  onChange={(e) =>
-                    setSearchParams({ ...searchParams, status: e.target.value })
-                  }
+                  onChange={(e) => handleInputChange('status', e.target.value)}
                 >
                   <MenuItem value="">전체</MenuItem>
                   <MenuItem value="ACTIVE">활성</MenuItem>
@@ -333,6 +367,7 @@ const WorkplaceManagement: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
+
             <Box sx={{ flex: '0 0 120px' }}>
               <Button
                 fullWidth
@@ -343,6 +378,18 @@ const WorkplaceManagement: React.FC = () => {
                 검색
               </Button>
             </Box>
+
+            {/* <Box sx={{ flex: '0 0 100px' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleReset}
+              >
+                초기화
+              </Button>
+            </Box> */}
+
             <Box sx={{ flex: '0 0 150px' }}>
               <Button
                 fullWidth
@@ -460,10 +507,10 @@ const WorkplaceManagement: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>취소</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
             저장
           </Button>
+          <Button onClick={handleCloseDialog}>취소</Button>
         </DialogActions>
       </Dialog>
 
@@ -531,7 +578,7 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
       const response = await workplaceService.getWorkplaceWorkers(
         workplace.workplaceId!
       );
-      if (response.resultCode === '200' && response.result?.resultList) {
+      if (response.resultCode === 200 && response.result?.resultList) {
         setWorkers(response.result.resultList);
       }
     } catch (error) {
@@ -642,13 +689,22 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
       headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
-        <IconButton
-          size="small"
-          color="error"
-          onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
         >
-          <DeleteIcon />
-        </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Box>
       ),
     },
   ];
