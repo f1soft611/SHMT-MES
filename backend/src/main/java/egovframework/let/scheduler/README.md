@@ -73,9 +73,14 @@
 
 ### 1. 데이터베이스 설정
 ```sql
--- backend/DATABASE/scheduler_ddl_mysql.sql 파일을 실행하여 테이블을 생성합니다.
-source backend/DATABASE/scheduler_ddl_mysql.sql;
+-- 사용 중인 데이터베이스에 맞는 DDL 파일을 실행하여 테이블을 생성합니다.
+-- MySQL: backend/DATABASE/scheduler_ddl_mysql.sql
+-- MSSQL: backend/DATABASE/scheduler_ddl_mssql.sql (별도 생성 필요)
 ```
+
+**지원하는 데이터베이스:**
+- MySQL (Mapper: SchedulerConfigMapper_SQL_mysql.xml, SchedulerHistoryMapper_SQL_mysql.xml)
+- MS SQL Server (Mapper: SchedulerConfigMapper_SQL_mssql.xml, SchedulerHistoryMapper_SQL_mssql.xml)
 
 ### 2. 스케쥴러 등록
 1. 웹 UI에서 `/scheduler` 경로로 접속합니다.
@@ -105,7 +110,7 @@ source backend/DATABASE/scheduler_ddl_mysql.sql;
 ### Backend
 - **Controller**: REST API 엔드포인트 제공
 - **Service**: 비즈니스 로직 처리
-- **DAO/Mapper**: 데이터베이스 접근
+- **DAO/Repository**: 데이터베이스 접근 (EgovAbstractMapper 상속)
 - **DynamicSchedulerService**: 동적 스케쥴러 관리 및 실행
 
 ### Frontend
