@@ -110,7 +110,7 @@ const SchedulerManagement: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Box
         sx={{
           display: 'flex',
@@ -119,9 +119,10 @@ const SchedulerManagement: React.FC = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h4" component="h1">
-          ERP 연동 스케쥴러
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">스케쥴러 관리</Typography>
+        </Box>
+
         <Box>
           <Button
             variant="outlined"

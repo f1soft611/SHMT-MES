@@ -137,7 +137,7 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       ),
     },
     {
-      field: 'createdDate',
+      field: 'regDt',
       headerName: '등록일시',
       width: 180,
       align: 'center',
@@ -192,7 +192,7 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
         </Alert>
       )}
 
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, ml: 2 }}>
         <TextField
           size="small"
           placeholder="스케쥴러명 또는 설명으로 검색"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
+  Stack,
   Typography,
   Button,
   Table,
@@ -314,12 +315,13 @@ const UserManagement: React.FC = () => {
 
         {/* 검색 영역 */}
         <Paper sx={{ p: 2, mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, sm: 3 }}>
+          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ flex: '1 1 150px' }}>
               <FormControl fullWidth size="small">
                 <InputLabel>검색조건</InputLabel>
                 <Select
                   value={searchParams.searchCnd}
+                  label="검색 조건"
                   onChange={(e) =>
                     setSearchParams({
                       ...searchParams,
@@ -334,8 +336,8 @@ const UserManagement: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            </Box>
+            <Box sx={{ flex: '1 1 150px' }}>
               <TextField
                 fullWidth
                 size="small"
@@ -349,19 +351,18 @@ const UserManagement: React.FC = () => {
                 }
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            </Box>
+            <Box sx={{ flex: '1 1 150px' }}>
               <Button
                 variant="contained"
                 startIcon={<SearchIcon />}
                 onClick={handleSearch}
                 disabled={loading}
-                fullWidth
               >
                 검색
               </Button>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Paper>
 
         {/* 사용자 목록 */}

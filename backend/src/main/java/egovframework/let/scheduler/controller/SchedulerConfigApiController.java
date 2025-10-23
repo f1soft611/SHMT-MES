@@ -128,7 +128,7 @@ public class SchedulerConfigApiController {
                                      @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
 
-        scheduler.setCreatedBy(user.getId());
+        scheduler.setRegUserId(user.getId());
         schedulerConfigService.insertScheduler(scheduler);
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -157,7 +157,7 @@ public class SchedulerConfigApiController {
             throws Exception {
 
         scheduler.setSchedulerId(schedulerId);
-        scheduler.setUpdatedBy(user.getId());
+        scheduler.setUpdUserId(user.getId());
         schedulerConfigService.updateScheduler(scheduler);
 
         Map<String, Object> resultMap = new HashMap<>();

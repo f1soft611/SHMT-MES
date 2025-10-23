@@ -10,11 +10,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import {
-  DataGrid,
-  GridColDef,
-  GridPaginationModel,
-} from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import { useQuery } from '@tanstack/react-query';
 import { schedulerService } from '../../services/schedulerService';
@@ -103,14 +99,14 @@ const SchedulerHistoryList: React.FC = () => {
     {
       field: 'startTime',
       headerName: '시작시간',
-      width: 180,
+      width: 190,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'endTime',
       headerName: '종료시간',
-      width: 180,
+      width: 190,
       align: 'center',
       headerAlign: 'center',
     },
@@ -177,7 +173,7 @@ const SchedulerHistoryList: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+      <Box sx={{ mb: 2, ml: 2, display: 'flex', gap: 2 }}>
         <TextField
           size="small"
           placeholder="스케쥴러명 또는 에러 메시지로 검색"

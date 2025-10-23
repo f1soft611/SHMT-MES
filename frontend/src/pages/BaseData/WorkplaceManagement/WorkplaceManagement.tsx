@@ -318,68 +318,19 @@ const WorkplaceManagement: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h5">작업장 관리</Typography>
         </Box>
-      </Box>
 
-      {/* 검색 영역 */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ flex: '1 1 200px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>검색 조건</InputLabel>
-                <Select
-                  value={inputValues.searchCnd}
-                  label="검색 조건"
-                  onChange={(e) =>
-                    handleInputChange('searchCnd', e.target.value)
-                  }
-                >
-                  <MenuItem value="0">작업장 코드</MenuItem>
-                  <MenuItem value="1">작업장명</MenuItem>
-                  <MenuItem value="2">위치</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreateDialog}
+          >
+            작업장 등록
+          </Button>
+        </Box>
 
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="검색어"
-                value={inputValues.searchWrd}
-                onChange={(e) => handleInputChange('searchWrd', e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="검색어를 입력하세요"
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 150px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>상태</InputLabel>
-                <Select
-                  value={inputValues.status}
-                  label="상태"
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="ACTIVE">활성</MenuItem>
-                  <MenuItem value="INACTIVE">비활성</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ flex: '0 0 120px' }}>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<SearchIcon />}
-                onClick={handleSearch}
-              >
-                검색
-              </Button>
-            </Box>
-
-            {/* <Box sx={{ flex: '0 0 100px' }}>
+        {/* <Box sx={{ flex: '0 0 100px' }}>
               <Button
                 fullWidth
                 variant="outlined"
@@ -389,21 +340,64 @@ const WorkplaceManagement: React.FC = () => {
                 초기화
               </Button>
             </Box> */}
+      </Box>
 
-            <Box sx={{ flex: '0 0 150px' }}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleOpenCreateDialog}
+      {/* 검색 영역 */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ flex: '1 1 150px' }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>검색 조건</InputLabel>
+              <Select
+                value={inputValues.searchCnd}
+                label="검색 조건"
+                onChange={(e) => handleInputChange('searchCnd', e.target.value)}
               >
-                작업장 등록
-              </Button>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+                <MenuItem value="0">작업장 코드</MenuItem>
+                <MenuItem value="1">작업장명</MenuItem>
+                <MenuItem value="2">위치</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box sx={{ flex: '1 1 150px' }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>상태</InputLabel>
+              <Select
+                value={inputValues.status}
+                label="상태"
+                onChange={(e) => handleInputChange('status', e.target.value)}
+              >
+                <MenuItem value="">전체</MenuItem>
+                <MenuItem value="ACTIVE">활성</MenuItem>
+                <MenuItem value="INACTIVE">비활성</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box sx={{ flex: '1 1 200px' }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="검색어"
+              value={inputValues.searchWrd}
+              onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="검색어를 입력하세요"
+            />
+          </Box>
+
+          <Box sx={{ flex: '1 1 150px' }}>
+            <Button
+              variant="contained"
+              startIcon={<SearchIcon />}
+              onClick={handleSearch}
+            >
+              검색
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
 
       {/* 작업장 목록 */}
       <Paper sx={{ height: 600, width: '100%' }}>

@@ -238,15 +238,15 @@ const SchedulerForm: React.FC<SchedulerFormProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={mutation.isPending}>
-          취소
-        </Button>
         <Button
           onClick={handleSubmit(onSubmit)}
           variant="contained"
           disabled={mutation.isPending || isLoadingDetail}
         >
           {mutation.isPending ? <CircularProgress size={24} /> : '저장'}
+        </Button>
+        <Button onClick={handleClose} disabled={mutation.isPending}>
+          취소
         </Button>
       </DialogActions>
     </Dialog>
