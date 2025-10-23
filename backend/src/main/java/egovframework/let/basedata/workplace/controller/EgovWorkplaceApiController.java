@@ -78,6 +78,7 @@ public class EgovWorkplaceApiController {
         workplaceVO.setLastIndex(paginationInfo.getLastRecordIndex());
         workplaceVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
 
+        System.out.println(workplaceVO);
         Map<String, Object> resultMap = workplaceService.selectWorkplaceList(workplaceVO);
         int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
         paginationInfo.setTotalRecordCount(totCnt);
@@ -133,6 +134,16 @@ public class EgovWorkplaceApiController {
     public ResultVO insertWorkplace(
             @RequestBody Workplace workplace,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        // 작업장 코드 중복 체크
+        if (workplaceService.isWorkplaceCodeExists(workplace.getWorkplaceCode())) {
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("message", "이미 존재하는 작업장 코드입니다.");
+            errorMap.put("duplicateField", "workplaceCode");
+            errorMap.put("duplicateValue", workplace.getWorkplaceCode());
+
+            return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+        }
 
         workplace.setRegUserId(user.getUniqId());
         workplaceService.insertWorkplace(workplace);

@@ -1,4 +1,4 @@
-package egovframework.let.scheduler.model;
+package egovframework.let.scheduler.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

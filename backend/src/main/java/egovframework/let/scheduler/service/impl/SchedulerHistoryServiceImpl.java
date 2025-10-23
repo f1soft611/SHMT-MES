@@ -1,8 +1,8 @@
 package egovframework.let.scheduler.service.impl;
 
-import egovframework.let.scheduler.mapper.SchedulerHistoryDAO;
-import egovframework.let.scheduler.model.SchedulerHistory;
-import egovframework.let.scheduler.model.SchedulerHistoryVO;
+import egovframework.let.scheduler.domain.repository.SchedulerHistoryDAO;
+import egovframework.let.scheduler.domain.model.SchedulerHistory;
+import egovframework.let.scheduler.domain.model.SchedulerHistoryVO;
 import egovframework.let.scheduler.service.SchedulerHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

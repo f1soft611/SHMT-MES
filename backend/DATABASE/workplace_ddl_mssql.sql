@@ -131,3 +131,37 @@ END
 GO
 
 -- 샘플 데이터 삽입 (테스트용)
+-- 샘플 데이터 삽입
+IF NOT EXISTS (SELECT 1 FROM TB_WORKPLACE WHERE WORKPLACE_ID = 'WP001')
+BEGIN
+INSERT INTO TB_WORKPLACE (
+    WORKPLACE_ID, WORKPLACE_CODE, WORKPLACE_NAME, DESCRIPTION,
+    LOCATION, WORKPLACE_TYPE, STATUS, USE_YN, REG_USER_ID
+) VALUES
+      ('WP001', 'WP001', '1공장 조립라인', '자동차 부품 조립 작업장', '1공장 1층', '조립', 'ACTIVE', 'Y', 'socra710'),
+      ('WP002', 'WP002', '2공장 용접부', '금속 용접 전문 작업장', '2공장 2층', '용접', 'ACTIVE', 'Y', 'socra710'),
+      ('WP003', 'WP003', '3공장 도장부', '표면 도장 처리 작업장', '3공장 1층', '도장', 'INACTIVE', 'N', 'socra710'),
+      ('WP004', 'WP004', '품질검사실', '최종 품질 검사 및 테스트', '본관 3층', '검사', 'ACTIVE', 'Y', 'socra710'),
+      ('WP005', 'WP005', '창고관리실', '원자재 및 완제품 보관', '창고동', '보관', 'ACTIVE', 'Y', 'socra710');
+END
+GO
+
+-- 작업자 샘플 데이터
+IF NOT EXISTS (SELECT 1 FROM TB_WORKPLACE_WORKER WHERE WORKPLACE_WORKER_ID = 'WPW001')
+BEGIN
+INSERT INTO TB_WORKPLACE_WORKER (
+    WORKPLACE_WORKER_ID, WORKPLACE_ID, WORKER_ID, WORKER_NAME,
+    POSITION, ROLE, USE_YN, REG_USER_ID
+) VALUES
+      ('WPW001', 'WP001', 'EMP001', '김철수', '조립팀장', 'LEADER', 'Y', 'socra710'),
+      ('WPW002', 'WP001', 'EMP002', '이영희', '조립기사', 'MEMBER', 'Y', 'socra710'),
+      ('WPW003', 'WP001', 'EMP003', '박민수', '조립기사', 'MEMBER', 'Y', 'socra710'),
+      ('WPW004', 'WP002', 'EMP004', '정용접', '용접팀장', 'LEADER', 'Y', 'socra710'),
+      ('WPW005', 'WP002', 'EMP005', '강용접', '용접기사', 'MEMBER', 'Y', 'socra710'),
+      ('WPW006', 'WP003', 'EMP006', '최도장', '도장팀장', 'LEADER', 'Y', 'socra710'),
+      ('WPW007', 'WP004', 'EMP007', '한품질', '품질검사원', 'LEADER', 'Y', 'socra710'),
+      ('WPW008', 'WP004', 'EMP008', '유검사', '품질검사원', 'MEMBER', 'Y', 'socra710'),
+      ('WPW009', 'WP004', 'EMP009', '임테스트', '테스트기사', 'MEMBER', 'Y', 'socra710'),
+      ('WPW010', 'WP005', 'EMP010', '조창고', '창고관리자', 'LEADER', 'Y', 'socra710');
+END
+GO

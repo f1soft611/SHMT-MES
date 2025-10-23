@@ -52,7 +52,7 @@ public class WorkplaceWorker implements Serializable {
 	private String role = "";
 
 	@Schema(description = "사용 여부 (Y/N)")
-	private String useYn = "";
+	private String useYn = "Y";
 
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";

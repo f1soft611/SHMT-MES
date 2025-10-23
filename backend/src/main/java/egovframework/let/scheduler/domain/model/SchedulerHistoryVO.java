@@ -1,4 +1,4 @@
-package egovframework.let.scheduler.model;
+package egovframework.let.scheduler.domain.model;
 
 import egovframework.com.cmm.ComDefaultVO;
 import io.swagger.v3.oas.annotations.media.Schema;

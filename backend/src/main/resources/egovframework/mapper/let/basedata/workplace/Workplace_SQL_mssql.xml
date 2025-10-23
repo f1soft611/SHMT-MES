@@ -19,30 +19,30 @@
 
 	<select id="WorkplaceDAO.selectWorkplaceList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultMap="workplaceResult">
 		SELECT
-			WORKPLACE_ID,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			DESCRIPTION,
-			LOCATION,
-			WORKPLACE_TYPE,
-			STATUS,
-			USE_YN,
-			REG_USER_ID,
-			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
-			UPD_USER_ID,
-			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+		WORKPLACE_ID,
+		WORKPLACE_CODE,
+		WORKPLACE_NAME,
+		DESCRIPTION,
+		LOCATION,
+		WORKPLACE_TYPE,
+		STATUS,
+		USE_YN,
+		REG_USER_ID,
+		CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+		UPD_USER_ID,
+		CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
 		FROM TB_WORKPLACE
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '0'">
-					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 0">
+					AND WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '1'">
-					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 1">
+					AND WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
-					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 2">
+					AND LOCATION LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -54,7 +54,8 @@
 		</if>
 		ORDER BY REG_DT DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
-			LIMIT #{firstIndex}, #{recordCountPerPage}
+			OFFSET #{firstIndex} ROWS
+			FETCH NEXT #{recordCountPerPage} ROWS ONLY
 		</if>
 	</select>
 
@@ -65,13 +66,13 @@
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '0'">
-					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+					AND WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '1'">
-					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+					AND WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2'">
-					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+					AND LOCATION LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -94,9 +95,9 @@
 			STATUS,
 			USE_YN,
 			REG_USER_ID,
-			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
 			UPD_USER_ID,
-			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
 		FROM TB_WORKPLACE
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</select>
@@ -114,17 +115,17 @@
 			REG_USER_ID,
 			REG_DT
 		) VALUES (
-			#{workplaceId},
-			#{workplaceCode},
-			#{workplaceName},
-			#{description},
-			#{location},
-			#{workplaceType},
-			IFNULL(#{status}, 'ACTIVE'),
-			IFNULL(#{useYn}, 'Y'),
-			#{regUserId},
-			NOW()
-		)
+					 #{workplaceId},
+					 #{workplaceCode},
+					 #{workplaceName},
+					 #{description},
+					 #{location},
+					 #{workplaceType},
+					 ISNULL(#{status}, 'ACTIVE'),
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
 	</insert>
 
 	<update id="WorkplaceDAO.updateWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
@@ -138,7 +139,7 @@
 			STATUS = #{status},
 			USE_YN = #{useYn},
 			UPD_USER_ID = #{updUserId},
-			UPD_DT = NOW()
+			UPD_DT = GETDATE()
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</update>
 
@@ -146,5 +147,20 @@
 		DELETE FROM TB_WORKPLACE
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</delete>
+
+	<!-- 작업장 코드 중복 체크 -->
+	<select id="WorkplaceDAO.selectWorkplaceCodeCheck" parameterType="string" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_WORKPLACE
+		WHERE WORKPLACE_CODE = #{workplaceCode}
+	</select>
+
+	<!-- 작업장 코드 중복 체크 (수정 시) -->
+	<select id="WorkplaceDAO.selectWorkplaceCodeCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_WORKPLACE
+		WHERE WORKPLACE_CODE = #{workplaceCode}
+		  AND WORKPLACE_ID != #{workplaceId}
+	</select>
 
 </mapper>

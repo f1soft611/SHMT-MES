@@ -1,22 +1,20 @@
-package egovframework.let.scheduler.model;
+package egovframework.let.scheduler.domain.model;
 
+import egovframework.com.cmm.ComDefaultVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import java.io.Serializable;
 
 /**
- * 스케쥴러 설정 모델
+ * 스케쥴러 설정 검색 VO
  * @author AI Assistant
  * @since 2025.10.23
  * @version 1.0
  */
-@Schema(description = "스케쥴러 설정 모델")
+@Schema(description = "스케쥴러 설정 검색 VO")
 @Getter
 @Setter
-public class SchedulerConfig implements Serializable {
+public class SchedulerConfigVO extends ComDefaultVO {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,9 +47,4 @@ public class SchedulerConfig implements Serializable {
 
     @Schema(description = "수정자")
     private String updatedBy;
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
 }

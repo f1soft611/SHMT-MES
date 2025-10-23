@@ -1,7 +1,7 @@
-package egovframework.let.scheduler.mapper;
+package egovframework.let.scheduler.domain.repository;
 
-import egovframework.let.scheduler.model.SchedulerHistory;
-import egovframework.let.scheduler.model.SchedulerHistoryVO;
+import egovframework.let.scheduler.domain.model.SchedulerHistory;
+import egovframework.let.scheduler.domain.model.SchedulerHistoryVO;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 

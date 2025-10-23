@@ -1,7 +1,7 @@
 package egovframework.let.scheduler.service;
 
-import egovframework.let.scheduler.model.SchedulerHistory;
-import egovframework.let.scheduler.model.SchedulerHistoryVO;
+import egovframework.let.scheduler.domain.model.SchedulerHistory;
+import egovframework.let.scheduler.domain.model.SchedulerHistoryVO;
 
 import java.util.Map;
 

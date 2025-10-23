@@ -89,4 +89,21 @@ public interface EgovWorkplaceService {
 	 * @exception Exception
 	 */
 	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception;
+
+	/**
+	 * 작업장 코드 존재 여부 확인
+	 * @param workplaceCode 작업장 코드
+	 * @return 존재 여부
+	 * @throws Exception
+	 */
+	boolean isWorkplaceCodeExists(String workplaceCode) throws Exception;
+
+	/**
+	 * 작업장 코드 중복 체크 (수정 시)
+	 * @param workplaceId 작업장 ID
+	 * @param workplaceCode 작업장 코드
+	 * @return 중복 여부
+	 * @throws Exception
+	 */
+	boolean isWorkplaceCodeExistsForUpdate(String workplaceId, String workplaceCode) throws Exception;
 }

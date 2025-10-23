@@ -1,8 +1,8 @@
 package egovframework.let.scheduler.service.impl;
 
-import egovframework.let.scheduler.mapper.SchedulerConfigDAO;
-import egovframework.let.scheduler.model.SchedulerConfig;
-import egovframework.let.scheduler.model.SchedulerConfigVO;
+import egovframework.let.scheduler.domain.repository.SchedulerConfigDAO;
+import egovframework.let.scheduler.domain.model.SchedulerConfig;
+import egovframework.let.scheduler.domain.model.SchedulerConfigVO;
 import egovframework.let.scheduler.service.DynamicSchedulerService;
 import egovframework.let.scheduler.service.SchedulerConfigService;
 import lombok.RequiredArgsConstructor;

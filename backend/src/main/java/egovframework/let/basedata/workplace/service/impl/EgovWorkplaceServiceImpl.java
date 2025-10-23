@@ -128,4 +128,20 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception {
 		workplaceWorkerDAO.deleteWorkplaceWorker(workplaceWorkerId);
 	}
+
+	@Override
+	public boolean isWorkplaceCodeExists(String workplaceCode) throws Exception {
+		int count = workplaceDAO.selectWorkplaceCodeCheck(workplaceCode);
+		return count > 0;
+	}
+
+	@Override
+	public boolean isWorkplaceCodeExistsForUpdate(String workplaceId, String workplaceCode) throws Exception {
+		Map<String, String> params = new HashMap<>();
+		params.put("workplaceId", workplaceId);
+		params.put("workplaceCode", workplaceCode);
+
+		int count = workplaceDAO.selectWorkplaceCodeCheckForUpdate(params);
+		return count > 0;
+	}
 }
