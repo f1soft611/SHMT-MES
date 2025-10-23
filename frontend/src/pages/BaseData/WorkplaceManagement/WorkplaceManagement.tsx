@@ -11,12 +11,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   Chip,
@@ -27,12 +21,14 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   People as PeopleIcon,
   Search as SearchIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { Workplace, WorkplaceWorker } from '../../../types/workplace';
 import workplaceService from '../../../services/workplaceService';
@@ -66,18 +62,25 @@ const WorkplaceManagement: React.FC = () => {
     useYn: 'Y',
   });
 
-  // 검색 상태
+  // 실제 검색에 사용되는 파라미터
   const [searchParams, setSearchParams] = useState({
     searchCnd: '1',
     searchWrd: '',
     status: '',
   });
 
-  // 작업장 목록 조회
+  // 입력 필드용 상태 (화면 입력용)
+  const [inputValues, setInputValues] = useState({
+    searchCnd: '1',
+    searchWrd: '',
+    status: '',
+  });
+
+  // 작업장 목록 조회 (searchParams 의존성으로 자동 실행)
   const fetchWorkplaces = useCallback(async () => {
     try {
       const response = await workplaceService.getWorkplaceList(searchParams);
-      if (response.resultCode === '200' && response.result?.resultList) {
+      if (response.resultCode === 200 && response.result?.resultList) {
         setWorkplaces(response.result.resultList);
       }
     } catch (error) {
@@ -86,6 +89,7 @@ const WorkplaceManagement: React.FC = () => {
     }
   }, [searchParams]);
 
+  // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
     fetchWorkplaces();
   }, [fetchWorkplaces]);
@@ -96,6 +100,30 @@ const WorkplaceManagement: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  // 검색 실행 (입력값을 검색 파라미터로 복사)
+  const handleSearch = () => {
+    setSearchParams({ ...inputValues });
+  };
+
+  // 검색 조건 초기화
+  const handleReset = () => {
+    const resetValues = {
+      searchCnd: '1',
+      searchWrd: '',
+      status: '',
+    };
+    setInputValues(resetValues);
+    setSearchParams(resetValues);
+  };
+
+  // 입력 필드 변경 핸들러
+  const handleInputChange = (field: string, value: string) => {
+    setInputValues({
+      ...inputValues,
+      [field]: value,
+    });
   };
 
   const handleOpenCreateDialog = () => {
@@ -129,13 +157,18 @@ const WorkplaceManagement: React.FC = () => {
   const handleSave = async () => {
     try {
       if (dialogMode === 'create') {
-        await workplaceService.createWorkplace(formData);
-        showSnackbar('작업장이 등록되었습니다.', 'success');
+        const result = await workplaceService.createWorkplace(formData);
+        if (result.resultCode === 200) {
+          showSnackbar('작업장이 등록되었습니다.', 'success');
+        } else {
+          showSnackbar(result.result.message, 'error');
+        }
       } else {
         await workplaceService.updateWorkplace(formData.workplaceId!, formData);
         showSnackbar('작업장이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
+      // 저장 후 현재 검색 조건으로 다시 조회
       fetchWorkplaces();
     } catch (error) {
       console.error('Failed to save workplace:', error);
@@ -148,6 +181,7 @@ const WorkplaceManagement: React.FC = () => {
       try {
         await workplaceService.deleteWorkplace(workplaceId);
         showSnackbar('작업장이 삭제되었습니다.', 'success');
+        // 삭제 후 현재 검색 조건으로 다시 조회
         fetchWorkplaces();
       } catch (error) {
         console.error('Failed to delete workplace:', error);
@@ -166,10 +200,6 @@ const WorkplaceManagement: React.FC = () => {
     setSelectedWorkplace(null);
   };
 
-  const handleSearch = () => {
-    fetchWorkplaces();
-  };
-
   const getStatusColor = (status: string) => {
     return status === 'ACTIVE' ? 'success' : 'default';
   };
@@ -177,6 +207,103 @@ const WorkplaceManagement: React.FC = () => {
   const getStatusLabel = (status: string) => {
     return status === 'ACTIVE' ? '활성' : '비활성';
   };
+
+  const columns: GridColDef[] = [
+    {
+      field: 'workplaceCode',
+      headerName: '작업장 코드',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'workplaceName',
+      headerName: '작업장명',
+      flex: 1.2,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'location',
+      headerName: '위치',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'workplaceType',
+      headerName: '타입',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'status',
+      headerName: '상태',
+      flex: 0.8,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getStatusLabel(params.value || 'ACTIVE')}
+          color={getStatusColor(params.value || 'ACTIVE') as any}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'regDt',
+      headerName: '등록일',
+      flex: 1.2,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: '관리',
+      flex: 1.2,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenWorkerDialog(params.row)}
+              title="작업자 관리"
+            >
+              <PeopleIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenEditDialog(params.row)}
+              title="수정"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.workplaceId!)}
+              title="삭제"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+      ),
+    },
+  ];
 
   return (
     <Box>
@@ -201,13 +328,10 @@ const WorkplaceManagement: React.FC = () => {
               <FormControl fullWidth size="small">
                 <InputLabel>검색 조건</InputLabel>
                 <Select
-                  value={searchParams.searchCnd}
+                  value={inputValues.searchCnd}
                   label="검색 조건"
                   onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      searchCnd: e.target.value,
-                    })
+                    handleInputChange('searchCnd', e.target.value)
                   }
                 >
                   <MenuItem value="0">작업장 코드</MenuItem>
@@ -216,30 +340,26 @@ const WorkplaceManagement: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
+
             <Box sx={{ flex: '1 1 200px' }}>
               <TextField
                 fullWidth
                 size="small"
                 label="검색어"
-                value={searchParams.searchWrd}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    searchWrd: e.target.value,
-                  })
-                }
+                value={inputValues.searchWrd}
+                onChange={(e) => handleInputChange('searchWrd', e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="검색어를 입력하세요"
               />
             </Box>
+
             <Box sx={{ flex: '1 1 150px' }}>
               <FormControl fullWidth size="small">
                 <InputLabel>상태</InputLabel>
                 <Select
-                  value={searchParams.status}
+                  value={inputValues.status}
                   label="상태"
-                  onChange={(e) =>
-                    setSearchParams({ ...searchParams, status: e.target.value })
-                  }
+                  onChange={(e) => handleInputChange('status', e.target.value)}
                 >
                   <MenuItem value="">전체</MenuItem>
                   <MenuItem value="ACTIVE">활성</MenuItem>
@@ -247,6 +367,7 @@ const WorkplaceManagement: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
+
             <Box sx={{ flex: '0 0 120px' }}>
               <Button
                 fullWidth
@@ -257,6 +378,18 @@ const WorkplaceManagement: React.FC = () => {
                 검색
               </Button>
             </Box>
+
+            {/* <Box sx={{ flex: '0 0 100px' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleReset}
+              >
+                초기화
+              </Button>
+            </Box> */}
+
             <Box sx={{ flex: '0 0 150px' }}>
               <Button
                 fullWidth
@@ -273,82 +406,27 @@ const WorkplaceManagement: React.FC = () => {
       </Card>
 
       {/* 작업장 목록 */}
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>작업장 코드</TableCell>
-                <TableCell>작업장명</TableCell>
-                <TableCell>위치</TableCell>
-                <TableCell>타입</TableCell>
-                <TableCell>상태</TableCell>
-                <TableCell>등록일</TableCell>
-                <TableCell align="center">관리</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {workplaces.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    조회된 데이터가 없습니다.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                workplaces.map((workplace) => (
-                  <TableRow key={workplace.workplaceId} hover>
-                    <TableCell>{workplace.workplaceCode}</TableCell>
-                    <TableCell>{workplace.workplaceName}</TableCell>
-                    <TableCell>{workplace.location}</TableCell>
-                    <TableCell>{workplace.workplaceType}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(workplace.status || 'ACTIVE')}
-                        color={
-                          getStatusColor(workplace.status || 'ACTIVE') as any
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{workplace.regDt}</TableCell>
-                    <TableCell align="center">
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="center"
-                      >
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleOpenWorkerDialog(workplace)}
-                          title="작업자 관리"
-                        >
-                          <PeopleIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleOpenEditDialog(workplace)}
-                          title="수정"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(workplace.workplaceId!)}
-                          title="삭제"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <Paper sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={workplaces}
+          columns={columns}
+          getRowId={(row) => row.workplaceId || ''}
+          hideFooterPagination
+          disableRowSelectionOnClick
+          sx={{
+            border: 'none',
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+          localeText={{
+            noRowsLabel: '조회된 데이터가 없습니다',
+            footerRowSelected: (count) => `${count}개 선택됨`,
+          }}
+        />
       </Paper>
 
       {/* 작업장 등록/수정 다이얼로그 */}
@@ -429,10 +507,10 @@ const WorkplaceManagement: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>취소</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
             저장
           </Button>
+          <Button onClick={handleCloseDialog}>취소</Button>
         </DialogActions>
       </Dialog>
 
@@ -500,7 +578,7 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
       const response = await workplaceService.getWorkplaceWorkers(
         workplace.workplaceId!
       );
-      if (response.resultCode === '200' && response.result?.resultList) {
+      if (response.resultCode === 200 && response.result?.resultList) {
         setWorkers(response.result.resultList);
       }
     } catch (error) {
@@ -559,6 +637,77 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
       }
     }
   };
+
+  const workerColumns: GridColDef[] = [
+    {
+      field: 'workerId',
+      headerName: '작업자 ID',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'workerName',
+      headerName: '작업자명',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'position',
+      headerName: '직책',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'role',
+      headerName: '역할',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value === 'LEADER' ? '팀장' : '팀원'}
+          color={params.value === 'LEADER' ? 'primary' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'regDt',
+      headerName: '등록일',
+      flex: 1.5,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: '관리',
+      flex: 0.8,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -639,58 +788,28 @@ const WorkplaceWorkerDialog: React.FC<WorkplaceWorkerDialogProps> = ({
           </Card>
 
           {/* 작업자 목록 */}
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>작업자 ID</TableCell>
-                  <TableCell>작업자명</TableCell>
-                  <TableCell>직책</TableCell>
-                  <TableCell>역할</TableCell>
-                  <TableCell>등록일</TableCell>
-                  <TableCell align="center">관리</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {workers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      등록된 작업자가 없습니다.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  workers.map((worker) => (
-                    <TableRow key={worker.workplaceWorkerId}>
-                      <TableCell>{worker.workerId}</TableCell>
-                      <TableCell>{worker.workerName}</TableCell>
-                      <TableCell>{worker.position}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={worker.role === 'LEADER' ? '팀장' : '팀원'}
-                          color={
-                            worker.role === 'LEADER' ? 'primary' : 'default'
-                          }
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{worker.regDt}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() =>
-                            handleRemoveWorker(worker.workplaceWorkerId!)
-                          }
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Paper sx={{ height: 400, width: '100%' }}>
+            <DataGrid
+              rows={workers}
+              columns={workerColumns}
+              getRowId={(row) => row.workplaceWorkerId || ''}
+              hideFooterPagination
+              disableRowSelectionOnClick
+              sx={{
+                border: 'none',
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
+                },
+              }}
+              localeText={{
+                noRowsLabel: '등록된 작업자가 없습니다',
+                footerRowSelected: (count) => `${count}개 선택됨`,
+              }}
+            />
+          </Paper>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>닫기</Button>
