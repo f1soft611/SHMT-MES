@@ -40,9 +40,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (savedUser && token) {
       setUser(savedUser);
+      // 로그인된 상태면 자동 갱신 타이머 시작
+      authService.startTokenRefreshTimer();
     }
 
     setLoading(false);
+
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      authService.stopTokenRefreshTimer();
+    };
   }, []);
 
   const login = async (credentials: LoginRequest) => {
