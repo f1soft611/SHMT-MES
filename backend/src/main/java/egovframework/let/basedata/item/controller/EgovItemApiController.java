@@ -68,7 +68,9 @@ public class EgovItemApiController {
 
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(itemVO.getPageIndex());
-        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
+        paginationInfo.setRecordCountPerPage(
+                itemVO.getPageUnit() > 0 ? itemVO.getPageUnit() : propertyService.getInt("Globals.pageUnit")
+        );
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 
         itemVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
