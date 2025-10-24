@@ -4,7 +4,7 @@ import {
   IconButton, Paper, Stack, TextField, Typography, Chip, FormControl, InputLabel,
   Select, MenuItem, Alert, Snackbar, Tabs, Tab, Checkbox, FormControlLabel,
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon,
   Build as BuildIcon, BugReport as BugReportIcon, CheckCircle as CheckCircleIcon,
@@ -16,11 +16,16 @@ import workplaceService from '../../../services/workplaceService';
 
 const ProcessManagement: React.FC = () => {
   const [processes, setProcesses] = useState<Process[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [detailTab, setDetailTab] = useState(0);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error'; }>({
     open: false, message: '', severity: 'success',
   });
@@ -40,15 +45,20 @@ const ProcessManagement: React.FC = () => {
 
   const fetchProcesses = useCallback(async () => {
     try {
-      const response = await processService.getProcessList(searchParams);
+      const response = await processService.getProcessList(
+        paginationModel.page,
+        paginationModel.pageSize,
+        searchParams
+      );
       if (response.resultCode === 200 && response.result?.resultList) {
         setProcesses(response.result.resultList);
+        setTotalCount(parseInt(response.result.resultCnt || '0'));
       }
     } catch (error) {
       console.error('Failed to fetch processes:', error);
       showSnackbar('공정 목록을 불러오는데 실패했습니다.', 'error');
     }
-  }, [searchParams]);
+  }, [searchParams, paginationModel]);
 
   useEffect(() => {
     fetchProcesses();
@@ -64,12 +74,14 @@ const ProcessManagement: React.FC = () => {
 
   const handleSearch = () => {
     setSearchParams({ ...inputValues });
+    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const handleReset = () => {
     const resetValues = { searchCnd: '1', searchWrd: '', status: '', equipmentIntegrationYn: '' };
     setInputValues(resetValues);
     setSearchParams(resetValues);
+    setPaginationModel({ page: 0, pageSize: 10 });
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -245,7 +257,13 @@ const ProcessManagement: React.FC = () => {
 
       <Paper sx={{ width: '100%' }}>
         <DataGrid rows={processes} columns={columns} getRowId={(row) => row.processId || ''}
-          hideFooterPagination disableRowSelectionOnClick
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 50]}
+          rowCount={totalCount}
+          paginationMode="server"
+          disableRowSelectionOnClick
+          autoHeight
           sx={{ border: 'none', '& .MuiDataGrid-cell:focus': { outline: 'none' },
             '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' } }}
           localeText={{ noRowsLabel: '조회된 데이터가 없습니다', footerRowSelected: (count) => `${count}개 선택됨` }} />

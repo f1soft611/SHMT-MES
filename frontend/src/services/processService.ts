@@ -15,8 +15,17 @@ export const processService = {
   /**
    * 공정 목록 조회
    */
-  getProcessList: async (params?: ProcessSearchParams) => {
-    const response = await apiClient.get('/api/processes', { params });
+  getProcessList: async (
+    page: number = 0,
+    pageSize: number = 10,
+    params?: ProcessSearchParams
+  ) => {
+    const requestParams = {
+      pageIndex: page + 1,
+      pageUnit: pageSize,
+      ...params,
+    };
+    const response = await apiClient.get('/api/processes', { params: requestParams });
     return response.data;
   },
 

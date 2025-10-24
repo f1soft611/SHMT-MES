@@ -68,7 +68,9 @@ public class EgovProcessApiController {
 
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(processVO.getPageIndex());
-        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
+        paginationInfo.setRecordCountPerPage(
+                processVO.getPageUnit() > 0 ? processVO.getPageUnit() : propertyService.getInt("Globals.pageUnit")
+        );
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 
         processVO.setFirstIndex(paginationInfo.getFirstRecordIndex());

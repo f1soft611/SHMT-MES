@@ -21,7 +21,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -35,12 +35,17 @@ import workplaceService from '../../../services/workplaceService';
 
 const WorkplaceManagement: React.FC = () => {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(
     null
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [openWorkerDialog, setOpenWorkerDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -76,18 +81,23 @@ const WorkplaceManagement: React.FC = () => {
     status: '',
   });
 
-  // 작업장 목록 조회 (searchParams 의존성으로 자동 실행)
+  // 작업장 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
   const fetchWorkplaces = useCallback(async () => {
     try {
-      const response = await workplaceService.getWorkplaceList(searchParams);
+      const response = await workplaceService.getWorkplaceList(
+        paginationModel.page,
+        paginationModel.pageSize,
+        searchParams
+      );
       if (response.resultCode === 200 && response.result?.resultList) {
         setWorkplaces(response.result.resultList);
+        setTotalCount(parseInt(response.result.resultCnt || '0'));
       }
     } catch (error) {
       console.error('Failed to fetch workplaces:', error);
       showSnackbar('작업장 목록을 불러오는데 실패했습니다.', 'error');
     }
-  }, [searchParams]);
+  }, [searchParams, paginationModel]);
 
   // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
@@ -102,9 +112,10 @@ const WorkplaceManagement: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // 검색 실행 (입력값을 검색 파라미터로 복사)
+  // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
     setSearchParams({ ...inputValues });
+    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   // 검색 조건 초기화
@@ -116,6 +127,7 @@ const WorkplaceManagement: React.FC = () => {
     };
     setInputValues(resetValues);
     setSearchParams(resetValues);
+    setPaginationModel({ page: 0, pageSize: 10 });
   };
 
   // 입력 필드 변경 핸들러
@@ -405,8 +417,13 @@ const WorkplaceManagement: React.FC = () => {
           rows={workplaces}
           columns={columns}
           getRowId={(row) => row.workplaceId || ''}
-          hideFooterPagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 50]}
+          rowCount={totalCount}
+          paginationMode="server"
           disableRowSelectionOnClick
+          autoHeight
           sx={{
             border: 'none',
             '& .MuiDataGrid-cell:focus': {

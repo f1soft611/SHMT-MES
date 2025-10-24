@@ -19,7 +19,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -31,8 +31,13 @@ import itemService from '../../../services/itemService';
 
 const ItemManagement: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -71,18 +76,23 @@ const ItemManagement: React.FC = () => {
     itemType: '',
   });
 
-  // 품목 목록 조회 (searchParams 의존성으로 자동 실행)
+  // 품목 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
   const fetchItems = useCallback(async () => {
     try {
-      const response = await itemService.getItemList(searchParams);
+      const response = await itemService.getItemList(
+        paginationModel.page,
+        paginationModel.pageSize,
+        searchParams
+      );
       if (response.resultCode === 200 && response.result?.resultList) {
         setItems(response.result.resultList);
+        setTotalCount(parseInt(response.result.resultCnt || '0'));
       }
     } catch (error) {
       console.error('Failed to fetch items:', error);
       showSnackbar('품목 목록을 불러오는데 실패했습니다.', 'error');
     }
-  }, [searchParams]);
+  }, [searchParams, paginationModel]);
 
   // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
@@ -97,21 +107,23 @@ const ItemManagement: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // 검색 실행 (입력값을 검색 파라미터로 복사)
+  // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
     setSearchParams({ ...inputValues });
+    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   // 검색 조건 초기화
-  // const handleReset = () => {
-  //   const resetValues = {
-  //     searchCnd: '1',
-  //     searchWrd: '',
-  //     itemType: '',
-  //   };
-  //   setInputValues(resetValues);
-  //   setSearchParams(resetValues);
-  // };
+  const handleReset = () => {
+    const resetValues = {
+      searchCnd: '1',
+      searchWrd: '',
+      itemType: '',
+    };
+    setInputValues(resetValues);
+    setSearchParams(resetValues);
+    setPaginationModel({ page: 0, pageSize: 10 });
+  };
 
   // 입력 필드 변경 핸들러
   const handleInputChange = (field: string, value: string) => {
@@ -381,8 +393,13 @@ const ItemManagement: React.FC = () => {
           rows={items}
           columns={columns}
           getRowId={(row) => row.itemId || ''}
-          hideFooterPagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[5, 10, 25, 50]}
+          rowCount={totalCount}
+          paginationMode="server"
           disableRowSelectionOnClick
+          autoHeight
           sx={{
             border: 'none',
             '& .MuiDataGrid-cell:focus': {

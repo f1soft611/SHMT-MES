@@ -9,8 +9,17 @@ export const workplaceService = {
   /**
    * 작업장 목록 조회
    */
-  getWorkplaceList: async (params?: WorkplaceSearchParams) => {
-    const response = await apiClient.get('/api/workplaces', { params });
+  getWorkplaceList: async (
+    page: number = 0,
+    pageSize: number = 10,
+    params?: WorkplaceSearchParams
+  ) => {
+    const requestParams = {
+      pageIndex: page + 1,
+      pageUnit: pageSize,
+      ...params,
+    };
+    const response = await apiClient.get('/api/workplaces', { params: requestParams });
     return response.data;
   },
 

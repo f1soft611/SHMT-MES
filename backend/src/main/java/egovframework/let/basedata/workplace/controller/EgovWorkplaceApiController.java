@@ -71,7 +71,9 @@ public class EgovWorkplaceApiController {
 
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(workplaceVO.getPageIndex());
-        paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
+        paginationInfo.setRecordCountPerPage(
+                workplaceVO.getPageUnit() > 0 ? workplaceVO.getPageUnit() : propertyService.getInt("Globals.pageUnit")
+        );
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 
         workplaceVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
