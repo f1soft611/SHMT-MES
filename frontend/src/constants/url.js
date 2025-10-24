@@ -3,6 +3,7 @@ const URL = {
   MAIN: '/', //메인페이지
   LOGIN: '/login', //로그인
   WORKPLACE_MANAGEMENT: '/base/workplace', //작업장 관리
+  ITEM_MANAGEMENT: '/base/item', //품목 관리
   PRODUCTION_ORDERS: '/prod/orders', //생산지시
   PRODUCTION_RESULTS: '/prod/results', //생산실적
   ERROR: '/error', //오류 페이지
