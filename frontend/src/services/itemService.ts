@@ -9,8 +9,17 @@ export const itemService = {
   /**
    * 품목 목록 조회
    */
-  getItemList: async (params?: ItemSearchParams) => {
-    const response = await apiClient.get('/api/items', { params });
+  getItemList: async (
+    page: number = 0,
+    pageSize: number = 10,
+    params?: ItemSearchParams
+  ) => {
+    const requestParams = {
+      pageIndex: page + 1,
+      pageUnit: pageSize,
+      ...params,
+    };
+    const response = await apiClient.get('/api/items', { params: requestParams });
     return response.data;
   },
 
