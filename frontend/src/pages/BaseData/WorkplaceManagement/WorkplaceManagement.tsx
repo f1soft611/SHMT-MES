@@ -400,7 +400,7 @@ const WorkplaceManagement: React.FC = () => {
       </Paper>
 
       {/* 작업장 목록 */}
-      <Paper sx={{ height: 600, width: '100%' }}>
+      <Paper sx={{ width: '100%' }}>
         <DataGrid
           rows={workplaces}
           columns={columns}

@@ -23,7 +23,7 @@ export interface PermissionType {
   permissionId: string;
   permissionNm: string;
   permissionDc?: string;
-  permissionLevel: 'read' | 'write';
+  permissionLevel: 'read' | 'write' | 'excel';
   useAt: string;
   frstRegistPnttm?: Date;
   frstRegisterId?: string;

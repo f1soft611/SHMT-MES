@@ -116,7 +116,7 @@ const SchedulerManagement: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 3,
+          mb: 2,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

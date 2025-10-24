@@ -297,6 +297,7 @@ const UserManagement: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h5">사용자 관리</Typography>
           </Box>
+
           <Button
             variant="contained"
             startIcon={<AddIcon />}

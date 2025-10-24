@@ -52,7 +52,7 @@ function App() {
                     <Layout>
                       <Routes>
                         <Route path={URL.MAIN} element={<Dashboard />} />
-                        <Route path={URL.BASE_DATA} element={<BaseData />} />
+                        {/* <Route path={URL.BASE_DATA} element={<BaseData />} /> */}
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
@@ -73,10 +73,10 @@ function App() {
                           path={`${URL.PRODUCTION_RESULTS}/:id/edit`}
                           element={<ProductionResultForm />}
                         />
-                        <Route
+                        {/* <Route
                           path={URL.INTERFACE}
                           element={<InterfaceMonitor />}
-                        />
+                        /> */}
                         <Route
                           path={URL.SCHEDULER}
                           element={<SchedulerManagement />}
