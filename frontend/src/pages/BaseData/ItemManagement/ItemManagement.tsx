@@ -103,15 +103,15 @@ const ItemManagement: React.FC = () => {
   };
 
   // 검색 조건 초기화
-  const handleReset = () => {
-    const resetValues = {
-      searchCnd: '1',
-      searchWrd: '',
-      itemType: '',
-    };
-    setInputValues(resetValues);
-    setSearchParams(resetValues);
-  };
+  // const handleReset = () => {
+  //   const resetValues = {
+  //     searchCnd: '1',
+  //     searchWrd: '',
+  //     itemType: '',
+  //   };
+  //   setInputValues(resetValues);
+  //   setSearchParams(resetValues);
+  // };
 
   // 입력 필드 변경 핸들러
   const handleInputChange = (field: string, value: string) => {
