@@ -1,13 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Paper, Stack, TextField, Typography, Chip, FormControl, InputLabel,
-  Select, MenuItem, Alert, Snackbar, Tabs, Tab,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Snackbar,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
-  Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon,
-  Code as CodeIcon, List as ListIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+  Code as CodeIcon,
+  List as ListIcon,
 } from '@mui/icons-material';
 import { CommonCode, CommonDetailCode } from '../../../types/commonCode';
 import commonCodeService from '../../../services/commonCodeService';
@@ -15,11 +36,14 @@ import commonCodeService from '../../../services/commonCodeService';
 const CommonCodeManagement: React.FC = () => {
   const [commonCodes, setCommonCodes] = useState<CommonCode[]>([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedCommonCode, setSelectedCommonCode] = useState<CommonCode | null>(null);
+  const [selectedCommonCode, setSelectedCommonCode] =
+    useState<CommonCode | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [detailDialogMode, setDetailDialogMode] = useState<'create' | 'edit'>('create');
+  const [detailDialogMode, setDetailDialogMode] = useState<'create' | 'edit'>(
+    'create'
+  );
   const [currentTab, setCurrentTab] = useState(0);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
@@ -271,30 +295,38 @@ const CommonCodeManagement: React.FC = () => {
       headerName: '코드 ID',
       flex: 1,
       minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
     },
     {
       field: 'codeIdNm',
       headerName: '코드명',
       flex: 1.5,
       minWidth: 150,
+      headerAlign: 'center',
     },
     {
       field: 'codeIdDc',
       headerName: '설명',
       flex: 2,
       minWidth: 200,
+      headerAlign: 'center',
     },
     {
       field: 'clCode',
       headerName: '분류코드',
       flex: 1,
       minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
     },
     {
       field: 'useAt',
       headerName: '사용여부',
       flex: 0.5,
       minWidth: 80,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <Chip
           label={params.value === 'Y' ? '사용' : '미사용'}
@@ -309,31 +341,41 @@ const CommonCodeManagement: React.FC = () => {
       flex: 1,
       minWidth: 200,
       sortable: false,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<ListIcon />}
-            onClick={() => handleViewDetails(params.row)}
-          >
-            상세코드
-          </Button>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleOpenEditDialog(params.row)}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.codeId)}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleViewDetails(params.row)}
+            >
+              <SearchIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenEditDialog(params.row)}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.codeId)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       ),
     },
   ];
@@ -344,24 +386,30 @@ const CommonCodeManagement: React.FC = () => {
       headerName: '코드',
       flex: 1,
       minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
     },
     {
       field: 'codeNm',
       headerName: '코드명',
       flex: 1.5,
       minWidth: 150,
+      headerAlign: 'center',
     },
     {
       field: 'codeDc',
       headerName: '설명',
       flex: 2,
       minWidth: 200,
+      headerAlign: 'center',
     },
     {
       field: 'useAt',
       headerName: '사용여부',
       flex: 0.5,
       minWidth: 80,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
         <Chip
           label={params.value === 'Y' ? '사용' : '미사용'}
@@ -376,42 +424,54 @@ const CommonCodeManagement: React.FC = () => {
       flex: 0.8,
       minWidth: 120,
       sortable: false,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleOpenEditDetailDialog(params.row)}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDeleteDetail(params.row.codeId, params.row.code)}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleOpenEditDetailDialog(params.row)}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() =>
+                handleDeleteDetail(params.row.codeId, params.row.code)
+              }
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       ),
     },
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        공통코드 관리
-      </Typography>
-
-      <Tabs value={currentTab} onChange={handleTabChange} sx={{ mb: 2 }}>
-        <Tab icon={<CodeIcon />} label="공통코드" iconPosition="start" />
-        <Tab
-          icon={<ListIcon />}
-          label={`상세코드${selectedCommonCode ? ` (${selectedCommonCode.codeIdNm})` : ''}`}
-          iconPosition="start"
-          disabled={!selectedCommonCode}
-        />
-      </Tabs>
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">공통코드 관리</Typography>
+        </Box>
+      </Box>
 
       {/* 공통코드 탭 */}
       {currentTab === 0 && (
@@ -423,7 +483,9 @@ const CommonCodeManagement: React.FC = () => {
                 <Select
                   value={inputValues.searchCnd}
                   label="검색조건"
-                  onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('searchCnd', e.target.value)
+                  }
                 >
                   <MenuItem value="0">코드 ID</MenuItem>
                   <MenuItem value="1">코드명</MenuItem>
@@ -432,11 +494,11 @@ const CommonCodeManagement: React.FC = () => {
               </FormControl>
               <TextField
                 size="small"
-                label="검색어"
                 value={inputValues.searchWrd}
                 onChange={(e) => handleInputChange('searchWrd', e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 sx={{ flex: 1 }}
+                placeholder="검색어를 입력하세요"
               />
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel>사용여부</InputLabel>
@@ -463,9 +525,23 @@ const CommonCodeManagement: React.FC = () => {
                 startIcon={<AddIcon />}
                 onClick={handleOpenCreateDialog}
               >
-                등록
+                공통코드 등록
               </Button>
             </Stack>
+          </Paper>
+
+          <Paper sx={{ width: '100%' }}>
+            <Tabs value={currentTab} onChange={handleTabChange} sx={{ mb: 2 }}>
+              <Tab icon={<CodeIcon />} label="공통코드" iconPosition="start" />
+              <Tab
+                icon={<ListIcon />}
+                label={`상세코드${
+                  selectedCommonCode ? ` (${selectedCommonCode.codeIdNm})` : ''
+                }`}
+                iconPosition="start"
+                disabled={!selectedCommonCode}
+              />
+            </Tabs>
           </Paper>
 
           <Paper>
@@ -481,8 +557,11 @@ const CommonCodeManagement: React.FC = () => {
               disableRowSelectionOnClick
               autoHeight
               sx={{
-                '& .MuiDataGrid-cell': {
-                  padding: '8px',
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
                 },
               }}
             />
@@ -494,7 +573,12 @@ const CommonCodeManagement: React.FC = () => {
       {currentTab === 1 && selectedCommonCode && (
         <>
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <Typography variant="h6">
                 {selectedCommonCode.codeIdNm} ({selectedCommonCode.codeId})
               </Typography>
@@ -509,6 +593,20 @@ const CommonCodeManagement: React.FC = () => {
             </Stack>
           </Paper>
 
+          <Paper sx={{ width: '100%' }}>
+            <Tabs value={currentTab} onChange={handleTabChange} sx={{ mb: 2 }}>
+              <Tab icon={<CodeIcon />} label="공통코드" iconPosition="start" />
+              <Tab
+                icon={<ListIcon />}
+                label={`상세코드${
+                  selectedCommonCode ? ` (${selectedCommonCode.codeIdNm})` : ''
+                }`}
+                iconPosition="start"
+                disabled={!selectedCommonCode}
+              />
+            </Tabs>
+          </Paper>
+
           <Paper>
             <DataGrid
               rows={detailCodes}
@@ -517,8 +615,11 @@ const CommonCodeManagement: React.FC = () => {
               disableRowSelectionOnClick
               autoHeight
               sx={{
-                '& .MuiDataGrid-cell': {
-                  padding: '8px',
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
                 },
               }}
             />
@@ -527,7 +628,12 @@ const CommonCodeManagement: React.FC = () => {
       )}
 
       {/* 공통코드 등록/수정 다이얼로그 */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {dialogMode === 'create' ? '공통코드 등록' : '공통코드 수정'}
         </DialogTitle>
@@ -576,15 +682,20 @@ const CommonCodeManagement: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>취소</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
             저장
           </Button>
+          <Button onClick={handleCloseDialog}>취소</Button>
         </DialogActions>
       </Dialog>
 
       {/* 상세코드 등록/수정 다이얼로그 */}
-      <Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openDetailDialog}
+        onClose={handleCloseDetailDialog}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {detailDialogMode === 'create' ? '상세코드 등록' : '상세코드 수정'}
         </DialogTitle>
@@ -627,10 +738,14 @@ const CommonCodeManagement: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDetailDialog}>취소</Button>
-          <Button onClick={handleSaveDetail} variant="contained" color="primary">
+          <Button
+            onClick={handleSaveDetail}
+            variant="contained"
+            color="primary"
+          >
             저장
           </Button>
+          <Button onClick={handleCloseDetailDialog}>취소</Button>
         </DialogActions>
       </Dialog>
 

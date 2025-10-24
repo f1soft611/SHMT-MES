@@ -159,7 +159,9 @@ const SchedulerManagement: React.FC = () => {
           <Tab label="스케쥴러 관리" />
           <Tab label="실행 이력" />
         </Tabs>
+      </Paper>
 
+      <Paper sx={{ p: 2, mb: 2 }}>
         <TabPanel value={tabValue} index={0}>
           <SchedulerList onEdit={handleEditClick} />
         </TabPanel>

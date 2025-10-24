@@ -188,7 +188,11 @@ const ItemManagement: React.FC = () => {
   };
 
   const getItemTypeLabel = (itemType: string) => {
-    return itemType === 'PRODUCT' ? '제품' : itemType === 'MATERIAL' ? '자재' : itemType;
+    return itemType === 'PRODUCT'
+      ? '제품'
+      : itemType === 'MATERIAL'
+      ? '자재'
+      : itemType;
   };
 
   const getItemTypeColor = (itemType: string) => {
@@ -304,8 +308,54 @@ const ItemManagement: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h5">품목 관리</Typography>
         </Box>
+      </Box>
 
-        <Box>
+      {/* 검색 영역 */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>검색조건</InputLabel>
+            <Select
+              value={inputValues.searchCnd}
+              label="검색조건"
+              onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+            >
+              <MenuItem value="0">코드 ID</MenuItem>
+              <MenuItem value="1">코드명</MenuItem>
+              <MenuItem value="2">설명</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            size="small"
+            value={inputValues.searchWrd}
+            onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{ flex: 1 }}
+            placeholder="검색어를 입력하세요"
+          />
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>품목타입</InputLabel>
+            <Select
+              value={inputValues.itemType}
+              label="품목타입"
+              onChange={(e) => handleInputChange('itemType', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="PRODUCT">제품</MenuItem>
+              <MenuItem value="MATERIAL">자재</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            startIcon={<SearchIcon />}
+            onClick={handleSearch}
+          >
+            검색
+          </Button>
+
           <Button
             variant="contained"
             color="primary"
@@ -314,63 +364,6 @@ const ItemManagement: React.FC = () => {
           >
             품목 등록
           </Button>
-        </Box>
-      </Box>
-
-      {/* 검색 영역 */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          <Box sx={{ flex: '1 1 150px' }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>검색 조건</InputLabel>
-              <Select
-                value={inputValues.searchCnd}
-                label="검색 조건"
-                onChange={(e) => handleInputChange('searchCnd', e.target.value)}
-              >
-                <MenuItem value="0">품목코드</MenuItem>
-                <MenuItem value="1">품목명</MenuItem>
-                <MenuItem value="2">규격</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 150px' }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>품목타입</InputLabel>
-              <Select
-                value={inputValues.itemType}
-                label="품목타입"
-                onChange={(e) => handleInputChange('itemType', e.target.value)}
-              >
-                <MenuItem value="">전체</MenuItem>
-                <MenuItem value="PRODUCT">제품</MenuItem>
-                <MenuItem value="MATERIAL">자재</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 200px' }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="검색어"
-              value={inputValues.searchWrd}
-              onChange={(e) => handleInputChange('searchWrd', e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="검색어를 입력하세요"
-            />
-          </Box>
-
-          <Box sx={{ flex: '1 1 150px' }}>
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              onClick={handleSearch}
-            >
-              검색
-            </Button>
-          </Box>
         </Stack>
       </Paper>
 
@@ -423,7 +416,11 @@ const ItemManagement: React.FC = () => {
                 value={formData.itemCode}
                 onChange={(e) => handleChange('itemCode', e.target.value)}
                 disabled={dialogMode === 'edit' || formData.interfaceYn === 'Y'}
-                helperText={formData.interfaceYn === 'Y' ? '인터페이스 항목은 수정할 수 없습니다' : ''}
+                helperText={
+                  formData.interfaceYn === 'Y'
+                    ? '인터페이스 항목은 수정할 수 없습니다'
+                    : ''
+                }
               />
               <TextField
                 fullWidth
@@ -491,10 +488,7 @@ const ItemManagement: React.FC = () => {
               </FormControl>
               <FormControl fullWidth disabled>
                 <InputLabel>인터페이스 여부</InputLabel>
-                <Select
-                  value={formData.interfaceYn}
-                  label="인터페이스 여부"
-                >
+                <Select value={formData.interfaceYn} label="인터페이스 여부">
                   <MenuItem value="Y">예</MenuItem>
                   <MenuItem value="N">아니오</MenuItem>
                 </Select>

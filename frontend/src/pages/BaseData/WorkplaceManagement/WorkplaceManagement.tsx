@@ -218,14 +218,12 @@ const WorkplaceManagement: React.FC = () => {
       field: 'workplaceName',
       headerName: '작업장명',
       flex: 1.2,
-      align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'location',
       headerName: '위치',
       flex: 1,
-      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -317,17 +315,6 @@ const WorkplaceManagement: React.FC = () => {
           <Typography variant="h5">작업장 관리</Typography>
         </Box>
 
-        <Box>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleOpenCreateDialog}
-          >
-            작업장 등록
-          </Button>
-        </Box>
-
         {/* <Box sx={{ flex: '0 0 100px' }}>
               <Button
                 fullWidth
@@ -341,59 +328,59 @@ const WorkplaceManagement: React.FC = () => {
       </Box>
 
       {/* 검색 영역 */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          <Box sx={{ flex: '1 1 150px' }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>검색 조건</InputLabel>
-              <Select
-                value={inputValues.searchCnd}
-                label="검색 조건"
-                onChange={(e) => handleInputChange('searchCnd', e.target.value)}
-              >
-                <MenuItem value="0">작업장 코드</MenuItem>
-                <MenuItem value="1">작업장명</MenuItem>
-                <MenuItem value="2">위치</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 150px' }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>상태</InputLabel>
-              <Select
-                value={inputValues.status}
-                label="상태"
-                onChange={(e) => handleInputChange('status', e.target.value)}
-              >
-                <MenuItem value="">전체</MenuItem>
-                <MenuItem value="ACTIVE">활성</MenuItem>
-                <MenuItem value="INACTIVE">비활성</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 200px' }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="검색어"
-              value={inputValues.searchWrd}
-              onChange={(e) => handleInputChange('searchWrd', e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="검색어를 입력하세요"
-            />
-          </Box>
-
-          <Box sx={{ flex: '1 1 150px' }}>
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              onClick={handleSearch}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>검색 조건</InputLabel>
+            <Select
+              value={inputValues.searchCnd}
+              label="검색 조건"
+              onChange={(e) => handleInputChange('searchCnd', e.target.value)}
             >
-              검색
-            </Button>
-          </Box>
+              <MenuItem value="0">작업장 코드</MenuItem>
+              <MenuItem value="1">작업장명</MenuItem>
+              <MenuItem value="2">위치</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            size="small"
+            value={inputValues.searchWrd}
+            onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{ flex: 1 }}
+            placeholder="검색어를 입력하세요"
+          />
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>상태</InputLabel>
+            <Select
+              value={inputValues.status}
+              label="상태"
+              onChange={(e) => handleInputChange('status', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="ACTIVE">활성</MenuItem>
+              <MenuItem value="INACTIVE">비활성</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            startIcon={<SearchIcon />}
+            onClick={handleSearch}
+          >
+            검색
+          </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreateDialog}
+          >
+            작업장 등록
+          </Button>
         </Stack>
       </Paper>
 
