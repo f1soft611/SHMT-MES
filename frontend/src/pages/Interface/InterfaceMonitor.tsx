@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -37,6 +37,15 @@ const InterfaceMonitor: React.FC = () => {
   const [selectedLogNo, setSelectedLogNo] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
+  // 마지막 정상 응답의 rows/total을 저장
+  const lastRowsRef = useRef<any[]>([]);
+  const lastTotalRef = useRef<number>(0);
+
+  // 검색 변경 시 페이지 강제 리셋
+  useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [searchKeyword]);
+
   const {
     data: interfaceLogsData,
     isLoading,
@@ -49,14 +58,33 @@ const InterfaceMonitor: React.FC = () => {
       paginationModel.pageSize,
       searchKeyword,
     ],
-    queryFn: () =>
-      interfaceLogService.getInterfaceLogs(
-        paginationModel.page,
-        paginationModel.pageSize,
-        searchKeyword
-      ),
-    staleTime: 5 * 60 * 1000, // 5분
+    queryFn: ({ queryKey }) => {
+      const [, page, pageSize, keyword] = queryKey as any;
+
+      const pageForApi = typeof page === 'number' ? page : page;
+
+      return interfaceLogService.getInterfaceLogs(
+        pageForApi,
+        pageSize,
+        keyword
+      );
+    },
+    // keepPreviousData 사용하지 않음
+    staleTime: 0,
   });
+
+  // 정상적으로 데이터가 들어오면 lastRefs 업데이트
+  useEffect(() => {
+    const rows = interfaceLogsData?.content;
+    const cnt = interfaceLogsData?.totalElements;
+
+    if (Array.isArray(rows) && rows.length >= 0) {
+      lastRowsRef.current = rows;
+    }
+    if (typeof cnt === 'number' && !Number.isNaN(cnt)) {
+      lastTotalRef.current = cnt;
+    }
+  }, [interfaceLogsData]);
 
   const { data: interfaceLogDetail } = useQuery({
     queryKey: ['interfaceLogDetail', selectedLogNo],
@@ -67,7 +95,6 @@ const InterfaceMonitor: React.FC = () => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
-    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const handleDetailClick = (logNo: number) => {
@@ -291,60 +318,58 @@ const InterfaceMonitor: React.FC = () => {
           </Alert>
         )}
 
-        {interfaceLogsData && !isLoading && (
-          <Paper sx={{ height: '100%', width: '100%' }}>
-            <DataGrid
-              rows={interfaceLogsData.content}
-              columns={columns}
-              getRowId={(row) => row.logNo}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              pageSizeOptions={[5, 10, 25, 50]}
-              rowCount={interfaceLogsData.totalElements}
-              paginationMode="server"
-              loading={isLoading}
-              disableRowSelectionOnClick
-              processRowUpdate={handleProcessRowUpdate} // 추가
-              onProcessRowUpdateError={handleProcessRowUpdateError} // 추가
-              sx={{
-                border: 'none',
-                flex: 1,
-                '& .MuiDataGrid-cell:focus': {
-                  outline: 'none',
-                },
-                '& .MuiDataGrid-row:hover': {
-                  backgroundColor: 'action.hover',
-                },
-                '& .MuiDataGrid-cell--editable': {
-                  backgroundColor: 'rgba(0, 123, 255, 0.04)',
-                },
-                '& .MuiDataGrid-cell--editing': {
-                  backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                  border: 'none !important', // 추가: 편집 중 보더 제거
-                },
-              }}
-              localeText={{
-                noRowsLabel: '데이터가 없습니다',
-                footerRowSelected: (count) => `${count}개 선택됨`,
-              }}
-              slotProps={{
-                pagination: {
-                  labelRowsPerPage: '페이지당 행 수:',
-                  labelDisplayedRows: ({
-                    from,
-                    to,
-                    count,
-                  }: {
-                    from: number;
-                    to: number;
-                    count: number;
-                  }) =>
-                    `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
-                },
-              }}
-            />
-          </Paper>
-        )}
+        <Paper sx={{ height: '100%', width: '100%' }}>
+          <DataGrid
+            rows={isLoading ? lastRowsRef.current : interfaceLogsData?.content || []}
+            columns={columns}
+            getRowId={(row) => row.logNo}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 50]}
+            rowCount={interfaceLogsData?.totalElements ?? lastTotalRef.current ?? 0}
+            paginationMode="server"
+            loading={isLoading}
+            disableRowSelectionOnClick
+            processRowUpdate={handleProcessRowUpdate} // 추가
+            onProcessRowUpdateError={handleProcessRowUpdateError} // 추가
+            sx={{
+              border: 'none',
+              flex: 1,
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
+              '& .MuiDataGrid-cell--editable': {
+                backgroundColor: 'rgba(0, 123, 255, 0.04)',
+              },
+              '& .MuiDataGrid-cell--editing': {
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                border: 'none !important', // 추가: 편집 중 보더 제거
+              },
+            }}
+            localeText={{
+              noRowsLabel: '데이터가 없습니다',
+              footerRowSelected: (count) => `${count}개 선택됨`,
+            }}
+            slotProps={{
+              pagination: {
+                labelRowsPerPage: '페이지당 행 수:',
+                labelDisplayedRows: ({
+                  from,
+                  to,
+                  count,
+                }: {
+                  from: number;
+                  to: number;
+                  count: number;
+                }) =>
+                  `${from}-${to} / ${count !== -1 ? count : `${to} 이상`}`,
+              },
+            }}
+          />
+        </Paper>
 
         {/* Detail Modal */}
         <InterfaceLogDetailModal

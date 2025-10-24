@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -34,7 +34,16 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
     message: string;
   } | null>(null);
 
+  // 마지막 정상 응답의 rows/total을 저장
+  const lastRowsRef = useRef<any[]>([]);
+  const lastTotalRef = useRef<number>(0);
+
   const queryClient = useQueryClient();
+
+  // 검색 변경 시 페이지 강제 리셋
+  useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [searchKeyword]);
 
   const {
     data: schedulersData,
@@ -47,14 +56,35 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       paginationModel.pageSize,
       searchKeyword,
     ],
-    queryFn: () =>
-      schedulerService.getSchedulerList(
-        paginationModel.page,
-        paginationModel.pageSize,
-        searchKeyword
-      ),
-    staleTime: 5 * 60 * 1000,
+    queryFn: ({ queryKey }) => {
+      const [, page, pageSize, keyword] = queryKey as any;
+
+      const pageForApi = typeof page === 'number' ? page : page;
+
+      return schedulerService.getSchedulerList(
+        pageForApi,
+        pageSize,
+        keyword
+      );
+    },
+    // keepPreviousData 사용하지 않음
+    staleTime: 0,
   });
+
+  // 정상적으로 데이터가 들어오면 lastRefs 업데이트
+  useEffect(() => {
+    const rows = schedulersData?.result?.resultList;
+    const cnt = schedulersData?.result?.resultCnt
+      ? parseInt(schedulersData.result.resultCnt, 10)
+      : undefined;
+
+    if (Array.isArray(rows) && rows.length >= 0) {
+      lastRowsRef.current = rows;
+    }
+    if (typeof cnt === 'number' && !Number.isNaN(cnt)) {
+      lastTotalRef.current = cnt;
+    }
+  }, [schedulersData]);
 
   const deleteMutation = useMutation({
     mutationFn: (schedulerId: number) =>
@@ -78,7 +108,6 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
-    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const handleDeleteClick = (schedulerId: number) => {
@@ -173,10 +202,13 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
     },
   ];
 
-  const rows = schedulersData?.result?.resultList || [];
+  // 로딩 중이면 이전 rows/total을 보여주고, 아니면 실제 데이터 사용
+  const rows = isLoading
+    ? lastRowsRef.current
+    : schedulersData?.result?.resultList || [];
   const totalCount = schedulersData?.result?.resultCnt
-    ? parseInt(schedulersData.result.resultCnt)
-    : 0;
+    ? parseInt(schedulersData.result.resultCnt, 10)
+    : lastTotalRef.current ?? 0;
 
   if (error) {
     return (
