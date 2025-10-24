@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ItemDAO">
+
+	<resultMap id="itemResult" type="egovframework.let.basedata.item.domain.model.Item">
+		<result property="itemId" column="ITEM_ID"/>
+		<result property="itemCode" column="ITEM_CODE"/>
+		<result property="itemName" column="ITEM_NAME"/>
+		<result property="itemType" column="ITEM_TYPE"/>
+		<result property="specification" column="SPECIFICATION"/>
+		<result property="unit" column="UNIT"/>
+		<result property="stockQty" column="STOCK_QTY"/>
+		<result property="safetyStock" column="SAFETY_STOCK"/>
+		<result property="remark" column="REMARK"/>
+		<result property="interfaceYn" column="INTERFACE_YN"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="ItemDAO.selectItemList" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultMap="itemResult">
+		SELECT
+		ITEM_ID,
+		ITEM_CODE,
+		ITEM_NAME,
+		ITEM_TYPE,
+		SPECIFICATION,
+		UNIT,
+		STOCK_QTY,
+		SAFETY_STOCK,
+		REMARK,
+		INTERFACE_YN,
+		USE_YN,
+		REG_USER_ID,
+		CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+		UPD_USER_ID,
+		CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_ITEM
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == 0">
+					AND ITEM_CODE LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == 1">
+					AND ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == 2">
+					AND SPECIFICATION LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="itemType != null and itemType != ''">
+			AND ITEM_TYPE = #{itemType}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY REG_DT DESC
+		<if test="firstIndex != null and recordCountPerPage != null">
+			OFFSET #{firstIndex} ROWS
+			FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<select id="ItemDAO.selectItemListCnt" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_ITEM
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '0'">
+					AND ITEM_CODE LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '1'">
+					AND ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '2'">
+					AND SPECIFICATION LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="itemType != null and itemType != ''">
+			AND ITEM_TYPE = #{itemType}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+	</select>
+
+	<select id="ItemDAO.selectItem" parameterType="string" resultMap="itemResult">
+		SELECT
+			ITEM_ID,
+			ITEM_CODE,
+			ITEM_NAME,
+			ITEM_TYPE,
+			SPECIFICATION,
+			UNIT,
+			STOCK_QTY,
+			SAFETY_STOCK,
+			REMARK,
+			INTERFACE_YN,
+			USE_YN,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_ITEM
+		WHERE ITEM_ID = #{itemId}
+	</select>
+
+	<insert id="ItemDAO.insertItem" parameterType="egovframework.let.basedata.item.domain.model.Item">
+		INSERT INTO TB_ITEM (
+			ITEM_ID,
+			ITEM_CODE,
+			ITEM_NAME,
+			ITEM_TYPE,
+			SPECIFICATION,
+			UNIT,
+			STOCK_QTY,
+			SAFETY_STOCK,
+			REMARK,
+			INTERFACE_YN,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+					 #{itemId},
+					 #{itemCode},
+					 #{itemName},
+					 #{itemType},
+					 #{specification},
+					 #{unit},
+					 ISNULL(#{stockQty}, '0'),
+					 ISNULL(#{safetyStock}, '0'),
+					 #{remark},
+					 ISNULL(#{interfaceYn}, 'N'),
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
+	</insert>
+
+	<update id="ItemDAO.updateItem" parameterType="egovframework.let.basedata.item.domain.model.Item">
+		UPDATE TB_ITEM
+		SET
+			ITEM_CODE = #{itemCode},
+			ITEM_NAME = #{itemName},
+			ITEM_TYPE = #{itemType},
+			SPECIFICATION = #{specification},
+			UNIT = #{unit},
+			STOCK_QTY = #{stockQty},
+			SAFETY_STOCK = #{safetyStock},
+			REMARK = #{remark},
+			INTERFACE_YN = #{interfaceYn},
+			USE_YN = #{useYn},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = GETDATE()
+		WHERE ITEM_ID = #{itemId}
+	</update>
+
+	<delete id="ItemDAO.deleteItem" parameterType="string">
+		DELETE FROM TB_ITEM
+		WHERE ITEM_ID = #{itemId}
+	</delete>
+
+	<!-- 품목 코드 중복 체크 -->
+	<select id="ItemDAO.selectItemCodeCheck" parameterType="string" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_ITEM
+		WHERE ITEM_CODE = #{itemCode}
+	</select>
+
+	<!-- 품목 코드 중복 체크 (수정 시) -->
+	<select id="ItemDAO.selectItemCodeCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_ITEM
+		WHERE ITEM_CODE = #{itemCode}
+		  AND ITEM_ID != #{itemId}
+	</select>
+
+</mapper>

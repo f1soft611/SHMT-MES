@@ -6,6 +6,7 @@ import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 작업장 관리를 위한 데이터 접근 클래스
@@ -87,5 +88,19 @@ public class WorkplaceDAO extends EgovAbstractMapper {
      */
     public void deleteWorkplace(String workplaceId) throws Exception {
         delete("WorkplaceDAO.deleteWorkplace", workplaceId);
+    }
+
+    /**
+     * 작업장 코드 중복 체크
+     */
+    public int selectWorkplaceCodeCheck(String workplaceCode) {
+        return selectOne("WorkplaceDAO.selectWorkplaceCodeCheck", workplaceCode);
+    }
+
+    /**
+     * 작업장 코드 중복 체크 (수정 시)
+     */
+    public int selectWorkplaceCodeCheckForUpdate(Map<String, String> params) {
+        return selectOne("WorkplaceDAO.selectWorkplaceCodeCheckForUpdate", params);
     }
 }

@@ -32,6 +32,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Security as SecurityIcon,
+  Description as DescriptionIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import {
   MenuInfo,
@@ -55,12 +57,12 @@ const PermissionManagement: React.FC = () => {
   const roles = [
     { id: 1, name: 'ROLE_ADMIN (관리자)' },
     { id: 2, name: 'ROLE_USER (일반사용자)' },
-    {
-      id: 3,
-      name: 'ROLE_PRODUCTION_MANAGER (생산관리자)',
-    },
-    { id: 4, name: 'ROLE_PRODUCTION_USER (생산사용자)' },
-    { id: 5, name: 'ROLE_VIEWER (조회전용)' },
+    // {
+    //   id: 3,
+    //   name: 'ROLE_PRODUCTION_MANAGER (생산관리자)',
+    // },
+    // { id: 4, name: 'ROLE_PRODUCTION_USER (생산사용자)' },
+    // { id: 5, name: 'ROLE_VIEWER (조회전용)' },
   ];
 
   const loadData = async () => {
@@ -156,18 +158,18 @@ const PermissionManagement: React.FC = () => {
 
   return (
     <ProtectedRoute requiredPermission="write">
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 3,
+            mb: 2,
           }}
         >
-          <Typography variant="h4" component="h1">
-            권한 관리
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h5">권한 관리</Typography>
+          </Box>
         </Box>
 
         {error && (
@@ -215,11 +217,21 @@ const PermissionManagement: React.FC = () => {
                 {permissions.map((permission) => (
                   <Box key={permission.permissionId} sx={{ mb: 1 }}>
                     <Chip
-                      icon={<SecurityIcon />}
+                      icon={
+                        permission.permissionLevel === 'write' ? (
+                          <SecurityIcon />
+                        ) : permission.permissionLevel === 'excel' ? (
+                          <DescriptionIcon /> // 또는 <TableChartIcon />
+                        ) : (
+                          <VisibilityIcon /> // 또는 <RemoveRedEyeIcon />
+                        )
+                      }
                       label={`${permission.permissionNm} (${permission.permissionLevel})`}
                       color={
                         permission.permissionLevel === 'write'
                           ? 'primary'
+                          : permission.permissionLevel === 'excel'
+                          ? 'success' // 또는 'secondary', 'info'
                           : 'default'
                       }
                       size="small"
@@ -373,6 +385,8 @@ const PermissionManagement: React.FC = () => {
                             color={
                               rp.permissionLevel === 'write'
                                 ? 'primary'
+                                : rp.permissionLevel === 'excel'
+                                ? 'success'
                                 : 'default'
                             }
                             size="small"

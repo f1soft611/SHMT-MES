@@ -11,6 +11,8 @@
 		<result property="workplaceType" column="WORKPLACE_TYPE"/>
 		<result property="status" column="STATUS"/>
 		<result property="useYn" column="USE_YN"/>
+		<result property="proCnt" column="PRO_CNT"/>
+		<result property="workerCnt" column="WORKER_CNT"/>
 		<result property="regUserId" column="REG_USER_ID"/>
 		<result property="regDt" column="REG_DT"/>
 		<result property="updUserId" column="UPD_USER_ID"/>
@@ -19,42 +21,62 @@
 
 	<select id="WorkplaceDAO.selectWorkplaceList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultMap="workplaceResult">
 		SELECT
-			WORKPLACE_ID,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			DESCRIPTION,
-			LOCATION,
-			WORKPLACE_TYPE,
-			STATUS,
-			USE_YN,
-			REG_USER_ID,
-			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
-			UPD_USER_ID,
-			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
-		FROM TB_WORKPLACE
+		W.WORKPLACE_ID,
+		W.WORKPLACE_CODE,
+		W.WORKPLACE_NAME,
+		W.DESCRIPTION,
+		W.LOCATION,
+		W.WORKPLACE_TYPE,
+		W.STATUS,
+		W.USE_YN,
+		W.REG_USER_ID,
+		CONVERT(VARCHAR(19), W.REG_DT, 120) AS REG_DT,
+		W.UPD_USER_ID,
+		CONVERT(VARCHAR(19), W.UPD_DT, 120) AS UPD_DT,
+		ISNULL(PC.PROCESS_COUNT, 0) AS PRO_CNT,
+		ISNULL(WC.WORKER_COUNT, 0) AS WORKER_CNT
+		FROM TB_WORKPLACE W
+			LEFT JOIN (
+				SELECT
+					WORKPLACE_ID,
+					COUNT(*) AS PROCESS_COUNT
+				FROM TB_PROCESS_WORKPLACE
+				WHERE USE_YN = 'Y'
+				GROUP BY WORKPLACE_ID
+			) PC ON W.WORKPLACE_ID = PC.WORKPLACE_ID
+
+			LEFT JOIN (
+				SELECT
+					WORKPLACE_ID,
+					COUNT(*) AS WORKER_COUNT
+				FROM TB_WORKPLACE_WORKER
+				WHERE USE_YN = 'Y'
+				GROUP BY WORKPLACE_ID
+			) WC ON W.WORKPLACE_ID = WC.WORKPLACE_ID
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '0'">
-					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 0">
+					AND W.WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '1'">
-					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 1">
+					AND W.WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
-					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+				<when test="searchCnd == 2">
+					AND W.LOCATION LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
 		<if test="status != null and status != ''">
-			AND STATUS = #{status}
+			AND W.STATUS = #{status}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
+			AND W.USE_YN = #{useYn}
 		</if>
-		ORDER BY REG_DT DESC
+		ORDER BY W.REG_DT DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
-			LIMIT #{firstIndex}, #{recordCountPerPage}
+			OFFSET #{firstIndex} ROWS
+			FETCH NEXT #{recordCountPerPage} ROWS ONLY
 		</if>
 	</select>
 
@@ -65,13 +87,13 @@
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '0'">
-					AND WORKPLACE_CODE LIKE CONCAT('%', #{searchWrd}, '%')
+					AND WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '1'">
-					AND WORKPLACE_NAME LIKE CONCAT('%', #{searchWrd}, '%')
+					AND WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2'">
-					AND LOCATION LIKE CONCAT('%', #{searchWrd}, '%')
+					AND LOCATION LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -94,9 +116,9 @@
 			STATUS,
 			USE_YN,
 			REG_USER_ID,
-			DATE_FORMAT(REG_DT, '%Y-%m-%d %H:%i:%s') AS REG_DT,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
 			UPD_USER_ID,
-			DATE_FORMAT(UPD_DT, '%Y-%m-%d %H:%i:%s') AS UPD_DT
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
 		FROM TB_WORKPLACE
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</select>
@@ -114,17 +136,17 @@
 			REG_USER_ID,
 			REG_DT
 		) VALUES (
-			#{workplaceId},
-			#{workplaceCode},
-			#{workplaceName},
-			#{description},
-			#{location},
-			#{workplaceType},
-			IFNULL(#{status}, 'ACTIVE'),
-			IFNULL(#{useYn}, 'Y'),
-			#{regUserId},
-			NOW()
-		)
+					 #{workplaceId},
+					 #{workplaceCode},
+					 #{workplaceName},
+					 #{description},
+					 #{location},
+					 #{workplaceType},
+					 ISNULL(#{status}, 'ACTIVE'),
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
 	</insert>
 
 	<update id="WorkplaceDAO.updateWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
@@ -138,7 +160,7 @@
 			STATUS = #{status},
 			USE_YN = #{useYn},
 			UPD_USER_ID = #{updUserId},
-			UPD_DT = NOW()
+			UPD_DT = GETDATE()
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</update>
 
@@ -146,5 +168,20 @@
 		DELETE FROM TB_WORKPLACE
 		WHERE WORKPLACE_ID = #{workplaceId}
 	</delete>
+
+	<!-- 작업장 코드 중복 체크 -->
+	<select id="WorkplaceDAO.selectWorkplaceCodeCheck" parameterType="string" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_WORKPLACE
+		WHERE WORKPLACE_CODE = #{workplaceCode}
+	</select>
+
+	<!-- 작업장 코드 중복 체크 (수정 시) -->
+	<select id="WorkplaceDAO.selectWorkplaceCodeCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_WORKPLACE
+		WHERE WORKPLACE_CODE = #{workplaceCode}
+		  AND WORKPLACE_ID != #{workplaceId}
+	</select>
 
 </mapper>

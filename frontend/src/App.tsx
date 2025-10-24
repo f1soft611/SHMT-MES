@@ -11,13 +11,15 @@ import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/common/Layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
-import BaseData from './pages/BaseData/BaseData';
 import Dashboard from './pages/Dashboard/Dashboard';
+import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement/WorkplaceManagement';
+import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
+import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
-import InterfaceMonitor from './pages/Interface/InterfaceMonitor';
+import SchedulerManagement from './pages/Scheduler/SchedulerManagement';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
@@ -51,10 +53,22 @@ function App() {
                     <Layout>
                       <Routes>
                         <Route path={URL.MAIN} element={<Dashboard />} />
-                        <Route path={URL.BASE_DATA} element={<BaseData />} />
+                        {/* <Route path={URL.BASE_DATA} element={<BaseData />} /> */}
+                        <Route
+                          path={URL.COMMON_CODE_MANAGEMENT}
+                          element={<CommonCodeManagement />}
+                        />
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
+                        />
+                        <Route
+                          path={URL.PROCESS_MANAGEMENT}
+                          element={<ProcessManagement />}
+                        />
+                        <Route
+                          path={URL.ITEM_MANAGEMENT}
+                          element={<ItemManagement />}
                         />
                         <Route
                           path={URL.PRODUCTION_ORDERS}
@@ -72,9 +86,13 @@ function App() {
                           path={`${URL.PRODUCTION_RESULTS}/:id/edit`}
                           element={<ProductionResultForm />}
                         />
-                        <Route
+                        {/* <Route
                           path={URL.INTERFACE}
                           element={<InterfaceMonitor />}
+                        /> */}
+                        <Route
+                          path={URL.SCHEDULER}
+                          element={<SchedulerManagement />}
                         />
                         <Route path={URL.ADMIN} element={<AdminDashboard />} />
                         <Route

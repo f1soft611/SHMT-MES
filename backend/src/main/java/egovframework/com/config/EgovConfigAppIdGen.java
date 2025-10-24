@@ -1850,4 +1850,84 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 품목 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovItemIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_ITEM")
+			.setPreFix("ITEM_")
+			.setCipers(15)
+			.setFillChar('0')
+			.build();
+	}
+
+	/** 공정 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_PROCESS")
+			.setPreFix("PR_")
+			.setCipers(17)
+			.setFillChar('0')
+			.build();
+	}
+
+	/** 공정 작업장 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessWorkplaceIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_PROCESS_WORKPLACE")
+			.setPreFix("PRW_")
+			.setCipers(16)
+			.setFillChar('0')
+			.build();
+	}
+
+	/** 공정 불량코드 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessDefectIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_PROCESS_DEFECT")
+			.setPreFix("PRD_")
+			.setCipers(16)
+			.setFillChar('0')
+			.build();
+	}
+
+	/** 공정 검사항목 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessInspectionIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_PROCESS_INSPECTION")
+			.setPreFix("PRI_")
+			.setCipers(16)
+			.setFillChar('0')
+			.build();
+	}
+
 }

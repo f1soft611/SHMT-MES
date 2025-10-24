@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
+  Stack,
   Typography,
   Button,
   Table,
@@ -296,14 +297,6 @@ const UserManagement: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h5">사용자 관리</Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAdd}
-            disabled={loading}
-          >
-            사용자 추가
-          </Button>
         </Box>
 
         {error && (
@@ -313,55 +306,60 @@ const UserManagement: React.FC = () => {
         )}
 
         {/* 검색 영역 */}
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>검색조건</InputLabel>
-                <Select
-                  value={searchParams.searchCnd}
-                  onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      searchCnd: e.target.value,
-                    })
-                  }
-                >
-                  {searchConditions.map((condition) => (
-                    <MenuItem key={condition.value} value={condition.value}>
-                      {condition.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="검색어를 입력하세요"
-                value={searchParams.searchWrd}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>검색조건</InputLabel>
+              <Select
+                value={searchParams.searchCnd}
+                label="검색 조건"
                 onChange={(e) =>
                   setSearchParams({
                     ...searchParams,
-                    searchWrd: e.target.value,
+                    searchCnd: e.target.value,
                   })
                 }
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <Button
-                variant="contained"
-                startIcon={<SearchIcon />}
-                onClick={handleSearch}
-                disabled={loading}
-                fullWidth
               >
-                검색
-              </Button>
-            </Grid>
-          </Grid>
+                {searchConditions.map((condition) => (
+                  <MenuItem key={condition.value} value={condition.value}>
+                    {condition.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              size="small"
+              placeholder="검색어를 입력하세요"
+              value={searchParams.searchWrd}
+              sx={{ flex: 1 }}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  searchWrd: e.target.value,
+                })
+              }
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+
+            <Button
+              variant="contained"
+              startIcon={<SearchIcon />}
+              onClick={handleSearch}
+              disabled={loading}
+            >
+              검색
+            </Button>
+
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAdd}
+              disabled={loading}
+            >
+              사용자 추가
+            </Button>
+          </Stack>
         </Paper>
 
         {/* 사용자 목록 */}
