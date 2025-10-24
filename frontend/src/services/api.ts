@@ -13,12 +13,59 @@ const apiClient = axios.create({
   },
 });
 
+// 토큰 만료 확인 함수
+const isTokenExpiringSoon = (): boolean => {
+  const issuedAt = sessionStorage.getItem('tokenIssuedAt');
+  if (!issuedAt) {
+    return true;
+  }
+
+  const tokenAge = Date.now() - parseInt(issuedAt);
+  // 토큰이 발급된 지 55분(3300초) 이상 경과했으면 갱신 필요
+  const TOKEN_VALIDITY = 60 * 60 * 1000; // 60분
+  const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5분
+  return tokenAge >= (TOKEN_VALIDITY - TOKEN_REFRESH_THRESHOLD);
+};
+
+// 토큰 갱신 함수
+const performTokenRefresh = async (): Promise<string | null> => {
+  const refreshToken = sessionStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refreshToken: refreshToken
+    });
+
+    if (response.data.resultCode === '200' && response.data.jToken) {
+      const newToken = response.data.jToken;
+      sessionStorage.setItem('accessToken', newToken);
+      sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
+      return newToken;
+    }
+    return null;
+  } catch (error) {
+    console.error('토큰 갱신 실패:', error);
+    return null;
+  }
+};
+
 // 요청 인터셉터
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // 인증 토큰이 있다면 추가
-    const token = sessionStorage.getItem('accessToken');
+    let token = sessionStorage.getItem('accessToken');
     if (token) {
+      // 요청 전에 토큰 만료 확인 및 자동 갱신
+      if (isTokenExpiringSoon()) {
+        console.log('요청 전 토큰 자동 갱신...');
+        const newToken = await performTokenRefresh();
+        if (newToken) {
+          token = newToken;
+        }
+      }
       config.headers.Authorization = `${token}`;
     }
     return config;
