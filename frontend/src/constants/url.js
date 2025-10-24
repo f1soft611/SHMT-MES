@@ -2,6 +2,7 @@ const URL = {
   //COMMON
   MAIN: '/', //메인페이지
   LOGIN: '/login', //로그인
+  COMMON_CODE_MANAGEMENT: '/base/common-code', //공통코드 관리
   WORKPLACE_MANAGEMENT: '/base/workplace', //작업장 관리
   PROCESS_MANAGEMENT: '/base/process', //공정 관리
   ITEM_MANAGEMENT: '/base/item', //품목 관리

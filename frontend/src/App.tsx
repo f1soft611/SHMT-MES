@@ -12,6 +12,7 @@ import Layout from './components/common/Layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
+import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
 import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
@@ -53,6 +54,10 @@ function App() {
                       <Routes>
                         <Route path={URL.MAIN} element={<Dashboard />} />
                         {/* <Route path={URL.BASE_DATA} element={<BaseData />} /> */}
+                        <Route
+                          path={URL.COMMON_CODE_MANAGEMENT}
+                          element={<CommonCodeManagement />}
+                        />
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
