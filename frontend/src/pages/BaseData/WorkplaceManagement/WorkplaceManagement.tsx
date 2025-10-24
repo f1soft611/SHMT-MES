@@ -28,7 +28,6 @@ import {
   Delete as DeleteIcon,
   People as PeopleIcon,
   Search as SearchIcon,
-  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { Workplace, WorkplaceWorker } from '../../../types/workplace';
 import workplaceService from '../../../services/workplaceService';
@@ -118,19 +117,6 @@ const WorkplaceManagement: React.FC = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
   };
 
-  // 검색 조건 초기화
-  const handleReset = () => {
-    const resetValues = {
-      searchCnd: '1',
-      searchWrd: '',
-      status: '',
-    };
-    setInputValues(resetValues);
-    setSearchParams(resetValues);
-    setPaginationModel({ page: 0, pageSize: 10 });
-  };
-
-  // 입력 필드 변경 핸들러
   const handleInputChange = (field: string, value: string) => {
     setInputValues({
       ...inputValues,

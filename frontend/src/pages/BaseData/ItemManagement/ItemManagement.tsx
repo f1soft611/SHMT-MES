@@ -113,19 +113,6 @@ const ItemManagement: React.FC = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
   };
 
-  // 검색 조건 초기화
-  const handleReset = () => {
-    const resetValues = {
-      searchCnd: '1',
-      searchWrd: '',
-      itemType: '',
-    };
-    setInputValues(resetValues);
-    setSearchParams(resetValues);
-    setPaginationModel({ page: 0, pageSize: 10 });
-  };
-
-  // 입력 필드 변경 핸들러
   const handleInputChange = (field: string, value: string) => {
     setInputValues({
       ...inputValues,

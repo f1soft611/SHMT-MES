@@ -77,13 +77,6 @@ const ProcessManagement: React.FC = () => {
     setPaginationModel({ ...paginationModel, page: 0 });
   };
 
-  const handleReset = () => {
-    const resetValues = { searchCnd: '1', searchWrd: '', status: '', equipmentIntegrationYn: '' };
-    setInputValues(resetValues);
-    setSearchParams(resetValues);
-    setPaginationModel({ page: 0, pageSize: 10 });
-  };
-
   const handleInputChange = (field: string, value: string) => {
     setInputValues({ ...inputValues, [field]: value });
   };
@@ -393,7 +386,7 @@ const ProcessWorkplaceTab: React.FC<{ process: Process; showSnackbar: (m: string
 
   const fetchAllWorkplaces = useCallback(async () => {
     try {
-      const response = await workplaceService.getWorkplaceList({ status: 'ACTIVE' });
+      const response = await workplaceService.getWorkplaceList(0, 100, { status: 'ACTIVE' });
       if (response.resultCode === 200 && response.result?.resultList) {
         setAllWorkplaces(response.result.resultList);
       }
