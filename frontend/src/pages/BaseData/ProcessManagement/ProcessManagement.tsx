@@ -7,12 +7,12 @@ import {
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon,
-  Build as BuildIcon, BugReport as BugReportIcon, CheckCircle as CheckCircleIcon,
+  BugReport as BugReportIcon, CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { Process, ProcessWorkplace, ProcessDefect, ProcessInspection } from '../../../types/process';
-import { Workplace } from '../../../types/workplace';
+import { Process, ProcessDefect, ProcessInspection } from '../../../types/process';
+import { CommonDetailCode } from '../../../types/commonCode';
 import processService from '../../../services/processService';
-import workplaceService from '../../../services/workplaceService';
+import commonCodeService from '../../../services/commonCodeService';
 
 const ProcessManagement: React.FC = () => {
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -348,14 +348,12 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
       <DialogContent>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs value={detailTab} onChange={(e, newValue) => setDetailTab(newValue)}>
-            <Tab label="작업장 매핑" icon={<BuildIcon />} iconPosition="start" />
             <Tab label="불량코드 관리" icon={<BugReportIcon />} iconPosition="start" />
             <Tab label="검사항목 관리" icon={<CheckCircleIcon />} iconPosition="start" />
           </Tabs>
         </Box>
-        {detailTab === 0 && <ProcessWorkplaceTab process={process} showSnackbar={showSnackbar} />}
-        {detailTab === 1 && <ProcessDefectTab process={process} showSnackbar={showSnackbar} />}
-        {detailTab === 2 && <ProcessInspectionTab process={process} showSnackbar={showSnackbar} />}
+        {detailTab === 0 && <ProcessDefectTab process={process} showSnackbar={showSnackbar} />}
+        {detailTab === 1 && <ProcessInspectionTab process={process} showSnackbar={showSnackbar} />}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>닫기</Button>
@@ -364,142 +362,12 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
   );
 };
 
-// 작업장 매핑 탭
-const ProcessWorkplaceTab: React.FC<{ process: Process; showSnackbar: (m: string, s: 'success' | 'error') => void }> = ({ 
-  process, showSnackbar 
-}) => {
-  const [workplaces, setWorkplaces] = useState<ProcessWorkplace[]>([]);
-  const [allWorkplaces, setAllWorkplaces] = useState<Workplace[]>([]);
-  const [openWorkplaceDialog, setOpenWorkplaceDialog] = useState(false);
-  const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(null);
-
-  const fetchWorkplaces = useCallback(async () => {
-    try {
-      const response = await processService.getProcessWorkplaces(process.processId!);
-      if (response.resultCode === 200 && response.result?.resultList) {
-        setWorkplaces(response.result.resultList);
-      }
-    } catch (error) {
-      console.error('Failed to fetch workplaces:', error);
-    }
-  }, [process.processId]);
-
-  const fetchAllWorkplaces = useCallback(async () => {
-    try {
-      const response = await workplaceService.getWorkplaceList(0, 100, { status: 'ACTIVE' });
-      if (response.resultCode === 200 && response.result?.resultList) {
-        setAllWorkplaces(response.result.resultList);
-      }
-    } catch (error) {
-      console.error('Failed to fetch all workplaces:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchWorkplaces();
-    fetchAllWorkplaces();
-  }, [fetchWorkplaces, fetchAllWorkplaces]);
-
-  const handleAddWorkplace = async () => {
-    if (!selectedWorkplace) {
-      showSnackbar('작업장을 선택해주세요.', 'error');
-      return;
-    }
-    try {
-      await processService.addProcessWorkplace(process.processId!, {
-        processId: process.processId!,
-        workplaceId: selectedWorkplace.workplaceId!,
-        workplaceName: selectedWorkplace.workplaceName,
-      });
-      showSnackbar('작업장이 매핑되었습니다.', 'success');
-      setOpenWorkplaceDialog(false);
-      setSelectedWorkplace(null);
-      fetchWorkplaces();
-    } catch (error) {
-      console.error('Failed to add workplace:', error);
-      showSnackbar('작업장 매핑에 실패했습니다.', 'error');
-    }
-  };
-
-  const handleRemoveWorkplace = async (processWorkplaceId: string) => {
-    if (window.confirm('작업장 매핑을 해제하시겠습니까?')) {
-      try {
-        await processService.removeProcessWorkplace(process.processId!, processWorkplaceId);
-        showSnackbar('작업장 매핑이 해제되었습니다.', 'success');
-        fetchWorkplaces();
-      } catch (error) {
-        console.error('Failed to remove workplace:', error);
-        showSnackbar('작업장 매핑 해제에 실패했습니다.', 'error');
-      }
-    }
-  };
-
-  const workplaceColumns: GridColDef[] = [
-    { field: 'workplaceName', headerName: '작업장명', flex: 1, align: 'center', headerAlign: 'center' },
-    { field: 'workplaceId', headerName: '작업장 ID', flex: 1, align: 'center', headerAlign: 'center' },
-    { field: 'regDt', headerName: '등록일', flex: 1, align: 'center', headerAlign: 'center' },
-    {
-      field: 'actions', headerName: '관리', flex: 0.8, align: 'center', headerAlign: 'center', sortable: false,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <IconButton size="small" color="error" onClick={() => handleRemoveWorkplace(params.row.processWorkplaceId!)}>
-            <DeleteIcon />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
-  return (
-    <Box>
-      <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
-        <CardContent>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="subtitle2">작업장 매핑</Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenWorkplaceDialog(true)}>
-              작업장 추가
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
-      <Paper sx={{ height: 400, width: '100%' }}>
-        <DataGrid rows={workplaces} columns={workplaceColumns} getRowId={(row) => row.processWorkplaceId || ''}
-          hideFooterPagination disableRowSelectionOnClick
-          localeText={{ noRowsLabel: '매핑된 작업장이 없습니다' }} />
-      </Paper>
-
-      <Dialog open={openWorkplaceDialog} onClose={() => setOpenWorkplaceDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>작업장 선택</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>작업장</InputLabel>
-            <Select value={selectedWorkplace?.workplaceId || ''} label="작업장"
-              onChange={(e) => {
-                const workplace = allWorkplaces.find(w => w.workplaceId === e.target.value);
-                setSelectedWorkplace(workplace || null);
-              }}>
-              {allWorkplaces.map((wp) => (
-                <MenuItem key={wp.workplaceId} value={wp.workplaceId}>
-                  {wp.workplaceName} ({wp.workplaceCode})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleAddWorkplace} variant="contained">추가</Button>
-          <Button onClick={() => setOpenWorkplaceDialog(false)}>취소</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-};
-
-// 불량코드 관리 탭 (간략버전, 실제로는 더 확장 필요)
+// 불량코드 관리 탭
 const ProcessDefectTab: React.FC<{ process: Process; showSnackbar: (m: string, s: 'success' | 'error') => void }> = ({ 
   process, showSnackbar 
 }) => {
   const [defects, setDefects] = useState<ProcessDefect[]>([]);
+  const [defectCodes, setDefectCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [formData, setFormData] = useState<ProcessDefect>({
@@ -517,9 +385,35 @@ const ProcessDefectTab: React.FC<{ process: Process; showSnackbar: (m: string, s
     }
   }, [process.processId]);
 
+  const fetchDefectCodes = useCallback(async () => {
+    try {
+      const response = await commonCodeService.getCommonDetailCodeList('DEFECT_CODE', 'Y');
+      if (response.resultCode === 200 && response.result?.detailCodeList) {
+        setDefectCodes(response.result.detailCodeList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch defect codes:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchDefects();
-  }, [fetchDefects]);
+    fetchDefectCodes();
+  }, [fetchDefects, fetchDefectCodes]);
+
+  const handleDefectCodeChange = (code: string) => {
+    const selectedCode = defectCodes.find(dc => dc.code === code);
+    if (selectedCode) {
+      setFormData({ 
+        ...formData, 
+        defectCode: selectedCode.code,
+        defectName: selectedCode.codeNm,
+        description: selectedCode.codeDc || '',
+      });
+    } else {
+      setFormData({ ...formData, defectCode: code });
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -606,14 +500,29 @@ const ProcessDefectTab: React.FC<{ process: Process; showSnackbar: (m: string, s
         <DialogTitle>{dialogMode === 'create' ? '불량코드 등록' : '불량코드 수정'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField fullWidth required label="불량 코드" value={formData.defectCode}
-              onChange={(e) => setFormData({ ...formData, defectCode: e.target.value })} />
+            <FormControl fullWidth required>
+              <InputLabel>불량코드</InputLabel>
+              <Select 
+                value={formData.defectCode}
+                label="불량코드"
+                onChange={(e) => handleDefectCodeChange(e.target.value)}
+                disabled={dialogMode === 'edit'}
+              >
+                {defectCodes.map((code) => (
+                  <MenuItem key={code.code} value={code.code}>
+                    {code.codeNm} ({code.code})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField fullWidth required label="불량명" value={formData.defectName}
-              onChange={(e) => setFormData({ ...formData, defectName: e.target.value })} />
+              onChange={(e) => setFormData({ ...formData, defectName: e.target.value })} 
+              disabled />
             <TextField fullWidth label="불량 타입" value={formData.defectType}
               onChange={(e) => setFormData({ ...formData, defectType: e.target.value })} />
             <TextField fullWidth multiline rows={3} label="설명" value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+              disabled />
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -625,11 +534,12 @@ const ProcessDefectTab: React.FC<{ process: Process; showSnackbar: (m: string, s
   );
 };
 
-// 검사항목 관리 탭 (간략버전, 실제로는 더 확장 필요)
+// 검사항목 관리 탭
 const ProcessInspectionTab: React.FC<{ process: Process; showSnackbar: (m: string, s: 'success' | 'error') => void }> = ({ 
   process, showSnackbar 
 }) => {
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
+  const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [formData, setFormData] = useState<ProcessInspection>({
@@ -647,6 +557,36 @@ const ProcessInspectionTab: React.FC<{ process: Process; showSnackbar: (m: strin
       console.error('Failed to fetch inspections:', error);
     }
   }, [process.processId]);
+
+  const fetchInspectionCodes = useCallback(async () => {
+    try {
+      const response = await commonCodeService.getCommonDetailCodeList('INSPECTION_CODE', 'Y');
+      if (response.resultCode === 200 && response.result?.detailCodeList) {
+        setInspectionCodes(response.result.detailCodeList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch inspection codes:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInspections();
+    fetchInspectionCodes();
+  }, [fetchInspections, fetchInspectionCodes]);
+
+  const handleInspectionCodeChange = (code: string) => {
+    const selectedCode = inspectionCodes.find(ic => ic.code === code);
+    if (selectedCode) {
+      setFormData({ 
+        ...formData, 
+        inspectionCode: selectedCode.code,
+        inspectionName: selectedCode.codeNm,
+        description: selectedCode.codeDc || '',
+      });
+    } else {
+      setFormData({ ...formData, inspectionCode: code });
+    }
+  };
 
   useEffect(() => {
     fetchInspections();
@@ -741,10 +681,24 @@ const ProcessInspectionTab: React.FC<{ process: Process; showSnackbar: (m: strin
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <TextField fullWidth required label="검사 코드" value={formData.inspectionCode}
-                onChange={(e) => setFormData({ ...formData, inspectionCode: e.target.value })} />
+              <FormControl fullWidth required>
+                <InputLabel>검사코드</InputLabel>
+                <Select 
+                  value={formData.inspectionCode}
+                  label="검사코드"
+                  onChange={(e) => handleInspectionCodeChange(e.target.value)}
+                  disabled={dialogMode === 'edit'}
+                >
+                  {inspectionCodes.map((code) => (
+                    <MenuItem key={code.code} value={code.code}>
+                      {code.codeNm} ({code.code})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField fullWidth required label="검사항목명" value={formData.inspectionName}
-                onChange={(e) => setFormData({ ...formData, inspectionName: e.target.value })} />
+                onChange={(e) => setFormData({ ...formData, inspectionName: e.target.value })} 
+                disabled />
             </Stack>
             <Stack direction="row" spacing={2}>
               <TextField fullWidth label="검사 타입" value={formData.inspectionType}
@@ -761,7 +715,8 @@ const ProcessInspectionTab: React.FC<{ process: Process; showSnackbar: (m: strin
                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })} />
             </Stack>
             <TextField fullWidth multiline rows={3} label="설명" value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+              disabled />
           </Stack>
         </DialogContent>
         <DialogActions>

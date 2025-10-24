@@ -1,0 +1,69 @@
+-- MES 공통코드 관리 테이블 (MySQL)
+
+-- 메인 공통코드 테이블
+CREATE TABLE IF NOT EXISTS MES_CCMMN_CODE (
+    CODE_ID VARCHAR(20) NOT NULL PRIMARY KEY,
+    CODE_ID_NM VARCHAR(100) NOT NULL,
+    CODE_ID_DC VARCHAR(500) NULL,
+    USE_AT CHAR(1) NOT NULL DEFAULT 'Y',
+    CL_CODE VARCHAR(20) NULL,
+    FRST_REGIST_PNTTM DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FRST_REGISTER_ID VARCHAR(20) NULL,
+    LAST_UPDT_PNTTM DATETIME NULL,
+    LAST_UPDUSR_ID VARCHAR(20) NULL
+) COMMENT='MES 공통코드 메인 테이블';
+
+-- 상세 공통코드 테이블
+CREATE TABLE IF NOT EXISTS MES_CCMMNDETAIL_CODE (
+    CODE_ID VARCHAR(20) NOT NULL,
+    CODE VARCHAR(50) NOT NULL,
+    CODE_NM VARCHAR(100) NOT NULL,
+    CODE_DC VARCHAR(500) NULL,
+    USE_AT CHAR(1) NOT NULL DEFAULT 'Y',
+    FRST_REGIST_PNTTM DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FRST_REGISTER_ID VARCHAR(20) NULL,
+    LAST_UPDT_PNTTM DATETIME NULL,
+    LAST_UPDUSR_ID VARCHAR(20) NULL,
+    
+    PRIMARY KEY (CODE_ID, CODE),
+    CONSTRAINT FK_MES_CCMMNDETAIL_CODE FOREIGN KEY (CODE_ID) 
+        REFERENCES MES_CCMMN_CODE(CODE_ID) ON DELETE CASCADE
+) COMMENT='MES 공통코드 상세 테이블';
+
+-- ID 생성을 위한 테이블 데이터 추가
+INSERT IGNORE INTO IDS (TABLE_NAME, NEXT_ID) VALUES ('MES_CCMMN_CODE', 1);
+
+-- 인덱스 추가 (성능 향상을 위해)
+CREATE INDEX IF NOT EXISTS IX_MES_CCMMN_CODE_USE_AT ON MES_CCMMN_CODE (USE_AT);
+CREATE INDEX IF NOT EXISTS IX_MES_CCMMNDETAIL_CODE_USE_AT ON MES_CCMMNDETAIL_CODE (USE_AT);
+CREATE INDEX IF NOT EXISTS IX_MES_CCMMNDETAIL_CODE_CODE_ID ON MES_CCMMNDETAIL_CODE (CODE_ID);
+
+-- 샘플 데이터 삽입 (불량코드, 검사항목용)
+INSERT IGNORE INTO MES_CCMMN_CODE (CODE_ID, CODE_ID_NM, CODE_ID_DC, USE_AT, CL_CODE, FRST_REGISTER_ID) 
+VALUES 
+    ('DEFECT_CODE', '불량코드', '공정별 불량 코드 관리', 'Y', 'PROCESS', 'socra710'),
+    ('INSPECTION_CODE', '검사항목코드', '공정별 검사 항목 관리', 'Y', 'PROCESS', 'socra710');
+
+-- 불량코드 상세 샘플 데이터
+INSERT IGNORE INTO MES_CCMMNDETAIL_CODE (CODE_ID, CODE, CODE_NM, CODE_DC, USE_AT, FRST_REGISTER_ID) 
+VALUES 
+    ('DEFECT_CODE', 'DF001', '조립불량', '부품 조립 불량', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF002', '치수불량', '치수 규격 미달', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF003', '도장불량', '도장 표면 불량', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF004', '외관불량', '외관 검사 불합격', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF005', '긁힘', '제품 표면 긁힘', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF006', '찍힘', '제품 표면 찍힘', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF007', '변형', '제품 변형', 'Y', 'socra710'),
+    ('DEFECT_CODE', 'DF008', '오염', '제품 오염', 'Y', 'socra710');
+
+-- 검사항목 상세 샘플 데이터
+INSERT IGNORE INTO MES_CCMMNDETAIL_CODE (CODE_ID, CODE, CODE_NM, CODE_DC, USE_AT, FRST_REGISTER_ID) 
+VALUES 
+    ('INSPECTION_CODE', 'INS001', '조립강도', '조립 강도 측정', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS002', '치수정밀도', '치수 정밀도 측정', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS003', '도막두께', '도막 두께 측정', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS004', '외관검사', '육안 외관 검사', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS005', '중량검사', '제품 중량 검사', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS006', '경도검사', '재질 경도 검사', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS007', '전기저항', '전기 저항 측정', 'Y', 'socra710'),
+    ('INSPECTION_CODE', 'INS008', '내압검사', '내압 시험', 'Y', 'socra710');

@@ -146,6 +146,76 @@ INSERT INTO TB_WORKPLACE (
 END
 GO
 
+-- 작업장별 공정 매핑 테이블
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TB_WORKPLACE_PROCESS]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[TB_WORKPLACE_PROCESS] (
+        [WORKPLACE_PROCESS_ID] NVARCHAR(20) NOT NULL PRIMARY KEY,
+        [WORKPLACE_ID] NVARCHAR(20) NOT NULL,
+        [PROCESS_ID] NVARCHAR(20) NOT NULL,
+        [PROCESS_NAME] NVARCHAR(100) NOT NULL,
+        [PROCESS_CODE] NVARCHAR(50) NOT NULL,
+        [USE_YN] NCHAR(1) NOT NULL DEFAULT 'Y',
+        [REG_USER_ID] NVARCHAR(20) NULL,
+        [REG_DT] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [UPD_USER_ID] NVARCHAR(20) NULL,
+        [UPD_DT] DATETIME2 NULL,
+        
+        CONSTRAINT [FK_WORKPLACE_PROCESS_WORKPLACE] FOREIGN KEY ([WORKPLACE_ID]) 
+            REFERENCES [dbo].[TB_WORKPLACE]([WORKPLACE_ID]) ON DELETE CASCADE,
+        CONSTRAINT [UK_WORKPLACE_PROCESS] UNIQUE ([WORKPLACE_ID], [PROCESS_ID])
+    );
+END
+GO
+
+-- 작업장별 공정 매핑 테이블에 설명 추가
+IF NOT EXISTS (SELECT * FROM sys.extended_properties WHERE major_id = OBJECT_ID('TB_WORKPLACE_PROCESS') AND minor_id = 0)
+BEGIN
+    EXEC sys.sp_addextendedproperty 
+        @name = N'MS_Description', 
+        @value = N'작업장별 공정 매핑 정보', 
+        @level0type = N'SCHEMA', @level0name = N'dbo', 
+        @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS';
+END
+GO
+
+-- 컬럼별 설명 추가 (TB_WORKPLACE_PROCESS)
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'작업장 공정 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'WORKPLACE_PROCESS_ID';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'작업장 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'WORKPLACE_ID';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'공정 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'PROCESS_ID';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'공정명', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'PROCESS_NAME';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'공정 코드', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'PROCESS_CODE';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'사용 여부 (Y/N)', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'USE_YN';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'등록자 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'REG_USER_ID';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'등록일시', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'REG_DT';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'수정자 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'UPD_USER_ID';
+EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'수정일시', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_WORKPLACE_PROCESS', @level2type = N'COLUMN', @level2name = N'UPD_DT';
+GO
+
+-- ID 생성을 위한 테이블 데이터 추가
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[IDS]') AND type in (N'U'))
+BEGIN
+    -- TB_WORKPLACE_PROCESS ID 초기화
+    IF NOT EXISTS (SELECT 1 FROM IDS WHERE TABLE_NAME = 'TB_WORKPLACE_PROCESS')
+    BEGIN
+        INSERT INTO IDS (TABLE_NAME, NEXT_ID) VALUES ('TB_WORKPLACE_PROCESS', 1);
+    END
+END
+GO
+
+-- 인덱스 추가
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('TB_WORKPLACE_PROCESS') AND name = 'IX_TB_WORKPLACE_PROCESS_WORKPLACE_ID')
+BEGIN
+    CREATE INDEX IX_TB_WORKPLACE_PROCESS_WORKPLACE_ID ON TB_WORKPLACE_PROCESS (WORKPLACE_ID);
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('TB_WORKPLACE_PROCESS') AND name = 'IX_TB_WORKPLACE_PROCESS_PROCESS_ID')
+BEGIN
+    CREATE INDEX IX_TB_WORKPLACE_PROCESS_PROCESS_ID ON TB_WORKPLACE_PROCESS (PROCESS_ID);
+END
+GO
+
 -- 작업자 샘플 데이터
 IF NOT EXISTS (SELECT 1 FROM TB_WORKPLACE_WORKER WHERE WORKPLACE_WORKER_ID = 'WPW001')
 BEGIN
@@ -163,5 +233,18 @@ INSERT INTO TB_WORKPLACE_WORKER (
       ('WPW008', 'WP004', 'EMP008', '유검사', '품질검사원', 'MEMBER', 'Y', 'socra710'),
       ('WPW009', 'WP004', 'EMP009', '임테스트', '테스트기사', 'MEMBER', 'Y', 'socra710'),
       ('WPW010', 'WP005', 'EMP010', '조창고', '창고관리자', 'LEADER', 'Y', 'socra710');
+END
+GO
+
+-- 작업장별 공정 매핑 샘플 데이터
+IF NOT EXISTS (SELECT 1 FROM TB_WORKPLACE_PROCESS WHERE WORKPLACE_PROCESS_ID = 'WPP001')
+BEGIN
+INSERT INTO TB_WORKPLACE_PROCESS (
+    WORKPLACE_PROCESS_ID, WORKPLACE_ID, PROCESS_ID, PROCESS_NAME, PROCESS_CODE,
+    USE_YN, REG_USER_ID
+) VALUES
+      ('WPP001', 'WP001', 'PR001', 'BODY-COMP 조립', 'BODY-COMP', 'Y', 'socra710'),
+      ('WPP002', 'WP003', 'PR002', '도장', 'PAINTING', 'Y', 'socra710'),
+      ('WPP003', 'WP004', 'PR004', 'QC 검사', 'QC-INSPECTION', 'Y', 'socra710');
 END
 GO
