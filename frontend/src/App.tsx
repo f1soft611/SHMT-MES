@@ -14,6 +14,7 @@ import Login from './pages/Login/Login';
 import BaseData from './pages/BaseData/BaseData';
 import Dashboard from './pages/Dashboard/Dashboard';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement/WorkplaceManagement';
+import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
@@ -56,6 +57,10 @@ function App() {
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
+                        />
+                        <Route
+                          path={URL.ITEM_MANAGEMENT}
+                          element={<ItemManagement />}
                         />
                         <Route
                           path={URL.PRODUCTION_ORDERS}

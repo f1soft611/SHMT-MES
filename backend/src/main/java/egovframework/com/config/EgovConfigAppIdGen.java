@@ -1850,4 +1850,20 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 품목 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovItemIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(10)
+			.setTable("IDS")
+			.setTableName("TB_ITEM")
+			.setPreFix("ITEM_")
+			.setCipers(15)
+			.setFillChar('0')
+			.build();
+	}
+
 }
