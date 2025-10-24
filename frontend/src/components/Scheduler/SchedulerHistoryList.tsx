@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Box,
   TextField,
@@ -23,7 +23,11 @@ const SchedulerHistoryList: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
-  // ✅ 검색/필터 변경 시 페이지 강제 리셋
+  // 마지막 정상 응답의 rows/total을 저장
+  const lastRowsRef = useRef<any[]>([]);
+  const lastTotalRef = useRef<number>(0);
+
+  // 검색/필터 변경 시 페이지 강제 리셋
   useEffect(() => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [searchKeyword, statusFilter]);
@@ -40,18 +44,46 @@ const SchedulerHistoryList: React.FC = () => {
       searchKeyword,
       statusFilter,
     ],
-    queryFn: () =>
-      schedulerService.getSchedulerHistoryList(
-        paginationModel.page,
-        paginationModel.pageSize,
-        searchKeyword,
+    queryFn: ({ queryKey }) => {
+      const [_key, page, pageSize, keyword, status] = queryKey as any;
+
+      // 백엔드가 1-based 페이지를 기대하면 page + 1 사용
+      const pageForApi = typeof page === 'number' ? page : page;
+
+      return schedulerService.getSchedulerHistoryList(
+        pageForApi,
+        pageSize,
+        keyword,
         undefined,
-        statusFilter
-      ),
-    staleTime: 30 * 1000,
-    // ✅ 캐시 문제 방지
-    // keepPreviousData: false,
+        status
+      );
+    },
+    // keepPreviousData 사용하지 않음
+    staleTime: 0,
   });
+
+  // 정상적으로 데이터가 들어오면 lastRefs 업데이트
+  useEffect(() => {
+    const rows = historyData?.result?.resultList;
+    const cnt = historyData?.result?.resultCnt
+      ? parseInt(historyData.result.resultCnt, 10)
+      : undefined;
+
+    if (Array.isArray(rows) && rows.length >= 0) {
+      lastRowsRef.current = rows;
+    }
+    if (typeof cnt === 'number' && !Number.isNaN(cnt)) {
+      lastTotalRef.current = cnt;
+    }
+  }, [historyData]);
+
+  // 로딩 중이면 이전 rows/total을 보여주고, 아니면 실제 데이터 사용
+  const rowsToShow = isLoading
+    ? lastRowsRef.current
+    : historyData?.result?.resultList || [];
+  const totalCountToShow = historyData?.result?.resultCnt
+    ? parseInt(historyData.result.resultCnt, 10)
+    : lastTotalRef.current ?? 0;
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
@@ -163,11 +195,6 @@ const SchedulerHistoryList: React.FC = () => {
     },
   ];
 
-  const rows = historyData?.result?.resultList || [];
-  const totalCount = historyData?.result?.resultCnt
-    ? parseInt(historyData.result.resultCnt)
-    : 0;
-
   if (error) {
     return (
       <Alert severity="error">
@@ -209,24 +236,22 @@ const SchedulerHistoryList: React.FC = () => {
       </Box>
 
       <DataGrid
-        rows={rows}
+        rows={rowsToShow}
         columns={columns}
         getRowId={(row) => row.historyId}
         paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
+        onPaginationModelChange={(newModel) => {
+          setPaginationModel(newModel);
+        }}
         pageSizeOptions={[5, 10, 25, 50]}
-        rowCount={totalCount}
+        rowCount={totalCountToShow}
         paginationMode="server"
         loading={isLoading}
         autoHeight
         disableRowSelectionOnClick
         sx={{
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
-          },
-          '& .MuiDataGrid-row:hover': {
-            backgroundColor: 'action.hover',
-          },
+          '& .MuiDataGrid-cell:focus': { outline: 'none' },
+          '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' },
         }}
       />
     </Box>
