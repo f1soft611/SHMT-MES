@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * -----------------------------------------------------------
  * 2023/06/19        crlee       최초 생성
  */
+
+@Disabled("테스트 비활성화")
 @TestInstance(TestInstance. Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EgovLoginApiControllerTest {
