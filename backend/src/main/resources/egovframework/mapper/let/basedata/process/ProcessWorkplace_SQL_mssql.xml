@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessWorkplaceDAO">
+
+	<resultMap id="processWorkplaceResult" type="egovframework.let.basedata.process.domain.model.ProcessWorkplace">
+		<result property="processWorkplaceId" column="PROCESS_WORKPLACE_ID"/>
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="workplaceId" column="WORKPLACE_ID"/>
+		<result property="workplaceName" column="WORKPLACE_NAME"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="ProcessWorkplaceDAO.selectProcessWorkplaceList" parameterType="egovframework.let.basedata.process.domain.model.ProcessWorkplaceVO" resultMap="processWorkplaceResult">
+		SELECT
+			PROCESS_WORKPLACE_ID,
+			PROCESS_ID,
+			WORKPLACE_ID,
+			WORKPLACE_NAME,
+			USE_YN,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS_WORKPLACE
+		WHERE 1=1
+		<if test="processId != null and processId != ''">
+			AND PROCESS_ID = #{processId}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY REG_DT DESC
+	</select>
+
+	<insert id="ProcessWorkplaceDAO.insertProcessWorkplace" parameterType="egovframework.let.basedata.process.domain.model.ProcessWorkplace">
+		INSERT INTO TB_PROCESS_WORKPLACE (
+			PROCESS_WORKPLACE_ID,
+			PROCESS_ID,
+			WORKPLACE_ID,
+			WORKPLACE_NAME,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+					 #{processWorkplaceId},
+					 #{processId},
+					 #{workplaceId},
+					 #{workplaceName},
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
+	</insert>
+
+	<delete id="ProcessWorkplaceDAO.deleteProcessWorkplace" parameterType="string">
+		DELETE FROM TB_PROCESS_WORKPLACE
+		WHERE PROCESS_WORKPLACE_ID = #{processWorkplaceId}
+	</delete>
+
+</mapper>

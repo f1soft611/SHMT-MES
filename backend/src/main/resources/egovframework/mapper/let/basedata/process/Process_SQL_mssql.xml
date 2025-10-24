@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessDAO">
+
+	<resultMap id="processResult" type="egovframework.let.basedata.process.domain.model.Process">
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="processCode" column="PROCESS_CODE"/>
+		<result property="processName" column="PROCESS_NAME"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="processType" column="PROCESS_TYPE"/>
+		<result property="equipmentIntegrationYn" column="EQUIPMENT_INTEGRATION_YN"/>
+		<result property="status" column="STATUS"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="sortOrder" column="SORT_ORDER"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="ProcessDAO.selectProcessList" parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultMap="processResult">
+		SELECT
+		PROCESS_ID,
+		PROCESS_CODE,
+		PROCESS_NAME,
+		DESCRIPTION,
+		PROCESS_TYPE,
+		EQUIPMENT_INTEGRATION_YN,
+		STATUS,
+		USE_YN,
+		SORT_ORDER,
+		REG_USER_ID,
+		CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+		UPD_USER_ID,
+		CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == 0">
+					AND PROCESS_CODE LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == 1">
+					AND PROCESS_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == 2">
+					AND PROCESS_TYPE LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		<if test="equipmentIntegrationYn != null and equipmentIntegrationYn != ''">
+			AND EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn}
+		</if>
+		ORDER BY SORT_ORDER ASC, REG_DT DESC
+		<if test="firstIndex != null and recordCountPerPage != null">
+			OFFSET #{firstIndex} ROWS
+			FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<select id="ProcessDAO.selectProcessListCnt" parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_PROCESS
+		WHERE 1=1
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '0'">
+					AND PROCESS_CODE LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '1'">
+					AND PROCESS_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '2'">
+					AND PROCESS_TYPE LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		<if test="equipmentIntegrationYn != null and equipmentIntegrationYn != ''">
+			AND EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn}
+		</if>
+	</select>
+
+	<select id="ProcessDAO.selectProcess" parameterType="string" resultMap="processResult">
+		SELECT
+			PROCESS_ID,
+			PROCESS_CODE,
+			PROCESS_NAME,
+			DESCRIPTION,
+			PROCESS_TYPE,
+			EQUIPMENT_INTEGRATION_YN,
+			STATUS,
+			USE_YN,
+			SORT_ORDER,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS
+		WHERE PROCESS_ID = #{processId}
+	</select>
+
+	<insert id="ProcessDAO.insertProcess" parameterType="egovframework.let.basedata.process.domain.model.Process">
+		INSERT INTO TB_PROCESS (
+			PROCESS_ID,
+			PROCESS_CODE,
+			PROCESS_NAME,
+			DESCRIPTION,
+			PROCESS_TYPE,
+			EQUIPMENT_INTEGRATION_YN,
+			STATUS,
+			USE_YN,
+			SORT_ORDER,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+					 #{processId},
+					 #{processCode},
+					 #{processName},
+					 #{description},
+					 #{processType},
+					 ISNULL(#{equipmentIntegrationYn}, 'N'),
+					 ISNULL(#{status}, 'ACTIVE'),
+					 ISNULL(#{useYn}, 'Y'),
+					 #{sortOrder},
+					 #{regUserId},
+					 GETDATE()
+				 )
+	</insert>
+
+	<update id="ProcessDAO.updateProcess" parameterType="egovframework.let.basedata.process.domain.model.Process">
+		UPDATE TB_PROCESS
+		SET
+			PROCESS_CODE = #{processCode},
+			PROCESS_NAME = #{processName},
+			DESCRIPTION = #{description},
+			PROCESS_TYPE = #{processType},
+			EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn},
+			STATUS = #{status},
+			USE_YN = #{useYn},
+			SORT_ORDER = #{sortOrder},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = GETDATE()
+		WHERE PROCESS_ID = #{processId}
+	</update>
+
+	<delete id="ProcessDAO.deleteProcess" parameterType="string">
+		DELETE FROM TB_PROCESS
+		WHERE PROCESS_ID = #{processId}
+	</delete>
+
+	<!-- 공정 코드 중복 체크 -->
+	<select id="ProcessDAO.selectProcessCodeCheck" parameterType="string" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_PROCESS
+		WHERE PROCESS_CODE = #{processCode}
+	</select>
+
+	<!-- 공정 코드 중복 체크 (수정 시) -->
+	<select id="ProcessDAO.selectProcessCodeCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TB_PROCESS
+		WHERE PROCESS_CODE = #{processCode}
+		  AND PROCESS_ID != #{processId}
+	</select>
+
+</mapper>
