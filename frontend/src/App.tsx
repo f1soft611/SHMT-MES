@@ -13,6 +13,7 @@ import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement/WorkplaceManagement';
+import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
 import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
@@ -55,6 +56,10 @@ function App() {
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
+                        />
+                        <Route
+                          path={URL.PROCESS_MANAGEMENT}
+                          element={<ProcessManagement />}
                         />
                         <Route
                           path={URL.ITEM_MANAGEMENT}

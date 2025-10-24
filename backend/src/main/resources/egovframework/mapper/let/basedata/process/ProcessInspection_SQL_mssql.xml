@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessInspectionDAO">
+
+	<resultMap id="processInspectionResult" type="egovframework.let.basedata.process.domain.model.ProcessInspection">
+		<result property="processInspectionId" column="PROCESS_INSPECTION_ID"/>
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="inspectionCode" column="INSPECTION_CODE"/>
+		<result property="inspectionName" column="INSPECTION_NAME"/>
+		<result property="inspectionType" column="INSPECTION_TYPE"/>
+		<result property="standardValue" column="STANDARD_VALUE"/>
+		<result property="upperLimit" column="UPPER_LIMIT"/>
+		<result property="lowerLimit" column="LOWER_LIMIT"/>
+		<result property="unit" column="UNIT"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="ProcessInspectionDAO.selectProcessInspectionList" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspectionVO" resultMap="processInspectionResult">
+		SELECT
+			PROCESS_INSPECTION_ID,
+			PROCESS_ID,
+			INSPECTION_CODE,
+			INSPECTION_NAME,
+			INSPECTION_TYPE,
+			STANDARD_VALUE,
+			UPPER_LIMIT,
+			LOWER_LIMIT,
+			UNIT,
+			DESCRIPTION,
+			USE_YN,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS_INSPECTION
+		WHERE 1=1
+		<if test="processId != null and processId != ''">
+			AND PROCESS_ID = #{processId}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY INSPECTION_CODE ASC
+	</select>
+
+	<insert id="ProcessInspectionDAO.insertProcessInspection" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspection">
+		INSERT INTO TB_PROCESS_INSPECTION (
+			PROCESS_INSPECTION_ID,
+			PROCESS_ID,
+			INSPECTION_CODE,
+			INSPECTION_NAME,
+			INSPECTION_TYPE,
+			STANDARD_VALUE,
+			UPPER_LIMIT,
+			LOWER_LIMIT,
+			UNIT,
+			DESCRIPTION,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+					 #{processInspectionId},
+					 #{processId},
+					 #{inspectionCode},
+					 #{inspectionName},
+					 #{inspectionType},
+					 #{standardValue},
+					 #{upperLimit},
+					 #{lowerLimit},
+					 #{unit},
+					 #{description},
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
+	</insert>
+
+	<update id="ProcessInspectionDAO.updateProcessInspection" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspection">
+		UPDATE TB_PROCESS_INSPECTION
+		SET
+			INSPECTION_CODE = #{inspectionCode},
+			INSPECTION_NAME = #{inspectionName},
+			INSPECTION_TYPE = #{inspectionType},
+			STANDARD_VALUE = #{standardValue},
+			UPPER_LIMIT = #{upperLimit},
+			LOWER_LIMIT = #{lowerLimit},
+			UNIT = #{unit},
+			DESCRIPTION = #{description},
+			USE_YN = #{useYn},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = GETDATE()
+		WHERE PROCESS_INSPECTION_ID = #{processInspectionId}
+	</update>
+
+	<delete id="ProcessInspectionDAO.deleteProcessInspection" parameterType="string">
+		DELETE FROM TB_PROCESS_INSPECTION
+		WHERE PROCESS_INSPECTION_ID = #{processInspectionId}
+	</delete>
+
+</mapper>
