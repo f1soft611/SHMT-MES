@@ -1,6 +1,7 @@
 package egovframework.let.basedata.process.service;
 
 import egovframework.let.basedata.process.domain.model.*;
+import egovframework.let.basedata.process.domain.model.Process;
 
 import java.util.List;
 import java.util.Map;

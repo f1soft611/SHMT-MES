@@ -5,6 +5,7 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.let.basedata.process.domain.model.*;
+import egovframework.let.basedata.process.domain.model.Process;
 import egovframework.let.basedata.process.service.EgovProcessService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

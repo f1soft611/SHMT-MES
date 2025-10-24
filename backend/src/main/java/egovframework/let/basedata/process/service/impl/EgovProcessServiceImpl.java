@@ -1,6 +1,7 @@
 package egovframework.let.basedata.process.service.impl;
 
 import egovframework.let.basedata.process.domain.model.*;
+import egovframework.let.basedata.process.domain.model.Process;
 import egovframework.let.basedata.process.domain.repository.*;
 import egovframework.let.basedata.process.service.EgovProcessService;
 import lombok.RequiredArgsConstructor;
