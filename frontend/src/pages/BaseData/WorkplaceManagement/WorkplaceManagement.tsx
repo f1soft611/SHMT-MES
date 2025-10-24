@@ -255,6 +255,20 @@ const WorkplaceManagement: React.FC = () => {
       ),
     },
     {
+      field: 'proCnt',
+      headerName: '등록 공정 수',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'workerCnt',
+      headerName: '작업자 수',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
       field: 'regDt',
       headerName: '등록일',
       flex: 1.2,
@@ -590,10 +604,16 @@ const WorkplaceDetailDialog: React.FC<WorkplaceDetailDialogProps> = ({
           </Tabs>
         </Box>
         {detailTab === 0 && (
-          <WorkplaceWorkerTab workplace={workplace} showSnackbar={showSnackbar} />
+          <WorkplaceWorkerTab
+            workplace={workplace}
+            showSnackbar={showSnackbar}
+          />
         )}
         {detailTab === 1 && (
-          <WorkplaceProcessTab workplace={workplace} showSnackbar={showSnackbar} />
+          <WorkplaceProcessTab
+            workplace={workplace}
+            showSnackbar={showSnackbar}
+          />
         )}
       </DialogContent>
       <DialogActions>
@@ -755,11 +775,7 @@ const WorkplaceWorkerTab: React.FC<{
           <Typography variant="subtitle2" gutterBottom>
             작업자 추가
           </Typography>
-          <Stack
-            direction="row"
-            spacing={2}
-            sx={{ mt: 0.5, flexWrap: 'wrap' }}
-          >
+          <Stack direction="row" spacing={2} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
             <Box sx={{ flex: '1 1 150px' }}>
               <TextField
                 fullWidth
@@ -898,7 +914,9 @@ const WorkplaceProcessTab: React.FC<{
   }, [fetchProcesses, fetchAvailableProcesses]);
 
   const handleProcessChange = (processId: string) => {
-    const selectedProcess = availableProcesses.find((p) => p.processId === processId);
+    const selectedProcess = availableProcesses.find(
+      (p) => p.processId === processId
+    );
     if (selectedProcess) {
       setFormData({
         ...formData,
@@ -913,7 +931,10 @@ const WorkplaceProcessTab: React.FC<{
 
   const handleSave = async () => {
     try {
-      await workplaceService.addWorkplaceProcess(workplace.workplaceId!, formData);
+      await workplaceService.addWorkplaceProcess(
+        workplace.workplaceId!,
+        formData
+      );
       showSnackbar('공정이 등록되었습니다.', 'success');
       setOpenDialog(false);
       fetchProcesses();

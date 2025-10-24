@@ -929,7 +929,7 @@ const ProcessInspectionTab: React.FC<{
   const fetchInspectionCodes = useCallback(async () => {
     try {
       const response = await commonCodeService.getCommonDetailCodeList(
-        'INSPECTION_CODE',
+        'COM004',
         'Y'
       );
       if (response.resultCode === 200 && response.result?.detailCodeList) {

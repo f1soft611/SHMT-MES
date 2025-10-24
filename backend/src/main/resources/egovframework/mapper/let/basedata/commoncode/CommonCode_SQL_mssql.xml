@@ -29,13 +29,13 @@
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '0'">
+				<when test="searchCnd == 0">
 					AND CODE_ID LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '1'">
+				<when test="searchCnd == 1">
 					AND CODE_ID_NM LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
+				<when test="searchCnd == 2">
 					AND CODE_ID_DC LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
@@ -59,13 +59,13 @@
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '0'">
+				<when test="searchCnd == 0">
 					AND CODE_ID LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '1'">
+				<when test="searchCnd == 1">
 					AND CODE_ID_NM LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
+				<when test="searchCnd == 2">
 					AND CODE_ID_DC LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>

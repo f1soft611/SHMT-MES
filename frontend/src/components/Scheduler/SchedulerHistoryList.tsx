@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -23,6 +23,11 @@ const SchedulerHistoryList: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
 
+  // ✅ 검색/필터 변경 시 페이지 강제 리셋
+  useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [searchKeyword, statusFilter]);
+
   const {
     data: historyData,
     isLoading,
@@ -43,17 +48,17 @@ const SchedulerHistoryList: React.FC = () => {
         undefined,
         statusFilter
       ),
-    staleTime: 30 * 1000, // 30초
+    staleTime: 30 * 1000,
+    // ✅ 캐시 문제 방지
+    // keepPreviousData: false,
   });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
-    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const handleStatusChange = (event: any) => {
     setStatusFilter(event.target.value);
-    setPaginationModel({ ...paginationModel, page: 0 });
   };
 
   const getStatusColor = (status: string) => {
