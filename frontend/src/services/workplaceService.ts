@@ -1,5 +1,6 @@
 import apiClient from './api';
 import { Workplace, WorkplaceWorker, WorkplaceSearchParams } from '../types/workplace';
+import { ProcessWorkplace } from '../types/process';
 
 /**
  * 작업장 API 서비스
@@ -76,6 +77,30 @@ export const workplaceService = {
    */
   removeWorkplaceWorker: async (workplaceId: string, workplaceWorkerId: string) => {
     const response = await apiClient.delete(`/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`);
+    return response.data;
+  },
+
+  /**
+   * 작업장별 공정 목록 조회
+   */
+  getWorkplaceProcesses: async (workplaceId: string) => {
+    const response = await apiClient.get(`/api/workplaces/${workplaceId}/processes`);
+    return response.data;
+  },
+
+  /**
+   * 작업장별 공정 등록
+   */
+  addWorkplaceProcess: async (workplaceId: string, processWorkplace: ProcessWorkplace) => {
+    const response = await apiClient.post(`/api/workplaces/${workplaceId}/processes`, processWorkplace);
+    return response.data;
+  },
+
+  /**
+   * 작업장별 공정 삭제
+   */
+  removeWorkplaceProcess: async (workplaceId: string, processWorkplaceId: string) => {
+    const response = await apiClient.delete(`/api/workplaces/${workplaceId}/processes/${processWorkplaceId}`);
     return response.data;
   },
 };

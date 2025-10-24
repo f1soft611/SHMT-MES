@@ -4,6 +4,9 @@ import egovframework.com.cmm.LoginVO;
 import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
+import egovframework.let.basedata.process.domain.model.ProcessWorkplace;
+import egovframework.let.basedata.process.domain.model.ProcessWorkplaceVO;
+import egovframework.let.basedata.process.service.EgovProcessService;
 import egovframework.let.basedata.workplace.domain.model.Workplace;
 import egovframework.let.basedata.workplace.domain.model.WorkplaceVO;
 import egovframework.let.basedata.workplace.domain.model.WorkplaceWorker;
@@ -49,6 +52,7 @@ public class EgovWorkplaceApiController {
 
     private final ResultVoHelper resultVoHelper;
     private final EgovWorkplaceService workplaceService;
+    private final EgovProcessService processService;
     private final EgovPropertyService propertyService;
 
     /**
@@ -293,6 +297,92 @@ public class EgovWorkplaceApiController {
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "작업자가 삭제되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 작업장별 공정 목록을 조회한다.
+     */
+    @Operation(
+            summary = "작업장별 공정 목록 조회",
+            description = "작업장별 공정 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovWorkplaceApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/workplaces/{workplaceId}/processes")
+    public ResultVO selectWorkplaceProcessList(
+            @PathVariable String workplaceId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        ProcessWorkplaceVO processWorkplaceVO = new ProcessWorkplaceVO();
+        processWorkplaceVO.setWorkplaceId(workplaceId);
+        
+        List<ProcessWorkplaceVO> resultList = processService.selectProcessWorkplaceList(processWorkplaceVO);
+        
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", resultList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 작업장별 공정을 등록한다.
+     */
+    @Operation(
+            summary = "작업장별 공정 등록",
+            description = "작업장별 공정을 등록한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovWorkplaceApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "등록 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/workplaces/{workplaceId}/processes")
+    public ResultVO insertWorkplaceProcess(
+            @PathVariable String workplaceId,
+            @RequestBody ProcessWorkplace processWorkplace,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processWorkplace.setWorkplaceId(workplaceId);
+        processWorkplace.setRegUserId(user.getUniqId());
+        processService.insertProcessWorkplace(processWorkplace);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "공정이 등록되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 작업장별 공정을 삭제한다.
+     */
+    @Operation(
+            summary = "작업장별 공정 삭제",
+            description = "작업장별 공정을 삭제한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovWorkplaceApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @DeleteMapping("/workplaces/{workplaceId}/processes/{processWorkplaceId}")
+    public ResultVO deleteWorkplaceProcess(
+            @PathVariable String workplaceId,
+            @PathVariable String processWorkplaceId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processService.deleteProcessWorkplace(processWorkplaceId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "공정이 삭제되었습니다.");
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }

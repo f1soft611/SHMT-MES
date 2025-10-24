@@ -23,6 +23,8 @@ export interface ProcessWorkplace {
   processId: string;
   workplaceId: string;
   workplaceName: string;
+  processCode?: string;
+  processName?: string;
   useYn?: string;
   regUserId?: string;
   regDt?: string;

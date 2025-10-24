@@ -7,6 +7,8 @@
 		<result property="processId" column="PROCESS_ID"/>
 		<result property="workplaceId" column="WORKPLACE_ID"/>
 		<result property="workplaceName" column="WORKPLACE_NAME"/>
+		<result property="processCode" column="PROCESS_CODE"/>
+		<result property="processName" column="PROCESS_NAME"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="regUserId" column="REG_USER_ID"/>
 		<result property="regDt" column="REG_DT"/>
@@ -16,24 +18,30 @@
 
 	<select id="ProcessWorkplaceDAO.selectProcessWorkplaceList" parameterType="egovframework.let.basedata.process.domain.model.ProcessWorkplaceVO" resultMap="processWorkplaceResult">
 		SELECT
-			PROCESS_WORKPLACE_ID,
-			PROCESS_ID,
-			WORKPLACE_ID,
-			WORKPLACE_NAME,
-			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_PROCESS_WORKPLACE
+			pw.PROCESS_WORKPLACE_ID,
+			pw.PROCESS_ID,
+			pw.WORKPLACE_ID,
+			pw.WORKPLACE_NAME,
+			p.PROCESS_CODE,
+			p.PROCESS_NAME,
+			pw.USE_YN,
+			pw.REG_USER_ID,
+			CONVERT(VARCHAR(19), pw.REG_DT, 120) AS REG_DT,
+			pw.UPD_USER_ID,
+			CONVERT(VARCHAR(19), pw.UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS_WORKPLACE pw
+		LEFT JOIN TB_PROCESS p ON pw.PROCESS_ID = p.PROCESS_ID
 		WHERE 1=1
 		<if test="processId != null and processId != ''">
-			AND PROCESS_ID = #{processId}
+			AND pw.PROCESS_ID = #{processId}
+		</if>
+		<if test="workplaceId != null and workplaceId != ''">
+			AND pw.WORKPLACE_ID = #{workplaceId}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
+			AND pw.USE_YN = #{useYn}
 		</if>
-		ORDER BY REG_DT DESC
+		ORDER BY pw.REG_DT DESC
 	</select>
 
 	<insert id="ProcessWorkplaceDAO.insertProcessWorkplace" parameterType="egovframework.let.basedata.process.domain.model.ProcessWorkplace">

@@ -45,6 +45,12 @@ public class ProcessWorkplace implements Serializable {
 	@Schema(description = "작업장명")
 	private String workplaceName = "";
 
+	@Schema(description = "공정 코드")
+	private String processCode = "";
+
+	@Schema(description = "공정명")
+	private String processName = "";
+
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "";
 
