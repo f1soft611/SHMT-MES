@@ -108,12 +108,14 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       headerName: '스케쥴러명',
       flex: 1,
       minWidth: 200,
+      headerAlign: 'center',
     },
     {
       field: 'schedulerDescription',
       headerName: '설명',
       flex: 1,
       minWidth: 250,
+      headerAlign: 'center',
     },
     {
       field: 'cronExpression',

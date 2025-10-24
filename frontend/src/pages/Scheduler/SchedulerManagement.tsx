@@ -8,7 +8,16 @@ import {
   Tab,
   Alert,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+  Code as CodeIcon,
+  List as ListIcon,
+  History as HistoryIcon,
+  Schedule as ScheduleIcon,
+} from '@mui/icons-material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { schedulerService } from '../../services/schedulerService';
@@ -125,11 +134,12 @@ const SchedulerManagement: React.FC = () => {
 
         <Box>
           <Button
-            variant="outlined"
+            variant="contained"
+            color="info"
             startIcon={<RefreshIcon />}
             onClick={handleRestartClick}
             disabled={restartMutation.isPending}
-            sx={{ mr: 1 }}
+            sx={{ mr: 2 }}
           >
             스케쥴러 재시작
           </Button>
@@ -154,14 +164,18 @@ const SchedulerManagement: React.FC = () => {
           value={tabValue}
           onChange={handleTabChange}
           aria-label="scheduler tabs"
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
+          sx={{ mb: 2 }}
         >
-          <Tab label="스케쥴러 관리" />
-          <Tab label="실행 이력" />
+          <Tab
+            icon={<ScheduleIcon />}
+            iconPosition="start"
+            label="스케쥴러 관리"
+          />
+          <Tab icon={<HistoryIcon />} iconPosition="start" label="실행 이력" />
         </Tabs>
       </Paper>
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper>
         <TabPanel value={tabValue} index={0}>
           <SchedulerList onEdit={handleEditClick} />
         </TabPanel>

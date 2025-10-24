@@ -646,7 +646,7 @@ const ProcessDefectTab: React.FC<{
   const fetchDefectCodes = useCallback(async () => {
     try {
       const response = await commonCodeService.getCommonDetailCodeList(
-        'DEFECT_CODE',
+        'COM003',
         'Y'
       );
       if (response.resultCode === 200 && response.result?.detailCodeList) {
