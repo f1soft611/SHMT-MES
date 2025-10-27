@@ -210,9 +210,7 @@ const ProductionPlan: React.FC = () => {
       setPlans([...plans, newPlan]);
       showSnackbar('생산계획이 등록되었습니다.', 'success');
     } else {
-      setPlans(
-        plans.map((p) => (p.id === formData.id ? formData : p))
-      );
+      setPlans(plans.map((p) => (p.id === formData.id ? formData : p)));
       showSnackbar('생산계획이 수정되었습니다.', 'success');
     }
 
@@ -451,7 +449,9 @@ const ProductionPlan: React.FC = () => {
                                   <IconButton
                                     size="small"
                                     color="error"
-                                    onClick={() => plan.id && handleDelete(plan.id)}
+                                    onClick={() =>
+                                      plan.id && handleDelete(plan.id)
+                                    }
                                     title="삭제"
                                   >
                                     <DeleteIcon fontSize="small" />
@@ -486,11 +486,7 @@ const ProductionPlan: React.FC = () => {
             <TextField
               fullWidth
               label="계획일자"
-              value={
-                dialogMode === 'create'
-                  ? selectedDate
-                  : formData.date
-              }
+              value={dialogMode === 'create' ? selectedDate : formData.date}
               disabled
             />
             <Stack direction="row" spacing={2}>
@@ -529,18 +525,14 @@ const ProductionPlan: React.FC = () => {
                 fullWidth
                 label="작업장코드"
                 value={formData.workplaceCode}
-                onChange={(e) =>
-                  handleChange('workplaceCode', e.target.value)
-                }
+                onChange={(e) => handleChange('workplaceCode', e.target.value)}
                 placeholder="예: WP-001"
               />
               <TextField
                 fullWidth
                 label="작업장명"
                 value={formData.workplaceName}
-                onChange={(e) =>
-                  handleChange('workplaceName', e.target.value)
-                }
+                onChange={(e) => handleChange('workplaceName', e.target.value)}
                 placeholder="예: 조립라인 1"
               />
             </Stack>
