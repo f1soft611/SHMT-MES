@@ -433,7 +433,12 @@ const ProductionPlan: React.FC = () => {
                           onClick={() => toggleWorkplace(workplace.workplaceCode)}
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <IconButton size="small" sx={{ mr: 1 }}>
+                            <IconButton 
+                              size="small" 
+                              sx={{ mr: 1 }}
+                              aria-label={isExpanded ? '설비 접기' : '설비 펼치기'}
+                              aria-expanded={isExpanded}
+                            >
                               {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                             </IconButton>
                             <Box>
@@ -617,8 +622,10 @@ const ProductionPlan: React.FC = () => {
             />
             <Stack direction="row" spacing={2}>
               <FormControl fullWidth>
-                <InputLabel>작업장</InputLabel>
+                <InputLabel id="workplace-select-label">작업장</InputLabel>
                 <Select
+                  labelId="workplace-select-label"
+                  id="workplace-select"
                   value={formData.workplaceCode}
                   label="작업장"
                   onChange={(e) => {
@@ -646,8 +653,10 @@ const ProductionPlan: React.FC = () => {
               />
             </Stack>
             <FormControl fullWidth>
-              <InputLabel>근무조</InputLabel>
+              <InputLabel id="shift-select-label">근무조</InputLabel>
               <Select
+                labelId="shift-select-label"
+                id="shift-select"
                 value={formData.shift}
                 label="근무조"
                 onChange={(e) => handleChange('shift', e.target.value)}
