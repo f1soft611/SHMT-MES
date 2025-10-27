@@ -6,6 +6,7 @@ const URL = {
   WORKPLACE_MANAGEMENT: '/base/workplace', //작업장 관리
   PROCESS_MANAGEMENT: '/base/process', //공정 관리
   ITEM_MANAGEMENT: '/base/item', //품목 관리
+  PRODUCTION_PLAN: '/prod/plan', //생산계획 수립
   PRODUCTION_ORDERS: '/prod/orders', //생산지시
   PRODUCTION_RESULTS: '/prod/results', //생산실적
   ERROR: '/error', //오류 페이지
