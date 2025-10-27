@@ -216,3 +216,59 @@ src/
 - **API 문서**: Swagger/OpenAPI 3.0 사용
 - **컴포넌트 문서**: Storybook 또는 JSDoc 활용
 - **변경 이력**: CHANGELOG.md 파일에 버전별 변경사항 기록
+
+## JWT 세션 관리
+
+### 슬라이딩 윈도우 세션 방식
+
+프로젝트는 사용자 경험 향상을 위해 **슬라이딩 윈도우(Sliding Window)** 방식의 JWT 세션 관리를 사용합니다.
+
+#### 동작 원리
+
+1. **토큰 유효 시간**: 60분
+2. **자동 갱신**: 사용자가 API 요청을 할 때마다 세션 시간이 자동으로 연장됩니다
+3. **비활동 시 만료**: 사용자가 60분 동안 아무런 활동을 하지 않으면 로그아웃됩니다
+
+#### 기술적 구현
+
+- **프론트엔드**: 모든 성공적인 API 응답 시 `tokenIssuedAt` 타임스탬프를 업데이트
+- **자동 갱신 시점**: 토큰이 만료 5분 전이 되면 자동으로 새 토큰 발급
+- **리프레시 토큰**: 7일 유효 기간의 리프레시 토큰으로 액세스 토큰 갱신
+
+#### 사용자 경험
+
+- ✅ **활동 중인 사용자**: 작업 중에는 로그아웃되지 않습니다
+- ✅ **장시간 작업**: 데이터 입력이나 문서 작성 중에도 세션 유지
+- ✅ **보안**: 비활동 상태가 60분 지속되면 자동 로그아웃으로 보안 유지
+- ✅ **투명한 갱신**: 토큰 갱신이 백그라운드에서 자동으로 처리되어 사용자가 인지하지 못함
+
+#### 관련 파일
+
+**Frontend (이번 PR에서 수정)**:
+- `frontend/src/services/api.ts` - 기본 API 클라이언트 (슬라이딩 윈도우 구현)
+- `frontend/src/services/authService.ts` - 인증 서비스 (슬라이딩 윈도우 구현)
+- `frontend/src/util/axios.ts` - Axios 설정 (슬라이딩 윈도우 구현)
+
+**Backend (기존 구현, 변경 없음)**:
+- `backend/src/main/java/egovframework/com/jwt/EgovJwtTokenUtil.java` - JWT 토큰 생성/검증
+- `backend/src/main/java/egovframework/let/uat/uia/web/EgovLoginApiController.java` - 로그인/토큰 갱신 API
+
+---
+
+### JWT Session Management (English Summary)
+
+**Sliding Window Session Approach**: The project uses a sliding window JWT session management to improve user experience.
+
+**Key Features**:
+- Token validity: 60 minutes
+- Automatic extension: Session time automatically extends with each user activity
+- Inactivity timeout: Users are logged out after 60 minutes of inactivity
+- Implementation: `tokenIssuedAt` timestamp is updated on every successful API response
+- Auto-refresh: New token is issued 5 minutes before expiration
+- Refresh token: 7-day validity for access token renewal
+
+**Benefits**:
+- Active users remain logged in during work
+- Long-running tasks maintain session
+- Security maintained with inactivity timeout
+- Transparent token refresh in background

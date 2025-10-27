@@ -13,6 +13,10 @@ const apiClient = axios.create({
   },
 });
 
+// 슬라이딩 윈도우 세션 관리:
+// - 사용자가 API 요청을 할 때마다 tokenIssuedAt이 업데이트됩니다
+// - 이를 통해 활동 중인 사용자는 세션이 계속 유지됩니다
+// - 비활동 상태가 60분 지속되면 세션이 만료됩니다
 // 토큰 만료 확인 함수
 const isTokenExpiringSoon = (): boolean => {
   const issuedAt = sessionStorage.getItem('tokenIssuedAt');
@@ -91,7 +95,15 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // 응답 인터셉터
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // 성공적인 응답 시 활동 시간 업데이트 (슬라이딩 윈도우 세션)
+    // 사용자가 활동 중일 때마다 세션을 연장합니다
+    const token = sessionStorage.getItem('accessToken');
+    if (token) {
+      sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     
@@ -120,6 +132,7 @@ apiClient.interceptors.response.use(
           if (refreshResponse.data.resultCode === '200' && refreshResponse.data.jToken) {
             const newToken = refreshResponse.data.jToken;
             sessionStorage.setItem('accessToken', newToken);
+            sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
             originalRequest.headers.Authorization = newToken;
             processQueue(null, newToken);
             return apiClient(originalRequest);
@@ -136,6 +149,7 @@ apiClient.interceptors.response.use(
       sessionStorage.removeItem('accessToken');
       sessionStorage.removeItem('refreshToken');
       sessionStorage.removeItem('user');
+      sessionStorage.removeItem('tokenIssuedAt');
       window.location.href = '/login';
     }
     return Promise.reject(error);

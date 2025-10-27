@@ -94,6 +94,8 @@ export const authService = {
   },
 
   // 토큰 만료 여부 확인 (JWT 토큰 유효시간: 60분)
+  // 참고: 슬라이딩 윈도우 방식으로 사용자 활동 시마다 tokenIssuedAt이 업데이트됩니다
+  // 따라서 활동 중인 사용자는 세션이 계속 유지되고, 비활동 시에만 60분 후 만료됩니다
   isTokenExpiringSoon(): boolean {
     const issuedAt = sessionStorage.getItem('tokenIssuedAt');
     if (!issuedAt) {
@@ -203,7 +205,15 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response interceptor - 401 에러 시 토큰 리프레쉬 시도
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // 성공적인 응답 시 활동 시간 업데이트 (슬라이딩 윈도우 세션)
+    // 사용자가 활동 중일 때마다 세션을 연장합니다
+    const token = authService.getToken();
+    if (token) {
+      sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     
