@@ -246,349 +246,349 @@ const ProductionPlan: React.FC = () => {
         </Box>
       </Box>
 
-        {/* 검색 영역 */}
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              size="small"
-              label="품목코드"
-              value={searchValues.itemCode}
-              onChange={(e) => handleSearchChange('itemCode', e.target.value)}
-              sx={{ minWidth: 150 }}
-            />
-            <TextField
-              size="small"
-              label="품목명"
-              value={searchValues.itemName}
-              onChange={(e) => handleSearchChange('itemName', e.target.value)}
-              sx={{ minWidth: 200 }}
-            />
-            <TextField
-              size="small"
-              label="작업장"
-              value={searchValues.workplaceCode}
-              onChange={(e) =>
-                handleSearchChange('workplaceCode', e.target.value)
-              }
-              sx={{ minWidth: 150 }}
-            />
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              onClick={handleSearch}
-            >
-              검색
-            </Button>
-          </Stack>
-        </Paper>
-
-        {/* 주간 네비게이션 */}
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            justifyContent="center"
+      {/* 검색 영역 */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            size="small"
+            label="품목코드"
+            value={searchValues.itemCode}
+            onChange={(e) => handleSearchChange('itemCode', e.target.value)}
+            sx={{ minWidth: 150 }}
+          />
+          <TextField
+            size="small"
+            label="품목명"
+            value={searchValues.itemName}
+            onChange={(e) => handleSearchChange('itemName', e.target.value)}
+            sx={{ minWidth: 200 }}
+          />
+          <TextField
+            size="small"
+            label="작업장"
+            value={searchValues.workplaceCode}
+            onChange={(e) =>
+              handleSearchChange('workplaceCode', e.target.value)
+            }
+            sx={{ minWidth: 150 }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<SearchIcon />}
+            onClick={handleSearch}
           >
-            <IconButton onClick={handlePrevWeek} color="primary">
-              <NavigateBeforeIcon />
-            </IconButton>
+            검색
+          </Button>
+        </Stack>
+      </Paper>
 
-            <Typography variant="h6" sx={{ minWidth: 300, textAlign: 'center' }}>
-              {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-              {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
-            </Typography>
+      {/* 주간 네비게이션 */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="center"
+        >
+          <IconButton onClick={handlePrevWeek} color="primary">
+            <NavigateBeforeIcon />
+          </IconButton>
 
-            <IconButton onClick={handleNextWeek} color="primary">
-              <NavigateNextIcon />
-            </IconButton>
+          <Typography variant="h6" sx={{ minWidth: 300, textAlign: 'center' }}>
+            {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
+            {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
+          </Typography>
 
-            <Button variant="outlined" onClick={handleToday}>
-              오늘
-            </Button>
-          </Stack>
-        </Paper>
+          <IconButton onClick={handleNextWeek} color="primary">
+            <NavigateNextIcon />
+          </IconButton>
 
-        {/* 주간 그리드 */}
-        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-          <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      minWidth: 120,
-                      backgroundColor: 'primary.light',
-                      color: 'white',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    품목 정보
-                  </TableCell>
-                  {weekDays.map((day) => {
-                    const isToday = isSameDay(day, new Date());
-                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                    const dateStr = formatDate(day, 'YYYY-MM-DD');
-                    return (
-                      <TableCell
-                        key={dateStr}
-                        align="center"
-                        sx={{
-                          minWidth: 150,
-                          backgroundColor: isToday
-                            ? 'warning.light'
-                            : isWeekend
-                            ? 'grey.200'
-                            : 'primary.light',
-                          color: isToday ? 'warning.contrastText' : 'white',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        <Box>
-                          <Typography variant="body2">
-                            {formatDate(day, 'ddd')}
-                          </Typography>
-                          <Typography variant="h6">
-                            {formatDate(day, 'MM/DD')}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      등록된 계획
-                    </Typography>
-                  </TableCell>
-                  {weekDays.map((day) => {
-                    const dateStr = formatDate(day, 'YYYY-MM-DD');
-                    const dayPlans = getPlansForDate(dateStr);
-                    return (
-                      <TableCell
-                        key={dateStr}
-                        sx={{
-                          verticalAlign: 'top',
-                          backgroundColor:
-                            day.getDay() === 0 || day.getDay() === 6
-                              ? 'grey.50'
-                              : 'inherit',
-                        }}
-                      >
-                        <Box sx={{ minHeight: 100 }}>
-                          <Button
-                            fullWidth
-                            size="small"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenCreateDialog(dateStr)}
-                            variant="outlined"
-                            sx={{ mb: 1 }}
-                          >
-                            등록
-                          </Button>
+          <Button variant="outlined" onClick={handleToday}>
+            오늘
+          </Button>
+        </Stack>
+      </Paper>
 
-                          <Stack spacing={1}>
-                            {dayPlans.map((plan) => (
-                              <Paper
-                                key={plan.id}
-                                elevation={2}
+      {/* 주간 그리드 */}
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    minWidth: 120,
+                    backgroundColor: 'primary.light',
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  품목 정보
+                </TableCell>
+                {weekDays.map((day) => {
+                  const isToday = isSameDay(day, new Date());
+                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                  const dateStr = formatDate(day, 'YYYY-MM-DD');
+                  return (
+                    <TableCell
+                      key={dateStr}
+                      align="center"
+                      sx={{
+                        minWidth: 150,
+                        backgroundColor: isToday
+                          ? 'warning.light'
+                          : isWeekend
+                          ? 'grey.200'
+                          : 'primary.light',
+                        color: isToday ? 'warning.contrastText' : 'white',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2">
+                          {formatDate(day, 'ddd')}
+                        </Typography>
+                        <Typography variant="h6">
+                          {formatDate(day, 'MM/DD')}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    등록된 계획
+                  </Typography>
+                </TableCell>
+                {weekDays.map((day) => {
+                  const dateStr = formatDate(day, 'YYYY-MM-DD');
+                  const dayPlans = getPlansForDate(dateStr);
+                  return (
+                    <TableCell
+                      key={dateStr}
+                      sx={{
+                        verticalAlign: 'top',
+                        backgroundColor:
+                          day.getDay() === 0 || day.getDay() === 6
+                            ? 'grey.50'
+                            : 'inherit',
+                      }}
+                    >
+                      <Box sx={{ minHeight: 100 }}>
+                        <Button
+                          fullWidth
+                          size="small"
+                          startIcon={<AddIcon />}
+                          onClick={() => handleOpenCreateDialog(dateStr)}
+                          variant="outlined"
+                          sx={{ mb: 1 }}
+                        >
+                          등록
+                        </Button>
+
+                        <Stack spacing={1}>
+                          {dayPlans.map((plan) => (
+                            <Paper
+                              key={plan.id}
+                              elevation={2}
+                              sx={{
+                                p: 1,
+                                '&:hover': {
+                                  backgroundColor: 'action.hover',
+                                },
+                              }}
+                            >
+                              <Box
                                 sx={{
-                                  p: 1,
-                                  '&:hover': {
-                                    backgroundColor: 'action.hover',
-                                  },
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
                                 }}
                               >
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'flex-start',
-                                  }}
-                                >
-                                  <Box sx={{ flex: 1 }}>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {plan.itemCode}
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      sx={{ fontWeight: 'bold' }}
-                                    >
-                                      {plan.itemName}
-                                    </Typography>
-                                    <Typography variant="body2" color="primary">
-                                      {plan.plannedQty.toLocaleString()}
-                                    </Typography>
-                                    {plan.shift && (
-                                      <Chip
-                                        label={
-                                          plan.shift === 'DAY' ? '주간' : '야간'
-                                        }
-                                        size="small"
-                                        color={
-                                          plan.shift === 'DAY'
-                                            ? 'primary'
-                                            : 'default'
-                                        }
-                                        sx={{ mt: 0.5 }}
-                                      />
-                                    )}
-                                  </Box>
-                                  <Box>
-                                    <IconButton
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {plan.itemCode}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontWeight: 'bold' }}
+                                  >
+                                    {plan.itemName}
+                                  </Typography>
+                                  <Typography variant="body2" color="primary">
+                                    {plan.plannedQty.toLocaleString()}
+                                  </Typography>
+                                  {plan.shift && (
+                                    <Chip
+                                      label={
+                                        plan.shift === 'DAY' ? '주간' : '야간'
+                                      }
                                       size="small"
-                                      onClick={() => handleOpenEditDialog(plan)}
-                                      title="수정"
-                                    >
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      onClick={() => handleDelete(plan.id!)}
-                                      title="삭제"
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  </Box>
+                                      color={
+                                        plan.shift === 'DAY'
+                                          ? 'primary'
+                                          : 'default'
+                                      }
+                                      sx={{ mt: 0.5 }}
+                                    />
+                                  )}
                                 </Box>
-                              </Paper>
-                            ))}
-                          </Stack>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+                                <Box>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleOpenEditDialog(plan)}
+                                    title="수정"
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => plan.id && handleDelete(plan.id)}
+                                    title="삭제"
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </Box>
+                            </Paper>
+                          ))}
+                        </Stack>
+                      </Box>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-        {/* 등록/수정 다이얼로그 */}
-        <Dialog
-          open={openDialog}
-          onClose={handleCloseDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
-          </DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
-                fullWidth
-                label="계획일자"
-                value={
-                  dialogMode === 'create'
-                    ? selectedDate
-                    : formData.date
-                }
-                disabled
-              />
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  fullWidth
-                  required
-                  label="품목코드"
-                  value={formData.itemCode}
-                  onChange={(e) => handleChange('itemCode', e.target.value)}
-                  placeholder="예: PROD-001"
-                />
-                <TextField
-                  fullWidth
-                  required
-                  label="품목명"
-                  value={formData.itemName}
-                  onChange={(e) => handleChange('itemName', e.target.value)}
-                  placeholder="예: 제품A"
-                />
-              </Stack>
+      {/* 등록/수정 다이얼로그 */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="계획일자"
+              value={
+                dialogMode === 'create'
+                  ? selectedDate
+                  : formData.date
+              }
+              disabled
+            />
+            <Stack direction="row" spacing={2}>
               <TextField
                 fullWidth
                 required
-                type="number"
-                label="계획수량"
-                value={formData.plannedQty}
-                onChange={(e) =>
-                  handleChange('plannedQty', parseInt(e.target.value) || 0)
-                }
-                InputProps={{
-                  inputProps: { min: 0 },
-                }}
+                label="품목코드"
+                value={formData.itemCode}
+                onChange={(e) => handleChange('itemCode', e.target.value)}
+                placeholder="예: PROD-001"
               />
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  fullWidth
-                  label="작업장코드"
-                  value={formData.workplaceCode}
-                  onChange={(e) =>
-                    handleChange('workplaceCode', e.target.value)
-                  }
-                  placeholder="예: WP-001"
-                />
-                <TextField
-                  fullWidth
-                  label="작업장명"
-                  value={formData.workplaceName}
-                  onChange={(e) =>
-                    handleChange('workplaceName', e.target.value)
-                  }
-                  placeholder="예: 조립라인 1"
-                />
-              </Stack>
-              <FormControl fullWidth>
-                <InputLabel>근무조</InputLabel>
-                <Select
-                  value={formData.shift}
-                  label="근무조"
-                  onChange={(e) => handleChange('shift', e.target.value)}
-                >
-                  <MenuItem value="DAY">주간</MenuItem>
-                  <MenuItem value="NIGHT">야간</MenuItem>
-                </Select>
-              </FormControl>
               <TextField
                 fullWidth
-                multiline
-                rows={3}
-                label="비고"
-                value={formData.remark}
-                onChange={(e) => handleChange('remark', e.target.value)}
+                required
+                label="품목명"
+                value={formData.itemName}
+                onChange={(e) => handleChange('itemName', e.target.value)}
+                placeholder="예: 제품A"
               />
             </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleSave} variant="contained" color="primary">
-              저장
-            </Button>
-            <Button onClick={handleCloseDialog}>취소</Button>
-          </DialogActions>
-        </Dialog>
+            <TextField
+              fullWidth
+              required
+              type="number"
+              label="계획수량"
+              value={formData.plannedQty}
+              onChange={(e) =>
+                handleChange('plannedQty', parseInt(e.target.value) || 0)
+              }
+              InputProps={{
+                inputProps: { min: 0 },
+              }}
+            />
+            <Stack direction="row" spacing={2}>
+              <TextField
+                fullWidth
+                label="작업장코드"
+                value={formData.workplaceCode}
+                onChange={(e) =>
+                  handleChange('workplaceCode', e.target.value)
+                }
+                placeholder="예: WP-001"
+              />
+              <TextField
+                fullWidth
+                label="작업장명"
+                value={formData.workplaceName}
+                onChange={(e) =>
+                  handleChange('workplaceName', e.target.value)
+                }
+                placeholder="예: 조립라인 1"
+              />
+            </Stack>
+            <FormControl fullWidth>
+              <InputLabel>근무조</InputLabel>
+              <Select
+                value={formData.shift}
+                label="근무조"
+                onChange={(e) => handleChange('shift', e.target.value)}
+              >
+                <MenuItem value="DAY">주간</MenuItem>
+                <MenuItem value="NIGHT">야간</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="비고"
+              value={formData.remark}
+              onChange={(e) => handleChange('remark', e.target.value)}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSave} variant="contained" color="primary">
+            저장
+          </Button>
+          <Button onClick={handleCloseDialog}>취소</Button>
+        </DialogActions>
+      </Dialog>
 
-        {/* 스낵바 */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={3000}
+      {/* 스낵바 */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 
