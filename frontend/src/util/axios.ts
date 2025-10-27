@@ -9,7 +9,7 @@ const apiClient = axios.create({
 
 // 토큰 리프레쉬 중인지 추적하는 변수
 let isRefreshing = false;
-let failedQueue: Array<{resolve: Function, reject: Function}> = [];
+let failedQueue: Array<{ resolve: Function; reject: Function }> = [];
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -19,7 +19,7 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -61,22 +61,24 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // 이미 리프레쉬 중이면 큐에 추가
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => {
-          return apiClient(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then(() => {
+            return apiClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       const newToken = await authService.refreshToken();
       if (newToken) {
         originalRequest.headers.Authorization = newToken;

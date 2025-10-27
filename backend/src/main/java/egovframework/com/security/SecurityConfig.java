@@ -59,6 +59,7 @@ public class SecurityConfig {
             "/login/**",
             "/auth/login-jwt", // JWT 로그인
             "/auth/login", // 일반 로그인
+            "/auth/refresh", // 토큰 갱신
             "/file", // 파일 다운로드
             "/etc/**", // 사용자단의 회원약관,회원가입,사용자아이디 중복여부체크 URL허용
 

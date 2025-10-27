@@ -39,6 +39,13 @@ public class AuthenticInterceptor extends WebContentInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws ServletException {
 
+		String requestURI = request.getRequestURI();
+
+		// ✅ /auth/refresh는 인터셉터 제외 (맨 위에 추가!)
+		if (requestURI.startsWith("/auth/refresh")) {
+			return true;  // 바로 통과
+		}
+
 		LoginVO loginVO = (LoginVO) EgovUserDetailsHelper.getAuthenticatedUser();
 
 		if (loginVO.getId() != null) {
@@ -47,7 +54,8 @@ public class AuthenticInterceptor extends WebContentInterceptor {
 			log.debug("AuthenticInterceptor ================== ");
 			
 			return true;
-    }
+    	}
+
 		log.debug("AuthenticInterceptor Fail!!!!!!!!!!!!================== ");
     
 		ModelAndView modelAndView = new ModelAndView("redirect:http://localhost:3000/login");
