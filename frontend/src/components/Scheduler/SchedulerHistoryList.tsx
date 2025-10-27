@@ -58,8 +58,8 @@ const SchedulerHistoryList: React.FC = () => {
         status
       );
     },
-    // keepPreviousData 사용하지 않음
-    staleTime: 0,
+    // keepPreviousData: true,
+    staleTime: 30 * 1000, // 30초 동안 데이터 신선하게 유지
   });
 
   // 정상적으로 데이터가 들어오면 lastRefs 업데이트

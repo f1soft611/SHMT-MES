@@ -41,7 +41,7 @@
 		<if test="useYn != null and useYn != ''">
 			AND pw.USE_YN = #{useYn}
 		</if>
-		ORDER BY pw.REG_DT DESC
+		ORDER BY pw.REG_DT
 	</select>
 
 	<insert id="ProcessWorkplaceDAO.insertProcessWorkplace" parameterType="egovframework.let.basedata.process.domain.model.ProcessWorkplace">

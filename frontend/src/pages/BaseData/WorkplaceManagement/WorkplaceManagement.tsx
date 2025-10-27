@@ -236,14 +236,12 @@ const WorkplaceManagement: React.FC = () => {
     {
       field: 'workplaceType',
       headerName: '타입',
-      flex: 1,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'status',
       headerName: '상태',
-      flex: 0.8,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -255,30 +253,28 @@ const WorkplaceManagement: React.FC = () => {
       ),
     },
     {
-      field: 'proCnt',
-      headerName: '등록 공정 수',
-      flex: 1,
+      field: 'workerCnt',
+      headerName: '작업자 수',
       align: 'center',
       headerAlign: 'center',
     },
     {
-      field: 'workerCnt',
-      headerName: '작업자 수',
-      flex: 1,
+      field: 'proCnt',
+      headerName: '공정 수',
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'regDt',
       headerName: '등록일',
-      flex: 1.2,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'actions',
       headerName: '관리',
-      flex: 1.2,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -297,22 +293,22 @@ const WorkplaceManagement: React.FC = () => {
               color="primary"
               onClick={() => {
                 handleOpenDetailDialog(params.row);
-                setDetailTab(1);
+                setDetailTab(0);
               }}
-              title="상세관리"
+              title="작업자 관리"
             >
-              <BuildIcon />
+              <PeopleIcon />
             </IconButton>
             <IconButton
               size="small"
               color="primary"
               onClick={() => {
                 handleOpenDetailDialog(params.row);
-                setDetailTab(0);
+                setDetailTab(1);
               }}
-              title="작업자 관리"
+              title="공정 관리"
             >
-              <PeopleIcon />
+              <BuildIcon />
             </IconButton>
             <IconButton
               size="small"
@@ -596,11 +592,7 @@ const WorkplaceDetailDialog: React.FC<WorkplaceDetailDialogProps> = ({
               icon={<PeopleIcon />}
               iconPosition="start"
             />
-            <Tab
-              label="등록된 공정 관리"
-              icon={<BuildIcon />}
-              iconPosition="start"
-            />
+            <Tab label="공정 관리" icon={<BuildIcon />} iconPosition="start" />
           </Tabs>
         </Box>
         {detailTab === 0 && (
@@ -736,14 +728,13 @@ const WorkplaceWorkerTab: React.FC<{
     {
       field: 'regDt',
       headerName: '등록일',
-      flex: 1.5,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'actions',
       headerName: '관리',
-      flex: 0.8,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -965,27 +956,26 @@ const WorkplaceProcessTab: React.FC<{
       field: 'processCode',
       headerName: '공정 코드',
       flex: 1,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'processName',
       headerName: '공정명',
       flex: 1.2,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'regDt',
       headerName: '등록일',
-      flex: 1.5,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'actions',
       headerName: '관리',
-      flex: 0.8,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
