@@ -244,8 +244,31 @@ src/
 
 #### 관련 파일
 
-- `frontend/src/services/api.ts` - 기본 API 클라이언트
-- `frontend/src/services/authService.ts` - 인증 서비스
-- `frontend/src/util/axios.ts` - Axios 설정
+**Frontend (이번 PR에서 수정)**:
+- `frontend/src/services/api.ts` - 기본 API 클라이언트 (슬라이딩 윈도우 구현)
+- `frontend/src/services/authService.ts` - 인증 서비스 (슬라이딩 윈도우 구현)
+- `frontend/src/util/axios.ts` - Axios 설정 (슬라이딩 윈도우 구현)
+
+**Backend (기존 구현, 변경 없음)**:
 - `backend/src/main/java/egovframework/com/jwt/EgovJwtTokenUtil.java` - JWT 토큰 생성/검증
 - `backend/src/main/java/egovframework/let/uat/uia/web/EgovLoginApiController.java` - 로그인/토큰 갱신 API
+
+---
+
+### JWT Session Management (English Summary)
+
+**Sliding Window Session Approach**: The project uses a sliding window JWT session management to improve user experience.
+
+**Key Features**:
+- Token validity: 60 minutes
+- Automatic extension: Session time automatically extends with each user activity
+- Inactivity timeout: Users are logged out after 60 minutes of inactivity
+- Implementation: `tokenIssuedAt` timestamp is updated on every successful API response
+- Auto-refresh: New token is issued 5 minutes before expiration
+- Refresh token: 7-day validity for access token renewal
+
+**Benefits**:
+- Active users remain logged in during work
+- Long-running tasks maintain session
+- Security maintained with inactivity timeout
+- Transparent token refresh in background
