@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -24,6 +24,12 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Collapse,
+  Card,
+  CardContent,
+  Divider,
+  Tooltip,
+  Badge,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,7 +38,14 @@ import {
   Search as SearchIcon,
   NavigateBefore as NavigateBeforeIcon,
   NavigateNext as NavigateNextIcon,
+  ExpandMore as ExpandMoreIcon,
+  ChevronRight as ChevronRightIcon,
+  CalendarToday as CalendarTodayIcon,
+  FilterList as FilterListIcon,
+  ViewWeek as ViewWeekIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
+import { workplaceService } from '../../services/workplaceService';
 
 interface ProductionPlanData {
   id?: string;
@@ -40,10 +53,17 @@ interface ProductionPlanData {
   itemCode: string;
   itemName: string;
   plannedQty: number;
-  workplaceCode?: string;
+  workplaceCode: string;
   workplaceName?: string;
   shift?: string;
   remark?: string;
+}
+
+interface Workplace {
+  workplaceId?: string;
+  workplaceCode: string;
+  workplaceName: string;
+  expanded?: boolean;
 }
 
 const ProductionPlan: React.FC = () => {
@@ -51,7 +71,7 @@ const ProductionPlan: React.FC = () => {
   const getMonday = (date: Date): Date => {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 조정
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
   };
 
@@ -83,7 +103,11 @@ const ProductionPlan: React.FC = () => {
     );
   };
 
-  // 현재 주의 시작일 (월요일)
+  const isWeekend = (date: Date): boolean => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
     getMonday(new Date())
   );
@@ -101,7 +125,6 @@ const ProductionPlan: React.FC = () => {
     severity: 'success',
   });
 
-  // 폼 데이터
   const [formData, setFormData] = useState<ProductionPlanData>({
     date: '',
     itemCode: '',
@@ -113,17 +136,62 @@ const ProductionPlan: React.FC = () => {
     remark: '',
   });
 
-  // 검색 조건
   const [searchValues, setSearchValues] = useState({
     itemCode: '',
     itemName: '',
     workplaceCode: '',
   });
 
-  // 모의 데이터 (백엔드 연동 전 임시)
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [expandedWorkplaces, setExpandedWorkplaces] = useState<Set<string>>(
+    new Set()
+  );
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
 
-  // 일주일 날짜 배열 생성 (월-일)
+  useEffect(() => {
+    loadWorkplaces();
+  }, []);
+
+  const loadWorkplaces = async () => {
+    try {
+      const response = await workplaceService.getWorkplaceList(0, 100);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        const workplaceList = response.result.resultList.map((wp: any) => ({
+          workplaceId: wp.workplaceId,
+          workplaceCode: wp.workplaceCode,
+          workplaceName: wp.workplaceName,
+          expanded: false,
+        }));
+        setWorkplaces(workplaceList);
+        setExpandedWorkplaces(
+          new Set(workplaceList.map((wp: Workplace) => wp.workplaceCode))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load workplaces:', error);
+      const mockWorkplaces = [
+        { workplaceCode: 'WP-001', workplaceName: '설비1', expanded: true },
+        { workplaceCode: 'WP-002', workplaceName: '설비2', expanded: true },
+        { workplaceCode: 'WP-003', workplaceName: '설비3', expanded: true },
+      ];
+      setWorkplaces(mockWorkplaces);
+      setExpandedWorkplaces(
+        new Set(mockWorkplaces.map((wp) => wp.workplaceCode))
+      );
+    }
+  };
+
+  const toggleWorkplace = (workplaceCode: string) => {
+    const newExpanded = new Set(expandedWorkplaces);
+    if (newExpanded.has(workplaceCode)) {
+      newExpanded.delete(workplaceCode);
+    } else {
+      newExpanded.add(workplaceCode);
+    }
+    setExpandedWorkplaces(newExpanded);
+  };
+
   const getWeekDays = (): Date[] => {
     const days: Date[] = [];
     for (let i = 0; i < 7; i++) {
@@ -134,17 +202,14 @@ const ProductionPlan: React.FC = () => {
 
   const weekDays = getWeekDays();
 
-  // 다음 주로 이동
   const handleNextWeek = () => {
     setCurrentWeekStart(addDays(currentWeekStart, 7));
   };
 
-  // 이전 주로 이동
   const handlePrevWeek = () => {
     setCurrentWeekStart(addDays(currentWeekStart, -7));
   };
 
-  // 오늘로 이동
   const handleToday = () => {
     setCurrentWeekStart(getMonday(new Date()));
   };
@@ -157,7 +222,7 @@ const ProductionPlan: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleOpenCreateDialog = (date: string) => {
+  const handleOpenCreateDialog = (date: string, workplaceCode?: string) => {
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -165,7 +230,7 @@ const ProductionPlan: React.FC = () => {
       itemCode: '',
       itemName: '',
       plannedQty: 0,
-      workplaceCode: '',
+      workplaceCode: workplaceCode || '',
       workplaceName: '',
       shift: 'DAY',
       remark: '',
@@ -192,12 +257,16 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSearch = () => {
-    // 검색 로직 (백엔드 연동 시 구현)
     showSnackbar('검색 기능은 백엔드 연동 후 구현됩니다.', 'success');
   };
 
   const handleSave = () => {
-    if (!formData.itemCode || !formData.itemName || formData.plannedQty <= 0) {
+    if (
+      !formData.itemCode ||
+      !formData.itemName ||
+      formData.plannedQty <= 0 ||
+      !formData.workplaceCode
+    ) {
       showSnackbar('필수 항목을 입력해주세요.', 'error');
       return;
     }
@@ -224,131 +293,306 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  // 특정 날짜의 생산계획 가져오기
-  const getPlansForDate = (date: string) => {
-    return plans.filter((p) => p.date === date);
+  const getPlansForDateAndWorkplace = (date: string, workplaceCode: string) => {
+    return plans.filter(
+      (p) => p.date === date && p.workplaceCode === workplaceCode
+    );
+  };
+
+  const getTotalPlansForDate = (date: string) => {
+    return plans.filter((p) => p.date === date).length;
+  };
+
+  const getTotalQtyForDate = (date: string) => {
+    return plans
+      .filter((p) => p.date === date)
+      .reduce((sum, p) => sum + p.plannedQty, 0);
   };
 
   return (
-    <Box>
-      <Box
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: '#f5f7fa',
+      }}
+    >
+      {/* 헤더 영역 */}
+      <Paper
+        elevation={0}
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          p: 3,
           mb: 2,
+          bgcolor: 'white',
+          borderBottom: '3px solid',
+          borderColor: 'primary.main',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">생산계획 수립</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              sx={{
+                p: 1.5,
+                bgcolor: 'primary.main',
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ViewWeekIcon sx={{ fontSize: 32, color: 'white' }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{ color: 'text.primary', fontWeight: 700 }}
+              >
+                생산계획 수립
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: 'text.secondary', mt: 0.5 }}
+              >
+                주간 생산 일정을 관리하고 계획하세요
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="검색 필터">
+              <IconButton
+                onClick={() => setShowSearchPanel(!showSearchPanel)}
+                sx={{
+                  bgcolor: showSearchPanel ? 'primary.main' : 'grey.100',
+                  color: showSearchPanel ? 'white' : 'text.secondary',
+                  '&:hover': {
+                    bgcolor: showSearchPanel ? 'primary.dark' : 'grey.200',
+                  },
+                }}
+              >
+                <FilterListIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="새로고침">
+              <IconButton
+                onClick={loadWorkplaces}
+                sx={{
+                  bgcolor: 'grey.100',
+                  color: 'text.secondary',
+                  '&:hover': { bgcolor: 'grey.200' },
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
+      </Paper>
 
       {/* 검색 영역 */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            size="small"
-            label="품목코드"
-            value={searchValues.itemCode}
-            onChange={(e) => handleSearchChange('itemCode', e.target.value)}
-            sx={{ minWidth: 150 }}
-          />
-          <TextField
-            size="small"
-            label="품목명"
-            value={searchValues.itemName}
-            onChange={(e) => handleSearchChange('itemName', e.target.value)}
-            sx={{ minWidth: 200 }}
-          />
-          <TextField
-            size="small"
-            label="작업장"
-            value={searchValues.workplaceCode}
-            onChange={(e) =>
-              handleSearchChange('workplaceCode', e.target.value)
-            }
-            sx={{ minWidth: 150 }}
-          />
-          <Button
-            variant="contained"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-          >
-            검색
-          </Button>
-        </Stack>
-      </Paper>
+      <Collapse in={showSearchPanel}>
+        <Card sx={{ mb: 2, boxShadow: 2 }}>
+          <CardContent>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+              }}
+            >
+              <FilterListIcon color="primary" />
+              검색 필터
+            </Typography>
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              flexWrap="wrap"
+            >
+              <TextField
+                size="small"
+                label="품목코드"
+                value={searchValues.itemCode}
+                onChange={(e) => handleSearchChange('itemCode', e.target.value)}
+                sx={{ minWidth: 180 }}
+              />
+              <TextField
+                size="small"
+                label="품목명"
+                value={searchValues.itemName}
+                onChange={(e) => handleSearchChange('itemName', e.target.value)}
+                sx={{ minWidth: 200 }}
+              />
+              <TextField
+                size="small"
+                label="작업장"
+                value={searchValues.workplaceCode}
+                onChange={(e) =>
+                  handleSearchChange('workplaceCode', e.target.value)
+                }
+                sx={{ minWidth: 180 }}
+              />
+              <Button
+                variant="contained"
+                startIcon={<SearchIcon />}
+                onClick={handleSearch}
+              >
+                검색
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       {/* 주간 네비게이션 */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          justifyContent="center"
-        >
-          <IconButton onClick={handlePrevWeek} color="primary">
-            <NavigateBeforeIcon />
-          </IconButton>
+      <Card sx={{ mb: 2, boxShadow: 2 }}>
+        <CardContent>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Tooltip title="이전 주">
+              <IconButton
+                onClick={handlePrevWeek}
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                }}
+              >
+                <NavigateBeforeIcon />
+              </IconButton>
+            </Tooltip>
 
-          <Typography variant="h6" sx={{ minWidth: 300, textAlign: 'center' }}>
-            {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-            {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
-          </Typography>
+            <Box sx={{ textAlign: 'center', minWidth: 350 }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 700, color: 'primary.main' }}
+              >
+                {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
+                {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                월요일 - 일요일
+              </Typography>
+            </Box>
 
-          <IconButton onClick={handleNextWeek} color="primary">
-            <NavigateNextIcon />
-          </IconButton>
+            <Tooltip title="다음 주">
+              <IconButton
+                onClick={handleNextWeek}
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                }}
+              >
+                <NavigateNextIcon />
+              </IconButton>
+            </Tooltip>
 
-          <Button variant="outlined" onClick={handleToday}>
-            오늘
-          </Button>
-        </Stack>
-      </Paper>
+            <Button
+              variant="contained"
+              color="warning"
+              startIcon={<CalendarTodayIcon />}
+              onClick={handleToday}
+            >
+              오늘
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
 
       {/* 주간 그리드 */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
+      <Paper sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}>
+        <TableContainer sx={{ height: '100%' }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    minWidth: 120,
-                    backgroundColor: 'primary.light',
+                    minWidth: 200,
+                    bgcolor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
+                    fontSize: '1rem',
+                    borderRight: '1px solid rgba(224, 224, 224, 1)',
                   }}
                 >
-                  품목 정보
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ViewWeekIcon />
+                    설비
+                  </Box>
                 </TableCell>
                 {weekDays.map((day) => {
                   const isToday = isSameDay(day, new Date());
-                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                  const isWeekendDay = isWeekend(day);
                   const dateStr = formatDate(day, 'YYYY-MM-DD');
+                  const totalPlans = getTotalPlansForDate(dateStr);
+                  const totalQty = getTotalQtyForDate(dateStr);
+
                   return (
                     <TableCell
                       key={dateStr}
                       align="center"
                       sx={{
-                        minWidth: 150,
-                        backgroundColor: isToday
-                          ? 'warning.light'
-                          : isWeekend
-                          ? 'grey.200'
-                          : 'primary.light',
-                        color: isToday ? 'warning.contrastText' : 'white',
+                        minWidth: 180,
+                        bgcolor: isToday
+                          ? 'warning.main'
+                          : isWeekendDay
+                          ? 'grey.400'
+                          : 'primary.main',
+                        color: 'white',
                         fontWeight: 'bold',
+                        borderRight: '1px solid rgba(224, 224, 224, 1)',
                       }}
                     >
                       <Box>
-                        <Typography variant="body2">
-                          {formatDate(day, 'ddd')}
+                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                          {formatDate(day, 'ddd')}요일
                         </Typography>
-                        <Typography variant="h6">
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 700, my: 0.5 }}
+                        >
                           {formatDate(day, 'MM/DD')}
                         </Typography>
+                        {totalPlans > 0 && (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'center',
+                              gap: 1,
+                              mt: 1,
+                            }}
+                          >
+                            <Badge badgeContent={totalPlans} color="error">
+                              <Chip
+                                label={`${totalQty.toLocaleString()}`}
+                                size="small"
+                                sx={{
+                                  bgcolor: 'rgba(255,255,255,0.9)',
+                                  color: 'primary.main',
+                                  fontWeight: 'bold',
+                                }}
+                              />
+                            </Badge>
+                          </Box>
+                        )}
                       </Box>
                     </TableCell>
                   );
@@ -356,116 +600,268 @@ const ProductionPlan: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    등록된 계획
-                  </Typography>
-                </TableCell>
-                {weekDays.map((day) => {
-                  const dateStr = formatDate(day, 'YYYY-MM-DD');
-                  const dayPlans = getPlansForDate(dateStr);
+              {workplaces.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                    <Box sx={{ opacity: 0.6 }}>
+                      <ViewWeekIcon
+                        sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
+                      />
+                      <Typography variant="h6" color="text.secondary">
+                        등록된 설비가 없습니다.
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        설비를 먼저 등록해주세요.
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                workplaces.map((workplace, index) => {
+                  const isExpanded = expandedWorkplaces.has(
+                    workplace.workplaceCode
+                  );
                   return (
-                    <TableCell
-                      key={dateStr}
-                      sx={{
-                        verticalAlign: 'top',
-                        backgroundColor:
-                          day.getDay() === 0 || day.getDay() === 6
-                            ? 'grey.50'
-                            : 'inherit',
-                      }}
-                    >
-                      <Box sx={{ minHeight: 100 }}>
-                        <Button
-                          fullWidth
-                          size="small"
-                          startIcon={<AddIcon />}
-                          onClick={() => handleOpenCreateDialog(dateStr)}
-                          variant="outlined"
-                          sx={{ mb: 1 }}
+                    <React.Fragment key={workplace.workplaceCode}>
+                      <TableRow
+                        sx={{
+                          '&:hover': { backgroundColor: 'action.hover' },
+                          bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
+                        }}
+                      >
+                        <TableCell
+                          sx={{
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            borderRight: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                          onClick={() =>
+                            toggleWorkplace(workplace.workplaceCode)
+                          }
                         >
-                          등록
-                        </Button>
-
-                        <Stack spacing={1}>
-                          {dayPlans.map((plan) => (
-                            <Paper
-                              key={plan.id}
-                              elevation={2}
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton
+                              size="small"
                               sx={{
-                                p: 1,
-                                '&:hover': {
-                                  backgroundColor: 'action.hover',
-                                },
+                                mr: 1,
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                '&:hover': { bgcolor: 'primary.dark' },
+                                width: 32,
+                                height: 32,
                               }}
                             >
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                }}
+                              {isExpanded ? (
+                                <ExpandMoreIcon fontSize="small" />
+                              ) : (
+                                <ChevronRightIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                            <Box>
+                              <Typography
+                                variant="body1"
+                                sx={{ fontWeight: 700, color: 'text.primary' }}
                               >
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {plan.itemCode}
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ fontWeight: 'bold' }}
-                                  >
-                                    {plan.itemName}
-                                  </Typography>
-                                  <Typography variant="body2" color="primary">
-                                    {plan.plannedQty.toLocaleString()}
-                                  </Typography>
-                                  {plan.shift && (
-                                    <Chip
-                                      label={
-                                        plan.shift === 'DAY' ? '주간' : '야간'
-                                      }
-                                      size="small"
-                                      color={
-                                        plan.shift === 'DAY'
-                                          ? 'primary'
-                                          : 'default'
-                                      }
-                                      sx={{ mt: 0.5 }}
-                                    />
-                                  )}
-                                </Box>
-                                <Box>
-                                  <IconButton
+                                {workplace.workplaceName}
+                              </Typography>
+                              <Chip
+                                label={workplace.workplaceCode}
+                                size="small"
+                                sx={{ mt: 0.5 }}
+                              />
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        {weekDays.map((day) => {
+                          const dateStr = formatDate(day, 'YYYY-MM-DD');
+                          const dayPlans = getPlansForDateAndWorkplace(
+                            dateStr,
+                            workplace.workplaceCode
+                          );
+                          const isWeekendDay = isWeekend(day);
+
+                          return (
+                            <TableCell
+                              key={dateStr}
+                              sx={{
+                                verticalAlign: 'top',
+                                backgroundColor: isWeekendDay
+                                  ? 'grey.100'
+                                  : 'white',
+                                p: 1.5,
+                                borderRight: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                            >
+                              <Collapse
+                                in={isExpanded}
+                                timeout="auto"
+                                unmountOnExit
+                              >
+                                <Box sx={{ minHeight: 100 }}>
+                                  <Button
+                                    fullWidth
                                     size="small"
-                                    onClick={() => handleOpenEditDialog(plan)}
-                                    title="수정"
-                                  >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
+                                    startIcon={<AddIcon />}
                                     onClick={() =>
-                                      plan.id && handleDelete(plan.id)
+                                      handleOpenCreateDialog(
+                                        dateStr,
+                                        workplace.workplaceCode
+                                      )
                                     }
-                                    title="삭제"
+                                    variant="contained"
+                                    sx={{ mb: 1.5 }}
                                   >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
+                                    계획 추가
+                                  </Button>
+
+                                  <Stack spacing={1.5}>
+                                    {dayPlans.map((plan) => (
+                                      <Card
+                                        key={plan.id}
+                                        elevation={2}
+                                        sx={{
+                                          '&:hover': {
+                                            boxShadow: 4,
+                                            transform: 'translateY(-2px)',
+                                          },
+                                          transition: 'all 0.2s ease',
+                                          borderLeft: '4px solid',
+                                          borderColor:
+                                            plan.shift === 'DAY'
+                                              ? 'primary.main'
+                                              : 'warning.main',
+                                        }}
+                                      >
+                                        <CardContent
+                                          sx={{
+                                            p: 1.5,
+                                            '&:last-child': { pb: 1.5 },
+                                          }}
+                                        >
+                                          <Box
+                                            sx={{
+                                              display: 'flex',
+                                              justifyContent: 'space-between',
+                                              alignItems: 'flex-start',
+                                            }}
+                                          >
+                                            <Box sx={{ flex: 1 }}>
+                                              <Chip
+                                                label={plan.itemCode}
+                                                size="small"
+                                                color="primary"
+                                                variant="outlined"
+                                                sx={{ mb: 0.5 }}
+                                              />
+                                              <Typography
+                                                variant="body2"
+                                                sx={{
+                                                  fontWeight: 600,
+                                                  color: 'text.primary',
+                                                  my: 0.5,
+                                                }}
+                                              >
+                                                {plan.itemName}
+                                              </Typography>
+                                              <Box
+                                                sx={{
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: 1,
+                                                  mt: 1,
+                                                }}
+                                              >
+                                                <Chip
+                                                  label={`${plan.plannedQty.toLocaleString()} 개`}
+                                                  size="small"
+                                                  color="success"
+                                                />
+                                                <Chip
+                                                  label={
+                                                    plan.shift === 'DAY'
+                                                      ? '주간'
+                                                      : '야간'
+                                                  }
+                                                  size="small"
+                                                  color={
+                                                    plan.shift === 'DAY'
+                                                      ? 'primary'
+                                                      : 'warning'
+                                                  }
+                                                />
+                                              </Box>
+                                            </Box>
+                                            <Box
+                                              sx={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 0.5,
+                                              }}
+                                            >
+                                              <Tooltip title="수정">
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() =>
+                                                    handleOpenEditDialog(plan)
+                                                  }
+                                                  sx={{
+                                                    bgcolor: 'info.light',
+                                                    color: 'white',
+                                                    '&:hover': {
+                                                      bgcolor: 'info.main',
+                                                    },
+                                                  }}
+                                                >
+                                                  <EditIcon fontSize="small" />
+                                                </IconButton>
+                                              </Tooltip>
+                                              <Tooltip title="삭제">
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() =>
+                                                    plan.id &&
+                                                    handleDelete(plan.id)
+                                                  }
+                                                  sx={{
+                                                    bgcolor: 'error.light',
+                                                    color: 'white',
+                                                    '&:hover': {
+                                                      bgcolor: 'error.main',
+                                                    },
+                                                  }}
+                                                >
+                                                  <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                              </Tooltip>
+                                            </Box>
+                                          </Box>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </Stack>
                                 </Box>
-                              </Box>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Box>
-                    </TableCell>
+                              </Collapse>
+                              {!isExpanded && dayPlans.length > 0 && (
+                                <Chip
+                                  label={`${dayPlans.length}건`}
+                                  size="small"
+                                  color="primary"
+                                />
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    </React.Fragment>
                   );
-                })}
-              </TableRow>
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -475,14 +871,22 @@ const ProductionPlan: React.FC = () => {
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: 'primary.main',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '1.25rem',
+          }}
+        >
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
         </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
+        <Divider />
+        <DialogContent sx={{ mt: 2 }}>
+          <Stack spacing={3}>
             <TextField
               fullWidth
               label="계획일자"
@@ -521,32 +925,44 @@ const ProductionPlan: React.FC = () => {
               }}
             />
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="작업장코드"
-                value={formData.workplaceCode}
-                onChange={(e) => handleChange('workplaceCode', e.target.value)}
-                placeholder="예: WP-001"
-              />
-              <TextField
-                fullWidth
-                label="작업장명"
-                value={formData.workplaceName}
-                onChange={(e) => handleChange('workplaceName', e.target.value)}
-                placeholder="예: 조립라인 1"
-              />
+              <FormControl fullWidth>
+                <InputLabel>작업장</InputLabel>
+                <Select
+                  value={formData.workplaceCode}
+                  label="작업장"
+                  onChange={(e) => {
+                    const selectedWorkplace = workplaces.find(
+                      (wp) => wp.workplaceCode === e.target.value
+                    );
+                    handleChange('workplaceCode', e.target.value);
+                    if (selectedWorkplace) {
+                      handleChange(
+                        'workplaceName',
+                        selectedWorkplace.workplaceName
+                      );
+                    }
+                  }}
+                  required
+                >
+                  {workplaces.map((wp) => (
+                    <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
+                      {wp.workplaceName} ({wp.workplaceCode})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>근무조</InputLabel>
+                <Select
+                  value={formData.shift}
+                  label="근무조"
+                  onChange={(e) => handleChange('shift', e.target.value)}
+                >
+                  <MenuItem value="DAY">주간</MenuItem>
+                  <MenuItem value="NIGHT">야간</MenuItem>
+                </Select>
+              </FormControl>
             </Stack>
-            <FormControl fullWidth>
-              <InputLabel>근무조</InputLabel>
-              <Select
-                value={formData.shift}
-                label="근무조"
-                onChange={(e) => handleChange('shift', e.target.value)}
-              >
-                <MenuItem value="DAY">주간</MenuItem>
-                <MenuItem value="NIGHT">야간</MenuItem>
-              </Select>
-            </FormControl>
             <TextField
               fullWidth
               multiline
@@ -557,11 +973,19 @@ const ProductionPlan: React.FC = () => {
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSave} variant="contained" color="primary">
+        <Divider />
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            size="large"
+            sx={{ px: 4 }}
+          >
             저장
           </Button>
-          <Button onClick={handleCloseDialog}>취소</Button>
+          <Button onClick={handleCloseDialog} variant="outlined" size="large">
+            취소
+          </Button>
         </DialogActions>
       </Dialog>
 
