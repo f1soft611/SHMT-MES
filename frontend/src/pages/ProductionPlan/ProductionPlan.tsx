@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -24,6 +24,7 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Collapse,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,7 +33,10 @@ import {
   Search as SearchIcon,
   NavigateBefore as NavigateBeforeIcon,
   NavigateNext as NavigateNextIcon,
+  ExpandMore as ExpandMoreIcon,
+  ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
+import { workplaceService } from '../../services/workplaceService';
 
 interface ProductionPlanData {
   id?: string;
@@ -40,10 +44,17 @@ interface ProductionPlanData {
   itemCode: string;
   itemName: string;
   plannedQty: number;
-  workplaceCode?: string;
+  workplaceCode: string;
   workplaceName?: string;
   shift?: string;
   remark?: string;
+}
+
+interface Workplace {
+  workplaceId?: string;
+  workplaceCode: string;
+  workplaceName: string;
+  expanded?: boolean;
 }
 
 const ProductionPlan: React.FC = () => {
@@ -122,11 +133,55 @@ const ProductionPlan: React.FC = () => {
 
   // 모의 데이터 (백엔드 연동 전 임시)
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [expandedWorkplaces, setExpandedWorkplaces] = useState<Set<string>>(new Set());
 
-  // 일주일 날짜 배열 생성 (월-일)
+  // 작업장 목록 로드
+  useEffect(() => {
+    loadWorkplaces();
+  }, []);
+
+  const loadWorkplaces = async () => {
+    try {
+      const response = await workplaceService.getWorkplaceList(0, 100);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        const workplaceList = response.result.resultList.map((wp: any) => ({
+          workplaceId: wp.workplaceId,
+          workplaceCode: wp.workplaceCode,
+          workplaceName: wp.workplaceName,
+          expanded: false,
+        }));
+        setWorkplaces(workplaceList);
+        // 기본적으로 모든 설비 펼쳐두기
+        setExpandedWorkplaces(new Set(workplaceList.map((wp: Workplace) => wp.workplaceCode)));
+      }
+    } catch (error) {
+      console.error('Failed to load workplaces:', error);
+      // 백엔드 연동 전 모의 데이터
+      const mockWorkplaces = [
+        { workplaceCode: 'WP-001', workplaceName: '설비1', expanded: true },
+        { workplaceCode: 'WP-002', workplaceName: '설비2', expanded: true },
+        { workplaceCode: 'WP-003', workplaceName: '설비3', expanded: true },
+      ];
+      setWorkplaces(mockWorkplaces);
+      setExpandedWorkplaces(new Set(mockWorkplaces.map(wp => wp.workplaceCode)));
+    }
+  };
+
+  const toggleWorkplace = (workplaceCode: string) => {
+    const newExpanded = new Set(expandedWorkplaces);
+    if (newExpanded.has(workplaceCode)) {
+      newExpanded.delete(workplaceCode);
+    } else {
+      newExpanded.add(workplaceCode);
+    }
+    setExpandedWorkplaces(newExpanded);
+  };
+
+  // 일주일 날짜 배열 생성 (월-금)
   const getWeekDays = (): Date[] => {
     const days: Date[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {  // 월-금만 표시 (0-4)
       days.push(addDays(currentWeekStart, i));
     }
     return days;
@@ -157,7 +212,7 @@ const ProductionPlan: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleOpenCreateDialog = (date: string) => {
+  const handleOpenCreateDialog = (date: string, workplaceCode?: string) => {
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -165,7 +220,7 @@ const ProductionPlan: React.FC = () => {
       itemCode: '',
       itemName: '',
       plannedQty: 0,
-      workplaceCode: '',
+      workplaceCode: workplaceCode || '',
       workplaceName: '',
       shift: 'DAY',
       remark: '',
@@ -197,7 +252,7 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSave = () => {
-    if (!formData.itemCode || !formData.itemName || formData.plannedQty <= 0) {
+    if (!formData.itemCode || !formData.itemName || formData.plannedQty <= 0 || !formData.workplaceCode) {
       showSnackbar('필수 항목을 입력해주세요.', 'error');
       return;
     }
@@ -226,9 +281,9 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  // 특정 날짜의 생산계획 가져오기
-  const getPlansForDate = (date: string) => {
-    return plans.filter((p) => p.date === date);
+  // 특정 날짜와 작업장의 생산계획 가져오기
+  const getPlansForDateAndWorkplace = (date: string, workplaceCode: string) => {
+    return plans.filter((p) => p.date === date && p.workplaceCode === workplaceCode);
   };
 
   return (
@@ -296,7 +351,7 @@ const ProductionPlan: React.FC = () => {
 
           <Typography variant="h6" sx={{ minWidth: 300, textAlign: 'center' }}>
             {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-            {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
+            {formatDate(addDays(currentWeekStart, 4), 'MM월 DD일')} (월-금)
           </Typography>
 
           <IconButton onClick={handleNextWeek} color="primary">
@@ -309,7 +364,7 @@ const ProductionPlan: React.FC = () => {
         </Stack>
       </Paper>
 
-      {/* 주간 그리드 */}
+      {/* 주간 그리드 - 설비별 생산계획 */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
           <Table stickyHeader>
@@ -317,30 +372,27 @@ const ProductionPlan: React.FC = () => {
               <TableRow>
                 <TableCell
                   sx={{
-                    minWidth: 120,
-                    backgroundColor: 'primary.light',
+                    minWidth: 200,
+                    backgroundColor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
                   }}
                 >
-                  품목 정보
+                  설비
                 </TableCell>
                 {weekDays.map((day) => {
                   const isToday = isSameDay(day, new Date());
-                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                   const dateStr = formatDate(day, 'YYYY-MM-DD');
                   return (
                     <TableCell
                       key={dateStr}
                       align="center"
                       sx={{
-                        minWidth: 150,
+                        minWidth: 180,
                         backgroundColor: isToday
-                          ? 'warning.light'
-                          : isWeekend
-                          ? 'grey.200'
-                          : 'primary.light',
-                        color: isToday ? 'warning.contrastText' : 'white',
+                          ? 'warning.main'
+                          : 'primary.main',
+                        color: 'white',
                         fontWeight: 'bold',
                       }}
                     >
@@ -358,114 +410,158 @@ const ProductionPlan: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    등록된 계획
-                  </Typography>
-                </TableCell>
-                {weekDays.map((day) => {
-                  const dateStr = formatDate(day, 'YYYY-MM-DD');
-                  const dayPlans = getPlansForDate(dateStr);
+              {workplaces.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography color="text.secondary">
+                      등록된 설비가 없습니다.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                workplaces.map((workplace) => {
+                  const isExpanded = expandedWorkplaces.has(workplace.workplaceCode);
                   return (
-                    <TableCell
-                      key={dateStr}
-                      sx={{
-                        verticalAlign: 'top',
-                        backgroundColor:
-                          day.getDay() === 0 || day.getDay() === 6
-                            ? 'grey.50'
-                            : 'inherit',
-                      }}
-                    >
-                      <Box sx={{ minHeight: 100 }}>
-                        <Button
-                          fullWidth
-                          size="small"
-                          startIcon={<AddIcon />}
-                          onClick={() => handleOpenCreateDialog(dateStr)}
-                          variant="outlined"
-                          sx={{ mb: 1 }}
+                    <React.Fragment key={workplace.workplaceCode}>
+                      <TableRow sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
+                        <TableCell 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            backgroundColor: 'grey.100',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => toggleWorkplace(workplace.workplaceCode)}
                         >
-                          등록
-                        </Button>
-
-                        <Stack spacing={1}>
-                          {dayPlans.map((plan) => (
-                            <Paper
-                              key={plan.id}
-                              elevation={2}
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton 
+                              size="small" 
+                              sx={{ mr: 1 }}
+                              aria-label={isExpanded ? '설비 접기' : '설비 펼치기'}
+                              aria-expanded={isExpanded}
+                            >
+                              {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                            </IconButton>
+                            <Box>
+                              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                {workplace.workplaceName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {workplace.workplaceCode}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        {weekDays.map((day) => {
+                          const dateStr = formatDate(day, 'YYYY-MM-DD');
+                          const dayPlans = getPlansForDateAndWorkplace(dateStr, workplace.workplaceCode);
+                          return (
+                            <TableCell
+                              key={dateStr}
                               sx={{
+                                verticalAlign: 'top',
+                                backgroundColor: 'grey.50',
                                 p: 1,
-                                '&:hover': {
-                                  backgroundColor: 'action.hover',
-                                },
                               }}
                             >
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                }}
-                              >
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {plan.itemCode}
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ fontWeight: 'bold' }}
-                                  >
-                                    {plan.itemName}
-                                  </Typography>
-                                  <Typography variant="body2" color="primary">
-                                    {plan.plannedQty.toLocaleString()}
-                                  </Typography>
-                                  {plan.shift && (
-                                    <Chip
-                                      label={
-                                        plan.shift === 'DAY' ? '주간' : '야간'
-                                      }
-                                      size="small"
-                                      color={
-                                        plan.shift === 'DAY'
-                                          ? 'primary'
-                                          : 'default'
-                                      }
-                                      sx={{ mt: 0.5 }}
-                                    />
-                                  )}
-                                </Box>
-                                <Box>
-                                  <IconButton
+                              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <Box sx={{ minHeight: 80 }}>
+                                  <Button
+                                    fullWidth
                                     size="small"
-                                    onClick={() => handleOpenEditDialog(plan)}
-                                    title="수정"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => handleOpenCreateDialog(dateStr, workplace.workplaceCode)}
+                                    variant="outlined"
+                                    sx={{ mb: 1 }}
                                   >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => plan.id && handleDelete(plan.id)}
-                                    title="삭제"
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
+                                    등록
+                                  </Button>
+
+                                  <Stack spacing={1}>
+                                    {dayPlans.map((plan) => (
+                                      <Paper
+                                        key={plan.id}
+                                        elevation={2}
+                                        sx={{
+                                          p: 1,
+                                          '&:hover': {
+                                            backgroundColor: 'action.hover',
+                                          },
+                                        }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start',
+                                          }}
+                                        >
+                                          <Box sx={{ flex: 1 }}>
+                                            <Typography
+                                              variant="caption"
+                                              color="text.secondary"
+                                            >
+                                              {plan.itemCode}
+                                            </Typography>
+                                            <Typography
+                                              variant="body2"
+                                              sx={{ fontWeight: 'bold' }}
+                                            >
+                                              {plan.itemName}
+                                            </Typography>
+                                            <Typography variant="body2" color="primary">
+                                              {plan.plannedQty.toLocaleString()}
+                                            </Typography>
+                                            {plan.shift && (
+                                              <Chip
+                                                label={
+                                                  plan.shift === 'DAY' ? '주간' : '야간'
+                                                }
+                                                size="small"
+                                                color={
+                                                  plan.shift === 'DAY'
+                                                    ? 'primary'
+                                                    : 'default'
+                                                }
+                                                sx={{ mt: 0.5 }}
+                                              />
+                                            )}
+                                          </Box>
+                                          <Box>
+                                            <IconButton
+                                              size="small"
+                                              onClick={() => handleOpenEditDialog(plan)}
+                                              title="수정"
+                                            >
+                                              <EditIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton
+                                              size="small"
+                                              color="error"
+                                              onClick={() => plan.id && handleDelete(plan.id)}
+                                              title="삭제"
+                                            >
+                                              <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                          </Box>
+                                        </Box>
+                                      </Paper>
+                                    ))}
+                                  </Stack>
                                 </Box>
-                              </Box>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Box>
-                    </TableCell>
+                              </Collapse>
+                              {!isExpanded && dayPlans.length > 0 && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {dayPlans.length}개 계획
+                                </Typography>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    </React.Fragment>
                   );
-                })}
-              </TableRow>
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -525,28 +621,42 @@ const ProductionPlan: React.FC = () => {
               }}
             />
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="작업장코드"
-                value={formData.workplaceCode}
-                onChange={(e) =>
-                  handleChange('workplaceCode', e.target.value)
-                }
-                placeholder="예: WP-001"
-              />
+              <FormControl fullWidth>
+                <InputLabel id="workplace-select-label">작업장</InputLabel>
+                <Select
+                  labelId="workplace-select-label"
+                  id="workplace-select"
+                  value={formData.workplaceCode}
+                  label="작업장"
+                  onChange={(e) => {
+                    const selectedWorkplace = workplaces.find(wp => wp.workplaceCode === e.target.value);
+                    handleChange('workplaceCode', e.target.value);
+                    if (selectedWorkplace) {
+                      handleChange('workplaceName', selectedWorkplace.workplaceName);
+                    }
+                  }}
+                  required
+                >
+                  {workplaces.map((wp) => (
+                    <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
+                      {wp.workplaceName} ({wp.workplaceCode})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField
                 fullWidth
                 label="작업장명"
                 value={formData.workplaceName}
-                onChange={(e) =>
-                  handleChange('workplaceName', e.target.value)
-                }
-                placeholder="예: 조립라인 1"
+                disabled
+                placeholder="작업장 선택 시 자동 입력"
               />
             </Stack>
             <FormControl fullWidth>
-              <InputLabel>근무조</InputLabel>
+              <InputLabel id="shift-select-label">근무조</InputLabel>
               <Select
+                labelId="shift-select-label"
+                id="shift-select"
                 value={formData.shift}
                 label="근무조"
                 onChange={(e) => handleChange('shift', e.target.value)}
