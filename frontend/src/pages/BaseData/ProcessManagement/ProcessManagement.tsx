@@ -224,14 +224,12 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'processType',
       headerName: '공정 타입',
-      flex: 1,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'equipmentIntegrationYn',
       headerName: '설비연동',
-      flex: 0.8,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -245,7 +243,6 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'status',
       headerName: '상태',
-      flex: 0.8,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -259,21 +256,20 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'sortOrder',
       headerName: '순서',
-      flex: 0.6,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'regDt',
       headerName: '등록일',
-      flex: 1.2,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'actions',
       headerName: '관리',
-      flex: 1.5,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -290,10 +286,24 @@ const ProcessManagement: React.FC = () => {
             <IconButton
               size="small"
               color="primary"
-              onClick={() => handleOpenDetailDialog(params.row)}
-              title="상세관리"
+              onClick={() => {
+                handleOpenDetailDialog(params.row);
+                setDetailTab(0);
+              }}
+              title="불량코드 관리"
             >
-              <BuildIcon />
+              <BugReportIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => {
+                handleOpenDetailDialog(params.row);
+                setDetailTab(1);
+              }}
+              title="검사항목 관리"
+            >
+              <CheckCircleIcon />
             </IconButton>
             <IconButton
               size="small"
@@ -725,21 +735,21 @@ const ProcessDefectTab: React.FC<{
       field: 'defectName',
       headerName: '불량명',
       flex: 1,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'defectType',
       headerName: '불량 타입',
       flex: 1,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'description',
       headerName: '설명',
       flex: 1.5,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {
@@ -874,7 +884,7 @@ const ProcessDefectTab: React.FC<{
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              disabled
+              // disabled
             />
           </Stack>
         </DialogContent>
@@ -1012,7 +1022,7 @@ const ProcessInspectionTab: React.FC<{
       field: 'inspectionName',
       headerName: '검사항목명',
       flex: 1.2,
-      align: 'center',
+      // align: 'center',
       headerAlign: 'center',
     },
     {

@@ -173,34 +173,52 @@ public class EgovLoginApiController {
 			@ApiResponse(responseCode = "401", description = "리프레쉬 토큰이 유효하지 않음")
 	})
 	@PostMapping(value = "/auth/refresh")
-	public HashMap<String, Object> refreshToken(@RequestBody HashMap<String, String> request) throws Exception {
-		HashMap<String, Object> resultMap = new HashMap<String, Object>();
-		
+	public HashMap<String, Object> refreshToken(@RequestBody HashMap<String, String> request) {
+		HashMap<String, Object> resultMap = new HashMap<>();
+
+		// 디버깅: 전체 request 출력
+		System.out.println("===== Request Body =====");
+		System.out.println("전체 request: " + request);
+		System.out.println("request.keySet(): " + request.keySet());
+
 		String refreshToken = request.get("refreshToken");
-		
-		if (refreshToken == null || !jwtTokenUtil.isValidRefreshToken(refreshToken)) {
+		System.out.println("refreshToken: " + refreshToken);
+		System.out.println("refreshToken is null: " + (refreshToken == null));
+		System.out.println("========================");
+
+		if (refreshToken == null || refreshToken.trim().isEmpty()) {
+			resultMap.put("resultCode", "401");
+			resultMap.put("resultMessage", "리프레쉬 토큰이 제공되지 않았습니다");
+			return resultMap;
+		}
+
+		if (!jwtTokenUtil.isValidRefreshToken(refreshToken)) {
 			resultMap.put("resultCode", "401");
 			resultMap.put("resultMessage", "유효하지 않은 리프레쉬 토큰입니다");
 			return resultMap;
 		}
-		
+
 		try {
-			// 리프레쉬 토큰에서 사용자 정보 추출
 			LoginVO loginVO = jwtTokenUtil.getLoginVOFromToken(refreshToken);
-			
-			// 새로운 액세스 토큰 생성
+
+			if (loginVO == null) {
+				resultMap.put("resultCode", "401");
+				resultMap.put("resultMessage", "토큰에서 사용자 정보를 추출할 수 없습니다");
+				return resultMap;
+			}
+
 			String newAccessToken = jwtTokenUtil.generateToken(loginVO);
-			
+
 			resultMap.put("jToken", newAccessToken);
 			resultMap.put("resultCode", "200");
 			resultMap.put("resultMessage", "토큰 리프레쉬 성공");
-			
+
 		} catch (Exception e) {
-			log.error("토큰 리프레쉬 실패: " + e.getMessage());
-			resultMap.put("resultCode", "401");
+			log.error("토큰 리프레쉬 실패: " + e.getMessage(), e);
+			resultMap.put("resultCode", "500");
 			resultMap.put("resultMessage", "토큰 리프레쉬 실패");
 		}
-		
+
 		return resultMap;
 	}
 
