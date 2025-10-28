@@ -32,12 +32,31 @@ import {
   Search as SearchIcon,
   Build as BuildIcon,
 } from '@mui/icons-material';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { Workplace, WorkplaceWorker } from '../../../types/workplace';
 import { ProcessWorkplace } from '../../../types/process';
 import workplaceService from '../../../services/workplaceService';
 import processService from '../../../services/processService';
+import { usePermissions } from '../../../contexts/PermissionContext';
+
+// 작업장 등록 유효성 검사 스키마
+const workplaceSchema = yup.object({
+  workplaceCode: yup.string().required('작업장 코드는 필수입니다.'),
+  workplaceName: yup.string().required('작업장명은 필수입니다.'),
+  description: yup.string(),
+  location: yup.string(),
+  workplaceType: yup.string(),
+  status: yup.string().required('상태는 필수입니다.'),
+  useYn: yup.string().required('사용 여부는 필수입니다.'),
+});
 
 const WorkplaceManagement: React.FC = () => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base-data/workplace');
+  
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(
@@ -61,15 +80,23 @@ const WorkplaceManagement: React.FC = () => {
     severity: 'success',
   });
 
-  // 폼 상태
-  const [formData, setFormData] = useState<Workplace>({
-    workplaceCode: '',
-    workplaceName: '',
-    description: '',
-    location: '',
-    workplaceType: '',
-    status: 'ACTIVE',
-    useYn: 'Y',
+  // react-hook-form 설정 - 작업장
+  const {
+    control: workplaceControl,
+    handleSubmit: handleWorkplaceSubmit,
+    reset: resetWorkplaceForm,
+    formState: { errors: workplaceErrors },
+  } = useForm<Workplace>({
+    resolver: yupResolver(workplaceSchema),
+    defaultValues: {
+      workplaceCode: '',
+      workplaceName: '',
+      description: '',
+      location: '',
+      workplaceType: '',
+      status: 'ACTIVE',
+      useYn: 'Y',
+    },
   });
 
   // 실제 검색에 사용되는 파라미터
@@ -132,7 +159,7 @@ const WorkplaceManagement: React.FC = () => {
 
   const handleOpenCreateDialog = () => {
     setDialogMode('create');
-    setFormData({
+    resetWorkplaceForm({
       workplaceCode: '',
       workplaceName: '',
       description: '',
@@ -146,29 +173,26 @@ const WorkplaceManagement: React.FC = () => {
 
   const handleOpenEditDialog = (workplace: Workplace) => {
     setDialogMode('edit');
-    setFormData(workplace);
+    resetWorkplaceForm(workplace);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    resetWorkplaceForm();
   };
 
-  const handleChange = (field: keyof Workplace, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (data: Workplace) => {
     try {
       if (dialogMode === 'create') {
-        const result = await workplaceService.createWorkplace(formData);
+        const result = await workplaceService.createWorkplace(data);
         if (result.resultCode === 200) {
           showSnackbar('작업장이 등록되었습니다.', 'success');
         } else {
           showSnackbar(result.result.message, 'error');
         }
       } else {
-        await workplaceService.updateWorkplace(formData.workplaceId!, formData);
+        await workplaceService.updateWorkplace(data.workplaceId!, data);
         showSnackbar('작업장이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -315,6 +339,7 @@ const WorkplaceManagement: React.FC = () => {
               color="primary"
               onClick={() => handleOpenEditDialog(params.row)}
               title="수정"
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -323,6 +348,7 @@ const WorkplaceManagement: React.FC = () => {
               color="error"
               onClick={() => handleDelete(params.row.workplaceId!)}
               title="삭제"
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -409,6 +435,7 @@ const WorkplaceManagement: React.FC = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleOpenCreateDialog}
+            disabled={!canWrite}
           >
             작업장 등록
           </Button>
@@ -457,72 +484,111 @@ const WorkplaceManagement: React.FC = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                required
-                label="작업장 코드"
-                value={formData.workplaceCode}
-                onChange={(e) => handleChange('workplaceCode', e.target.value)}
-                disabled={dialogMode === 'edit'}
+              <Controller
+                name="workplaceCode"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="작업장 코드"
+                    disabled={dialogMode === 'edit'}
+                    error={!!workplaceErrors.workplaceCode}
+                    helperText={workplaceErrors.workplaceCode?.message}
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                required
-                label="작업장명"
-                value={formData.workplaceName}
-                onChange={(e) => handleChange('workplaceName', e.target.value)}
+              <Controller
+                name="workplaceName"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="작업장명"
+                    error={!!workplaceErrors.workplaceName}
+                    helperText={workplaceErrors.workplaceName?.message}
+                  />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="위치"
-                value={formData.location}
-                onChange={(e) => handleChange('location', e.target.value)}
+              <Controller
+                name="location"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="위치" />
+                )}
               />
-              <TextField
-                fullWidth
-                label="타입"
-                value={formData.workplaceType}
-                onChange={(e) => handleChange('workplaceType', e.target.value)}
+              <Controller
+                name="workplaceType"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="타입" />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>상태</InputLabel>
-                <Select
-                  value={formData.status}
-                  label="상태"
-                  onChange={(e) => handleChange('status', e.target.value)}
-                >
-                  <MenuItem value="ACTIVE">활성</MenuItem>
-                  <MenuItem value="INACTIVE">비활성</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>사용 여부</InputLabel>
-                <Select
-                  value={formData.useYn}
-                  label="사용 여부"
-                  onChange={(e) => handleChange('useYn', e.target.value)}
-                >
-                  <MenuItem value="Y">사용</MenuItem>
-                  <MenuItem value="N">미사용</MenuItem>
-                </Select>
-              </FormControl>
+              <Controller
+                name="status"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!workplaceErrors.status}>
+                    <InputLabel>상태</InputLabel>
+                    <Select {...field} label="상태">
+                      <MenuItem value="ACTIVE">활성</MenuItem>
+                      <MenuItem value="INACTIVE">비활성</MenuItem>
+                    </Select>
+                    {workplaceErrors.status && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {workplaceErrors.status.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="useYn"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!workplaceErrors.useYn}>
+                    <InputLabel>사용 여부</InputLabel>
+                    <Select {...field} label="사용 여부">
+                      <MenuItem value="Y">사용</MenuItem>
+                      <MenuItem value="N">미사용</MenuItem>
+                    </Select>
+                    {workplaceErrors.useYn && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {workplaceErrors.useYn.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
             </Stack>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="설명"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+            <Controller
+              name="description"
+              control={workplaceControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="설명"
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button
+            onClick={handleWorkplaceSubmit(handleSave)}
+            variant="contained"
+            color="primary"
+          >
             저장
           </Button>
           <Button onClick={handleCloseDialog}>취소</Button>

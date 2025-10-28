@@ -35,6 +35,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Build as BuildIcon,
 } from '@mui/icons-material';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import {
   Process,
   ProcessDefect,
@@ -43,8 +46,47 @@ import {
 import { CommonDetailCode } from '../../../types/commonCode';
 import processService from '../../../services/processService';
 import commonCodeService from '../../../services/commonCodeService';
+import { usePermissions } from '../../../contexts/PermissionContext';
+
+// 공정 등록 유효성 검사 스키마
+const processSchema = yup.object({
+  processCode: yup.string().required('공정 코드는 필수입니다.'),
+  processName: yup.string().required('공정명은 필수입니다.'),
+  description: yup.string(),
+  processType: yup.string(),
+  equipmentIntegrationYn: yup.string().required('설비연동 여부는 필수입니다.'),
+  status: yup.string().required('상태는 필수입니다.'),
+  useYn: yup.string().required('사용 여부는 필수입니다.'),
+  sortOrder: yup.number().required('순서는 필수입니다.').min(0, '순서는 0 이상이어야 합니다.'),
+});
+
+// 불량코드 추가 유효성 검사 스키마
+const defectSchema = yup.object({
+  defectCode: yup.string().required('불량 코드는 필수입니다.'),
+  defectName: yup.string().required('불량명은 필수입니다.'),
+  defectType: yup.string(),
+  description: yup.string(),
+  useYn: yup.string().required('사용 여부는 필수입니다.'),
+});
+
+// 검사항목 추가 유효성 검사 스키마
+const inspectionSchema = yup.object({
+  inspectionCode: yup.string().required('검사 코드는 필수입니다.'),
+  inspectionName: yup.string().required('검사항목명은 필수입니다.'),
+  inspectionType: yup.string(),
+  standardValue: yup.string(),
+  upperLimit: yup.number().nullable(),
+  lowerLimit: yup.number().nullable(),
+  unit: yup.string(),
+  description: yup.string(),
+  useYn: yup.string().required('사용 여부는 필수입니다.'),
+});
 
 const ProcessManagement: React.FC = () => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base-data/process');
+  
   const [processes, setProcesses] = useState<Process[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
@@ -66,15 +108,24 @@ const ProcessManagement: React.FC = () => {
     severity: 'success',
   });
 
-  const [formData, setFormData] = useState<Process>({
-    processCode: '',
-    processName: '',
-    description: '',
-    processType: '',
-    equipmentIntegrationYn: 'N',
-    status: 'ACTIVE',
-    useYn: 'Y',
-    sortOrder: 0,
+  // react-hook-form 설정 - 공정
+  const {
+    control: processControl,
+    handleSubmit: handleProcessSubmit,
+    reset: resetProcessForm,
+    formState: { errors: processErrors },
+  } = useForm<Process>({
+    resolver: yupResolver(processSchema),
+    defaultValues: {
+      processCode: '',
+      processName: '',
+      description: '',
+      processType: '',
+      equipmentIntegrationYn: 'N',
+      status: 'ACTIVE',
+      useYn: 'Y',
+      sortOrder: 0,
+    },
   });
 
   const [searchParams, setSearchParams] = useState({
@@ -131,7 +182,7 @@ const ProcessManagement: React.FC = () => {
 
   const handleOpenCreateDialog = () => {
     setDialogMode('create');
-    setFormData({
+    resetProcessForm({
       processCode: '',
       processName: '',
       description: '',
@@ -146,29 +197,26 @@ const ProcessManagement: React.FC = () => {
 
   const handleOpenEditDialog = (process: Process) => {
     setDialogMode('edit');
-    setFormData(process);
+    resetProcessForm(process);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    resetProcessForm();
   };
 
-  const handleChange = (field: keyof Process, value: string | number) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (data: Process) => {
     try {
       if (dialogMode === 'create') {
-        const result = await processService.createProcess(formData);
+        const result = await processService.createProcess(data);
         if (result.resultCode === 200) {
           showSnackbar('공정이 등록되었습니다.', 'success');
         } else {
           showSnackbar(result.result.message, 'error');
         }
       } else {
-        await processService.updateProcess(formData.processId!, formData);
+        await processService.updateProcess(data.processId!, data);
         showSnackbar('공정이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -310,6 +358,7 @@ const ProcessManagement: React.FC = () => {
               color="primary"
               onClick={() => handleOpenEditDialog(params.row)}
               title="수정"
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -318,6 +367,7 @@ const ProcessManagement: React.FC = () => {
               color="error"
               onClick={() => handleDelete(params.row.processId!)}
               title="삭제"
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -407,6 +457,7 @@ const ProcessManagement: React.FC = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleOpenCreateDialog}
+            disabled={!canWrite}
           >
             공정 등록
           </Button>
@@ -450,89 +501,136 @@ const ProcessManagement: React.FC = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                required
-                label="공정 코드"
-                value={formData.processCode}
-                onChange={(e) => handleChange('processCode', e.target.value)}
-                disabled={dialogMode === 'edit'}
+              <Controller
+                name="processCode"
+                control={processControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="공정 코드"
+                    disabled={dialogMode === 'edit'}
+                    error={!!processErrors.processCode}
+                    helperText={processErrors.processCode?.message}
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                required
-                label="공정명"
-                value={formData.processName}
-                onChange={(e) => handleChange('processName', e.target.value)}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="공정 타입"
-                value={formData.processType}
-                onChange={(e) => handleChange('processType', e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="정렬 순서"
-                type="number"
-                value={formData.sortOrder}
-                onChange={(e) =>
-                  handleChange('sortOrder', parseInt(e.target.value) || 0)
-                }
+              <Controller
+                name="processName"
+                control={processControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="공정명"
+                    error={!!processErrors.processName}
+                    helperText={processErrors.processName?.message}
+                  />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>상태</InputLabel>
-                <Select
-                  value={formData.status}
-                  label="상태"
-                  onChange={(e) => handleChange('status', e.target.value)}
-                >
-                  <MenuItem value="ACTIVE">활성</MenuItem>
-                  <MenuItem value="INACTIVE">비활성</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>사용 여부</InputLabel>
-                <Select
-                  value={formData.useYn}
-                  label="사용 여부"
-                  onChange={(e) => handleChange('useYn', e.target.value)}
-                >
-                  <MenuItem value="Y">사용</MenuItem>
-                  <MenuItem value="N">미사용</MenuItem>
-                </Select>
-              </FormControl>
+              <Controller
+                name="processType"
+                control={processControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="공정 타입" />
+                )}
+              />
+              <Controller
+                name="sortOrder"
+                control={processControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="정렬 순서"
+                    type="number"
+                    error={!!processErrors.sortOrder}
+                    helperText={processErrors.sortOrder?.message}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 0)
+                    }
+                  />
+                )}
+              />
             </Stack>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.equipmentIntegrationYn === 'Y'}
-                  onChange={(e) =>
-                    handleChange(
-                      'equipmentIntegrationYn',
-                      e.target.checked ? 'Y' : 'N'
-                    )
+            <Stack direction="row" spacing={2}>
+              <Controller
+                name="status"
+                control={processControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!processErrors.status}>
+                    <InputLabel>상태</InputLabel>
+                    <Select {...field} label="상태">
+                      <MenuItem value="ACTIVE">활성</MenuItem>
+                      <MenuItem value="INACTIVE">비활성</MenuItem>
+                    </Select>
+                    {processErrors.status && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {processErrors.status.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="useYn"
+                control={processControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!processErrors.useYn}>
+                    <InputLabel>사용 여부</InputLabel>
+                    <Select {...field} label="사용 여부">
+                      <MenuItem value="Y">사용</MenuItem>
+                      <MenuItem value="N">미사용</MenuItem>
+                    </Select>
+                    {processErrors.useYn && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {processErrors.useYn.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+            </Stack>
+            <Controller
+              name="equipmentIntegrationYn"
+              control={processControl}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={field.value === 'Y'}
+                      onChange={(e) => field.onChange(e.target.checked ? 'Y' : 'N')}
+                    />
                   }
+                  label="설비연동공정"
                 />
-              }
-              label="설비연동공정"
+              )}
             />
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="설명"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+            <Controller
+              name="description"
+              control={processControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="설명"
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button
+            onClick={handleProcessSubmit(handleSave)}
+            variant="contained"
+            color="primary"
+          >
             저장
           </Button>
           <Button onClick={handleCloseDialog}>취소</Button>
@@ -627,17 +725,32 @@ const ProcessDefectTab: React.FC<{
   process: Process;
   showSnackbar: (m: string, s: 'success' | 'error') => void;
 }> = ({ process, showSnackbar }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base-data/process');
+  
   const [defects, setDefects] = useState<ProcessDefect[]>([]);
   const [defectCodes, setDefectCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [formData, setFormData] = useState<ProcessDefect>({
-    processId: process.processId!,
-    defectCode: '',
-    defectName: '',
-    defectType: '',
-    description: '',
-    useYn: 'Y',
+
+  // react-hook-form 설정
+  const {
+    control: defectControl,
+    handleSubmit: handleDefectSubmit,
+    reset: resetDefectForm,
+    setValue: setDefectValue,
+    formState: { errors: defectErrors },
+  } = useForm<ProcessDefect>({
+    resolver: yupResolver(defectSchema),
+    defaultValues: {
+      processId: process.processId!,
+      defectCode: '',
+      defectName: '',
+      defectType: '',
+      description: '',
+      useYn: 'Y',
+    },
   });
 
   const fetchDefects = useCallback(async () => {
@@ -675,31 +788,29 @@ const ProcessDefectTab: React.FC<{
   const handleDefectCodeChange = (code: string) => {
     const selectedCode = defectCodes.find((dc) => dc.code === code);
     if (selectedCode) {
-      setFormData({
-        ...formData,
-        defectCode: selectedCode.code,
-        defectName: selectedCode.codeNm,
-        description: selectedCode.codeDc || '',
-      });
+      setDefectValue('defectCode', selectedCode.code);
+      setDefectValue('defectName', selectedCode.codeNm);
+      setDefectValue('description', selectedCode.codeDc || '');
     } else {
-      setFormData({ ...formData, defectCode: code });
+      setDefectValue('defectCode', code);
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (data: ProcessDefect) => {
     try {
       if (dialogMode === 'create') {
-        await processService.addProcessDefect(process.processId!, formData);
+        await processService.addProcessDefect(process.processId!, data);
         showSnackbar('불량코드가 등록되었습니다.', 'success');
       } else {
         await processService.updateProcessDefect(
           process.processId!,
-          formData.processDefectId!,
-          formData
+          data.processDefectId!,
+          data
         );
         showSnackbar('불량코드가 수정되었습니다.', 'success');
       }
       setOpenDialog(false);
+      resetDefectForm();
       fetchDefects();
     } catch (error) {
       console.error('Failed to save defect:', error);
@@ -774,9 +885,10 @@ const ProcessDefectTab: React.FC<{
               color="primary"
               onClick={() => {
                 setDialogMode('edit');
-                setFormData(params.row);
+                resetDefectForm(params.row);
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -784,6 +896,7 @@ const ProcessDefectTab: React.FC<{
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processDefectId!)}
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -804,7 +917,7 @@ const ProcessDefectTab: React.FC<{
               startIcon={<AddIcon />}
               onClick={() => {
                 setDialogMode('create');
-                setFormData({
+                resetDefectForm({
                   processId: process.processId!,
                   defectCode: '',
                   defectName: '',
@@ -814,6 +927,7 @@ const ProcessDefectTab: React.FC<{
                 });
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               불량코드 추가
             </Button>
@@ -842,54 +956,78 @@ const ProcessDefectTab: React.FC<{
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth required>
-              <InputLabel>불량코드</InputLabel>
-              <Select
-                value={formData.defectCode}
-                label="불량코드"
-                onChange={(e) => handleDefectCodeChange(e.target.value)}
-                disabled={dialogMode === 'edit'}
-              >
-                {defectCodes.map((code) => (
-                  <MenuItem key={code.code} value={code.code}>
-                    {code.codeNm} ({code.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              required
-              label="불량명"
-              value={formData.defectName}
-              onChange={(e) =>
-                setFormData({ ...formData, defectName: e.target.value })
-              }
-              disabled
+            <Controller
+              name="defectCode"
+              control={defectControl}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!defectErrors.defectCode}
+                >
+                  <InputLabel>불량코드</InputLabel>
+                  <Select
+                    {...field}
+                    label="불량코드"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleDefectCodeChange(e.target.value);
+                    }}
+                    disabled={dialogMode === 'edit'}
+                  >
+                    {defectCodes.map((code) => (
+                      <MenuItem key={code.code} value={code.code}>
+                        {code.codeNm} ({code.code})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {defectErrors.defectCode && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      {defectErrors.defectCode.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
             />
-            <TextField
-              fullWidth
-              label="불량 타입"
-              value={formData.defectType}
-              onChange={(e) =>
-                setFormData({ ...formData, defectType: e.target.value })
-              }
+            <Controller
+              name="defectName"
+              control={defectControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  required
+                  label="불량명"
+                  disabled
+                  error={!!defectErrors.defectName}
+                  helperText={defectErrors.defectName?.message}
+                />
+              )}
             />
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="설명"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              // disabled
+            <Controller
+              name="defectType"
+              control={defectControl}
+              render={({ field }) => (
+                <TextField {...field} fullWidth label="불량 타입" />
+              )}
+            />
+            <Controller
+              name="description"
+              control={defectControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="설명"
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained">
+          <Button onClick={handleDefectSubmit(handleSave)} variant="contained">
             저장
           </Button>
           <Button onClick={() => setOpenDialog(false)}>취소</Button>
@@ -904,23 +1042,38 @@ const ProcessInspectionTab: React.FC<{
   process: Process;
   showSnackbar: (m: string, s: 'success' | 'error') => void;
 }> = ({ process, showSnackbar }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base-data/process');
+  
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
   const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
     []
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [formData, setFormData] = useState<ProcessInspection>({
-    processId: process.processId!,
-    inspectionCode: '',
-    inspectionName: '',
-    inspectionType: '',
-    standardValue: '',
-    upperLimit: undefined,
-    lowerLimit: undefined,
-    unit: '',
-    description: '',
-    useYn: 'Y',
+
+  // react-hook-form 설정
+  const {
+    control: inspectionControl,
+    handleSubmit: handleInspectionSubmit,
+    reset: resetInspectionForm,
+    setValue: setInspectionValue,
+    formState: { errors: inspectionErrors },
+  } = useForm<ProcessInspection>({
+    resolver: yupResolver(inspectionSchema),
+    defaultValues: {
+      processId: process.processId!,
+      inspectionCode: '',
+      inspectionName: '',
+      inspectionType: '',
+      standardValue: '',
+      upperLimit: undefined,
+      lowerLimit: undefined,
+      unit: '',
+      description: '',
+      useYn: 'Y',
+    },
   });
 
   const fetchInspections = useCallback(async () => {
@@ -958,35 +1111,29 @@ const ProcessInspectionTab: React.FC<{
   const handleInspectionCodeChange = (code: string) => {
     const selectedCode = inspectionCodes.find((ic) => ic.code === code);
     if (selectedCode) {
-      setFormData({
-        ...formData,
-        inspectionCode: selectedCode.code,
-        inspectionName: selectedCode.codeNm,
-        description: selectedCode.codeDc || '',
-      });
+      setInspectionValue('inspectionCode', selectedCode.code);
+      setInspectionValue('inspectionName', selectedCode.codeNm);
+      setInspectionValue('description', selectedCode.codeDc || '');
     } else {
-      setFormData({ ...formData, inspectionCode: code });
+      setInspectionValue('inspectionCode', code);
     }
   };
 
-  useEffect(() => {
-    fetchInspections();
-  }, [fetchInspections]);
-
-  const handleSave = async () => {
+  const handleSave = async (data: ProcessInspection) => {
     try {
       if (dialogMode === 'create') {
-        await processService.addProcessInspection(process.processId!, formData);
+        await processService.addProcessInspection(process.processId!, data);
         showSnackbar('검사항목이 등록되었습니다.', 'success');
       } else {
         await processService.updateProcessInspection(
           process.processId!,
-          formData.processInspectionId!,
-          formData
+          data.processInspectionId!,
+          data
         );
         showSnackbar('검사항목이 수정되었습니다.', 'success');
       }
       setOpenDialog(false);
+      resetInspectionForm();
       fetchInspections();
     } catch (error) {
       console.error('Failed to save inspection:', error);
@@ -1082,9 +1229,10 @@ const ProcessInspectionTab: React.FC<{
               color="primary"
               onClick={() => {
                 setDialogMode('edit');
-                setFormData(params.row);
+                resetInspectionForm(params.row);
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -1092,6 +1240,7 @@ const ProcessInspectionTab: React.FC<{
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processInspectionId!)}
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -1112,7 +1261,7 @@ const ProcessInspectionTab: React.FC<{
               startIcon={<AddIcon />}
               onClick={() => {
                 setDialogMode('create');
-                setFormData({
+                resetInspectionForm({
                   processId: process.processId!,
                   inspectionCode: '',
                   inspectionName: '',
@@ -1126,6 +1275,7 @@ const ProcessInspectionTab: React.FC<{
                 });
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               검사항목 추가
             </Button>
@@ -1155,99 +1305,130 @@ const ProcessInspectionTab: React.FC<{
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth required>
-                <InputLabel>검사코드</InputLabel>
-                <Select
-                  value={formData.inspectionCode}
-                  label="검사코드"
-                  onChange={(e) => handleInspectionCodeChange(e.target.value)}
-                  disabled={dialogMode === 'edit'}
-                >
-                  {inspectionCodes.map((code) => (
-                    <MenuItem key={code.code} value={code.code}>
-                      {code.codeNm} ({code.code})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                fullWidth
-                required
-                label="검사항목명"
-                value={formData.inspectionName}
-                onChange={(e) =>
-                  setFormData({ ...formData, inspectionName: e.target.value })
-                }
-                disabled
+              <Controller
+                name="inspectionCode"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <FormControl
+                    fullWidth
+                    required
+                    error={!!inspectionErrors.inspectionCode}
+                  >
+                    <InputLabel>검사코드</InputLabel>
+                    <Select
+                      {...field}
+                      label="검사코드"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleInspectionCodeChange(e.target.value);
+                      }}
+                      disabled={dialogMode === 'edit'}
+                    >
+                      {inspectionCodes.map((code) => (
+                        <MenuItem key={code.code} value={code.code}>
+                          {code.codeNm} ({code.code})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {inspectionErrors.inspectionCode && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {inspectionErrors.inspectionCode.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="inspectionName"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="검사항목명"
+                    disabled
+                    error={!!inspectionErrors.inspectionName}
+                    helperText={inspectionErrors.inspectionName?.message}
+                  />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="검사 타입"
-                value={formData.inspectionType}
-                onChange={(e) =>
-                  setFormData({ ...formData, inspectionType: e.target.value })
-                }
+              <Controller
+                name="inspectionType"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="검사 타입" />
+                )}
               />
-              <TextField
-                fullWidth
-                label="기준값"
-                value={formData.standardValue}
-                onChange={(e) =>
-                  setFormData({ ...formData, standardValue: e.target.value })
-                }
+              <Controller
+                name="standardValue"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="기준값" />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="상한값"
-                type="number"
-                value={formData.upperLimit || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    upperLimit: parseFloat(e.target.value) || undefined,
-                  })
-                }
+              <Controller
+                name="upperLimit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="상한값"
+                    type="number"
+                    value={field.value || ''}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="하한값"
-                type="number"
-                value={formData.lowerLimit || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    lowerLimit: parseFloat(e.target.value) || undefined,
-                  })
-                }
+              <Controller
+                name="lowerLimit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="하한값"
+                    type="number"
+                    value={field.value || ''}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="단위"
-                value={formData.unit}
-                onChange={(e) =>
-                  setFormData({ ...formData, unit: e.target.value })
-                }
+              <Controller
+                name="unit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="단위" />
+                )}
               />
             </Stack>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="설명"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              disabled
+            <Controller
+              name="description"
+              control={inspectionControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="설명"
+                  disabled
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained">
+          <Button onClick={handleInspectionSubmit(handleSave)} variant="contained">
             저장
           </Button>
           <Button onClick={() => setOpenDialog(false)}>취소</Button>
