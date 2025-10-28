@@ -30,10 +30,41 @@ import {
   Code as CodeIcon,
   List as ListIcon,
 } from '@mui/icons-material';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { CommonCode, CommonDetailCode } from '../../../types/commonCode';
 import commonCodeService from '../../../services/commonCodeService';
+import { usePermissions } from '../../../contexts/PermissionContext';
+
+// 공통코드 등록 유효성 검사 스키마
+const commonCodeSchema: yup.ObjectSchema<CommonCode> = yup.object({
+  codeId: yup.string().required('코드 ID는 필수입니다.'),
+  codeIdNm: yup.string().required('코드명은 필수입니다.'),
+  codeIdDc: yup.string(),
+  clCode: yup.string(),
+  useAt: yup
+    .mixed<'Y' | 'N'>()
+    .oneOf(['Y', 'N'])
+    .required('사용여부는 필수입니다.'),
+});
+
+// 상세코드 등록 유효성 검사 스키마
+const detailCodeSchema: yup.ObjectSchema<CommonDetailCode> = yup.object({
+  codeId: yup.string().required('코드는 필수입니다.'),
+  code: yup.string().required('코드는 필수입니다.'),
+  codeNm: yup.string().required('코드명은 필수입니다.'),
+  codeDc: yup.string(),
+  useAt: yup
+    .mixed<'Y' | 'N'>()
+    .oneOf(['Y', 'N'])
+    .required('사용여부는 필수입니다.'),
+});
 
 const CommonCodeManagement: React.FC = () => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base/common-code');
   const [commonCodes, setCommonCodes] = useState<CommonCode[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedCommonCode, setSelectedCommonCode] =
@@ -59,22 +90,38 @@ const CommonCodeManagement: React.FC = () => {
     severity: 'success',
   });
 
-  // 공통코드 폼 상태
-  const [formData, setFormData] = useState<CommonCode>({
-    codeId: '',
-    codeIdNm: '',
-    codeIdDc: '',
-    useAt: 'Y',
-    clCode: '',
+  // react-hook-form 설정 - 공통코드
+  const {
+    control: commonCodeControl,
+    handleSubmit: handleCommonCodeSubmit,
+    reset: resetCommonCodeForm,
+    formState: { errors: commonCodeErrors },
+  } = useForm<CommonCode>({
+    resolver: yupResolver(commonCodeSchema),
+    defaultValues: {
+      codeId: '',
+      codeIdNm: '',
+      codeIdDc: '',
+      clCode: 'LET',
+      useAt: 'Y',
+    },
   });
 
-  // 공통코드 상세 폼 상태
-  const [detailFormData, setDetailFormData] = useState<CommonDetailCode>({
-    codeId: '',
-    code: '',
-    codeNm: '',
-    codeDc: '',
-    useAt: 'Y',
+  // react-hook-form 설정 - 상세코드
+  const {
+    control: detailCodeControl,
+    handleSubmit: handleDetailCodeSubmit,
+    reset: resetDetailCodeForm,
+    formState: { errors: detailCodeErrors },
+  } = useForm<CommonDetailCode>({
+    resolver: yupResolver(detailCodeSchema),
+    defaultValues: {
+      codeId: '',
+      code: '',
+      codeNm: '',
+      codeDc: '',
+      useAt: 'Y',
+    },
   });
 
   // 상세 코드 목록
@@ -148,41 +195,38 @@ const CommonCodeManagement: React.FC = () => {
 
   const handleOpenCreateDialog = () => {
     setDialogMode('create');
-    setFormData({
+    resetCommonCodeForm({
       codeId: '',
       codeIdNm: '',
       codeIdDc: '',
+      clCode: 'LET',
       useAt: 'Y',
-      clCode: '',
     });
     setOpenDialog(true);
   };
 
   const handleOpenEditDialog = (commonCode: CommonCode) => {
     setDialogMode('edit');
-    setFormData(commonCode);
+    resetCommonCodeForm(commonCode);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    resetCommonCodeForm();
   };
 
-  const handleChange = (field: keyof CommonCode, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (data: CommonCode) => {
     try {
       if (dialogMode === 'create') {
-        const result = await commonCodeService.createCommonCode(formData);
+        const result = await commonCodeService.createCommonCode(data);
         if (result.resultCode === 200) {
           showSnackbar('공통코드가 등록되었습니다.', 'success');
         } else {
           showSnackbar(result.result.message, 'error');
         }
       } else {
-        await commonCodeService.updateCommonCode(formData.codeId!, formData);
+        await commonCodeService.updateCommonCode(data.codeId!, data);
         showSnackbar('공통코드가 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -216,7 +260,7 @@ const CommonCodeManagement: React.FC = () => {
   const handleOpenCreateDetailDialog = () => {
     if (!selectedCommonCode) return;
     setDetailDialogMode('create');
-    setDetailFormData({
+    resetDetailCodeForm({
       codeId: selectedCommonCode.codeId,
       code: '',
       codeNm: '',
@@ -228,24 +272,21 @@ const CommonCodeManagement: React.FC = () => {
 
   const handleOpenEditDetailDialog = (detailCode: CommonDetailCode) => {
     setDetailDialogMode('edit');
-    setDetailFormData(detailCode);
+    resetDetailCodeForm(detailCode);
     setOpenDetailDialog(true);
   };
 
   const handleCloseDetailDialog = () => {
     setOpenDetailDialog(false);
+    resetDetailCodeForm();
   };
 
-  const handleDetailChange = (field: keyof CommonDetailCode, value: string) => {
-    setDetailFormData({ ...detailFormData, [field]: value });
-  };
-
-  const handleSaveDetail = async () => {
+  const handleSaveDetail = async (data: CommonDetailCode) => {
     try {
       if (detailDialogMode === 'create') {
         const result = await commonCodeService.createCommonDetailCode(
-          detailFormData.codeId,
-          detailFormData
+          data.codeId,
+          data
         );
         if (result.resultCode === 200) {
           showSnackbar('상세 코드가 등록되었습니다.', 'success');
@@ -254,9 +295,9 @@ const CommonCodeManagement: React.FC = () => {
         }
       } else {
         await commonCodeService.updateCommonDetailCode(
-          detailFormData.codeId,
-          detailFormData.code,
-          detailFormData
+          data.codeId,
+          data.code,
+          data
         );
         showSnackbar('상세 코드가 수정되었습니다.', 'success');
       }
@@ -364,6 +405,7 @@ const CommonCodeManagement: React.FC = () => {
               size="small"
               color="primary"
               onClick={() => handleOpenEditDialog(params.row)}
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -371,6 +413,7 @@ const CommonCodeManagement: React.FC = () => {
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.codeId)}
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -440,6 +483,7 @@ const CommonCodeManagement: React.FC = () => {
               size="small"
               color="primary"
               onClick={() => handleOpenEditDetailDialog(params.row)}
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -449,6 +493,7 @@ const CommonCodeManagement: React.FC = () => {
               onClick={() =>
                 handleDeleteDetail(params.row.codeId, params.row.code)
               }
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -519,11 +564,13 @@ const CommonCodeManagement: React.FC = () => {
               >
                 검색
               </Button>
+
               <Button
                 variant="contained"
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={handleOpenCreateDialog}
+                disabled={!canWrite}
               >
                 공통코드 등록
               </Button>
@@ -587,6 +634,7 @@ const CommonCodeManagement: React.FC = () => {
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={handleOpenCreateDetailDialog}
+                disabled={!canWrite}
               >
                 상세코드 등록
               </Button>
@@ -639,50 +687,91 @@ const CommonCodeManagement: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 2 }}>
-            <TextField
-              label="코드 ID"
-              value={formData.codeId}
-              onChange={(e) => handleChange('codeId', e.target.value)}
-              fullWidth
-              required
-              disabled={dialogMode === 'edit'}
+            <Controller
+              name="codeId"
+              control={commonCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="코드 ID"
+                  fullWidth
+                  required
+                  disabled={dialogMode === 'edit'}
+                  error={!!commonCodeErrors.codeId}
+                  helperText={commonCodeErrors.codeId?.message}
+                />
+              )}
             />
-            <TextField
-              label="코드명"
-              value={formData.codeIdNm}
-              onChange={(e) => handleChange('codeIdNm', e.target.value)}
-              fullWidth
-              required
+            <Controller
+              name="codeIdNm"
+              control={commonCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="코드명"
+                  fullWidth
+                  required
+                  error={!!commonCodeErrors.codeIdNm}
+                  helperText={commonCodeErrors.codeIdNm?.message}
+                />
+              )}
             />
-            <TextField
-              label="설명"
-              value={formData.codeIdDc}
-              onChange={(e) => handleChange('codeIdDc', e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
+            <Controller
+              name="codeIdDc"
+              control={commonCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="설명"
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+              )}
             />
-            <TextField
-              label="분류코드"
-              value={formData.clCode}
-              onChange={(e) => handleChange('clCode', e.target.value)}
-              fullWidth
+            <Controller
+              name="clCode"
+              control={commonCodeControl}
+              render={({ field }) => (
+                <FormControl fullWidth>
+                  <InputLabel>분류코드</InputLabel>
+                  <Select {...field} label="분류코드">
+                    <MenuItem value="LET">LET</MenuItem>
+                    {/* 필요한 다른 분류코드 옵션 추가 */}
+                  </Select>
+                </FormControl>
+              )}
             />
-            <FormControl fullWidth>
-              <InputLabel>사용여부</InputLabel>
-              <Select
-                value={formData.useAt}
-                label="사용여부"
-                onChange={(e) => handleChange('useAt', e.target.value)}
-              >
-                <MenuItem value="Y">사용</MenuItem>
-                <MenuItem value="N">미사용</MenuItem>
-              </Select>
-            </FormControl>
+            <Controller
+              name="useAt"
+              control={commonCodeControl}
+              render={({ field }) => (
+                <FormControl fullWidth error={!!commonCodeErrors.useAt}>
+                  <InputLabel>사용여부</InputLabel>
+                  <Select {...field} label="사용여부">
+                    <MenuItem value="Y">사용</MenuItem>
+                    <MenuItem value="N">미사용</MenuItem>
+                  </Select>
+                  {commonCodeErrors.useAt && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {commonCodeErrors.useAt.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button
+            onClick={handleCommonCodeSubmit(handleSave)}
+            variant="contained"
+            color="primary"
+          >
             저장
           </Button>
           <Button onClick={handleCloseDialog}>취소</Button>
@@ -701,45 +790,75 @@ const CommonCodeManagement: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 2 }}>
-            <TextField
-              label="코드"
-              value={detailFormData.code}
-              onChange={(e) => handleDetailChange('code', e.target.value)}
-              fullWidth
-              required
-              disabled={detailDialogMode === 'edit'}
+            <Controller
+              name="code"
+              control={detailCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="코드"
+                  fullWidth
+                  required
+                  disabled={detailDialogMode === 'edit'}
+                  error={!!detailCodeErrors.code}
+                  helperText={detailCodeErrors.code?.message}
+                />
+              )}
             />
-            <TextField
-              label="코드명"
-              value={detailFormData.codeNm}
-              onChange={(e) => handleDetailChange('codeNm', e.target.value)}
-              fullWidth
-              required
+            <Controller
+              name="codeNm"
+              control={detailCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="코드명"
+                  fullWidth
+                  required
+                  error={!!detailCodeErrors.codeNm}
+                  helperText={detailCodeErrors.codeNm?.message}
+                />
+              )}
             />
-            <TextField
-              label="설명"
-              value={detailFormData.codeDc}
-              onChange={(e) => handleDetailChange('codeDc', e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
+            <Controller
+              name="codeDc"
+              control={detailCodeControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="설명"
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+              )}
             />
-            <FormControl fullWidth>
-              <InputLabel>사용여부</InputLabel>
-              <Select
-                value={detailFormData.useAt}
-                label="사용여부"
-                onChange={(e) => handleDetailChange('useAt', e.target.value)}
-              >
-                <MenuItem value="Y">사용</MenuItem>
-                <MenuItem value="N">미사용</MenuItem>
-              </Select>
-            </FormControl>
+            <Controller
+              name="useAt"
+              control={detailCodeControl}
+              render={({ field }) => (
+                <FormControl fullWidth error={!!detailCodeErrors.useAt}>
+                  <InputLabel>사용여부</InputLabel>
+                  <Select {...field} label="사용여부">
+                    <MenuItem value="Y">사용</MenuItem>
+                    <MenuItem value="N">미사용</MenuItem>
+                  </Select>
+                  {detailCodeErrors.useAt && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {detailCodeErrors.useAt.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={handleSaveDetail}
+            onClick={handleDetailCodeSubmit(handleSaveDetail)}
             variant="contained"
             color="primary"
           >

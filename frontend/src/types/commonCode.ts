@@ -6,20 +6,8 @@ export interface CommonCode {
   codeId: string;
   codeIdNm: string;
   codeIdDc?: string;
-  useAt?: string;
-  clCode?: string;
-  frstRegistPnttm?: string;
-  frstRegisterId?: string;
-  lastUpdtPnttm?: string;
-  lastUpdusrId?: string;
-}
-
-export interface CommonCodeSearchParams {
-  searchCnd?: string;
-  searchWrd?: string;
-  useAt?: string;
-  clCode?: string;
-  pageIndex?: number;
+  clCode?: string | 'LET';
+  useAt: string;
 }
 
 export interface CommonDetailCode {
@@ -27,9 +15,12 @@ export interface CommonDetailCode {
   code: string;
   codeNm: string;
   codeDc?: string;
+  useAt: string;
+}
+
+export interface CommonCodeSearchParams {
+  searchCnd?: string;
+  searchWrd?: string;
   useAt?: string;
-  frstRegistPnttm?: string;
-  frstRegisterId?: string;
-  lastUpdtPnttm?: string;
-  lastUpdusrId?: string;
+  clCode?: string;
 }

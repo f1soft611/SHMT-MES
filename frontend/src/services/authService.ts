@@ -52,9 +52,9 @@ export const authService = {
         sessionStorage.setItem('user', JSON.stringify(response.data.resultVO));
         // 토큰 발급 시간 저장 (밀리초)
         sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
-        
+
         // 자동 갱신 타이머 시작
-        this.startTokenRefreshTimer();
+        // this.startTokenRefreshTimer();
       }
 
       return response.data;
@@ -73,7 +73,7 @@ export const authService = {
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('tokenIssuedAt');
-    this.stopTokenRefreshTimer();
+    // this.stopTokenRefreshTimer();
   },
 
   getToken(): string | null {
@@ -105,7 +105,7 @@ export const authService = {
     const tokenAge = Date.now() - parseInt(issuedAt);
     // 토큰이 발급된 지 55분(3300초) 이상 경과했으면 갱신 필요
     const TOKEN_VALIDITY = 60 * 60 * 1000; // 60분
-    return tokenAge >= (TOKEN_VALIDITY - TOKEN_REFRESH_THRESHOLD);
+    return tokenAge >= TOKEN_VALIDITY - TOKEN_REFRESH_THRESHOLD;
   },
 
   async refreshToken(): Promise<string | null> {
@@ -116,7 +116,7 @@ export const authService = {
 
     try {
       const response = await apiClient.post('/auth/refresh', {
-        refreshToken: refreshToken
+        refreshToken: refreshToken,
       });
 
       if (response.data.resultCode === '200' && response.data.jToken) {
@@ -189,7 +189,7 @@ apiClient.interceptors.request.use(
 
 // 토큰 리프레쉬 중인지 추적하는 변수
 let isRefreshing = false;
-let failedQueue: Array<{resolve: Function, reject: Function}> = [];
+let failedQueue: Array<{ resolve: Function; reject: Function }> = [];
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -199,7 +199,7 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -216,22 +216,24 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // 이미 리프레쉬 중이면 큐에 추가
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => {
-          return apiClient(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then(() => {
+            return apiClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       const newToken = await authService.refreshToken();
       if (newToken) {
         originalRequest.headers.Authorization = `Bearer ${newToken}`;

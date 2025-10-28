@@ -153,9 +153,14 @@ const SchedulerHistoryList: React.FC = () => {
       width: 130,
       align: 'right',
       headerAlign: 'center',
-      valueFormatter: (params: any) => {
-        if (params.value === null || params.value === undefined) return '-';
-        return params.value.toLocaleString();
+      renderCell: (params: any) => {
+        const value = params.row.executionTimeMs;
+        if (value === null || value === undefined || value === '') return '-';
+
+        const numValue = Number(value);
+        if (isNaN(numValue)) return '-';
+
+        return numValue.toLocaleString();
       },
     },
     {
