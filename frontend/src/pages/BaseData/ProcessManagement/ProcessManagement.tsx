@@ -489,10 +489,6 @@ const ProcessManagement: React.FC = () => {
             '& .MuiDataGrid-cell:focus': { outline: 'none' },
             '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' },
           }}
-          localeText={{
-            noRowsLabel: '조회된 데이터가 없습니다',
-            footerRowSelected: (count) => `${count}개 선택됨`,
-          }}
         />
       </Paper>
 

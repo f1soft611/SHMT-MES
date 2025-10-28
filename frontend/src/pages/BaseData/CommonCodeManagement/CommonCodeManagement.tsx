@@ -199,7 +199,7 @@ const CommonCodeManagement: React.FC = () => {
       codeId: '',
       codeIdNm: '',
       codeIdDc: '',
-      clCode: '',
+      clCode: 'LET',
       useAt: 'Y',
     });
     setOpenDialog(true);
@@ -733,7 +733,13 @@ const CommonCodeManagement: React.FC = () => {
               name="clCode"
               control={commonCodeControl}
               render={({ field }) => (
-                <TextField {...field} label="분류코드" fullWidth />
+                <FormControl fullWidth>
+                  <InputLabel>분류코드</InputLabel>
+                  <Select {...field} label="분류코드">
+                    <MenuItem value="LET">LET</MenuItem>
+                    {/* 필요한 다른 분류코드 옵션 추가 */}
+                  </Select>
+                </FormControl>
               )}
             />
             <Controller
