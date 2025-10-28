@@ -519,6 +519,7 @@ const CommonCodeManagement: React.FC = () => {
               >
                 검색
               </Button>
+
               <Button
                 variant="contained"
                 color="primary"
