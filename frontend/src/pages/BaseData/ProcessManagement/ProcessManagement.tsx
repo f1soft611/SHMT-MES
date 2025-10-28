@@ -1042,23 +1042,38 @@ const ProcessInspectionTab: React.FC<{
   process: Process;
   showSnackbar: (m: string, s: 'success' | 'error') => void;
 }> = ({ process, showSnackbar }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base-data/process');
+  
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
   const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
     []
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [formData, setFormData] = useState<ProcessInspection>({
-    processId: process.processId!,
-    inspectionCode: '',
-    inspectionName: '',
-    inspectionType: '',
-    standardValue: '',
-    upperLimit: undefined,
-    lowerLimit: undefined,
-    unit: '',
-    description: '',
-    useYn: 'Y',
+
+  // react-hook-form 설정
+  const {
+    control: inspectionControl,
+    handleSubmit: handleInspectionSubmit,
+    reset: resetInspectionForm,
+    setValue: setInspectionValue,
+    formState: { errors: inspectionErrors },
+  } = useForm<ProcessInspection>({
+    resolver: yupResolver(inspectionSchema),
+    defaultValues: {
+      processId: process.processId!,
+      inspectionCode: '',
+      inspectionName: '',
+      inspectionType: '',
+      standardValue: '',
+      upperLimit: undefined,
+      lowerLimit: undefined,
+      unit: '',
+      description: '',
+      useYn: 'Y',
+    },
   });
 
   const fetchInspections = useCallback(async () => {
@@ -1096,35 +1111,29 @@ const ProcessInspectionTab: React.FC<{
   const handleInspectionCodeChange = (code: string) => {
     const selectedCode = inspectionCodes.find((ic) => ic.code === code);
     if (selectedCode) {
-      setFormData({
-        ...formData,
-        inspectionCode: selectedCode.code,
-        inspectionName: selectedCode.codeNm,
-        description: selectedCode.codeDc || '',
-      });
+      setInspectionValue('inspectionCode', selectedCode.code);
+      setInspectionValue('inspectionName', selectedCode.codeNm);
+      setInspectionValue('description', selectedCode.codeDc || '');
     } else {
-      setFormData({ ...formData, inspectionCode: code });
+      setInspectionValue('inspectionCode', code);
     }
   };
 
-  useEffect(() => {
-    fetchInspections();
-  }, [fetchInspections]);
-
-  const handleSave = async () => {
+  const handleSave = async (data: ProcessInspection) => {
     try {
       if (dialogMode === 'create') {
-        await processService.addProcessInspection(process.processId!, formData);
+        await processService.addProcessInspection(process.processId!, data);
         showSnackbar('검사항목이 등록되었습니다.', 'success');
       } else {
         await processService.updateProcessInspection(
           process.processId!,
-          formData.processInspectionId!,
-          formData
+          data.processInspectionId!,
+          data
         );
         showSnackbar('검사항목이 수정되었습니다.', 'success');
       }
       setOpenDialog(false);
+      resetInspectionForm();
       fetchInspections();
     } catch (error) {
       console.error('Failed to save inspection:', error);
@@ -1220,9 +1229,10 @@ const ProcessInspectionTab: React.FC<{
               color="primary"
               onClick={() => {
                 setDialogMode('edit');
-                setFormData(params.row);
+                resetInspectionForm(params.row);
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -1230,6 +1240,7 @@ const ProcessInspectionTab: React.FC<{
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processInspectionId!)}
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -1250,7 +1261,7 @@ const ProcessInspectionTab: React.FC<{
               startIcon={<AddIcon />}
               onClick={() => {
                 setDialogMode('create');
-                setFormData({
+                resetInspectionForm({
                   processId: process.processId!,
                   inspectionCode: '',
                   inspectionName: '',
@@ -1264,6 +1275,7 @@ const ProcessInspectionTab: React.FC<{
                 });
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               검사항목 추가
             </Button>
@@ -1293,99 +1305,130 @@ const ProcessInspectionTab: React.FC<{
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth required>
-                <InputLabel>검사코드</InputLabel>
-                <Select
-                  value={formData.inspectionCode}
-                  label="검사코드"
-                  onChange={(e) => handleInspectionCodeChange(e.target.value)}
-                  disabled={dialogMode === 'edit'}
-                >
-                  {inspectionCodes.map((code) => (
-                    <MenuItem key={code.code} value={code.code}>
-                      {code.codeNm} ({code.code})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                fullWidth
-                required
-                label="검사항목명"
-                value={formData.inspectionName}
-                onChange={(e) =>
-                  setFormData({ ...formData, inspectionName: e.target.value })
-                }
-                disabled
+              <Controller
+                name="inspectionCode"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <FormControl
+                    fullWidth
+                    required
+                    error={!!inspectionErrors.inspectionCode}
+                  >
+                    <InputLabel>검사코드</InputLabel>
+                    <Select
+                      {...field}
+                      label="검사코드"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleInspectionCodeChange(e.target.value);
+                      }}
+                      disabled={dialogMode === 'edit'}
+                    >
+                      {inspectionCodes.map((code) => (
+                        <MenuItem key={code.code} value={code.code}>
+                          {code.codeNm} ({code.code})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {inspectionErrors.inspectionCode && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {inspectionErrors.inspectionCode.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="inspectionName"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="검사항목명"
+                    disabled
+                    error={!!inspectionErrors.inspectionName}
+                    helperText={inspectionErrors.inspectionName?.message}
+                  />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="검사 타입"
-                value={formData.inspectionType}
-                onChange={(e) =>
-                  setFormData({ ...formData, inspectionType: e.target.value })
-                }
+              <Controller
+                name="inspectionType"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="검사 타입" />
+                )}
               />
-              <TextField
-                fullWidth
-                label="기준값"
-                value={formData.standardValue}
-                onChange={(e) =>
-                  setFormData({ ...formData, standardValue: e.target.value })
-                }
+              <Controller
+                name="standardValue"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="기준값" />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="상한값"
-                type="number"
-                value={formData.upperLimit || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    upperLimit: parseFloat(e.target.value) || undefined,
-                  })
-                }
+              <Controller
+                name="upperLimit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="상한값"
+                    type="number"
+                    value={field.value || ''}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="하한값"
-                type="number"
-                value={formData.lowerLimit || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    lowerLimit: parseFloat(e.target.value) || undefined,
-                  })
-                }
+              <Controller
+                name="lowerLimit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="하한값"
+                    type="number"
+                    value={field.value || ''}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                label="단위"
-                value={formData.unit}
-                onChange={(e) =>
-                  setFormData({ ...formData, unit: e.target.value })
-                }
+              <Controller
+                name="unit"
+                control={inspectionControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="단위" />
+                )}
               />
             </Stack>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="설명"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              disabled
+            <Controller
+              name="description"
+              control={inspectionControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="설명"
+                  disabled
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained">
+          <Button onClick={handleInspectionSubmit(handleSave)} variant="contained">
             저장
           </Button>
           <Button onClick={() => setOpenDialog(false)}>취소</Button>
