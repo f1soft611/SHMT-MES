@@ -12,10 +12,6 @@ export interface Process {
   status?: string;
   useYn?: string;
   sortOrder?: number;
-  regUserId?: string;
-  regDt?: string;
-  updUserId?: string;
-  updDt?: string;
 }
 
 export interface ProcessWorkplace {
@@ -40,10 +36,6 @@ export interface ProcessDefect {
   defectType?: string;
   description?: string;
   useYn?: string;
-  regUserId?: string;
-  regDt?: string;
-  updUserId?: string;
-  updDt?: string;
 }
 
 export interface ProcessInspection {
@@ -53,15 +45,11 @@ export interface ProcessInspection {
   inspectionName: string;
   inspectionType?: string;
   standardValue?: string;
-  upperLimit?: number;
-  lowerLimit?: number;
+  upperLimit?: number | null;
+  lowerLimit?: number | null;
   unit?: string;
   description?: string;
   useYn?: string;
-  regUserId?: string;
-  regDt?: string;
-  updUserId?: string;
-  updDt?: string;
 }
 
 export interface ProcessSearchParams {

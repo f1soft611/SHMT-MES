@@ -42,7 +42,8 @@ import processService from '../../../services/processService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 
 // 작업장 등록 유효성 검사 스키마
-const workplaceSchema = yup.object({
+const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
+  workplaceId: yup.string(),
   workplaceCode: yup.string().required('작업장 코드는 필수입니다.'),
   workplaceName: yup.string().required('작업장명은 필수입니다.'),
   description: yup.string(),
@@ -55,8 +56,8 @@ const workplaceSchema = yup.object({
 const WorkplaceManagement: React.FC = () => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/workplace');
-  
+  const canWrite = hasWritePermission('/base/workplace');
+
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(
@@ -542,7 +543,11 @@ const WorkplaceManagement: React.FC = () => {
                       <MenuItem value="INACTIVE">비활성</MenuItem>
                     </Select>
                     {workplaceErrors.status && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
                         {workplaceErrors.status.message}
                       </Typography>
                     )}
@@ -560,7 +565,11 @@ const WorkplaceManagement: React.FC = () => {
                       <MenuItem value="N">미사용</MenuItem>
                     </Select>
                     {workplaceErrors.useYn && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
                         {workplaceErrors.useYn.message}
                       </Typography>
                     )}

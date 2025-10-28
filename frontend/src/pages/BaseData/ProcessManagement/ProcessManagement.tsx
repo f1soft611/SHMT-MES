@@ -49,7 +49,8 @@ import commonCodeService from '../../../services/commonCodeService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 
 // 공정 등록 유효성 검사 스키마
-const processSchema = yup.object({
+const processSchema: yup.ObjectSchema<Process> = yup.object({
+  processId: yup.string(),
   processCode: yup.string().required('공정 코드는 필수입니다.'),
   processName: yup.string().required('공정명은 필수입니다.'),
   description: yup.string(),
@@ -57,11 +58,16 @@ const processSchema = yup.object({
   equipmentIntegrationYn: yup.string().required('설비연동 여부는 필수입니다.'),
   status: yup.string().required('상태는 필수입니다.'),
   useYn: yup.string().required('사용 여부는 필수입니다.'),
-  sortOrder: yup.number().required('순서는 필수입니다.').min(0, '순서는 0 이상이어야 합니다.'),
+  sortOrder: yup
+    .number()
+    .required('순서는 필수입니다.')
+    .min(0, '순서는 0 이상이어야 합니다.'),
 });
 
 // 불량코드 추가 유효성 검사 스키마
-const defectSchema = yup.object({
+const defectSchema: yup.ObjectSchema<ProcessDefect> = yup.object({
+  processId: yup.string().required('공정 ID는 필수입니다.'),
+  processDefectId: yup.string(),
   defectCode: yup.string().required('불량 코드는 필수입니다.'),
   defectName: yup.string().required('불량명은 필수입니다.'),
   defectType: yup.string(),
@@ -70,7 +76,9 @@ const defectSchema = yup.object({
 });
 
 // 검사항목 추가 유효성 검사 스키마
-const inspectionSchema = yup.object({
+const inspectionSchema: yup.ObjectSchema<ProcessInspection> = yup.object({
+  processId: yup.string().required('공정 ID는 필수입니다.'),
+  processInspectionId: yup.string(),
   inspectionCode: yup.string().required('검사 코드는 필수입니다.'),
   inspectionName: yup.string().required('검사항목명은 필수입니다.'),
   inspectionType: yup.string(),
@@ -85,8 +93,8 @@ const inspectionSchema = yup.object({
 const ProcessManagement: React.FC = () => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/process');
-  
+  const canWrite = hasWritePermission('/base/process');
+
   const [processes, setProcesses] = useState<Process[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
@@ -569,7 +577,11 @@ const ProcessManagement: React.FC = () => {
                       <MenuItem value="INACTIVE">비활성</MenuItem>
                     </Select>
                     {processErrors.status && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
                         {processErrors.status.message}
                       </Typography>
                     )}
@@ -587,7 +599,11 @@ const ProcessManagement: React.FC = () => {
                       <MenuItem value="N">미사용</MenuItem>
                     </Select>
                     {processErrors.useYn && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
                         {processErrors.useYn.message}
                       </Typography>
                     )}
@@ -603,7 +619,9 @@ const ProcessManagement: React.FC = () => {
                   control={
                     <Checkbox
                       checked={field.value === 'Y'}
-                      onChange={(e) => field.onChange(e.target.checked ? 'Y' : 'N')}
+                      onChange={(e) =>
+                        field.onChange(e.target.checked ? 'Y' : 'N')
+                      }
                     />
                   }
                   label="설비연동공정"
@@ -728,7 +746,7 @@ const ProcessDefectTab: React.FC<{
   // 권한 체크
   const { hasWritePermission } = usePermissions();
   const canWrite = hasWritePermission('/base-data/process');
-  
+
   const [defects, setDefects] = useState<ProcessDefect[]>([]);
   const [defectCodes, setDefectCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -745,6 +763,7 @@ const ProcessDefectTab: React.FC<{
     resolver: yupResolver(defectSchema),
     defaultValues: {
       processId: process.processId!,
+      processDefectId: '',
       defectCode: '',
       defectName: '',
       defectType: '',
@@ -982,7 +1001,11 @@ const ProcessDefectTab: React.FC<{
                     ))}
                   </Select>
                   {defectErrors.defectCode && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
                       {defectErrors.defectCode.message}
                     </Typography>
                   )}
@@ -1045,7 +1068,7 @@ const ProcessInspectionTab: React.FC<{
   // 권한 체크
   const { hasWritePermission } = usePermissions();
   const canWrite = hasWritePermission('/base-data/process');
-  
+
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
   const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
     []
@@ -1064,6 +1087,7 @@ const ProcessInspectionTab: React.FC<{
     resolver: yupResolver(inspectionSchema),
     defaultValues: {
       processId: process.processId!,
+      processInspectionId: '',
       inspectionCode: '',
       inspectionName: '',
       inspectionType: '',
@@ -1331,7 +1355,11 @@ const ProcessInspectionTab: React.FC<{
                       ))}
                     </Select>
                     {inspectionErrors.inspectionCode && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
                         {inspectionErrors.inspectionCode.message}
                       </Typography>
                     )}
@@ -1428,7 +1456,10 @@ const ProcessInspectionTab: React.FC<{
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleInspectionSubmit(handleSave)} variant="contained">
+          <Button
+            onClick={handleInspectionSubmit(handleSave)}
+            variant="contained"
+          >
             저장
           </Button>
           <Button onClick={() => setOpenDialog(false)}>취소</Button>

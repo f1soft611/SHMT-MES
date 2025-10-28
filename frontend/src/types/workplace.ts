@@ -11,10 +11,6 @@ export interface Workplace {
   workplaceType?: string;
   status?: string;
   useYn?: string;
-  regUserId?: string;
-  regDt?: string;
-  updUserId?: string;
-  updDt?: string;
 }
 
 export interface WorkplaceWorker {

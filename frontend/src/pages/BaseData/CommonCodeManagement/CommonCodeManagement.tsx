@@ -38,26 +38,33 @@ import commonCodeService from '../../../services/commonCodeService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 
 // 공통코드 등록 유효성 검사 스키마
-const commonCodeSchema = yup.object({
+const commonCodeSchema: yup.ObjectSchema<CommonCode> = yup.object({
   codeId: yup.string().required('코드 ID는 필수입니다.'),
   codeIdNm: yup.string().required('코드명은 필수입니다.'),
   codeIdDc: yup.string(),
   clCode: yup.string(),
-  useAt: yup.string().required('사용여부는 필수입니다.'),
+  useAt: yup
+    .mixed<'Y' | 'N'>()
+    .oneOf(['Y', 'N'])
+    .required('사용여부는 필수입니다.'),
 });
 
 // 상세코드 등록 유효성 검사 스키마
-const detailCodeSchema = yup.object({
+const detailCodeSchema: yup.ObjectSchema<CommonDetailCode> = yup.object({
+  codeId: yup.string().required('코드는 필수입니다.'),
   code: yup.string().required('코드는 필수입니다.'),
   codeNm: yup.string().required('코드명은 필수입니다.'),
   codeDc: yup.string(),
-  useAt: yup.string().required('사용여부는 필수입니다.'),
+  useAt: yup
+    .mixed<'Y' | 'N'>()
+    .oneOf(['Y', 'N'])
+    .required('사용여부는 필수입니다.'),
 });
 
 const CommonCodeManagement: React.FC = () => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/common-code');
+  const canWrite = hasWritePermission('/base/common-code');
   const [commonCodes, setCommonCodes] = useState<CommonCode[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedCommonCode, setSelectedCommonCode] =
@@ -95,8 +102,8 @@ const CommonCodeManagement: React.FC = () => {
       codeId: '',
       codeIdNm: '',
       codeIdDc: '',
+      clCode: 'LET',
       useAt: 'Y',
-      clCode: '',
     },
   });
 
@@ -192,8 +199,8 @@ const CommonCodeManagement: React.FC = () => {
       codeId: '',
       codeIdNm: '',
       codeIdDc: '',
-      useAt: 'Y',
       clCode: '',
+      useAt: 'Y',
     });
     setOpenDialog(true);
   };
@@ -740,7 +747,11 @@ const CommonCodeManagement: React.FC = () => {
                     <MenuItem value="N">미사용</MenuItem>
                   </Select>
                   {commonCodeErrors.useAt && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
                       {commonCodeErrors.useAt.message}
                     </Typography>
                   )}
@@ -826,7 +837,11 @@ const CommonCodeManagement: React.FC = () => {
                     <MenuItem value="N">미사용</MenuItem>
                   </Select>
                   {detailCodeErrors.useAt && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
                       {detailCodeErrors.useAt.message}
                     </Typography>
                   )}
