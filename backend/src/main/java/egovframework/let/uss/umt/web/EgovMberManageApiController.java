@@ -210,8 +210,6 @@ public class EgovMberManageApiController {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		beanValidator.validate(mberManageVO, bindingResult);
 
-		System.out.println(mberManageVO + "------------------------------sss");
-
 		if (bindingResult.hasErrors()) {
 			ComDefaultCodeVO vo = new ComDefaultCodeVO();
 

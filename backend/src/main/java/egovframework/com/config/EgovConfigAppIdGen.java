@@ -564,7 +564,7 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovUsrCnfrmIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(egovDataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("COMTECOPSEQ")
 			.setTableName("USRCNFRM_ID")
 			.setPreFix("USRCNFRM_")
@@ -1828,8 +1828,8 @@ public class EgovConfigAppIdGen {
 			.setBlockSize(10)
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE")
-			.setPreFix("WP_")
-			.setCipers(17)
+			.setPreFix("WP")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}
@@ -1844,8 +1844,8 @@ public class EgovConfigAppIdGen {
 			.setBlockSize(10)
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE_WORKER")
-			.setPreFix("WPW_")
-			.setCipers(16)
+			.setPreFix("WPW")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}
@@ -1860,7 +1860,7 @@ public class EgovConfigAppIdGen {
 			.setBlockSize(10)
 			.setTable("IDS")
 			.setTableName("TB_ITEM")
-			.setPreFix("ITEM_")
+			.setPreFix("ITEM")
 			.setCipers(15)
 			.setFillChar('0')
 			.build();
@@ -1873,11 +1873,11 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovProcessIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TB_PROCESS")
-			.setPreFix("PR_")
-			.setCipers(17)
+			.setPreFix("PR")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}
@@ -1889,11 +1889,11 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovProcessWorkplaceIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_WORKPLACE")
-			.setPreFix("PRW_")
-			.setCipers(16)
+			.setPreFix("PRW")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}
@@ -1905,11 +1905,11 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovProcessDefectIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_DEFECT")
-			.setPreFix("PRD_")
-			.setCipers(16)
+			.setPreFix("PRD")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}
@@ -1921,11 +1921,11 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovProcessInspectionIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_INSPECTION")
-			.setPreFix("PRI_")
-			.setCipers(16)
+			.setPreFix("PRI")
+			.setCipers(4)
 			.setFillChar('0')
 			.build();
 	}

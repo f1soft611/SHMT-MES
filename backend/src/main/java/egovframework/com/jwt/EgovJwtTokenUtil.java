@@ -111,7 +111,6 @@ public class EgovJwtTokenUtil implements Serializable{
 		LoginVO loginVO = new LoginVO();
 
         try {
-			System.out.println(token);
 		    loginVO.setId(getUserIdFromToken(token));
 			loginVO.setName(getInfoFromToken("name", token));
 			loginVO.setUserSe(getUserSeFromToken(token));
