@@ -105,8 +105,17 @@ const SchedulerForm: React.FC<SchedulerFormProps> = ({
         return schedulerService.createScheduler(scheduler);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['schedulers'] });
+    onSuccess: async () => {
+      // 목록 무효화 및 리페치
+      await queryClient.refetchQueries({ queryKey: ['schedulers'] });
+
+      // 수정 모드인 경우 상세 정보도 리페치
+      if (isEditMode && schedulerId) {
+        await queryClient.refetchQueries({
+          queryKey: ['scheduler', schedulerId],
+        });
+      }
+
       onSuccess();
     },
   });
