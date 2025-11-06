@@ -16,6 +16,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { schedulerService } from '../../services/schedulerService';
 
@@ -102,6 +103,25 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
     },
   });
 
+  const executeMutation = useMutation({
+    mutationFn: (schedulerId: number) =>
+      schedulerService.executeScheduler(schedulerId),
+    onSuccess: () => {
+      setAlertMessage({
+        type: 'success',
+        message: '스케쥴러가 실행되었습니다.',
+      });
+      setTimeout(() => setAlertMessage(null), 3000);
+    },
+    onError: (error: any) => {
+      setAlertMessage({
+        type: 'error',
+        message: `실행 실패: ${error.message}`,
+      });
+      setTimeout(() => setAlertMessage(null), 5000);
+    },
+  });
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(event.target.value);
   };
@@ -109,6 +129,12 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
   const handleDeleteClick = (schedulerId: number) => {
     if (window.confirm('이 스케쥴러를 삭제하시겠습니까?')) {
       deleteMutation.mutate(schedulerId);
+    }
+  };
+
+  const handleExecuteClick = (schedulerId: number) => {
+    if (window.confirm('이 스케쥴러를 즉시 실행하시겠습니까?')) {
+      executeMutation.mutate(schedulerId);
     }
   };
 
@@ -174,8 +200,17 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       field: 'actions',
       type: 'actions',
       headerName: '작업',
-      width: 120,
+      width: 150,
       getActions: (params) => [
+        <GridActionsCellItem
+          icon={
+            <Tooltip title="즉시 실행">
+              <PlayArrowIcon />
+            </Tooltip>
+          }
+          label="실행"
+          onClick={() => handleExecuteClick(params.row.schedulerId)}
+        />,
         <GridActionsCellItem
           icon={
             <Tooltip title="수정">

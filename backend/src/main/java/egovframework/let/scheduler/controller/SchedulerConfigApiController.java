@@ -216,4 +216,31 @@ public class SchedulerConfigApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+    /**
+     * 특정 스케쥴러를 즉시 실행한다.
+     */
+    @Operation(
+            summary = "스케쥴러 즉시 실행",
+            description = "특정 스케쥴러를 즉시 실행",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"SchedulerConfigApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "실행 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님"),
+            @ApiResponse(responseCode = "404", description = "스케쥴러를 찾을 수 없음")
+    })
+    @PostMapping("/{schedulerId}/execute")
+    public ResultVO executeScheduler(@Parameter(description = "스케쥴러 ID") @PathVariable Long schedulerId,
+                                      @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
+            throws Exception {
+
+        schedulerConfigService.executeSchedulerManually(schedulerId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "스케쥴러가 실행되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
 }
