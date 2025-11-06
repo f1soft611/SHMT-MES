@@ -527,4 +527,121 @@ public class EgovProcessApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+    /**
+     * 공정별 중지항목 목록을 조회한다.
+     */
+    @Operation(
+            summary = "공정별 중지항목 목록 조회",
+            description = "공정별 중지항목 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/processes/{processId}/stopitems")
+    public ResultVO selectProcessStopItemList(
+            @PathVariable String processId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        ProcessStopItemVO processStopItemVO = new ProcessStopItemVO();
+        processStopItemVO.setProcessId(processId);
+        
+        List<ProcessStopItemVO> resultList = processService.selectProcessStopItemList(processStopItemVO);
+        
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", resultList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 공정별 중지항목을 등록한다.
+     */
+    @Operation(
+            summary = "공정별 중지항목 등록",
+            description = "공정별 중지항목을 등록한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "등록 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/processes/{processId}/stopitems")
+    public ResultVO insertProcessStopItem(
+            @PathVariable String processId,
+            @RequestBody ProcessStopItem processStopItem,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processStopItem.setProcessId(processId);
+        processStopItem.setRegUserId(user.getUniqId());
+        processService.insertProcessStopItem(processStopItem);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "중지항목이 등록되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 공정별 중지항목을 수정한다.
+     */
+    @Operation(
+            summary = "공정별 중지항목 수정",
+            description = "공정별 중지항목을 수정한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PutMapping("/processes/{processId}/stopitems/{processStopItemId}")
+    public ResultVO updateProcessStopItem(
+            @PathVariable String processId,
+            @PathVariable String processStopItemId,
+            @RequestBody ProcessStopItem processStopItem,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processStopItem.setProcessId(processId);
+        processStopItem.setProcessStopItemId(processStopItemId);
+        processStopItem.setUpdUserId(user.getUniqId());
+        processService.updateProcessStopItem(processStopItem);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "중지항목이 수정되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 공정별 중지항목을 삭제한다.
+     */
+    @Operation(
+            summary = "공정별 중지항목 삭제",
+            description = "공정별 중지항목을 삭제한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @DeleteMapping("/processes/{processId}/stopitems/{processStopItemId}")
+    public ResultVO deleteProcessStopItem(
+            @PathVariable String processId,
+            @PathVariable String processStopItemId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processService.deleteProcessStopItem(processStopItemId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "중지항목이 삭제되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
 }

@@ -1930,4 +1930,20 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 공정 중지항목 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessStopItemIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(1)
+			.setTable("IDS")
+			.setTableName("TB_PROCESS_STOP_ITEM")
+			.setPreFix("PRS")
+			.setCipers(4)
+			.setFillChar('0')
+			.build();
+	}
+
 }

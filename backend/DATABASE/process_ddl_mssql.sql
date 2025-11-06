@@ -136,6 +136,40 @@ BEGIN
 END
 GO
 
+-- 공정별 중지항목 테이블
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TB_PROCESS_STOP_ITEM]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[TB_PROCESS_STOP_ITEM] (
+        [PROCESS_STOP_ITEM_ID] NVARCHAR(20) NOT NULL PRIMARY KEY,
+        [PROCESS_ID] NVARCHAR(20) NOT NULL,
+        [STOP_ITEM_CODE] NVARCHAR(50) NOT NULL,
+        [STOP_ITEM_NAME] NVARCHAR(100) NOT NULL,
+        [STOP_TYPE] NVARCHAR(50) NULL,
+        [DESCRIPTION] NVARCHAR(500) NULL,
+        [USE_YN] NCHAR(1) NOT NULL DEFAULT 'Y',
+        [REG_USER_ID] NVARCHAR(20) NULL,
+        [REG_DT] DATETIME2 NOT NULL DEFAULT GETDATE(),
+        [UPD_USER_ID] NVARCHAR(20) NULL,
+        [UPD_DT] DATETIME2 NULL,
+        
+        CONSTRAINT [FK_PROCESS_STOP_ITEM_PROCESS] FOREIGN KEY ([PROCESS_ID]) 
+            REFERENCES [dbo].[TB_PROCESS]([PROCESS_ID]) ON DELETE CASCADE,
+        CONSTRAINT [UK_PROCESS_STOP_ITEM_CODE] UNIQUE ([PROCESS_ID], [STOP_ITEM_CODE])
+    );
+END
+GO
+
+-- 공정별 중지항목 테이블에 설명 추가
+IF NOT EXISTS (SELECT * FROM sys.extended_properties WHERE major_id = OBJECT_ID('TB_PROCESS_STOP_ITEM') AND minor_id = 0)
+BEGIN
+    EXEC sys.sp_addextendedproperty 
+        @name = N'MS_Description', 
+        @value = N'공정별 중지항목 정보', 
+        @level0type = N'SCHEMA', @level0name = N'dbo', 
+        @level1type = N'TABLE', @level1name = N'TB_PROCESS_STOP_ITEM';
+END
+GO
+
 -- 컬럼별 설명 추가 (TB_PROCESS)
 EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'공정 ID', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_PROCESS', @level2type = N'COLUMN', @level2name = N'PROCESS_ID';
 EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = N'공정 코드', @level0type = N'SCHEMA', @level0name = N'dbo', @level1type = N'TABLE', @level1name = N'TB_PROCESS', @level2type = N'COLUMN', @level2name = N'PROCESS_CODE';
@@ -178,6 +212,12 @@ BEGIN
     BEGIN
         INSERT INTO IDS (TABLE_NAME, NEXT_ID) VALUES ('TB_PROCESS_INSPECTION', 1);
     END
+    
+    -- TB_PROCESS_STOP_ITEM ID 초기화
+    IF NOT EXISTS (SELECT 1 FROM IDS WHERE TABLE_NAME = 'TB_PROCESS_STOP_ITEM')
+    BEGIN
+        INSERT INTO IDS (TABLE_NAME, NEXT_ID) VALUES ('TB_PROCESS_STOP_ITEM', 1);
+    END
 END
 GO
 
@@ -209,6 +249,12 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('TB_PROCESS_INSPECTION') AND name = 'IX_TB_PROCESS_INSPECTION_PROCESS_ID')
 BEGIN
     CREATE INDEX IX_TB_PROCESS_INSPECTION_PROCESS_ID ON TB_PROCESS_INSPECTION (PROCESS_ID);
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('TB_PROCESS_STOP_ITEM') AND name = 'IX_TB_PROCESS_STOP_ITEM_PROCESS_ID')
+BEGIN
+    CREATE INDEX IX_TB_PROCESS_STOP_ITEM_PROCESS_ID ON TB_PROCESS_STOP_ITEM (PROCESS_ID);
 END
 GO
 
@@ -266,5 +312,19 @@ INSERT INTO TB_PROCESS_INSPECTION (
       ('PI002', 'PR001', 'INS002', '치수정밀도', '치수', '±0.5', 0.5, -0.5, 'mm', '치수 정밀도 측정', 'Y', 'socra710'),
       ('PI003', 'PR002', 'INS003', '도막두께', '도장', '50', 60, 40, 'μm', '도막 두께 측정', 'Y', 'socra710'),
       ('PI004', 'PR004', 'INS004', '외관검사', '외관', 'PASS', NULL, NULL, NULL, '육안 외관 검사', 'Y', 'socra710');
+END
+GO
+
+-- 공정별 중지항목 샘플 데이터
+IF NOT EXISTS (SELECT 1 FROM TB_PROCESS_STOP_ITEM WHERE PROCESS_STOP_ITEM_ID = 'PS001')
+BEGIN
+INSERT INTO TB_PROCESS_STOP_ITEM (
+    PROCESS_STOP_ITEM_ID, PROCESS_ID, STOP_ITEM_CODE, STOP_ITEM_NAME,
+    STOP_TYPE, DESCRIPTION, USE_YN, REG_USER_ID
+) VALUES
+      ('PS001', 'PR001', 'ST001', '설비고장', '설비', '설비 고장으로 인한 작업 중지', 'Y', 'socra710'),
+      ('PS002', 'PR001', 'ST002', '자재부족', '자재', '작업 자재 부족', 'Y', 'socra710'),
+      ('PS003', 'PR002', 'ST003', '품질이상', '품질', '품질 기준 미달로 인한 중지', 'Y', 'socra710'),
+      ('PS004', 'PR004', 'ST004', '안전사고', '안전', '안전사고 발생으로 인한 중지', 'Y', 'socra710');
 END
 GO
