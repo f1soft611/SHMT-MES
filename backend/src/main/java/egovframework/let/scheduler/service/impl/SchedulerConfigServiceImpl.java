@@ -71,4 +71,9 @@ public class SchedulerConfigServiceImpl implements SchedulerConfigService {
     public void restartSchedulers() throws Exception {
         dynamicSchedulerService.restartSchedulers();
     }
+
+    @Override
+    public void executeSchedulerManually(Long schedulerId) throws Exception {
+        dynamicSchedulerService.executeSchedulerManually(schedulerId);
+    }
 }

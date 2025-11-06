@@ -221,4 +221,23 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         // 첫 글자를 소문자로 변환하여 Bean 이름 생성
         return Character.toLowerCase(simpleClassName.charAt(0)) + simpleClassName.substring(1);
     }
+
+    @Override
+    public void executeSchedulerManually(Long schedulerId) throws Exception {
+        log.info("스케쥴러 수동 실행 시작: schedulerId={}", schedulerId);
+        
+        // 스케쥴러 설정 조회
+        SchedulerConfig config = schedulerConfigDAO.selectSchedulerDetail(schedulerId);
+        if (config == null) {
+            throw new IllegalArgumentException("스케쥴러를 찾을 수 없습니다: " + schedulerId);
+        }
+        
+        // 비동기로 실행
+        new Thread(() -> {
+            Runnable task = createTaskRunnable(config);
+            task.run();
+        }).start();
+        
+        log.info("스케쥴러 수동 실행 요청 완료: {}", config.getSchedulerName());
+    }
 }

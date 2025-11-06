@@ -55,4 +55,11 @@ public interface SchedulerConfigService {
      * @throws Exception
      */
     void restartSchedulers() throws Exception;
+
+    /**
+     * 특정 스케쥴러를 즉시 실행한다.
+     * @param schedulerId 스케쥴러 ID
+     * @throws Exception
+     */
+    void executeSchedulerManually(Long schedulerId) throws Exception;
 }
