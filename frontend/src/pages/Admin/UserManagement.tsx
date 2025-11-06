@@ -5,12 +5,6 @@ import {
   Stack,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -23,10 +17,10 @@ import {
   IconButton,
   Alert,
   Chip,
-  Pagination,
   InputAdornment,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -62,6 +56,11 @@ const UserManagement: React.FC = () => {
     currentPageNo: 1,
     totalRecordCount: 0,
     recordCountPerPage: 10,
+    pageSize: 10,
+  });
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
     pageSize: 10,
   });
 
@@ -150,13 +149,11 @@ const UserManagement: React.FC = () => {
     });
   };
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
+  const handlePageChange = (newModel: GridPaginationModel) => {
+    setPaginationModel(newModel);
     setSearchParams({
       ...searchParams,
-      pageIndex: value,
+      pageIndex: newModel.page + 1,
     });
   };
 
@@ -283,6 +280,84 @@ const UserManagement: React.FC = () => {
     return groupItem ? groupItem.codeNm : groupId;
   };
 
+  const columns: GridColDef[] = [
+    {
+      field: 'mberId',
+      headerName: '사용자ID',
+      flex: 1,
+      minWidth: 120,
+      headerAlign: 'center',
+    },
+    {
+      field: 'mberNm',
+      headerName: '사용자명',
+      flex: 1,
+      minWidth: 120,
+      headerAlign: 'center',
+    },
+    {
+      field: 'mberSttus',
+      headerName: '상태',
+      flex: 0.8,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getStatusLabel(params.value)}
+          color={params.value === 'A' ? 'success' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'groupId',
+      headerName: '그룹',
+      flex: 1,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (value) => getGroupLabel(value || ''),
+    },
+    {
+      field: 'sbscrbDe',
+      headerName: '가입일',
+      flex: 1,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: '작업',
+      flex: 0.8,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1} justifyContent="center">
+          <IconButton
+            size="small"
+            onClick={() => handleEdit(params.row)}
+            disabled={loading}
+            color="primary"
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => handleDelete(params.row.uniqId)}
+            disabled={loading}
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <ProtectedRoute requiredPermission="write">
       <Box>
@@ -363,76 +438,28 @@ const UserManagement: React.FC = () => {
         </Paper>
 
         {/* 사용자 목록 */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>사용자ID</TableCell>
-                <TableCell>사용자명</TableCell>
-                <TableCell>상태</TableCell>
-                <TableCell>그룹</TableCell>
-                <TableCell>가입일</TableCell>
-                <TableCell align="center">작업</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <TableRow key={user.uniqId}>
-                    <TableCell>{user.mberId}</TableCell>
-                    <TableCell>{user.mberNm}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(user.mberSttus)}
-                        color={user.mberSttus === 'A' ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{getGroupLabel(user.groupId || '')}</TableCell>
-                    <TableCell>{user.sbscrbDe}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEdit(user)}
-                        disabled={loading}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(user.uniqId)}
-                        disabled={loading}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    {loading ? '로딩 중...' : '사용자가 없습니다.'}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* 페이징 */}
-        {pagination.totalRecordCount > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-            <Pagination
-              count={Math.ceil(
-                pagination.totalRecordCount / pagination.recordCountPerPage
-              )}
-              page={pagination.currentPageNo}
-              onChange={handlePageChange}
-              color="primary"
-              disabled={loading}
-            />
-          </Box>
-        )}
+        <Paper sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={users}
+            columns={columns}
+            getRowId={(row) => row.uniqId}
+            loading={loading}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={handlePageChange}
+            rowCount={pagination.totalRecordCount}
+            pageSizeOptions={[5, 10, 25, 50]}
+            disableRowSelectionOnClick
+            sx={{
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          />
+        </Paper>
 
         {/* 사용자 추가/수정 다이얼로그 */}
         <Dialog
