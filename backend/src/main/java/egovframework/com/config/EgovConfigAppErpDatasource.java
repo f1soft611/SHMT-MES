@@ -1,17 +1,12 @@
 package egovframework.com.config;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.mybatis.spring.SqlSessionFactoryBean;
-import org.mybatis.spring.SqlSessionTemplate;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -34,7 +29,6 @@ import javax.sql.DataSource;
  *
  */
 @Configuration
-@MapperScan(basePackages = "egovframework.let.scheduler.domain.repository", sqlSessionFactoryRef = "erpSqlSessionFactory")
 public class EgovConfigAppErpDatasource {
 
 	@Autowired
@@ -68,34 +62,10 @@ public class EgovConfigAppErpDatasource {
 	}
 
 	/**
-	 * @return [ERP SqlSessionFactory 설정]
+	 * @return [ERP JdbcTemplate 설정]
 	 */
-	@Bean(name = "erpSqlSessionFactory")
-	public SqlSessionFactory erpSqlSessionFactory(@Qualifier("erpDataSource") DataSource dataSource) throws Exception {
-		SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
-		sessionFactory.setDataSource(dataSource);
-		
-		PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-		sessionFactory.setMapperLocations(
-			resolver.getResources("classpath:/egovframework/mapper/let/scheduler/ErpUserInterface_SQL_mssql.xml")
-		);
-		
-		return sessionFactory.getObject();
-	}
-
-	/**
-	 * @return [ERP SqlSessionTemplate 설정]
-	 */
-	@Bean(name = "erpSqlSessionTemplate")
-	public SqlSessionTemplate erpSqlSessionTemplate(@Qualifier("erpSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
-		return new SqlSessionTemplate(sqlSessionFactory);
-	}
-
-	/**
-	 * @return [ERP TransactionManager 설정]
-	 */
-	@Bean(name = "erpTransactionManager")
-	public DataSourceTransactionManager erpTransactionManager(@Qualifier("erpDataSource") DataSource dataSource) {
-		return new DataSourceTransactionManager(dataSource);
+	@Bean(name = "erpJdbcTemplate")
+	public JdbcTemplate erpJdbcTemplate(@Qualifier("erpDataSource") DataSource dataSource) {
+		return new JdbcTemplate(dataSource);
 	}
 }

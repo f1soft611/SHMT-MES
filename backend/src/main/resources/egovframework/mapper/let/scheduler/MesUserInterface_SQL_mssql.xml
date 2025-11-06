@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.let.scheduler.domain.repository.MesUserInterfaceDAO">
+
+    <!-- MES 사용자 테이블에 사원 정보 존재 여부 확인 -->
+    <select id="selectMesUserCount" parameterType="String" resultType="int">
+        SELECT COUNT(1) AS cnt
+        FROM MES_USER_INFO
+        WHERE EMPLYR_ID = #{empId}
+    </select>
+
+    <!-- MES 사용자 테이블에 사원 정보 삽입 -->
+    <insert id="insertMesUser" parameterType="egovframework.let.scheduler.domain.model.ErpEmployee">
+        INSERT INTO MES_USER_INFO (
+            ESNTL_ID,
+            ORGNZT_ID,
+            EMPLYR_ID,
+            USER_NM,
+            PASSWORD,
+            PASSWORD_HINT,
+            PASSWORD_CNSR,
+            EMAIL_ADRES,
+            EMPLYR_STTUS_CODE,
+            GROUP_ID,
+            SBSCRB_DE
+        ) VALUES (
+            'USR_' + CONVERT(VARCHAR(20), #{empSeq}),
+            'ORGNZT_0000000000000',
+            #{empId},
+            #{empName},
+            'DEFAULT_PASSWORD_HASH',
+            '생년월일',
+            '',
+            #{email},
+            'P',
+            'GROUP_00000000000000',
+            GETDATE()
+        )
+    </insert>
+
+    <!-- MES 사용자 테이블의 사원 정보 업데이트 -->
+    <update id="updateMesUser" parameterType="egovframework.let.scheduler.domain.model.ErpEmployee">
+        UPDATE MES_USER_INFO
+        SET 
+            USER_NM = #{empName},
+            EMAIL_ADRES = #{email},
+            EMPLYR_STTUS_CODE = CASE 
+                WHEN #{typeSeq} = 0 THEN 'P'
+                ELSE 'D'
+            END
+        WHERE EMPLYR_ID = #{empId}
+    </update>
+
+</mapper>

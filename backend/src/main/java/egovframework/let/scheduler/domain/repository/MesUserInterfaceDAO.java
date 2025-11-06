@@ -3,24 +3,15 @@ package egovframework.let.scheduler.domain.repository;
 import egovframework.let.scheduler.domain.model.ErpEmployee;
 import egovframework.rte.psl.dataaccess.mapper.Mapper;
 
-import java.util.List;
-
 /**
- * ERP 사원 정보 인터페이스 DAO
+ * MES 사용자 정보 인터페이스 DAO (MES 데이터베이스 쓰기)
  * 
  * @author SHMT-MES
  * @since 2025.11.06
  * @version 1.0
  */
-@Mapper("erpUserInterfaceDAO")
-public interface ErpUserInterfaceDAO {
-
-	/**
-	 * ERP에서 사원 정보 조회
-	 * @return 사원 정보 리스트
-	 * @throws Exception
-	 */
-	List<ErpEmployee> selectErpEmployees() throws Exception;
+@Mapper("mesUserInterfaceDAO")
+public interface MesUserInterfaceDAO {
 
 	/**
 	 * MES 사용자 테이블에 사원 정보 존재 여부 확인
