@@ -28,7 +28,6 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  People as PeopleIcon,
 } from '@mui/icons-material';
 import {
   User,
@@ -140,6 +139,7 @@ const UserManagement: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleSearch = () => {

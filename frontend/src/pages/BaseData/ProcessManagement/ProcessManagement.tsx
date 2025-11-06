@@ -33,7 +33,6 @@ import {
   Search as SearchIcon,
   BugReport as BugReportIcon,
   CheckCircle as CheckCircleIcon,
-  Build as BuildIcon,
   PanTool as PanToolIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
