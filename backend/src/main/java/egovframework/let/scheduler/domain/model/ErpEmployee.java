@@ -90,4 +90,9 @@ public class ErpEmployee implements Serializable {
 	 * 최종수정일시 (LastDateTime)
 	 */
 	private Date lastDateTime;
+
+	/**
+	 * 비밀번호 세팅용
+	 */
+	private String password = "";
 }

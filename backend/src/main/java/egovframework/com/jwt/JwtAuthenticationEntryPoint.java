@@ -42,8 +42,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         //Convert object to JSON string
         String jsonInString = mapper.writeValueAsString(resultVO);
 
-
-
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON.toString());
         response.setCharacterEncoding("UTF-8");

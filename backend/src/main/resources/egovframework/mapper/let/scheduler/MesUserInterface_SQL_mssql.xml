@@ -29,12 +29,12 @@
             'ORGNZT_0000000000000',
             #{empId},
             #{empName},
-            'DEFAULT_PASSWORD_HASH',
-            '생년월일',
+            #{password},
+            '',
             '',
             #{email},
-            'P',
-            'GROUP_00000000000000',
+            'Y',
+            2,
             GETDATE()
         )
     </insert>
@@ -46,8 +46,8 @@
             USER_NM = #{empName},
             EMAIL_ADRES = #{email},
             EMPLYR_STTUS_CODE = CASE 
-                WHEN #{typeSeq} = 0 THEN 'P'
-                ELSE 'D'
+                WHEN #{typeSeq} = 3031001 THEN 'Y'
+                ELSE 'N'
             END
         WHERE EMPLYR_ID = #{empId}
     </update>

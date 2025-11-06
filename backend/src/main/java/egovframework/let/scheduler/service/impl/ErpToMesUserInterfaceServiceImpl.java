@@ -3,6 +3,7 @@ package egovframework.let.scheduler.service.impl;
 import egovframework.let.scheduler.domain.model.ErpEmployee;
 import egovframework.let.scheduler.domain.repository.MesUserInterfaceDAO;
 import egovframework.let.scheduler.service.ErpToMesUserInterfaceService;
+import egovframework.let.utl.sim.service.EgovFileScrty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -68,6 +69,11 @@ public class ErpToMesUserInterfaceServiceImpl implements ErpToMesUserInterfaceSe
 					int count = mesUserInterfaceDAO.selectMesUserCount(employee.getEmpId());
 					
 					if (count == 0) {
+
+						//패스워드 암호화
+						String pass = EgovFileScrty.encryptPassword(employee.getPassword(), employee.getEmpId());
+						employee.setPassword(pass);
+
 						// 2-2. 신규 사원인 경우 INSERT
 						mesUserInterfaceDAO.insertMesUser(employee);
 						insertCount++;
@@ -103,7 +109,7 @@ public class ErpToMesUserInterfaceServiceImpl implements ErpToMesUserInterfaceSe
 					"DeptSeq, DeptName, TypeSeq, TypeName, Email, UserId, UserSeq, " +
 					"LastUserSeq, LastDateTime " +
 					"FROM SHM_IF_VIEW_TDAEmp " +
-					"WHERE TypeSeq = 0 " +  // 재직자만 동기화
+					"WHERE TypeSeq = 3031001 " +  // 재직자만 동기화
 					"ORDER BY EmpSeq";
 
 		return erpJdbcTemplate.query(sql, new ErpEmployeeRowMapper());
@@ -131,6 +137,8 @@ public class ErpToMesUserInterfaceServiceImpl implements ErpToMesUserInterfaceSe
 			employee.setUserSeq(rs.getInt("UserSeq"));
 			employee.setLastUserSeq(rs.getInt("LastUserSeq"));
 			employee.setLastDateTime(rs.getTimestamp("LastDateTime"));
+
+			employee.setPassword(rs.getString("EmpId"));
 			return employee;
 		}
 	}
