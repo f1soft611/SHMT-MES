@@ -21,25 +21,32 @@ package egovframework.let.scheduler.service;
 public interface ErpToMesInterfaceService {
 
 	/**
-	 * ERP 시스템의 작업지시 정보를 MES 시스템으로 연동
-	 * @throws Exception
-	 */
-	void syncWorkOrders() throws Exception;
-
-	/**
-	 * ERP 시스템의 자재 정보를 MES 시스템으로 연동
+	 * ERP 시스템의 품목 정보를 MES 시스템으로 연동
 	 * @throws Exception
 	 */
 	void syncMaterials() throws Exception;
 
 	/**
-	 * ERP 시스템의 BOM(Bill of Materials) 정보를 MES 시스템으로 연동
+	 * 스케쥴러에서 호출되는 품목정보 프로세스 실행
 	 * @throws Exception
 	 */
-	void syncBom() throws Exception;
+	void executeMaterialInterface() throws Exception;
 
 	/**
-	 * 스케쥴러에서 호출되는 전체 연동 프로세스 실행
+	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TDAEmp 뷰에서 사원 정보를 조회하여 MES_USER_INFO 테이블에 동기화
+	 * @throws Exception
+	 */
+	void syncUsers() throws Exception;
+
+	/**
+	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
+	 * @throws Exception
+	 */
+	void executeUserInterface() throws Exception;
+
+	/**
+	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
 	 * @throws Exception
 	 */
 	void executeInterface() throws Exception;

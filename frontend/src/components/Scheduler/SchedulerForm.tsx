@@ -207,7 +207,7 @@ const SchedulerForm: React.FC<SchedulerFormProps> = ({
                   error={!!errors.jobClassName}
                   helperText={
                     errors.jobClassName?.message ||
-                    '예: egovframework.let.scheduler.service.ErpToMesInterfaceService'
+                    '예: ErpToMesInterfaceService.executeUserInterface'
                   }
                 />
               )}

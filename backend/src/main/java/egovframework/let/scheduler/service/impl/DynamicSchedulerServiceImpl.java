@@ -151,34 +151,38 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
     private void executeJob(SchedulerConfig config) throws Exception {
         String jobClassName = config.getJobClassName();
         log.info("스케쥴러 작업 실행: {} - {}", config.getSchedulerName(), jobClassName);
-        
+
         try {
-            // jobClassName 형식: egovframework.let.scheduler.service.ErpToMesInterfaceService 또는
-            //                   egovframework.let.scheduler.service.ErpToMesInterfaceService.executeInterface
-            
+            // jobClassName 형식:
+            // 1. egovframework.let.scheduler.service.ErpToMesInterfaceService.executeInterface (전체 경로)
+            // 2. ErpToMesInterfaceService.executeInterface (짧은 형식)
+            // 3. egovframework.let.scheduler.service.ErpToMesInterfaceService (클래스만)
+            // 4. ErpToMesInterfaceService (짧은 클래스명만)
+
             String serviceName;
             String methodName = null;
-            
+
             // 메서드명이 포함된 경우 분리
-            if (jobClassName.contains(".") && 
-                Character.isLowerCase(jobClassName.charAt(jobClassName.lastIndexOf('.') + 1))) {
+            if (jobClassName.contains(".") &&
+                    Character.isLowerCase(jobClassName.charAt(jobClassName.lastIndexOf('.') + 1))) {
                 int lastDotIndex = jobClassName.lastIndexOf('.');
                 serviceName = jobClassName.substring(0, lastDotIndex);
                 methodName = jobClassName.substring(lastDotIndex + 1);
             } else {
                 serviceName = jobClassName;
             }
-            
+
             // 클래스 이름에서 서비스 빈 이름 추출
             String beanName = getBeanNameFromClassName(serviceName);
-            
+
             // Spring 컨텍스트에서 서비스 빈 조회
-            Object serviceBean = applicationContext.getBean(beanName);
-            
-            if (serviceBean == null) {
-                throw new IllegalArgumentException("서비스 빈을 찾을 수 없습니다: " + beanName);
+            Object serviceBean = null;
+            try {
+                serviceBean = applicationContext.getBean(beanName);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("서비스 빈을 찾을 수 없습니다: " + beanName + " (원본: " + jobClassName + ")", e);
             }
-            
+
             // 메서드 실행
             if (methodName != null && !methodName.isEmpty()) {
                 // 특정 메서드 호출
@@ -199,25 +203,28 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
                         log.info("execute 메서드 실행 완료: {}", beanName);
                     } catch (NoSuchMethodException e2) {
                         throw new IllegalArgumentException(
-                            "서비스에 executeInterface() 또는 execute() 메서드가 없습니다: " + beanName);
+                                "서비스에 executeInterface() 또는 execute() 메서드가 없습니다: " + beanName);
                     }
                 }
             }
-            
+
         } catch (Exception e) {
             log.error("스케쥴러 작업 실행 실패: {}", config.getSchedulerName(), e);
             throw e;
         }
     }
-    
+
     /**
-     * 클래스 전체 경로에서 Spring Bean 이름을 추출
-     * 예: egovframework.let.scheduler.service.ErpToMesInterfaceService -> erpToMesInterfaceService
+     * 클래스 전체 경로 또는 짧은 클래스명에서 Spring Bean 이름을 추출
+     * 예1: egovframework.let.scheduler.service.ErpToMesInterfaceService -> erpToMesInterfaceService
+     * 예2: ErpToMesInterfaceService -> erpToMesInterfaceService
      */
     private String getBeanNameFromClassName(String className) {
         // 클래스 전체 경로에서 마지막 클래스명만 추출
-        String simpleClassName = className.substring(className.lastIndexOf('.') + 1);
-        
+        String simpleClassName = className.contains(".")
+                ? className.substring(className.lastIndexOf('.') + 1)
+                : className;
+
         // 첫 글자를 소문자로 변환하여 Bean 이름 생성
         return Character.toLowerCase(simpleClassName.charAt(0)) + simpleClassName.substring(1);
     }

@@ -741,7 +741,7 @@ const ProcessDefectTab: React.FC<{
 }> = ({ process, showSnackbar }) => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/process');
+  const canWrite = hasWritePermission('/base/process');
 
   const [defects, setDefects] = useState<ProcessDefect[]>([]);
   const [defectCodes, setDefectCodes] = useState<CommonDetailCode[]>([]);
@@ -1063,7 +1063,7 @@ const ProcessInspectionTab: React.FC<{
 }> = ({ process, showSnackbar }) => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/process');
+  const canWrite = hasWritePermission('/base/process');
 
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
   const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
