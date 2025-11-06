@@ -129,6 +129,12 @@ class SchedulerService {
     return response.data;
   }
 
+  // 스케쥴러 즉시 실행
+  async executeScheduler(schedulerId: number): Promise<any> {
+    const response = await api.post(`/api/schedulers/${schedulerId}/execute`);
+    return response.data;
+  }
+
   // 스케쥴러 실행 이력 목록 조회
   async getSchedulerHistoryList(
     page: number = 0,
