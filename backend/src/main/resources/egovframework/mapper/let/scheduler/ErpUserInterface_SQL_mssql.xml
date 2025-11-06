@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.let.scheduler.domain.repository.ErpUserInterfaceDAO">
+
+    <!-- ERP 사원 정보 resultMap -->
+    <resultMap id="erpEmployeeResultMap" type="egovframework.let.scheduler.domain.model.ErpEmployee">
+        <result property="companySeq" column="CompanySeq"/>
+        <result property="empSeq" column="EmpSeq"/>
+        <result property="empId" column="EmpId"/>
+        <result property="empName" column="EmpName"/>
+        <result property="umPgSeq" column="UMPgSeq"/>
+        <result property="umPgName" column="UMPgName"/>
+        <result property="deptSeq" column="DeptSeq"/>
+        <result property="deptName" column="DeptName"/>
+        <result property="typeSeq" column="TypeSeq"/>
+        <result property="typeName" column="TypeName"/>
+        <result property="email" column="Email"/>
+        <result property="userId" column="UserId"/>
+        <result property="userSeq" column="UserSeq"/>
+        <result property="lastUserSeq" column="LastUserSeq"/>
+        <result property="lastDateTime" column="LastDateTime"/>
+    </resultMap>
+
+    <!-- ERP에서 사원 정보 조회 (SHMTEST 데이터베이스의 SHM_IF_VIEW_TDAEmp 뷰 조회) -->
+    <select id="selectErpEmployees" resultMap="erpEmployeeResultMap">
+        SELECT 
+            CompanySeq,
+            EmpSeq,
+            EmpId,
+            EmpName,
+            UMPgSeq,
+            UMPgName,
+            DeptSeq,
+            DeptName,
+            TypeSeq,
+            TypeName,
+            Email,
+            UserId,
+            UserSeq,
+            LastUserSeq,
+            LastDateTime
+        FROM SHM_IF_VIEW_TDAEmp
+        WHERE TypeSeq = 0  -- 재직자만 동기화
+        ORDER BY EmpSeq
+    </select>
+
+    <!-- MES 사용자 테이블에 사원 정보 존재 여부 확인 -->
+    <select id="selectMesUserCount" parameterType="String" resultType="int">
+        SELECT COUNT(1) AS cnt
+        FROM MES_USER_INFO
+        WHERE EMPLYR_ID = #{empId}
+    </select>
+
+    <!-- MES 사용자 테이블에 사원 정보 삽입 -->
+    <insert id="insertMesUser" parameterType="egovframework.let.scheduler.domain.model.ErpEmployee">
+        INSERT INTO MES_USER_INFO (
+            ESNTL_ID,
+            ORGNZT_ID,
+            EMPLYR_ID,
+            USER_NM,
+            PASSWORD,
+            PASSWORD_HINT,
+            PASSWORD_CNSR,
+            EMAIL_ADRES,
+            EMPLYR_STTUS_CODE,
+            GROUP_ID,
+            SBSCRB_DE
+        ) VALUES (
+            'USR_' + CONVERT(VARCHAR(20), #{empSeq}),
+            'ORGNZT_0000000000000',
+            #{empId},
+            #{empName},
+            'DEFAULT_PASSWORD_HASH',  -- 기본 비밀번호 해시 (실제로는 암호화된 값 사용)
+            '생년월일',
+            '',
+            #{email},
+            'P',  -- 일반사용자 권한
+            'GROUP_00000000000000',  -- 기본 그룹
+            GETDATE()
+        )
+    </insert>
+
+    <!-- MES 사용자 테이블의 사원 정보 업데이트 -->
+    <update id="updateMesUser" parameterType="egovframework.let.scheduler.domain.model.ErpEmployee">
+        UPDATE MES_USER_INFO
+        SET 
+            USER_NM = #{empName},
+            EMAIL_ADRES = #{email},
+            EMPLYR_STTUS_CODE = CASE 
+                WHEN #{typeSeq} = 0 THEN 'P'  -- 재직자
+                ELSE 'D'  -- 퇴직자
+            END
+        WHERE EMPLYR_ID = #{empId}
+    </update>
+
+</mapper>
