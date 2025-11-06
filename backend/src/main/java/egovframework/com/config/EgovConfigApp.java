@@ -10,6 +10,7 @@ import org.springframework.context.annotation.PropertySources;
 	EgovConfigAppAspect.class,
 	EgovConfigAppCommon.class,
 	EgovConfigAppDatasource.class,
+	EgovConfigAppErpDatasource.class,
 	EgovConfigAppIdGen.class,
 	EgovConfigAppProperties.class,
 	EgovConfigAppMapper.class,
