@@ -232,11 +232,15 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
             throw new IllegalArgumentException("스케쥴러를 찾을 수 없습니다: " + schedulerId);
         }
         
-        // 비동기로 실행
-        new Thread(() -> {
+        // TaskScheduler를 사용하여 비동기로 실행
+        if (taskScheduler != null) {
+            Runnable task = createTaskRunnable(config);
+            taskScheduler.schedule(task, new Date());
+        } else {
+            log.warn("TaskScheduler가 초기화되지 않아 동기로 실행합니다.");
             Runnable task = createTaskRunnable(config);
             task.run();
-        }).start();
+        }
         
         log.info("스케쥴러 수동 실행 요청 완료: {}", config.getSchedulerName());
     }
