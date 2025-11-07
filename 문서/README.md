@@ -52,6 +52,15 @@
 
 ### 기능별 구현 가이드 (Feature Implementation)
 
+#### 미사용 서비스
+- **[미사용 서비스 문서화](./UNUSED_SERVICES_DOCUMENTATION.md)** ⭐ **NEW**
+  - 게시판 관리 서비스 (BBS)
+  - 개인 일정 관리 서비스
+  - SNS 로그인 서비스
+  - 파일 관리 서비스
+  - 사이트 관리 서비스
+  - 활성화 가이드
+
 #### 기준정보 관리
 - **[공통코드 구현 가이드](./COMMON_CODE_IMPLEMENTATION_GUIDE.md)**
   - 공통코드 시스템 구조
