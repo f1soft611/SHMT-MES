@@ -25,8 +25,8 @@
             GROUP_ID,
             SBSCRB_DE
         ) VALUES (
-            'USR_' + CONVERT(VARCHAR(20), #{empSeq}),
-            'ORGNZT_0000000000000',
+            'ERP' + CONVERT(VARCHAR(20), #{empSeq}),
+            '000001',
             #{empId},
             #{empName},
             #{password},

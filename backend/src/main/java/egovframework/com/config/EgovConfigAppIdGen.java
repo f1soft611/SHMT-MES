@@ -567,8 +567,8 @@ public class EgovConfigAppIdGen {
 			.setBlockSize(1)
 			.setTable("COMTECOPSEQ")
 			.setTableName("USRCNFRM_ID")
-			.setPreFix("USRCNFRM_")
-			.setCipers(11)
+			.setPreFix("USR")
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
