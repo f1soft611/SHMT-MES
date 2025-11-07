@@ -834,8 +834,8 @@ const WorkplaceWorkerTab: React.FC<{
     <Box>
       <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
         <CardContent>
-          <Typography variant="subtitle2" gutterBottom>
-            작업자 추가
+          <Typography variant="subtitle1" gutterBottom>
+            작업자 관리
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
             <Box sx={{ flex: '1 1 150px' }}>
@@ -1075,8 +1075,13 @@ const WorkplaceProcessTab: React.FC<{
     <Box>
       <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
         <CardContent>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="subtitle2">공정 관리</Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">공정 관리</Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}

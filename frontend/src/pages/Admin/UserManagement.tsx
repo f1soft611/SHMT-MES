@@ -45,12 +45,17 @@ const UserManagement: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 검색 및 페이징
+  // 검색 조건 (UI 입력용)
+  const [searchCnd, setSearchCnd] = useState('2');
+  const [searchWrd, setSearchWrd] = useState('');
+
+  // 실제 API 호출에 사용되는 검색 파라미터
   const [searchParams, setSearchParams] = useState<UserSearchParams>({
     pageIndex: 1,
-    searchCnd: '',
+    searchCnd: '2',
     searchWrd: '',
   });
+
   const [pagination, setPagination] = useState({
     currentPageNo: 1,
     totalRecordCount: 0,
@@ -137,16 +142,29 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // 초기 로드만 수행
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // searchParams가 변경될 때만 조회 (페이징 포함)
+  useEffect(() => {
+    if (searchParams.pageIndex && searchParams.pageIndex > 1) {
+      loadUsers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleSearch = () => {
+    // 검색 버튼 클릭 시에만 실제 검색 수행
+    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
     setSearchParams({
-      ...searchParams,
       pageIndex: 1,
+      searchCnd: searchCnd,
+      searchWrd: searchWrd,
     });
+    loadUsers();
   };
 
   const handlePageChange = (newModel: GridPaginationModel) => {
@@ -286,6 +304,7 @@ const UserManagement: React.FC = () => {
       headerName: '사용자ID',
       flex: 1,
       minWidth: 120,
+      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -293,6 +312,7 @@ const UserManagement: React.FC = () => {
       headerName: '사용자명',
       flex: 1,
       minWidth: 120,
+      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -322,38 +342,45 @@ const UserManagement: React.FC = () => {
     {
       field: 'sbscrbDe',
       headerName: '가입일',
-      flex: 1,
-      minWidth: 120,
+      width: 180,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'actions',
       headerName: '작업',
-      flex: 0.8,
-      minWidth: 120,
+      width: 100,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <IconButton
-            size="small"
-            onClick={() => handleEdit(params.row)}
-            disabled={loading}
-            color="primary"
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleDelete(params.row.uniqId)}
-            disabled={loading}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <IconButton
+              size="small"
+              onClick={() => handleEdit(params.row)}
+              disabled={loading}
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(params.row.uniqId)}
+              disabled={loading}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       ),
     },
   ];
@@ -386,14 +413,9 @@ const UserManagement: React.FC = () => {
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel>검색조건</InputLabel>
               <Select
-                value={searchParams.searchCnd}
+                value={searchCnd}
                 label="검색 조건"
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    searchCnd: e.target.value,
-                  })
-                }
+                onChange={(e) => setSearchCnd(e.target.value)}
               >
                 {searchConditions.map((condition) => (
                   <MenuItem key={condition.value} value={condition.value}>
@@ -406,14 +428,9 @@ const UserManagement: React.FC = () => {
             <TextField
               size="small"
               placeholder="검색어를 입력하세요"
-              value={searchParams.searchWrd}
+              value={searchWrd}
               sx={{ flex: 1 }}
-              onChange={(e) =>
-                setSearchParams({
-                  ...searchParams,
-                  searchWrd: e.target.value,
-                })
-              }
+              onChange={(e) => setSearchWrd(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
 
@@ -438,7 +455,7 @@ const UserManagement: React.FC = () => {
         </Paper>
 
         {/* 사용자 목록 */}
-        <Paper sx={{ height: 600, width: '100%' }}>
+        <Paper sx={{ width: '100%' }}>
           <DataGrid
             rows={users}
             columns={columns}
@@ -535,6 +552,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>비밀번호 힌트</InputLabel>
                     <Select
+                      label="비밀번호 힌트"
                       value={formData.passwordHint}
                       onChange={(e) =>
                         setFormData({
@@ -565,6 +583,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>사용자 상태</InputLabel>
                     <Select
+                      label="사용자 상태"
                       value={formData.mberSttus}
                       onChange={(e) =>
                         setFormData({ ...formData, mberSttus: e.target.value })
@@ -582,6 +601,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>사용자 그룹</InputLabel>
                     <Select
+                      label="사용자 그룹"
                       value={formData.groupId}
                       onChange={(e) =>
                         setFormData({ ...formData, groupId: e.target.value })

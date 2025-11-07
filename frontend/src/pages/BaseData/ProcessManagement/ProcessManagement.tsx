@@ -116,7 +116,7 @@ const ProcessManagement: React.FC = () => {
   const [detailTab, setDetailTab] = useState(0);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 25,
   });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -956,8 +956,13 @@ const ProcessDefectTab: React.FC<{
     <Box>
       <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
         <CardContent>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="subtitle2">불량코드 관리</Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">불량코드 관리</Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -1305,8 +1310,13 @@ const ProcessInspectionTab: React.FC<{
     <Box>
       <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
         <CardContent>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="subtitle2">검사항목 관리</Typography>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">검사항목 관리</Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -1476,7 +1486,6 @@ const ProcessInspectionTab: React.FC<{
                   multiline
                   rows={3}
                   label="설명"
-                  disabled
                 />
               )}
             />
@@ -1503,9 +1512,10 @@ const ProcessStopItemTab: React.FC<{
 }> = ({ process, showSnackbar }) => {
   // 권한 체크
   const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base-data/process');
+  const canWrite = hasWritePermission('/base/process');
 
   const [stopItems, setStopItems] = useState<ProcessStopItem[]>([]);
+  const [stopItemCodes, setStopItemCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
@@ -1514,6 +1524,7 @@ const ProcessStopItemTab: React.FC<{
     control: stopItemControl,
     handleSubmit: handleStopItemSubmit,
     reset: resetStopItemForm,
+    setValue: setStopItemValue,
     formState: { errors: stopItemErrors },
   } = useForm<ProcessStopItem>({
     resolver: yupResolver(stopItemSchema),
@@ -1541,9 +1552,35 @@ const ProcessStopItemTab: React.FC<{
     }
   }, [process.processId]);
 
+  const fetchStopItemCodes = useCallback(async () => {
+    try {
+      const response = await commonCodeService.getCommonDetailCodeList(
+        'COM005',
+        'Y'
+      );
+      if (response.resultCode === 200 && response.result?.detailCodeList) {
+        setStopItemCodes(response.result.detailCodeList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stop item codes:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchStopItems();
-  }, [fetchStopItems]);
+    fetchStopItemCodes();
+  }, [fetchStopItems, fetchStopItemCodes]);
+
+  const handleStopItemCodeChange = (code: string) => {
+    const selectedCode = stopItemCodes.find((sic) => sic.code === code);
+    if (selectedCode) {
+      setStopItemValue('stopItemCode', selectedCode.code);
+      setStopItemValue('stopItemName', selectedCode.codeNm);
+      setStopItemValue('description', selectedCode.codeDc || '');
+    } else {
+      setStopItemValue('stopItemCode', code);
+    }
+  };
 
   const handleSave = async (data: ProcessStopItem) => {
     try {
@@ -1595,6 +1632,7 @@ const ProcessStopItemTab: React.FC<{
       field: 'stopItemName',
       headerName: '중지항목명',
       flex: 1.2,
+      // align: 'center',
       headerAlign: 'center',
     },
     {
@@ -1608,21 +1646,8 @@ const ProcessStopItemTab: React.FC<{
       field: 'description',
       headerName: '설명',
       flex: 1.5,
+      // align: 'center',
       headerAlign: 'center',
-    },
-    {
-      field: 'useYn',
-      headerName: '사용여부',
-      flex: 0.7,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value === 'Y' ? '사용' : '미사용'}
-          color={params.value === 'Y' ? 'success' : 'default'}
-          size="small"
-        />
-      ),
     },
     {
       field: 'actions',
@@ -1632,90 +1657,132 @@ const ProcessStopItemTab: React.FC<{
       headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => {
-              setDialogMode('edit');
-              resetStopItemForm(params.row);
-              setOpenDialog(true);
-            }}
-            disabled={!canWrite}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.processStopItemId!)}
-            disabled={!canWrite}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => {
+                setDialogMode('edit');
+                resetStopItemForm(params.row);
+                setOpenDialog(true);
+              }}
+              disabled={!canWrite}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.processStopItemId!)}
+              disabled={!canWrite}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       ),
     },
   ];
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6">중지항목 목록</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setDialogMode('create');
-            resetStopItemForm({
-              processId: process.processId!,
-              processStopItemId: '',
-              stopItemCode: '',
-              stopItemName: '',
-              stopType: '',
-              description: '',
-              useYn: 'Y',
-            });
-            setOpenDialog(true);
-          }}
-          disabled={!canWrite}
-        >
-          등록
-        </Button>
-      </Box>
+      <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
+        <CardContent>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">중지항목 관리</Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setDialogMode('create');
+                resetStopItemForm({
+                  processId: process.processId!,
+                  processStopItemId: '',
+                  stopItemCode: '',
+                  stopItemName: '',
+                  stopType: '',
+                  description: '',
+                  useYn: 'Y',
+                });
+                setOpenDialog(true);
+              }}
+              disabled={!canWrite}
+            >
+              중지항목 추가
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+      <Paper sx={{ height: 400, width: '100%' }}>
+        <DataGrid
+          rows={stopItems}
+          columns={stopItemColumns}
+          getRowId={(row) => row.processStopItemId || ''}
+          hideFooterPagination
+          disableRowSelectionOnClick
+          localeText={{ noRowsLabel: '등록된 중지항목이 없습니다' }}
+        />
+      </Paper>
 
-      <DataGrid
-        rows={stopItems}
-        columns={stopItemColumns}
-        getRowId={(row) => row.processStopItemId!}
-        autoHeight
-        disableRowSelectionOnClick
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: 10 },
-          },
-        }}
-        pageSizeOptions={[5, 10, 25]}
-      />
-
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {dialogMode === 'create' ? '중지항목 등록' : '중지항목 수정'}
         </DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={2} sx={{ mt: 1 }}>
             <Controller
               name="stopItemCode"
               control={stopItemControl}
               render={({ field }) => (
-                <TextField
-                  {...field}
+                <FormControl
                   fullWidth
-                  label="중지항목 코드"
-                  error={!!stopItemErrors.stopItemCode}
-                  helperText={stopItemErrors.stopItemCode?.message}
                   required
-                />
+                  error={!!stopItemErrors.stopItemCode}
+                >
+                  <InputLabel>중지항목 코드</InputLabel>
+                  <Select
+                    {...field}
+                    label="중지항목 코드"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleStopItemCodeChange(e.target.value);
+                    }}
+                    disabled={dialogMode === 'edit'}
+                  >
+                    {stopItemCodes.map((code) => (
+                      <MenuItem key={code.code} value={code.code}>
+                        {code.codeNm} ({code.code})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {stopItemErrors.stopItemCode && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {stopItemErrors.stopItemCode.message}
+                    </Typography>
+                  )}
+                </FormControl>
               )}
             />
             <Controller
@@ -1725,10 +1792,11 @@ const ProcessStopItemTab: React.FC<{
                 <TextField
                   {...field}
                   fullWidth
+                  required
                   label="중지항목명"
+                  disabled
                   error={!!stopItemErrors.stopItemName}
                   helperText={stopItemErrors.stopItemName?.message}
-                  required
                 />
               )}
             />
@@ -1746,20 +1814,10 @@ const ProcessStopItemTab: React.FC<{
                 <TextField
                   {...field}
                   fullWidth
-                  label="설명"
                   multiline
                   rows={3}
-                />
-              )}
-            />
-            <Controller
-              name="useYn"
-              control={stopItemControl}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={<Checkbox checked={field.value === 'Y'} />}
-                  label="사용"
-                  onChange={(e, checked) => field.onChange(checked ? 'Y' : 'N')}
+                  label="설명"
+                  // disabled
                 />
               )}
             />
