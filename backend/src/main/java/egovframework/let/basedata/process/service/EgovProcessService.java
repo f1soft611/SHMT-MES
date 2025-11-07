@@ -153,6 +153,38 @@ public interface EgovProcessService {
 	public void deleteProcessInspection(String processInspectionId) throws Exception;
 
 	/**
+	 * 공정별 중지항목 목록을 조회한다.
+	 * 
+	 * @param processStopItemVO
+	 * @exception Exception
+	 */
+	public List<ProcessStopItemVO> selectProcessStopItemList(ProcessStopItemVO processStopItemVO) throws Exception;
+
+	/**
+	 * 공정별 중지항목을 등록한다.
+	 * 
+	 * @param processStopItem
+	 * @exception Exception
+	 */
+	public void insertProcessStopItem(ProcessStopItem processStopItem) throws Exception;
+
+	/**
+	 * 공정별 중지항목을 수정한다.
+	 * 
+	 * @param processStopItem
+	 * @exception Exception
+	 */
+	public void updateProcessStopItem(ProcessStopItem processStopItem) throws Exception;
+
+	/**
+	 * 공정별 중지항목을 삭제한다.
+	 * 
+	 * @param processStopItemId
+	 * @exception Exception
+	 */
+	public void deleteProcessStopItem(String processStopItemId) throws Exception;
+
+	/**
 	 * 공정 코드 존재 여부 확인
 	 * @param processCode 공정 코드
 	 * @return 존재 여부

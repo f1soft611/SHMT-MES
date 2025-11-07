@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessStopItemDAO">
+
+	<resultMap id="processStopItemResult" type="egovframework.let.basedata.process.domain.model.ProcessStopItem">
+		<result property="processStopItemId" column="PROCESS_STOP_ITEM_ID"/>
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="stopItemCode" column="STOP_ITEM_CODE"/>
+		<result property="stopItemName" column="STOP_ITEM_NAME"/>
+		<result property="stopType" column="STOP_TYPE"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="ProcessStopItemDAO.selectProcessStopItemList" parameterType="egovframework.let.basedata.process.domain.model.ProcessStopItemVO" resultMap="processStopItemResult">
+		SELECT
+			PROCESS_STOP_ITEM_ID,
+			PROCESS_ID,
+			STOP_ITEM_CODE,
+			STOP_ITEM_NAME,
+			STOP_TYPE,
+			DESCRIPTION,
+			USE_YN,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TB_PROCESS_STOP_ITEM
+		WHERE 1=1
+		<if test="processId != null and processId != ''">
+			AND PROCESS_ID = #{processId}
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND USE_YN = #{useYn}
+		</if>
+		ORDER BY STOP_ITEM_CODE ASC
+	</select>
+
+	<insert id="ProcessStopItemDAO.insertProcessStopItem" parameterType="egovframework.let.basedata.process.domain.model.ProcessStopItem">
+		INSERT INTO TB_PROCESS_STOP_ITEM (
+			PROCESS_STOP_ITEM_ID,
+			PROCESS_ID,
+			STOP_ITEM_CODE,
+			STOP_ITEM_NAME,
+			STOP_TYPE,
+			DESCRIPTION,
+			USE_YN,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+					 #{processStopItemId},
+					 #{processId},
+					 #{stopItemCode},
+					 #{stopItemName},
+					 #{stopType},
+					 #{description},
+					 ISNULL(#{useYn}, 'Y'),
+					 #{regUserId},
+					 GETDATE()
+				 )
+	</insert>
+
+	<update id="ProcessStopItemDAO.updateProcessStopItem" parameterType="egovframework.let.basedata.process.domain.model.ProcessStopItem">
+		UPDATE TB_PROCESS_STOP_ITEM
+		SET
+			STOP_ITEM_CODE = #{stopItemCode},
+			STOP_ITEM_NAME = #{stopItemName},
+			STOP_TYPE = #{stopType},
+			DESCRIPTION = #{description},
+			USE_YN = #{useYn},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = GETDATE()
+		WHERE PROCESS_STOP_ITEM_ID = #{processStopItemId}
+	</update>
+
+	<delete id="ProcessStopItemDAO.deleteProcessStopItem" parameterType="string">
+		DELETE FROM TB_PROCESS_STOP_ITEM
+		WHERE PROCESS_STOP_ITEM_ID = #{processStopItemId}
+	</delete>
+
+</mapper>

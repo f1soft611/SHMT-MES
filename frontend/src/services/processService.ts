@@ -4,6 +4,7 @@ import {
   ProcessWorkplace, 
   ProcessDefect, 
   ProcessInspection, 
+  ProcessStopItem,
   ProcessSearchParams 
 } from '../types/process';
 
@@ -146,6 +147,38 @@ export const processService = {
    */
   removeProcessInspection: async (processId: string, processInspectionId: string) => {
     const response = await apiClient.delete(`/api/processes/${processId}/inspections/${processInspectionId}`);
+    return response.data;
+  },
+
+  /**
+   * 공정별 중지항목 목록 조회
+   */
+  getProcessStopItems: async (processId: string) => {
+    const response = await apiClient.get(`/api/processes/${processId}/stopitems`);
+    return response.data;
+  },
+
+  /**
+   * 공정별 중지항목 등록
+   */
+  addProcessStopItem: async (processId: string, stopItem: ProcessStopItem) => {
+    const response = await apiClient.post(`/api/processes/${processId}/stopitems`, stopItem);
+    return response.data;
+  },
+
+  /**
+   * 공정별 중지항목 수정
+   */
+  updateProcessStopItem: async (processId: string, processStopItemId: string, stopItem: ProcessStopItem) => {
+    const response = await apiClient.put(`/api/processes/${processId}/stopitems/${processStopItemId}`, stopItem);
+    return response.data;
+  },
+
+  /**
+   * 공정별 중지항목 삭제
+   */
+  removeProcessStopItem: async (processId: string, processStopItemId: string) => {
+    const response = await apiClient.delete(`/api/processes/${processId}/stopitems/${processStopItemId}`);
     return response.data;
   },
 };

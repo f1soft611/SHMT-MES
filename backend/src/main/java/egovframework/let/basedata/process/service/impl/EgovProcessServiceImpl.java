@@ -39,6 +39,7 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	private final ProcessWorkplaceDAO processWorkplaceDAO;
 	private final ProcessDefectDAO processDefectDAO;
 	private final ProcessInspectionDAO processInspectionDAO;
+	private final ProcessStopItemDAO processStopItemDAO;
 
 	@Resource(name = "egovProcessIdGnrService")
 	private EgovIdGnrService egovProcessIdGnrService;
@@ -51,6 +52,9 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 
 	@Resource(name = "egovProcessInspectionIdGnrService")
 	private EgovIdGnrService egovProcessInspectionIdGnrService;
+
+	@Resource(name = "egovProcessStopItemIdGnrService")
+	private EgovIdGnrService egovProcessStopItemIdGnrService;
 
 	/**
 	 * 공정 목록을 조회한다.
@@ -205,6 +209,43 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	@Transactional
 	public void deleteProcessInspection(String processInspectionId) throws Exception {
 		processInspectionDAO.deleteProcessInspection(processInspectionId);
+	}
+
+	/**
+	 * 공정별 중지항목 목록을 조회한다.
+	 */
+	@Override
+	public List<ProcessStopItemVO> selectProcessStopItemList(ProcessStopItemVO processStopItemVO) throws Exception {
+		return processStopItemDAO.selectProcessStopItemList(processStopItemVO);
+	}
+
+	/**
+	 * 공정별 중지항목을 등록한다.
+	 */
+	@Override
+	@Transactional
+	public void insertProcessStopItem(ProcessStopItem processStopItem) throws Exception {
+		String processStopItemId = egovProcessStopItemIdGnrService.getNextStringId();
+		processStopItem.setProcessStopItemId(processStopItemId);
+		processStopItemDAO.insertProcessStopItem(processStopItem);
+	}
+
+	/**
+	 * 공정별 중지항목을 수정한다.
+	 */
+	@Override
+	@Transactional
+	public void updateProcessStopItem(ProcessStopItem processStopItem) throws Exception {
+		processStopItemDAO.updateProcessStopItem(processStopItem);
+	}
+
+	/**
+	 * 공정별 중지항목을 삭제한다.
+	 */
+	@Override
+	@Transactional
+	public void deleteProcessStopItem(String processStopItemId) throws Exception {
+		processStopItemDAO.deleteProcessStopItem(processStopItemId);
 	}
 
 	@Override
