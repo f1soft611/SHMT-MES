@@ -1,0 +1,931 @@
+# 통합 개발 워크플로우 (Development Workflow Guide)
+
+## 목차
+- [개요](#개요)
+- [개발 환경 준비](#개발-환경-준비)
+- [새 기능 개발 프로세스](#새-기능-개발-프로세스)
+- [프론트엔드-백엔드 연동](#프론트엔드-백엔드-연동)
+- [코드 리뷰 및 품질 관리](#코드-리뷰-및-품질-관리)
+- [배포 프로세스](#배포-프로세스)
+- [협업 가이드](#협업-가이드)
+- [문제 해결 플로우](#문제-해결-플로우)
+
+---
+
+## 개요
+
+이 문서는 SHMT-MES 프로젝트에서 프론트엔드와 백엔드를 함께 개발할 때 따라야 할 전체 워크플로우를 설명합니다.
+
+### 프로젝트 개발 스택
+
+```
+┌─────────────────────────────────────┐
+│         Frontend (React)            │
+│   - TypeScript                      │
+│   - Material-UI                     │
+│   - Axios                           │
+└──────────────┬──────────────────────┘
+               │ REST API (JSON)
+               │ JWT Authentication
+┌──────────────┴──────────────────────┐
+│       Backend (Spring Boot)         │
+│   - Java 1.8+                       │
+│   - eGovFramework                   │
+│   - MyBatis                         │
+└──────────────┬──────────────────────┘
+               │ JDBC
+┌──────────────┴──────────────────────┐
+│         Database (MySQL)            │
+│   - Multi-DB Support                │
+└─────────────────────────────────────┘
+```
+
+### 개발 원칙
+1. **API First**: API 명세를 먼저 정의하고 프론트엔드/백엔드 동시 개발
+2. **단계적 개발**: 작은 단위로 개발하고 자주 통합
+3. **문서화 우선**: 코드 작성 전 설계 문서 작성
+4. **테스트 주도**: 핵심 로직은 테스트 코드 작성
+5. **코드 리뷰**: 모든 코드는 리뷰 후 병합
+
+---
+
+## 개발 환경 준비
+
+### 1. 로컬 개발 환경 구성
+
+#### 필수 소프트웨어
+```bash
+# Java Development Kit
+java -version  # 1.8 이상
+
+# Node.js & npm
+node -v        # 14 이상
+npm -v         # 6 이상
+
+# Maven
+mvn -version   # 3.8.4
+
+# Git
+git --version
+```
+
+#### 데이터베이스 설정
+```sql
+-- MySQL 데이터베이스 생성
+CREATE DATABASE mes_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 사용자 생성 및 권한 부여
+CREATE USER 'mes_user'@'localhost' IDENTIFIED BY 'mes_password';
+GRANT ALL PRIVILEGES ON mes_db.* TO 'mes_user'@'localhost';
+FLUSH PRIVILEGES;
+
+-- DDL 스크립트 실행
+-- backend/DATABASE/ 폴더의 DDL 파일 실행
+```
+
+### 2. 프로젝트 클론 및 설정
+
+```bash
+# 저장소 클론
+git clone [repository-url]
+cd SHMT-MES
+
+# 백엔드 설정
+cd backend
+cp src/main/resources/application-dev.properties.example \
+   src/main/resources/application-dev.properties
+# application-dev.properties 파일 수정 (DB 정보 등)
+
+# 백엔드 빌드 및 실행
+mvn clean install
+mvn spring-boot:run
+
+# 새 터미널 열기
+# 프론트엔드 설정
+cd ../frontend
+cp env.development.example env.development
+# env.development 파일 수정 (API URL 등)
+
+# 프론트엔드 의존성 설치 및 실행
+npm install
+npm start
+```
+
+### 3. 개발 환경 확인
+
+```bash
+# 백엔드 확인
+curl http://localhost:8080/actuator/health
+# Swagger UI: http://localhost:8080/swagger-ui/index.html
+
+# 프론트엔드 확인
+# 브라우저에서 http://localhost:3000 접속
+# 로그인: admin / 1
+```
+
+---
+
+## 새 기능 개발 프로세스
+
+### 전체 개발 흐름
+
+```
+1. 요구사항 분석
+   ↓
+2. API 명세 작성
+   ↓
+3. 데이터베이스 설계
+   ↓
+4. ┌─────────────────┬─────────────────┐
+   │   백엔드 개발   │ 프론트엔드 개발 │
+   │   - DDL 실행    │ - 타입 정의     │
+   │   - VO 작성     │ - 서비스 작성   │
+   │   - DAO 작성    │ - 컴포넌트 작성 │
+   │   - Service     │ - 라우트 추가   │
+   │   - Controller  │                 │
+   └─────────────────┴─────────────────┘
+   ↓
+5. 통합 테스트
+   ↓
+6. 코드 리뷰
+   ↓
+7. 병합 및 배포
+```
+
+### 단계별 상세 가이드
+
+#### Step 1: 요구사항 분석
+```markdown
+# 기능 명세서 예시
+
+## 기능명
+생산 지시 관리
+
+## 목적
+생산 지시를 등록, 조회, 수정, 삭제할 수 있는 기능
+
+## 화면 구성
+- 생산 지시 목록 화면
+- 생산 지시 등록 Dialog
+- 생산 지시 수정 Dialog
+
+## 필요한 데이터
+- 생산 지시 번호
+- 품목 정보
+- 지시 수량
+- 예정 일자
+- 작업장 정보
+- 상태 (대기/진행중/완료)
+
+## 권한
+- 읽기: 모든 사용자
+- 쓰기: 생산관리자 이상
+```
+
+#### Step 2: API 명세 작성
+
+```yaml
+# API 명세서 (OpenAPI/Swagger)
+
+paths:
+  /api/production-orders:
+    get:
+      summary: 생산 지시 목록 조회
+      parameters:
+        - name: pageIndex
+          in: query
+          schema:
+            type: integer
+        - name: pageUnit
+          in: query
+          schema:
+            type: integer
+        - name: searchKeyword
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resultCode:
+                    type: integer
+                  result:
+                    type: object
+                    properties:
+                      resultList:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProductionOrder'
+    
+    post:
+      summary: 생산 지시 등록
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductionOrder'
+      responses:
+        '200':
+          description: 성공
+
+components:
+  schemas:
+    ProductionOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNo:
+          type: string
+        itemId:
+          type: string
+        orderQuantity:
+          type: integer
+        scheduledDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED]
+```
+
+#### Step 3: 데이터베이스 설계
+
+```sql
+-- backend/DATABASE/production_order_ddl_mysql.sql
+
+CREATE TABLE TB_PRODUCTION_ORDER (
+    ID VARCHAR(50) PRIMARY KEY COMMENT '생산 지시 ID',
+    ORDER_NO VARCHAR(50) NOT NULL UNIQUE COMMENT '생산 지시 번호',
+    ITEM_ID VARCHAR(50) NOT NULL COMMENT '품목 ID',
+    ORDER_QUANTITY INT NOT NULL COMMENT '지시 수량',
+    SCHEDULED_DATE DATE COMMENT '예정 일자',
+    STATUS VARCHAR(20) DEFAULT 'PENDING' COMMENT '상태',
+    WORKPLACE_ID VARCHAR(50) COMMENT '작업장 ID',
+    REMARK TEXT COMMENT '비고',
+    CREATED_BY VARCHAR(50) COMMENT '생성자',
+    CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '생성 일시',
+    UPDATED_BY VARCHAR(50) COMMENT '수정자',
+    UPDATED_AT DATETIME COMMENT '수정 일시',
+    USE_YN CHAR(1) DEFAULT 'Y' COMMENT '사용 여부',
+    
+    INDEX idx_order_no (ORDER_NO),
+    INDEX idx_status (STATUS),
+    INDEX idx_scheduled_date (SCHEDULED_DATE),
+    
+    FOREIGN KEY (ITEM_ID) REFERENCES TB_ITEM(ID),
+    FOREIGN KEY (WORKPLACE_ID) REFERENCES TB_WORKPLACE(ID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='생산 지시';
+```
+
+#### Step 4: 백엔드 개발
+
+```bash
+# 1. DDL 실행
+mysql -u mes_user -p mes_db < backend/DATABASE/production_order_ddl_mysql.sql
+
+# 2. 패키지 구조 생성
+backend/src/main/java/egovframework/let/production/order/
+├── controller/
+│   └── EgovProductionOrderApiController.java
+├── service/
+│   ├── EgovProductionOrderService.java
+│   └── impl/
+│       └── EgovProductionOrderServiceImpl.java
+├── domain/
+│   ├── model/
+│   │   └── ProductionOrderVO.java
+│   └── repository/
+│       └── ProductionOrderDAO.java
+
+# 3. MyBatis 매퍼 생성
+backend/src/main/resources/egovframework/mapper/let/production/order/
+└── ProductionOrder_SQL_mysql.xml
+
+# 4. 개발 순서
+# - VO (Value Object) 작성
+# - DAO (Data Access Object) 작성
+# - MyBatis Mapper XML 작성
+# - Service Interface 작성
+# - Service Implementation 작성
+# - Controller 작성
+# - Swagger 어노테이션 추가
+
+# 5. 로컬에서 테스트
+mvn spring-boot:run
+# Swagger에서 API 테스트
+```
+
+#### Step 5: 프론트엔드 개발
+
+```bash
+# 1. 타입 정의
+frontend/src/types/productionOrder.ts
+
+# 2. API 서비스 작성
+frontend/src/services/productionOrderService.ts
+
+# 3. 페이지 컴포넌트 작성
+frontend/src/pages/ProductionOrder/
+├── index.tsx
+├── components/
+│   ├── ProductionOrderList.tsx
+│   ├── ProductionOrderForm.tsx
+│   └── ProductionOrderDetail.tsx
+
+# 4. 라우트 추가
+# App.tsx에 라우트 추가
+
+# 5. 메뉴 추가
+# constants/url.js 및 Sidebar에 메뉴 추가
+
+# 6. 로컬에서 테스트
+npm start
+```
+
+---
+
+## 프론트엔드-백엔드 연동
+
+### API 엔드포인트 규칙
+
+#### RESTful API 설계
+```
+GET     /api/production-orders          # 목록 조회
+GET     /api/production-orders/{id}     # 상세 조회
+POST    /api/production-orders          # 등록
+PUT     /api/production-orders/{id}     # 수정
+DELETE  /api/production-orders/{id}     # 삭제
+```
+
+### 데이터 형식 규칙
+
+#### 요청 형식 (Request)
+```json
+// GET 요청 (Query Parameters)
+/api/production-orders?pageIndex=1&pageUnit=20&searchKeyword=test
+
+// POST/PUT 요청 (Request Body)
+{
+  "orderNo": "2025-001",
+  "itemId": "ITEM001",
+  "orderQuantity": 100,
+  "scheduledDate": "2025-01-15",
+  "status": "PENDING",
+  "workplaceId": "WP001"
+}
+```
+
+#### 응답 형식 (Response)
+```json
+// 성공 응답
+{
+  "resultCode": 200,
+  "resultMessage": "성공",
+  "result": {
+    "resultList": [
+      {
+        "id": "PO001",
+        "orderNo": "2025-001",
+        "itemName": "제품A",
+        "orderQuantity": 100,
+        "scheduledDate": "2025-01-15",
+        "status": "PENDING"
+      }
+    ],
+    "resultCnt": 1,
+    "paginationInfo": {
+      "currentPageNo": 1,
+      "totalPageCount": 1,
+      "recordCountPerPage": 20
+    }
+  }
+}
+
+// 에러 응답
+{
+  "resultCode": 400,
+  "resultMessage": "필수 항목이 누락되었습니다.",
+  "result": null
+}
+```
+
+### 인증 처리
+
+#### JWT 토큰 사용
+```typescript
+// 프론트엔드: 로그인 시 토큰 저장
+const login = async (id: string, password: string) => {
+  const response = await axios.post('/auth/login-jwt', { id, password });
+  const token = response.data.result.jToken;
+  localStorage.setItem('jToken', token);
+};
+
+// 프론트엔드: API 요청 시 토큰 전송
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 백엔드: 토큰 검증 및 사용자 정보 추출
+@GetMapping("/api/endpoint")
+public ResultVO getData(
+    @AuthenticationPrincipal LoginVO user) {
+    String userId = user.getUniqId();
+    // ...
+}
+```
+
+### CORS 처리
+
+```java
+// 백엔드: CORS 설정
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+}
+```
+
+### 에러 처리
+
+#### 백엔드 에러 처리
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(Exception.class)
+    public ResultVO handleException(Exception e) {
+        return ResultVO.builder()
+            .resultCode(500)
+            .resultMessage(e.getMessage())
+            .build();
+    }
+    
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResultVO handleIllegalArgument(IllegalArgumentException e) {
+        return ResultVO.builder()
+            .resultCode(400)
+            .resultMessage(e.getMessage())
+            .build();
+    }
+}
+```
+
+#### 프론트엔드 에러 처리
+```typescript
+// Axios Interceptor
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // 서버 응답 에러
+      const { status, data } = error.response;
+      
+      switch (status) {
+        case 401:
+          // 인증 실패 - 로그인 페이지로 이동
+          localStorage.removeItem('jToken');
+          window.location.href = '/login';
+          break;
+        case 403:
+          alert('권한이 없습니다.');
+          break;
+        case 500:
+          alert('서버 오류가 발생했습니다.');
+          break;
+        default:
+          alert(data.resultMessage || '오류가 발생했습니다.');
+      }
+    } else if (error.request) {
+      // 요청은 전송되었지만 응답을 받지 못함
+      alert('서버와 통신할 수 없습니다.');
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+---
+
+## 코드 리뷰 및 품질 관리
+
+### Git 브랜치 전략
+
+```
+main (운영)
+  ↑
+develop (개발)
+  ↑
+feature/[기능명] (기능 개발)
+```
+
+### 브랜치 작업 흐름
+
+```bash
+# 1. develop 브랜치에서 새 기능 브랜치 생성
+git checkout develop
+git pull origin develop
+git checkout -b feature/production-order-management
+
+# 2. 개발 작업 수행
+# ... 코드 작성 ...
+
+# 3. 커밋
+git add .
+git commit -m "feat: 생산 지시 관리 기능 추가
+
+- 생산 지시 CRUD API 구현
+- 생산 지시 목록 화면 구현
+- 페이지네이션 적용"
+
+# 4. 원격 저장소에 푸시
+git push origin feature/production-order-management
+
+# 5. Pull Request 생성
+# GitHub에서 Pull Request 생성
+
+# 6. 코드 리뷰 후 develop에 병합
+```
+
+### 커밋 메시지 규칙
+
+```
+<type>: <subject>
+
+<body>
+
+<footer>
+```
+
+#### Type 종류
+- `feat`: 새로운 기능
+- `fix`: 버그 수정
+- `docs`: 문서 수정
+- `style`: 코드 포맷팅 (기능 변경 없음)
+- `refactor`: 리팩토링
+- `test`: 테스트 추가/수정
+- `chore`: 빌드, 설정 변경
+
+#### 예시
+```bash
+feat: 생산 지시 관리 기능 추가
+
+- 생산 지시 CRUD API 구현
+- 생산 지시 목록 화면 구현
+- 검색 및 필터링 기능 추가
+- 페이지네이션 적용
+
+Resolves: #123
+```
+
+### 코드 리뷰 체크리스트
+
+#### 백엔드
+- [ ] API 명세와 일치하는가?
+- [ ] 트랜잭션 처리가 올바른가?
+- [ ] SQL Injection 등 보안 취약점이 없는가?
+- [ ] 예외 처리가 적절한가?
+- [ ] JavaDoc 주석이 작성되었는가?
+- [ ] 테스트 코드가 작성되었는가?
+
+#### 프론트엔드
+- [ ] 타입 정의가 올바른가?
+- [ ] 에러 처리가 적절한가?
+- [ ] 로딩 상태가 표시되는가?
+- [ ] 권한 처리가 올바른가?
+- [ ] 반응형 디자인이 적용되었는가?
+- [ ] 접근성(a11y)이 고려되었는가?
+
+---
+
+## 배포 프로세스
+
+### 환경 구성
+
+```
+개발 환경 (Development)
+  - Backend: http://localhost:8080
+  - Frontend: http://localhost:3000
+  - Database: localhost:3306
+
+스테이징 환경 (Staging)
+  - Backend: https://api-staging.example.com
+  - Frontend: https://staging.example.com
+  - Database: staging-db.example.com:3306
+
+운영 환경 (Production)
+  - Backend: https://api.example.com
+  - Frontend: https://example.com
+  - Database: prod-db.example.com:3306
+```
+
+### 백엔드 배포
+
+```bash
+# 1. 프로파일별 빌드
+mvn clean package -P prod
+
+# 2. JAR 파일 생성 확인
+ls -lh target/*.jar
+
+# 3. 서버에 배포
+scp target/backend-1.0.0.jar user@server:/app/
+
+# 4. 서버에서 실행
+ssh user@server
+cd /app
+java -jar backend-1.0.0.jar --spring.profiles.active=prod
+
+# 또는 systemd 서비스로 실행
+sudo systemctl start backend
+sudo systemctl enable backend
+```
+
+### 프론트엔드 배포
+
+```bash
+# 1. 환경별 빌드
+npm run build  # production 환경
+
+# 2. 빌드 파일 확인
+ls -lh build/
+
+# 3. 웹 서버에 배포 (Nginx 예시)
+scp -r build/* user@server:/var/www/html/
+
+# 4. Nginx 설정
+# /etc/nginx/sites-available/default
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+# 5. Nginx 재시작
+sudo systemctl restart nginx
+```
+
+### 배포 체크리스트
+
+- [ ] 환경 변수 설정 확인
+- [ ] 데이터베이스 마이그레이션 완료
+- [ ] API 엔드포인트 테스트
+- [ ] 로그인 기능 테스트
+- [ ] 주요 기능 동작 확인
+- [ ] 로그 모니터링 설정
+- [ ] 백업 설정 확인
+
+---
+
+## 협업 가이드
+
+### 의사소통 채널
+
+```
+일상 커뮤니케이션: Slack/Teams
+이슈 관리: GitHub Issues
+코드 리뷰: GitHub Pull Requests
+문서 공유: Confluence/Notion
+```
+
+### 이슈 관리
+
+#### 이슈 템플릿
+```markdown
+## 이슈 설명
+생산 지시 목록에서 검색이 동작하지 않음
+
+## 재현 방법
+1. 생산 지시 관리 메뉴 접속
+2. 검색어 입력 후 검색 버튼 클릭
+3. 결과가 필터링되지 않고 전체 목록이 표시됨
+
+## 예상 동작
+검색어가 포함된 생산 지시만 표시되어야 함
+
+## 환경
+- 브라우저: Chrome 120
+- OS: Windows 10
+- 버전: develop 브랜치 최신
+
+## 스크린샷
+[스크린샷 첨부]
+
+## 추가 정보
+콘솔에 에러 메시지는 없음
+```
+
+### 회의 가이드
+
+#### 일일 스탠드업 (Daily Standup)
+- **시간**: 매일 오전 10시, 15분
+- **내용**:
+  - 어제 한 일
+  - 오늘 할 일
+  - 장애물/도움이 필요한 사항
+
+#### 스프린트 계획 (Sprint Planning)
+- **시간**: 2주마다, 2시간
+- **내용**:
+  - 이번 스프린트 목표
+  - 백로그 아이템 선정
+  - 작업 할당
+
+#### 회고 (Retrospective)
+- **시간**: 스프린트 종료 시, 1시간
+- **내용**:
+  - 잘된 점
+  - 개선할 점
+  - 액션 아이템
+
+---
+
+## 문제 해결 플로우
+
+### 문제 발생 시 대응 절차
+
+```
+1. 문제 확인
+   ├─ 로그 확인
+   ├─ 에러 메시지 수집
+   └─ 재현 가능 여부 확인
+   ↓
+2. 원인 분석
+   ├─ 프론트엔드 문제인가?
+   ├─ 백엔드 문제인가?
+   └─ 데이터베이스 문제인가?
+   ↓
+3. 해결 방법 도출
+   ├─ 기존 이슈 검색
+   ├─ 문서 참고
+   └─ 팀원 상담
+   ↓
+4. 수정 및 테스트
+   ├─ 로컬에서 수정
+   ├─ 테스트
+   └─ 코드 리뷰
+   ↓
+5. 배포 및 모니터링
+```
+
+### 일반적인 문제 해결
+
+#### 문제 1: API 호출 실패
+```
+증상: 프론트엔드에서 API 호출 시 404 또는 500 에러
+
+해결:
+1. 백엔드가 실행 중인지 확인
+2. API 엔드포인트가 올바른지 확인
+3. CORS 설정 확인
+4. 인증 토큰 확인
+5. 백엔드 로그 확인
+```
+
+#### 문제 2: 데이터가 표시되지 않음
+```
+증상: API 응답은 정상이지만 화면에 데이터가 표시되지 않음
+
+해결:
+1. 브라우저 개발자 도구 콘솔 확인
+2. React 컴포넌트 state 확인
+3. 데이터 타입 매핑 확인
+4. 조건부 렌더링 로직 확인
+```
+
+#### 문제 3: 인증 실패
+```
+증상: 로그인 후 다른 API 호출 시 401 에러
+
+해결:
+1. 토큰이 localStorage에 저장되었는지 확인
+2. Axios interceptor에서 토큰이 헤더에 추가되는지 확인
+3. 토큰 유효기간 확인
+4. 백엔드 JWT 설정 확인
+```
+
+### 디버깅 팁
+
+#### 백엔드 디버깅
+```java
+// 로그 레벨 조정
+logging.level.egovframework=DEBUG
+
+// 특정 메서드에 중단점 설정
+// IDE에서 Debug 모드로 실행
+
+// SQL 로그 출력
+logging.level.org.mybatis=TRACE
+```
+
+#### 프론트엔드 디버깅
+```typescript
+// Console 로그
+console.log('데이터:', data);
+console.table(array);
+console.error('에러:', error);
+
+// React Developer Tools 사용
+// - 컴포넌트 계층 구조 확인
+// - Props 및 State 확인
+
+// 네트워크 탭 사용
+// - API 요청/응답 확인
+// - 요청 헤더 확인
+```
+
+---
+
+## 추가 참고 자료
+
+### 관련 문서
+- [백엔드 개발 가이드](./BACKEND_DEVELOPMENT_GUIDE.md)
+- [프론트엔드 개발 가이드](./FRONTEND_DEVELOPMENT_GUIDE.md)
+- [권한별 읽기쓰기 가이드](./권한별_읽기쓰기_가이드.md)
+- [공통코드 구현 가이드](./COMMON_CODE_IMPLEMENTATION_GUIDE.md)
+
+### 외부 리소스
+- [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [REST API Design Guide](https://restfulapi.net/)
+- [React Best Practices](https://react.dev/learn)
+- [Spring Boot Best Practices](https://docs.spring.io/spring-boot/docs/current/reference/html/)
+
+---
+
+## 자주 묻는 질문 (FAQ)
+
+### Q1: 새로운 테이블을 추가할 때 어떤 순서로 작업해야 하나요?
+**A**: 
+1. DDL 스크립트 작성 (DATABASE/ 폴더)
+2. 데이터베이스에 DDL 실행
+3. VO 클래스 작성
+4. DAO 인터페이스 작성
+5. MyBatis Mapper XML 작성
+6. Service → Controller 순서로 개발
+
+### Q2: 페이지네이션은 어떻게 구현하나요?
+**A**: [PAGINATION_IMPLEMENTATION.md](./PAGINATION_IMPLEMENTATION.md) 문서 참고
+
+### Q3: 새로운 메뉴를 추가하려면?
+**A**:
+1. 프론트엔드: `constants/url.js`에 URL 추가
+2. 프론트엔드: `Sidebar` 컴포넌트에 메뉴 추가
+3. 프론트엔드: `App.tsx`에 라우트 추가
+4. 백엔드: 데이터베이스 메뉴 테이블에 메뉴 정보 추가
+
+### Q4: 권한은 어떻게 제어하나요?
+**A**: [권한별_읽기쓰기_가이드.md](./권한별_읽기쓰기_가이드.md) 문서 참고
+
+### Q5: API 응답 형식이 일관되지 않은데 어떻게 하나요?
+**A**: 모든 API는 다음 형식을 따라야 합니다:
+```json
+{
+  "resultCode": 200,
+  "resultMessage": "성공",
+  "result": { /* 데이터 */ }
+}
+```
+
+---
+
+**문서 버전**: 1.0  
+**최종 수정일**: 2025-01-07  
+**작성자**: GitHub Copilot  
+**문서 관리자**: 개발팀
+
+---
+
+## 문서 히스토리
+
+| 날짜 | 버전 | 작성자 | 변경 내용 |
+|------|------|--------|-----------|
+| 2025-01-07 | 1.0 | GitHub Copilot | 최초 작성 |
