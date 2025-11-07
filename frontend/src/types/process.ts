@@ -52,6 +52,16 @@ export interface ProcessInspection {
   useYn?: string;
 }
 
+export interface ProcessStopItem {
+  processStopItemId?: string;
+  processId: string;
+  stopItemCode: string;
+  stopItemName: string;
+  stopType?: string;
+  description?: string;
+  useYn?: string;
+}
+
 export interface ProcessSearchParams {
   searchCnd?: string;
   searchWrd?: string;

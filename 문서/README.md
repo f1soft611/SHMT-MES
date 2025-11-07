@@ -1,0 +1,396 @@
+# SHMT-MES 프로젝트 문서 (Documentation Index)
+
+## 📚 문서 개요
+
+이 폴더에는 SHMT-MES (새한마이크로텍 MES) 프로젝트의 모든 기술 문서가 포함되어 있습니다.
+
+---
+
+## 🚀 시작하기 (Getting Started)
+
+### 새로운 개발자를 위한 가이드
+
+1. **[개발 환경 설정](#개발-가이드)**
+   - 백엔드 개발 가이드 참고
+   - 프론트엔드 개발 가이드 참고
+
+2. **[프로젝트 구조 이해](../README.md)**
+   - 루트 디렉터리의 README.md 참고
+
+3. **[첫 기능 개발하기](#통합-워크플로우)**
+   - 통합 개발 워크플로우 문서 참고
+
+---
+
+## 📖 문서 목록
+
+### 개발 가이드 (Development Guides)
+
+#### 🔵 백엔드 개발
+- **[백엔드 개발 가이드](./BACKEND_DEVELOPMENT_GUIDE.md)** ⭐ **필독**
+  - Spring Boot + eGovFramework 기반 백엔드 개발
+  - Controller, Service, DAO 작성 패턴
+  - MyBatis 매퍼 작성 방법
+  - JWT 인증 및 권한 처리
+  - 테스트 작성 가이드
+
+#### 🟢 프론트엔드 개발
+- **[프론트엔드 개발 가이드](./FRONTEND_DEVELOPMENT_GUIDE.md)** ⭐ **필독**
+  - React + TypeScript 기반 프론트엔드 개발
+  - 컴포넌트 작성 패턴
+  - API 연동 및 상태 관리
+  - Material-UI 사용법
+  - 권한별 UI 제어
+
+#### 🟣 통합 워크플로우
+- **[통합 개발 워크플로우](./DEVELOPMENT_WORKFLOW.md)** ⭐ **필독**
+  - 프론트엔드-백엔드 협업 가이드
+  - 전체 개발 프로세스
+  - Git 브랜치 전략
+  - 배포 프로세스
+  - 문제 해결 플로우
+
+### 기능별 구현 가이드 (Feature Implementation)
+
+#### 미사용 서비스
+- **[미사용 서비스 문서화](./UNUSED_SERVICES_DOCUMENTATION.md)** ⭐ **NEW**
+  - 게시판 관리 서비스 (BBS)
+  - 개인 일정 관리 서비스
+  - SNS 로그인 서비스
+  - 파일 관리 서비스
+  - 사이트 관리 서비스
+  - 활성화 가이드
+
+#### 기준정보 관리
+- **[공통코드 구현 가이드](./COMMON_CODE_IMPLEMENTATION_GUIDE.md)**
+  - 공통코드 시스템 구조
+  - 데이터베이스 설계
+  - API 구현 방법
+  - 프론트엔드 연동
+
+- **[공통코드 시스템 요약](./COMMON_CODE_SYSTEM_SUMMARY.md)**
+  - 공통코드 개요
+  - 주요 기능
+  - 사용 방법
+
+- **[품목 관리 구현 요약](./ITEM_MANAGEMENT_SUMMARY.md)**
+  - 품목 관리 기능 구조
+  - API 명세
+  - 화면 구성
+
+- **[품목 관리 UI 가이드](./ITEM_MANAGEMENT_UI_GUIDE.md)**
+  - 품목 관리 화면 사용법
+  - UI 컴포넌트 설명
+
+- **[공정 관리 구현 보고서](./PROCESS_MANAGEMENT_IMPLEMENTATION_REPORT.md)**
+  - 공정 관리 구현 내역
+  - 변경 사항
+  - 테스트 결과
+
+- **[공정 관리 UI 변경사항](./PROCESS_MANAGEMENT_UI_CHANGES.md)**
+  - UI 개선 사항
+  - 사용성 향상
+
+- **[공정 관리 UI 가이드](./PROCESS_MANAGEMENT_UI_GUIDE.md)**
+  - 공정 관리 화면 사용법
+  - 기능 설명
+
+- **[작업장-공정 매핑 구현](./WORKPLACE_PROCESS_MAPPING_IMPLEMENTATION.md)**
+  - 작업장과 공정 연결 구조
+  - 데이터 모델
+  - 구현 방법
+
+#### 공통 기능
+- **[페이지네이션 구현 가이드](./PAGINATION_IMPLEMENTATION.md)**
+  - 페이지네이션 패턴
+  - 백엔드-프론트엔드 연동
+  - URL 상태 관리
+
+- **[권한별 읽기쓰기 가이드](./권한별_읽기쓰기_가이드.md)**
+  - 권한 시스템 구조
+  - 권한별 UI 제어
+  - 구현 예제
+
+### 리팩토링 및 개선
+- **[리팩토링 완료 보고서](./REFACTORING_COMPLETION_REPORT.md)**
+  - 주요 리팩토링 내역
+  - 성능 개선 사항
+  - 코드 품질 향상
+
+- **[구현 요약 (구버전)](./IMPLEMENTATION_SUMMARY_OLD.md)**
+  - 초기 구현 내역
+  - 히스토리 참고용
+
+### 인터페이스 문서
+- **[인터페이스 폴더](./인터페이스/)**
+  - ERP 연동 인터페이스 문서
+  - 데이터 교환 명세
+
+### ERD (Entity Relationship Diagram)
+- **[ERD 폴더](./ERD/)**
+  - 데이터베이스 ERD
+  - 테이블 관계도
+
+---
+
+## 🎯 문서 사용 가이드
+
+### 새로운 기능을 개발할 때
+
+```
+1. 통합 개발 워크플로우 읽기
+   └─> DEVELOPMENT_WORKFLOW.md
+   
+2. 역할에 따른 가이드 읽기
+   ├─> 백엔드 개발자: BACKEND_DEVELOPMENT_GUIDE.md
+   └─> 프론트엔드 개발자: FRONTEND_DEVELOPMENT_GUIDE.md
+   
+3. 관련 기능 구현 가이드 참고
+   └─> 해당 기능의 구현 가이드 문서
+   
+4. 코드 작성 및 리뷰
+   └─> 가이드에 따라 코드 작성
+```
+
+### 기존 기능을 수정할 때
+
+```
+1. 관련 구현 가이드 읽기
+   └─> 해당 기능의 문서 확인
+   
+2. 코드 패턴 확인
+   ├─> 백엔드: BACKEND_DEVELOPMENT_GUIDE.md
+   └─> 프론트엔드: FRONTEND_DEVELOPMENT_GUIDE.md
+   
+3. 테스트 및 배포
+   └─> DEVELOPMENT_WORKFLOW.md 참고
+```
+
+### 버그를 수정할 때
+
+```
+1. 문제 해결 플로우 확인
+   └─> DEVELOPMENT_WORKFLOW.md > 문제 해결 플로우
+   
+2. 트러블슈팅 섹션 참고
+   ├─> BACKEND_DEVELOPMENT_GUIDE.md > 트러블슈팅
+   └─> FRONTEND_DEVELOPMENT_GUIDE.md > 트러블슈팅
+   
+3. 수정 및 테스트
+   └─> 가이드에 따라 수정
+```
+
+---
+
+## 📋 문서 작성 규칙
+
+### 새로운 문서 작성 시
+
+1. **파일명 규칙**
+   - 영문 대문자로 작성: `FEATURE_NAME_GUIDE.md`
+   - 한글도 가능: `기능명_가이드.md`
+   - 공백 대신 언더스코어(_) 사용
+
+2. **문서 구조**
+   ```markdown
+   # 문서 제목
+   
+   ## 목차
+   - [섹션1](#섹션1)
+   - [섹션2](#섹션2)
+   
+   ## 개요
+   이 문서의 목적과 범위
+   
+   ## 본문
+   상세 내용
+   
+   ## 관련 문서
+   - [관련 문서1](./RELATED_DOC1.md)
+   
+   ---
+   **문서 버전**: 1.0
+   **최종 수정일**: YYYY-MM-DD
+   **작성자**: 이름
+   ```
+
+3. **코드 예제**
+   - 언어를 명시하여 syntax highlighting 적용
+   - 주석으로 설명 추가
+   - 실행 가능한 완전한 예제 제공
+
+4. **이미지 첨부**
+   - 문서 폴더 내에 `images/` 폴더 생성
+   - 의미 있는 파일명 사용
+   - Markdown으로 삽입: `![설명](./images/screenshot.png)`
+
+---
+
+## 🔍 문서 검색 팁
+
+### VS Code에서 문서 검색
+
+```
+1. Ctrl/Cmd + Shift + F (전체 검색)
+2. 검색어 입력
+3. 파일 필터: 문서/*.md
+```
+
+### GitHub에서 문서 검색
+
+```
+1. 저장소 메인 페이지에서 't' 키 입력
+2. 파일명 입력하여 빠른 이동
+3. 또는 GitHub 검색 사용
+```
+
+---
+
+## 🤝 기여 가이드
+
+### 문서 개선 제안
+
+1. **이슈 생성**
+   - GitHub Issues에 문서 개선 제안 작성
+   - 라벨: `documentation`
+
+2. **Pull Request**
+   - 문서 수정 후 PR 생성
+   - 리뷰어: 개발팀 리더
+
+3. **리뷰 및 병합**
+   - 리뷰 완료 후 develop 브랜치에 병합
+
+---
+
+## 📞 문의 및 지원
+
+### 문서 관련 문의
+
+- **담당자**: 개발팀
+- **이메일**: dev-team@example.com
+- **Slack**: #dev-documentation 채널
+
+### 기술 지원
+
+- **백엔드**: #backend-support
+- **프론트엔드**: #frontend-support
+- **인프라**: #infra-support
+
+---
+
+## 🗂️ 문서 디렉터리 구조
+
+```
+문서/
+├── README.md                                    # 이 파일 (문서 인덱스)
+│
+├── 📘 개발 가이드
+│   ├── BACKEND_DEVELOPMENT_GUIDE.md            # 백엔드 개발 가이드
+│   ├── FRONTEND_DEVELOPMENT_GUIDE.md           # 프론트엔드 개발 가이드
+│   └── DEVELOPMENT_WORKFLOW.md                 # 통합 개발 워크플로우
+│
+├── 📗 기능 구현 가이드
+│   ├── COMMON_CODE_IMPLEMENTATION_GUIDE.md     # 공통코드 구현
+│   ├── COMMON_CODE_SYSTEM_SUMMARY.md           # 공통코드 요약
+│   ├── ITEM_MANAGEMENT_SUMMARY.md              # 품목 관리 요약
+│   ├── ITEM_MANAGEMENT_UI_GUIDE.md             # 품목 관리 UI
+│   ├── PROCESS_MANAGEMENT_IMPLEMENTATION_REPORT.md
+│   ├── PROCESS_MANAGEMENT_UI_CHANGES.md
+│   ├── PROCESS_MANAGEMENT_UI_GUIDE.md
+│   ├── WORKPLACE_PROCESS_MAPPING_IMPLEMENTATION.md
+│   └── PAGINATION_IMPLEMENTATION.md            # 페이지네이션
+│
+├── 📕 권한 및 보안
+│   └── 권한별_읽기쓰기_가이드.md                # 권한 관리
+│
+├── 📙 기타
+│   ├── REFACTORING_COMPLETION_REPORT.md        # 리팩토링 보고서
+│   ├── IMPLEMENTATION_SUMMARY_OLD.md           # 구버전 요약
+│   ├── ERD/                                    # 데이터베이스 ERD
+│   └── 인터페이스/                              # 인터페이스 문서
+│
+└── images/                                      # 문서 이미지 (필요시)
+```
+
+---
+
+## 📊 문서 현황
+
+### 완료된 문서
+- ✅ 백엔드 개발 가이드
+- ✅ 프론트엔드 개발 가이드
+- ✅ 통합 개발 워크플로우
+- ✅ 공통코드 구현 가이드
+- ✅ 권한별 읽기쓰기 가이드
+- ✅ 페이지네이션 구현 가이드
+- ✅ 각종 기능별 구현 문서
+
+### 업데이트 예정
+- 🔄 API 명세서 통합 문서
+- 🔄 테스트 전략 문서
+- 🔄 성능 최적화 가이드
+- 🔄 보안 가이드
+
+---
+
+## 📚 추가 학습 자료
+
+### 공식 문서
+- [Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/)
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/docs/)
+- [Material-UI](https://mui.com/)
+- [eGovFramework](https://www.egovframe.go.kr/)
+
+### 권장 도서
+- Clean Code (Robert C. Martin)
+- Refactoring (Martin Fowler)
+- Design Patterns (Gang of Four)
+
+### 온라인 강의
+- Udemy: Spring Boot & React
+- Coursera: Web Development
+- YouTube: 관련 기술 튜토리얼
+
+---
+
+## 📝 문서 버전 관리
+
+| 날짜 | 버전 | 변경 내용 | 작성자 |
+|------|------|-----------|--------|
+| 2025-01-07 | 1.0 | 초기 문서 작성 (백엔드/프론트엔드/워크플로우 가이드) | GitHub Copilot |
+| - | 1.1 | 기존 문서 통합 및 인덱스 구성 | - |
+
+---
+
+## ⚡ 빠른 링크
+
+### 자주 찾는 문서
+- 🔗 [새 기능 개발하기](./DEVELOPMENT_WORKFLOW.md#새-기능-개발-프로세스)
+- 🔗 [Controller 작성 패턴](./BACKEND_DEVELOPMENT_GUIDE.md#1-controller-작성-패턴)
+- 🔗 [Component 작성 패턴](./FRONTEND_DEVELOPMENT_GUIDE.md#1-페이지-컴포넌트-작성-패턴)
+- 🔗 [API 연동 방법](./FRONTEND_DEVELOPMENT_GUIDE.md#api-연동)
+- 🔗 [권한 처리](./권한별_읽기쓰기_가이드.md)
+- 🔗 [페이지네이션](./PAGINATION_IMPLEMENTATION.md)
+
+### 트러블슈팅
+- 🔗 [백엔드 트러블슈팅](./BACKEND_DEVELOPMENT_GUIDE.md#트러블슈팅)
+- 🔗 [프론트엔드 트러블슈팅](./FRONTEND_DEVELOPMENT_GUIDE.md#트러블슈팅)
+- 🔗 [문제 해결 플로우](./DEVELOPMENT_WORKFLOW.md#문제-해결-플로우)
+
+---
+
+**문서 관리자**: 개발팀  
+**최종 업데이트**: 2025-01-07  
+**문서 위치**: `/문서/README.md`
+
+---
+
+## 💡 도움이 더 필요하신가요?
+
+- 📧 이메일: dev-team@example.com
+- 💬 Slack: #dev-support
+- 📝 Issue: [GitHub Issues](https://github.com/f1soft611/SHMT-MES/issues)
+
+**Happy Coding! 🚀**

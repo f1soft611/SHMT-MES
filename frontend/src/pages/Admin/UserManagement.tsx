@@ -5,12 +5,6 @@ import {
   Stack,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -23,10 +17,10 @@ import {
   IconButton,
   Alert,
   Chip,
-  Pagination,
   InputAdornment,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -34,7 +28,6 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  People as PeopleIcon,
 } from '@mui/icons-material';
 import {
   User,
@@ -52,16 +45,26 @@ const UserManagement: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 검색 및 페이징
+  // 검색 조건 (UI 입력용)
+  const [searchCnd, setSearchCnd] = useState('2');
+  const [searchWrd, setSearchWrd] = useState('');
+
+  // 실제 API 호출에 사용되는 검색 파라미터
   const [searchParams, setSearchParams] = useState<UserSearchParams>({
     pageIndex: 1,
-    searchCnd: '',
+    searchCnd: '2',
     searchWrd: '',
   });
+
   const [pagination, setPagination] = useState({
     currentPageNo: 1,
     totalRecordCount: 0,
     recordCountPerPage: 10,
+    pageSize: 10,
+  });
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
     pageSize: 10,
   });
 
@@ -139,24 +142,36 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // 초기 로드만 수행
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // searchParams가 변경될 때만 조회 (페이징 포함)
+  useEffect(() => {
+    if (searchParams.pageIndex && searchParams.pageIndex > 1) {
+      loadUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleSearch = () => {
+    // 검색 버튼 클릭 시에만 실제 검색 수행
+    setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
     setSearchParams({
-      ...searchParams,
       pageIndex: 1,
+      searchCnd: searchCnd,
+      searchWrd: searchWrd,
     });
+    loadUsers();
   };
 
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
+  const handlePageChange = (newModel: GridPaginationModel) => {
+    setPaginationModel(newModel);
     setSearchParams({
       ...searchParams,
-      pageIndex: value,
+      pageIndex: newModel.page + 1,
     });
   };
 
@@ -283,6 +298,93 @@ const UserManagement: React.FC = () => {
     return groupItem ? groupItem.codeNm : groupId;
   };
 
+  const columns: GridColDef[] = [
+    {
+      field: 'mberId',
+      headerName: '사용자ID',
+      flex: 1,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'mberNm',
+      headerName: '사용자명',
+      flex: 1,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'mberSttus',
+      headerName: '상태',
+      flex: 0.8,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getStatusLabel(params.value)}
+          color={params.value === 'A' ? 'success' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'groupId',
+      headerName: '그룹',
+      flex: 1,
+      minWidth: 120,
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (value) => getGroupLabel(value || ''),
+    },
+    {
+      field: 'sbscrbDe',
+      headerName: '가입일',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: '작업',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <IconButton
+              size="small"
+              onClick={() => handleEdit(params.row)}
+              disabled={loading}
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(params.row.uniqId)}
+              disabled={loading}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <ProtectedRoute requiredPermission="write">
       <Box>
@@ -311,14 +413,9 @@ const UserManagement: React.FC = () => {
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel>검색조건</InputLabel>
               <Select
-                value={searchParams.searchCnd}
+                value={searchCnd}
                 label="검색 조건"
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    searchCnd: e.target.value,
-                  })
-                }
+                onChange={(e) => setSearchCnd(e.target.value)}
               >
                 {searchConditions.map((condition) => (
                   <MenuItem key={condition.value} value={condition.value}>
@@ -331,14 +428,9 @@ const UserManagement: React.FC = () => {
             <TextField
               size="small"
               placeholder="검색어를 입력하세요"
-              value={searchParams.searchWrd}
+              value={searchWrd}
               sx={{ flex: 1 }}
-              onChange={(e) =>
-                setSearchParams({
-                  ...searchParams,
-                  searchWrd: e.target.value,
-                })
-              }
+              onChange={(e) => setSearchWrd(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
 
@@ -363,76 +455,28 @@ const UserManagement: React.FC = () => {
         </Paper>
 
         {/* 사용자 목록 */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>사용자ID</TableCell>
-                <TableCell>사용자명</TableCell>
-                <TableCell>상태</TableCell>
-                <TableCell>그룹</TableCell>
-                <TableCell>가입일</TableCell>
-                <TableCell align="center">작업</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.length > 0 ? (
-                users.map((user) => (
-                  <TableRow key={user.uniqId}>
-                    <TableCell>{user.mberId}</TableCell>
-                    <TableCell>{user.mberNm}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(user.mberSttus)}
-                        color={user.mberSttus === 'A' ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{getGroupLabel(user.groupId || '')}</TableCell>
-                    <TableCell>{user.sbscrbDe}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEdit(user)}
-                        disabled={loading}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(user.uniqId)}
-                        disabled={loading}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    {loading ? '로딩 중...' : '사용자가 없습니다.'}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* 페이징 */}
-        {pagination.totalRecordCount > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-            <Pagination
-              count={Math.ceil(
-                pagination.totalRecordCount / pagination.recordCountPerPage
-              )}
-              page={pagination.currentPageNo}
-              onChange={handlePageChange}
-              color="primary"
-              disabled={loading}
-            />
-          </Box>
-        )}
+        <Paper sx={{ width: '100%' }}>
+          <DataGrid
+            rows={users}
+            columns={columns}
+            getRowId={(row) => row.uniqId}
+            loading={loading}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={handlePageChange}
+            rowCount={pagination.totalRecordCount}
+            pageSizeOptions={[5, 10, 25, 50]}
+            disableRowSelectionOnClick
+            sx={{
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          />
+        </Paper>
 
         {/* 사용자 추가/수정 다이얼로그 */}
         <Dialog
@@ -508,6 +552,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>비밀번호 힌트</InputLabel>
                     <Select
+                      label="비밀번호 힌트"
                       value={formData.passwordHint}
                       onChange={(e) =>
                         setFormData({
@@ -538,6 +583,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>사용자 상태</InputLabel>
                     <Select
+                      label="사용자 상태"
                       value={formData.mberSttus}
                       onChange={(e) =>
                         setFormData({ ...formData, mberSttus: e.target.value })
@@ -555,6 +601,7 @@ const UserManagement: React.FC = () => {
                   <FormControl fullWidth>
                     <InputLabel>사용자 그룹</InputLabel>
                     <Select
+                      label="사용자 그룹"
                       value={formData.groupId}
                       onChange={(e) =>
                         setFormData({ ...formData, groupId: e.target.value })
