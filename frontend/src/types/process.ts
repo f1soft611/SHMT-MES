@@ -31,6 +31,7 @@ export interface ProcessWorkplace {
 export interface ProcessDefect {
   processDefectId?: string;
   processId: string;
+  processCode: string;
   defectCode: string;
   defectName: string;
   defectType?: string;
@@ -41,6 +42,7 @@ export interface ProcessDefect {
 export interface ProcessInspection {
   processInspectionId?: string;
   processId: string;
+  processCode: string;
   inspectionCode: string;
   inspectionName: string;
   inspectionType?: string;
@@ -55,6 +57,7 @@ export interface ProcessInspection {
 export interface ProcessStopItem {
   processStopItemId?: string;
   processId: string;
+  processCode: string;
   stopItemCode: string;
   stopItemName: string;
   stopType?: string;

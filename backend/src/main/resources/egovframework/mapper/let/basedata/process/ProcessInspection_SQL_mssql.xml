@@ -3,69 +3,77 @@
 <mapper namespace="ProcessInspectionDAO">
 
 	<resultMap id="processInspectionResult" type="egovframework.let.basedata.process.domain.model.ProcessInspection">
-		<result property="processInspectionId" column="PROCESS_INSPECTION_ID"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
 		<result property="processId" column="PROCESS_ID"/>
-		<result property="inspectionCode" column="INSPECTION_CODE"/>
-		<result property="inspectionName" column="INSPECTION_NAME"/>
-		<result property="inspectionType" column="INSPECTION_TYPE"/>
+		<result property="processCode" column="WORK_CODE"/>
+		<result property="processInspectionId" column="INS_ID"/>
+		<result property="inspectionCode" column="INS_CODE"/>
+		<result property="inspectionName" column="INS_NAME"/>
+		<result property="inspectionType" column="INSP_TYPE"/>
 		<result property="standardValue" column="STANDARD_VALUE"/>
 		<result property="upperLimit" column="UPPER_LIMIT"/>
 		<result property="lowerLimit" column="LOWER_LIMIT"/>
 		<result property="unit" column="UNIT"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="useYn" column="USE_YN"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="ProcessInspectionDAO.selectProcessInspectionList" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspectionVO" resultMap="processInspectionResult">
 		SELECT
-			PROCESS_INSPECTION_ID,
-			PROCESS_ID,
-			INSPECTION_CODE,
-			INSPECTION_NAME,
-			INSPECTION_TYPE,
-			STANDARD_VALUE,
-			UPPER_LIMIT,
-			LOWER_LIMIT,
-			UNIT,
-			DESCRIPTION,
-			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_PROCESS_INSPECTION
+		FACTORY_CODE,
+		WORK_ID AS PROCESS_ID,
+		WORK_CODE,
+		INS_ID,
+		INS_CODE,
+		INS_NAME,
+		INS_TYPE AS INSP_TYPE,
+		STANDARD_VALUE,
+		UPPER_LIMIT,
+		LOWER_LIMIT,
+		UNIT,
+		DESCRIPTION,
+		USE_YN,
+		OPMAN_CODE,
+		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+		OPMAN_CODE2,
+		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR107
 		WHERE 1=1
 		<if test="processId != null and processId != ''">
-			AND PROCESS_ID = #{processId}
+			AND WORK_ID = #{processId}
 		</if>
 		<if test="useYn != null and useYn != ''">
 			AND USE_YN = #{useYn}
 		</if>
-		ORDER BY INSPECTION_CODE ASC
+		ORDER BY INS_CODE ASC
 	</select>
 
 	<insert id="ProcessInspectionDAO.insertProcessInspection" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspection">
-		INSERT INTO TB_PROCESS_INSPECTION (
-			PROCESS_INSPECTION_ID,
-			PROCESS_ID,
-			INSPECTION_CODE,
-			INSPECTION_NAME,
-			INSPECTION_TYPE,
+		INSERT INTO TPR107 (
+		    FACTORY_CODE,
+			WORK_ID,
+			WORK_CODE,
+			INS_ID,
+			INS_CODE,
+			INS_NAME,
+			INS_TYPE,
 			STANDARD_VALUE,
 			UPPER_LIMIT,
 			LOWER_LIMIT,
 			UNIT,
 			DESCRIPTION,
 			USE_YN,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
-					 #{processInspectionId},
+		          	 #{factoryCode},
 					 #{processId},
+					 #{processCode},
+					 #{processInspectionId},
 					 #{inspectionCode},
 					 #{inspectionName},
 					 #{inspectionType},
@@ -81,25 +89,25 @@
 	</insert>
 
 	<update id="ProcessInspectionDAO.updateProcessInspection" parameterType="egovframework.let.basedata.process.domain.model.ProcessInspection">
-		UPDATE TB_PROCESS_INSPECTION
+		UPDATE TPR107
 		SET
-			INSPECTION_CODE = #{inspectionCode},
-			INSPECTION_NAME = #{inspectionName},
-			INSPECTION_TYPE = #{inspectionType},
+			INS_CODE = #{inspectionCode},
+			INS_NAME = #{inspectionName},
+			INS_TYPE = #{inspectionType},
 			STANDARD_VALUE = #{standardValue},
 			UPPER_LIMIT = #{upperLimit},
 			LOWER_LIMIT = #{lowerLimit},
 			UNIT = #{unit},
 			DESCRIPTION = #{description},
 			USE_YN = #{useYn},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE PROCESS_INSPECTION_ID = #{processInspectionId}
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE INS_ID = #{processInspectionId}
 	</update>
 
 	<delete id="ProcessInspectionDAO.deleteProcessInspection" parameterType="string">
-		DELETE FROM TB_PROCESS_INSPECTION
-		WHERE PROCESS_INSPECTION_ID = #{processInspectionId}
+		DELETE FROM TPR107
+		WHERE INS_ID = #{processInspectionId}
 	</delete>
 
 </mapper>

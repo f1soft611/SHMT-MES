@@ -3,57 +3,65 @@
 <mapper namespace="ProcessDefectDAO">
 
 	<resultMap id="processDefectResult" type="egovframework.let.basedata.process.domain.model.ProcessDefect">
-		<result property="processDefectId" column="PROCESS_DEFECT_ID"/>
-		<result property="processId" column="PROCESS_ID"/>
-		<result property="defectCode" column="DEFECT_CODE"/>
-		<result property="defectName" column="DEFECT_NAME"/>
-		<result property="defectType" column="DEFECT_TYPE"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="processId" column="WORK_ID"/>
+		<result property="processCode" column="WORK_CODE"/>
+		<result property="processDefectId" column="QC_ID"/>
+		<result property="defectCode" column="QC_CODE"/>
+		<result property="defectName" column="QC_NAME"/>
+		<result property="defectType" column="QC_TYPE"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="useYn" column="USE_YN"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="ProcessDefectDAO.selectProcessDefectList" parameterType="egovframework.let.basedata.process.domain.model.ProcessDefectVO" resultMap="processDefectResult">
 		SELECT
-			PROCESS_DEFECT_ID,
-			PROCESS_ID,
-			DEFECT_CODE,
-			DEFECT_NAME,
-			DEFECT_TYPE,
-			DESCRIPTION,
-			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_PROCESS_DEFECT
+		FACTORY_CODE,
+		WORK_ID,
+		WORK_CODE,
+		QC_ID,
+		QC_CODE,
+		QC_NAME,
+		QC_TYPE,
+		DESCRIPTION,
+		USE_YN,
+		OPMAN_CODE,
+		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+		OPMAN_CODE2,
+		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR109
 		WHERE 1=1
 		<if test="processId != null and processId != ''">
-			AND PROCESS_ID = #{processId}
+			AND WORK_ID = #{processId}
 		</if>
 		<if test="useYn != null and useYn != ''">
 			AND USE_YN = #{useYn}
 		</if>
-		ORDER BY DEFECT_CODE ASC
+		ORDER BY WORK_CODE ASC
 	</select>
 
 	<insert id="ProcessDefectDAO.insertProcessDefect" parameterType="egovframework.let.basedata.process.domain.model.ProcessDefect">
-		INSERT INTO TB_PROCESS_DEFECT (
-			PROCESS_DEFECT_ID,
-			PROCESS_ID,
-			DEFECT_CODE,
-			DEFECT_NAME,
-			DEFECT_TYPE,
+		INSERT INTO TPR109 (
+		    FACTORY_CODE,
+			WORK_ID,
+		    WORK_CODE,
+			QC_ID,
+			QC_CODE,
+			QC_NAME,
+			QC_TYPE,
 			DESCRIPTION,
 			USE_YN,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
-					 #{processDefectId},
+		          	 #{factoryCode},
 					 #{processId},
+					 #{processCode},
+					 #{processDefectId},
 					 #{defectCode},
 					 #{defectName},
 					 #{defectType},
@@ -65,21 +73,21 @@
 	</insert>
 
 	<update id="ProcessDefectDAO.updateProcessDefect" parameterType="egovframework.let.basedata.process.domain.model.ProcessDefect">
-		UPDATE TB_PROCESS_DEFECT
+		UPDATE TPR109
 		SET
-			DEFECT_CODE = #{defectCode},
-			DEFECT_NAME = #{defectName},
-			DEFECT_TYPE = #{defectType},
+			QC_CODE = #{defectCode},
+			QC_NAME = #{defectName},
+			QC_TYPE = #{defectType},
 			DESCRIPTION = #{description},
 			USE_YN = #{useYn},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE PROCESS_DEFECT_ID = #{processDefectId}
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE QC_ID = #{processDefectId}
 	</update>
 
 	<delete id="ProcessDefectDAO.deleteProcessDefect" parameterType="string">
-		DELETE FROM TB_PROCESS_DEFECT
-		WHERE PROCESS_DEFECT_ID = #{processDefectId}
+		DELETE FROM TPR109
+		WHERE QC_ID = #{processDefectId}
 	</delete>
 
 </mapper>

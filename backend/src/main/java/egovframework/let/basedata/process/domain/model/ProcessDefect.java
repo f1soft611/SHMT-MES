@@ -33,11 +33,17 @@ public class ProcessDefect implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "공정 불량코드 ID")
-	private String processDefectId = "";
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
 
 	@Schema(description = "공정 ID")
 	private String processId = "";
+
+	@Schema(description = "공정 코드")
+	private String processCode = "";
+
+	@Schema(description = "공정 불량코드 ID")
+	private String processDefectId = "";
 
 	@Schema(description = "불량 코드")
 	private String defectCode = "";

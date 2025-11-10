@@ -33,11 +33,17 @@ public class WorkplaceWorker implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "작업장 작업자 ID")
-	private String workplaceWorkerId = "";
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
 
 	@Schema(description = "작업장 ID")
 	private String workplaceId = "";
+
+	@Schema(description = "작업장 코드")
+	private String workplaceCode = "";
+
+	@Schema(description = "작업장 작업자 ID")
+	private String workplaceWorkerId = "";
 
 	@Schema(description = "작업자 ID")
 	private String workerId = "";

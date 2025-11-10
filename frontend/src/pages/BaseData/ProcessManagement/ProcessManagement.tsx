@@ -68,6 +68,7 @@ const processSchema: yup.ObjectSchema<Process> = yup.object({
 // 불량코드 추가 유효성 검사 스키마
 const defectSchema: yup.ObjectSchema<ProcessDefect> = yup.object({
   processId: yup.string().required('공정 ID는 필수입니다.'),
+  processCode: yup.string().required('공정 코드는 필수입니다.'),
   processDefectId: yup.string(),
   defectCode: yup.string().required('불량 코드는 필수입니다.'),
   defectName: yup.string().required('불량명은 필수입니다.'),
@@ -79,6 +80,7 @@ const defectSchema: yup.ObjectSchema<ProcessDefect> = yup.object({
 // 검사항목 추가 유효성 검사 스키마
 const inspectionSchema: yup.ObjectSchema<ProcessInspection> = yup.object({
   processId: yup.string().required('공정 ID는 필수입니다.'),
+  processCode: yup.string().required('공정 코드는 필수입니다.'),
   processInspectionId: yup.string(),
   inspectionCode: yup.string().required('검사 코드는 필수입니다.'),
   inspectionName: yup.string().required('검사항목명은 필수입니다.'),
@@ -94,6 +96,7 @@ const inspectionSchema: yup.ObjectSchema<ProcessInspection> = yup.object({
 // 중지항목 추가 유효성 검사 스키마
 const stopItemSchema: yup.ObjectSchema<ProcessStopItem> = yup.object({
   processId: yup.string().required('공정 ID는 필수입니다.'),
+  processCode: yup.string().required('공정 코드는 필수입니다.'),
   processStopItemId: yup.string(),
   stopItemCode: yup.string().required('중지항목 코드는 필수입니다.'),
   stopItemName: yup.string().required('중지항목명은 필수입니다.'),
@@ -790,6 +793,7 @@ const ProcessDefectTab: React.FC<{
     resolver: yupResolver(defectSchema),
     defaultValues: {
       processId: process.processId!,
+      processCode: process.processCode!,
       processDefectId: '',
       defectCode: '',
       defectName: '',
@@ -970,6 +974,7 @@ const ProcessDefectTab: React.FC<{
                 setDialogMode('create');
                 resetDefectForm({
                   processId: process.processId!,
+                  processCode: process.processCode!,
                   defectCode: '',
                   defectName: '',
                   defectType: '',
@@ -1119,6 +1124,7 @@ const ProcessInspectionTab: React.FC<{
     resolver: yupResolver(inspectionSchema),
     defaultValues: {
       processId: process.processId!,
+      processCode: process.processCode!,
       processInspectionId: '',
       inspectionCode: '',
       inspectionName: '',
@@ -1324,6 +1330,7 @@ const ProcessInspectionTab: React.FC<{
                 setDialogMode('create');
                 resetInspectionForm({
                   processId: process.processId!,
+                  processCode: process.processCode!,
                   inspectionCode: '',
                   inspectionName: '',
                   inspectionType: '',
@@ -1530,6 +1537,7 @@ const ProcessStopItemTab: React.FC<{
     resolver: yupResolver(stopItemSchema),
     defaultValues: {
       processId: process.processId!,
+      processCode: process.processCode!,
       processStopItemId: '',
       stopItemCode: '',
       stopItemName: '',
@@ -1710,6 +1718,7 @@ const ProcessStopItemTab: React.FC<{
                 setDialogMode('create');
                 resetStopItemForm({
                   processId: process.processId!,
+                  processCode: process.processCode!,
                   processStopItemId: '',
                   stopItemCode: '',
                   stopItemName: '',

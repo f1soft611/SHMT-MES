@@ -3,48 +3,51 @@
 <mapper namespace="ProcessDAO">
 
 	<resultMap id="processResult" type="egovframework.let.basedata.process.domain.model.Process">
-		<result property="processId" column="PROCESS_ID"/>
-		<result property="processCode" column="PROCESS_CODE"/>
-		<result property="processName" column="PROCESS_NAME"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="processId" column="WORK_ID"/>
+		<result property="processCode" column="WORK_CODE"/>
+		<result property="processName" column="WORK_NAME"/>
 		<result property="description" column="DESCRIPTION"/>
-		<result property="processType" column="PROCESS_TYPE"/>
+		<result property="processType" column="WORK_TYPE"/>
 		<result property="equipmentIntegrationYn" column="EQUIPMENT_INTEGRATION_YN"/>
 		<result property="status" column="STATUS"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="sortOrder" column="SORT_ORDER"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="ProcessDAO.selectProcessList" parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultMap="processResult">
 		SELECT
-		PROCESS_ID,
-		PROCESS_CODE,
-		PROCESS_NAME,
+		FACTORY_CODE,
+		WORK_ID,
+		WORK_CODE,
+		WORK_NAME,
 		DESCRIPTION,
-		PROCESS_TYPE,
+		WORK_TYPE,
 		EQUIPMENT_INTEGRATION_YN,
 		STATUS,
 		USE_YN,
 		SORT_ORDER,
-		REG_USER_ID,
-		CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-		UPD_USER_ID,
-		CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_PROCESS
+		OPMAN_CODE,
+		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+		OPMAN_CODE2,
+		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR102
 		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == 0">
-					AND PROCESS_CODE LIKE '%' + #{searchWrd} + '%'
+					AND WORK_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 1">
-					AND PROCESS_NAME LIKE '%' + #{searchWrd} + '%'
+					AND WORK_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 2">
-					AND PROCESS_TYPE LIKE '%' + #{searchWrd} + '%'
+					AND WORK_TYPE LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -57,7 +60,7 @@
 		<if test="equipmentIntegrationYn != null and equipmentIntegrationYn != ''">
 			AND EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn}
 		</if>
-		ORDER BY SORT_ORDER ASC, REG_DT DESC
+		ORDER BY SORT_ORDER ASC, OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
@@ -66,18 +69,19 @@
 
 	<select id="ProcessDAO.selectProcessListCnt" parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_PROCESS
+		FROM TPR102
 		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '0'">
-					AND PROCESS_CODE LIKE '%' + #{searchWrd} + '%'
+					AND WORK_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '1'">
-					AND PROCESS_NAME LIKE '%' + #{searchWrd} + '%'
+					AND WORK_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2'">
-					AND PROCESS_TYPE LIKE '%' + #{searchWrd} + '%'
+					AND WORK_TYPE LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -92,39 +96,43 @@
 		</if>
 	</select>
 
-	<select id="ProcessDAO.selectProcess" parameterType="string" resultMap="processResult">
+	<select id="ProcessDAO.selectProcess" parameterType="map" resultMap="processResult">
 		SELECT
-			PROCESS_ID,
-			PROCESS_CODE,
-			PROCESS_NAME,
+			FACTORY_CODE,
+			WORK_ID,
+			WORK_CODE,
+			WORK_NAME,
 			DESCRIPTION,
-			PROCESS_TYPE,
+			WORK_TYPE,
 			EQUIPMENT_INTEGRATION_YN,
 			STATUS,
 			USE_YN,
 			SORT_ORDER,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_PROCESS
-		WHERE PROCESS_ID = #{processId}
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR102
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORK_ID = #{processId}
 	</select>
 
 	<insert id="ProcessDAO.insertProcess" parameterType="egovframework.let.basedata.process.domain.model.Process">
-		INSERT INTO TB_PROCESS (
-			PROCESS_ID,
-			PROCESS_CODE,
-			PROCESS_NAME,
+		INSERT INTO TPR102 (
+			FACTORY_CODE,
+			WORK_ID,
+			WORK_CODE,
+			WORK_NAME,
 			DESCRIPTION,
-			PROCESS_TYPE,
+			WORK_TYPE,
 			EQUIPMENT_INTEGRATION_YN,
 			STATUS,
 			USE_YN,
 			SORT_ORDER,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
+					 #{factoryCode},
 					 #{processId},
 					 #{processCode},
 					 #{processName},
@@ -140,39 +148,40 @@
 	</insert>
 
 	<update id="ProcessDAO.updateProcess" parameterType="egovframework.let.basedata.process.domain.model.Process">
-		UPDATE TB_PROCESS
+		UPDATE TPR102
 		SET
-			PROCESS_CODE = #{processCode},
-			PROCESS_NAME = #{processName},
+			WORK_CODE = #{processCode},
+			WORK_NAME = #{processName},
 			DESCRIPTION = #{description},
-			PROCESS_TYPE = #{processType},
+			WORK_TYPE = #{processType},
 			EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn},
 			STATUS = #{status},
 			USE_YN = #{useYn},
 			SORT_ORDER = #{sortOrder},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE PROCESS_ID = #{processId}
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORK_ID = #{processId}
 	</update>
 
-	<delete id="ProcessDAO.deleteProcess" parameterType="string">
-		DELETE FROM TB_PROCESS
-		WHERE PROCESS_ID = #{processId}
+	<delete id="ProcessDAO.deleteProcess" parameterType="map">
+		DELETE FROM TPR102
+		WHERE WORK_ID = #{processId}
 	</delete>
 
 	<!-- 공정 코드 중복 체크 -->
-	<select id="ProcessDAO.selectProcessCodeCheck" parameterType="string" resultType="int">
+	<select id="ProcessDAO.selectProcessCodeCheck" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_PROCESS
-		WHERE PROCESS_CODE = #{processCode}
+		FROM TPR102
+		WHERE WORK_CODE = #{processCode}
 	</select>
 
 	<!-- 공정 코드 중복 체크 (수정 시) -->
 	<select id="ProcessDAO.selectProcessCodeCheckForUpdate" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_PROCESS
-		WHERE PROCESS_CODE = #{processCode}
-		  AND PROCESS_ID != #{processId}
+		FROM TPR102
+		WHERE WORK_CODE = #{processCode}
+		  AND WORK_ID != #{processId}
 	</select>
 
 </mapper>

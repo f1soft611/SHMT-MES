@@ -1829,7 +1829,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE")
 			.setPreFix("WP")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1845,7 +1845,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE_WORKER")
 			.setPreFix("WPW")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1877,7 +1877,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS")
 			.setPreFix("PR")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1893,7 +1893,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_WORKPLACE")
 			.setPreFix("PRW")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1909,7 +1909,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_DEFECT")
 			.setPreFix("PRD")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1925,7 +1925,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_INSPECTION")
 			.setPreFix("PRI")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1941,7 +1941,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_STOP_ITEM")
 			.setPreFix("PRS")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
