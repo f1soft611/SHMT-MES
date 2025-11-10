@@ -36,7 +36,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Workplace, WorkplaceWorker } from '../../../types/workplace';
-import { ProcessWorkplace } from '../../../types/process';
+import { WorkplaceProcess } from '../../../types/process';
 import workplaceService from '../../../services/workplaceService';
 import processService from '../../../services/processService';
 import { usePermissions } from '../../../contexts/PermissionContext';
@@ -979,10 +979,10 @@ const WorkplaceProcessTab: React.FC<{
   workplace: Workplace;
   showSnackbar: (m: string, s: 'success' | 'error') => void;
 }> = ({ workplace, showSnackbar }) => {
-  const [processes, setProcesses] = useState<ProcessWorkplace[]>([]);
+  const [processes, setProcesses] = useState<WorkplaceProcess[]>([]);
   const [availableProcesses, setAvailableProcesses] = useState<any[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState<ProcessWorkplace>({
+  const [formData, setFormData] = useState<WorkplaceProcess>({
     workplaceId: workplace.workplaceId!,
     processId: '',
     workplaceName: workplace.workplaceName,
@@ -1054,12 +1054,12 @@ const WorkplaceProcessTab: React.FC<{
     }
   };
 
-  const handleDelete = async (processWorkplaceId: string) => {
+  const handleDelete = async (workplaceProcessId: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await workplaceService.removeWorkplaceProcess(
           workplace.workplaceId!,
-          processWorkplaceId
+          workplaceProcessId
         );
         showSnackbar('공정이 삭제되었습니다.', 'success');
         fetchProcesses();
@@ -1110,7 +1110,7 @@ const WorkplaceProcessTab: React.FC<{
           <IconButton
             size="small"
             color="error"
-            onClick={() => handleDelete(params.row.processWorkplaceId!)}
+            onClick={() => handleDelete(params.row.workplaceProcessId!)}
           >
             <DeleteIcon />
           </IconButton>
@@ -1154,7 +1154,7 @@ const WorkplaceProcessTab: React.FC<{
         <DataGrid
           rows={processes}
           columns={processColumns}
-          getRowId={(row) => row.processWorkplaceId || ''}
+          getRowId={(row) => row.workplaceProcessId || ''}
           hideFooterPagination
           disableRowSelectionOnClick
           localeText={{ noRowsLabel: '등록된 공정이 없습니다' }}

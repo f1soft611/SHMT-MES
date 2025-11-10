@@ -4,8 +4,8 @@ import egovframework.com.cmm.LoginVO;
 import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
-import egovframework.let.basedata.process.domain.model.ProcessWorkplace;
-import egovframework.let.basedata.process.domain.model.ProcessWorkplaceVO;
+import egovframework.let.basedata.process.domain.model.WorkplaceProcess;
+import egovframework.let.basedata.process.domain.model.WorkplaceProcessVO;
 import egovframework.let.basedata.process.service.EgovProcessService;
 import egovframework.let.basedata.workplace.domain.model.Workplace;
 import egovframework.let.basedata.workplace.domain.model.WorkplaceVO;
@@ -319,10 +319,10 @@ public class EgovWorkplaceApiController {
             @PathVariable String workplaceId,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        ProcessWorkplaceVO processWorkplaceVO = new ProcessWorkplaceVO();
-        processWorkplaceVO.setWorkplaceId(workplaceId);
+        WorkplaceProcessVO workplaceProcessVO = new WorkplaceProcessVO();
+        workplaceProcessVO.setWorkplaceId(workplaceId);
         
-        List<ProcessWorkplaceVO> resultList = processService.selectProcessWorkplaceList(processWorkplaceVO);
+        List<WorkplaceProcessVO> resultList = processService.selectWorkplaceProcessList(workplaceProcessVO);
         
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("resultList", resultList);
@@ -347,12 +347,12 @@ public class EgovWorkplaceApiController {
     @PostMapping("/workplaces/{workplaceId}/processes")
     public ResultVO insertWorkplaceProcess(
             @PathVariable String workplaceId,
-            @RequestBody ProcessWorkplace processWorkplace,
+            @RequestBody WorkplaceProcess workplaceProcess,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processWorkplace.setWorkplaceId(workplaceId);
-        processWorkplace.setRegUserId(user.getUniqId());
-        processService.insertProcessWorkplace(processWorkplace);
+        workplaceProcess.setWorkplaceId(workplaceId);
+        workplaceProcess.setRegUserId(user.getUniqId());
+        processService.insertWorkplaceProcess(workplaceProcess);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "공정이 등록되었습니다.");
@@ -373,13 +373,13 @@ public class EgovWorkplaceApiController {
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @DeleteMapping("/workplaces/{workplaceId}/processes/{processWorkplaceId}")
+    @DeleteMapping("/workplaces/{workplaceId}/processes/{workplaceProcessId}")
     public ResultVO deleteWorkplaceProcess(
             @PathVariable String workplaceId,
-            @PathVariable String processWorkplaceId,
+            @PathVariable String workplaceProcessId,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processService.deleteProcessWorkplace(processWorkplaceId);
+        processService.deleteWorkplaceProcess(workplaceProcessId);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "공정이 삭제되었습니다.");

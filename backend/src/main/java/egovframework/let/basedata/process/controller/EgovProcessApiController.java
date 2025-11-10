@@ -226,10 +226,10 @@ public class EgovProcessApiController {
             @PathVariable String processId,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        ProcessWorkplaceVO processWorkplaceVO = new ProcessWorkplaceVO();
-        processWorkplaceVO.setProcessId(processId);
+        WorkplaceProcessVO workplaceProcessVO = new WorkplaceProcessVO();
+        workplaceProcessVO.setProcessId(processId);
         
-        List<ProcessWorkplaceVO> resultList = processService.selectProcessWorkplaceList(processWorkplaceVO);
+        List<WorkplaceProcessVO> resultList = processService.selectWorkplaceProcessList(workplaceProcessVO);
         
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("resultList", resultList);
@@ -254,12 +254,12 @@ public class EgovProcessApiController {
     @PostMapping("/processes/{processId}/workplaces")
     public ResultVO insertProcessWorkplace(
             @PathVariable String processId,
-            @RequestBody ProcessWorkplace processWorkplace,
+            @RequestBody WorkplaceProcess workplaceProcess,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processWorkplace.setProcessId(processId);
-        processWorkplace.setRegUserId(user.getUniqId());
-        processService.insertProcessWorkplace(processWorkplace);
+        workplaceProcess.setProcessId(processId);
+        workplaceProcess.setRegUserId(user.getUniqId());
+        processService.insertWorkplaceProcess(workplaceProcess);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "작업장이 등록되었습니다.");
@@ -280,13 +280,13 @@ public class EgovProcessApiController {
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @DeleteMapping("/processes/{processId}/workplaces/{processWorkplaceId}")
+    @DeleteMapping("/processes/{processId}/workplaces/{workplaceProcessId}")
     public ResultVO deleteProcessWorkplace(
             @PathVariable String processId,
-            @PathVariable String processWorkplaceId,
+            @PathVariable String workplaceProcessId,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processService.deleteProcessWorkplace(processWorkplaceId);
+        processService.deleteWorkplaceProcess(workplaceProcessId);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "작업장이 삭제되었습니다.");

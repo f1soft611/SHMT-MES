@@ -36,7 +36,7 @@ import java.util.Map;
 public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements EgovProcessService {
 
 	private final ProcessDAO processDAO;
-	private final ProcessWorkplaceDAO processWorkplaceDAO;
+	private final WorkplaceProcessDAO workplaceProcessDAO;
 	private final ProcessDefectDAO processDefectDAO;
 	private final ProcessInspectionDAO processInspectionDAO;
 	private final ProcessStopItemDAO processStopItemDAO;
@@ -44,8 +44,8 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	@Resource(name = "egovProcessIdGnrService")
 	private EgovIdGnrService egovProcessIdGnrService;
 
-	@Resource(name = "egovProcessWorkplaceIdGnrService")
-	private EgovIdGnrService egovProcessWorkplaceIdGnrService;
+	@Resource(name = "egovWorkplaceProcessIdGnrService")
+	private EgovIdGnrService egovWorkplaceProcessIdGnrService;
 
 	@Resource(name = "egovProcessDefectIdGnrService")
 	private EgovIdGnrService egovProcessDefectIdGnrService;
@@ -110,31 +110,31 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	}
 
 	/**
-	 * 공정별 작업장 목록을 조회한다.
+	 * 작업장별 공정 목록을 조회한다.
 	 */
 	@Override
-	public List<ProcessWorkplaceVO> selectProcessWorkplaceList(ProcessWorkplaceVO processWorkplaceVO) throws Exception {
-		return processWorkplaceDAO.selectProcessWorkplaceList(processWorkplaceVO);
+	public List<WorkplaceProcessVO> selectWorkplaceProcessList(WorkplaceProcessVO workplaceProcessVO) throws Exception {
+		return workplaceProcessDAO.selectWorkplaceProcessList(workplaceProcessVO);
 	}
 
 	/**
-	 * 공정별 작업장을 등록한다.
+	 * 작업장별 공정을 등록한다.
 	 */
 	@Override
 	@Transactional
-	public void insertProcessWorkplace(ProcessWorkplace processWorkplace) throws Exception {
-		String processWorkplaceId = egovProcessWorkplaceIdGnrService.getNextStringId();
-		processWorkplace.setProcessWorkplaceId(processWorkplaceId);
-		processWorkplaceDAO.insertProcessWorkplace(processWorkplace);
+	public void insertWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {
+		String workplaceProcessId = egovWorkplaceProcessIdGnrService.getNextStringId();
+		workplaceProcess.setWorkplaceProcessId(workplaceProcessId);
+		workplaceProcessDAO.insertWorkplaceProcess(workplaceProcess);
 	}
 
 	/**
-	 * 공정별 작업장을 삭제한다.
+	 * 작업장별 공정을 삭제한다.
 	 */
 	@Override
 	@Transactional
-	public void deleteProcessWorkplace(String processWorkplaceId) throws Exception {
-		processWorkplaceDAO.deleteProcessWorkplace(processWorkplaceId);
+	public void deleteWorkplaceProcess(String workplaceProcessId) throws Exception {
+		workplaceProcessDAO.deleteWorkplaceProcess(workplaceProcessId);
 	}
 
 	/**

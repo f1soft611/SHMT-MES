@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 공정별 작업장 매핑 VO 클래스
+ * 작업장별 공정 매핑 VO 클래스
  * @author SHMT-MES
  * @since 2025.10.24
  * @version 1.0
@@ -20,10 +20,10 @@ import lombok.Setter;
  *
  * </pre>
  */
-@Schema(description = "공정별 작업장 매핑 검색 조건 VO")
+@Schema(description = "작업장별 공정 매핑 검색 조건 VO")
 @Getter
 @Setter
-public class ProcessWorkplaceVO extends ProcessWorkplace {
+public class WorkplaceProcessVO extends WorkplaceProcess {
 	
 	/**
 	 *  serialVersion UID
