@@ -73,6 +73,14 @@ export const workplaceService = {
   },
 
   /**
+   * 작업장별 작업자 수정
+   */
+  updateWorkplaceWorker: async (workplaceId: string, workplaceWorkerId: string, worker: WorkplaceWorker) => {
+    const response = await apiClient.put(`/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`, worker);
+    return response.data;
+  },
+
+  /**
    * 작업장별 작업자 삭제
    */
   removeWorkplaceWorker: async (workplaceId: string, workplaceWorkerId: string) => {

@@ -696,6 +696,8 @@ const WorkplaceWorkerTab: React.FC<{
   const { useCallback } = React;
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<WorkplaceWorker | null>(null);
 
   const fetchWorkers = useCallback(async () => {
     try {
@@ -733,6 +735,30 @@ const WorkplaceWorkerTab: React.FC<{
     } catch (error) {
       console.error('Failed to add worker:', error);
       showSnackbar('작업자 추가에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleEditWorker = (worker: WorkplaceWorker) => {
+    setEditingWorker({ ...worker });
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateWorker = async () => {
+    if (!editingWorker) return;
+
+    try {
+      await workplaceService.updateWorkplaceWorker(
+        workplace.workplaceId!,
+        editingWorker.workplaceWorkerId!,
+        editingWorker
+      );
+      showSnackbar('작업자 정보가 수정되었습니다.', 'success');
+      setOpenEditDialog(false);
+      setEditingWorker(null);
+      fetchWorkers();
+    } catch (error) {
+      console.error('Failed to update worker:', error);
+      showSnackbar('작업자 수정에 실패했습니다.', 'error');
     }
   };
 
@@ -810,13 +836,24 @@ const WorkplaceWorkerTab: React.FC<{
             height: '100%',
           }}
         >
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
-          >
-            <DeleteIcon />
-          </IconButton>
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleEditWorker(params.row)}
+              title="수정"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+              title="삭제"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
         </Box>
       ),
     },
@@ -874,6 +911,65 @@ const WorkplaceWorkerTab: React.FC<{
         onSelect={handleUserSelect}
         title="작업자 선택"
       />
+
+      {/* 작업자 수정 다이얼로그 */}
+      <Dialog
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>작업자 수정</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="작업자 ID"
+              value={editingWorker?.workerId || ''}
+              disabled
+            />
+            <TextField
+              fullWidth
+              label="작업자명"
+              value={editingWorker?.workerName || ''}
+              disabled
+            />
+            <TextField
+              fullWidth
+              label="직책"
+              value={editingWorker?.position || ''}
+              onChange={(e) =>
+                setEditingWorker({
+                  ...editingWorker!,
+                  position: e.target.value,
+                })
+              }
+            />
+            <FormControl fullWidth>
+              <InputLabel>역할</InputLabel>
+              <Select
+                value={editingWorker?.role || 'MEMBER'}
+                label="역할"
+                onChange={(e) =>
+                  setEditingWorker({
+                    ...editingWorker!,
+                    role: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value="LEADER">팀장</MenuItem>
+                <MenuItem value="MEMBER">팀원</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUpdateWorker} variant="contained">
+            저장
+          </Button>
+          <Button onClick={() => setOpenEditDialog(false)}>취소</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
