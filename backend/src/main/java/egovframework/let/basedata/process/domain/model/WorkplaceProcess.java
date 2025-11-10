@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serializable;
 
 /**
- * 공정별 작업장 매핑 데이터 모델 클래스
+ * 작업장별 공정 매핑 데이터 모델 클래스
  * @author SHMT-MES
  * @since 2025.10.24
  * @version 1.0
@@ -23,24 +23,24 @@ import java.io.Serializable;
  *
  * </pre>
  */
-@Schema(description = "공정별 작업장 매핑 모델")
+@Schema(description = "작업장별 공정 매핑 모델")
 @Getter
 @Setter
-public class ProcessWorkplace implements Serializable {
+public class WorkplaceProcess implements Serializable {
 
 	/**
 	 *  serialVersion UID
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "공정 작업장 ID")
-	private String processWorkplaceId = "";
-
-	@Schema(description = "공정 ID")
-	private String processId = "";
+	@Schema(description = "작업장 공정 ID")
+	private String workplaceProcessId = "";
 
 	@Schema(description = "작업장 ID")
 	private String workplaceId = "";
+
+	@Schema(description = "공정 ID")
+	private String processId = "";
 
 	@Schema(description = "작업장명")
 	private String workplaceName = "";

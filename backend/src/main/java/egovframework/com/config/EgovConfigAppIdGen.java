@@ -1882,17 +1882,17 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
-	/** 공정 작업장 ID Generation  Config
+	/** 작업장 공정 ID Generation  Config
 	 * @return
 	 */
 	@Bean(destroyMethod = "destroy")
-	public EgovTableIdGnrServiceImpl egovProcessWorkplaceIdGnrService() {
+	public EgovTableIdGnrServiceImpl egovWorkplaceProcessIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TB_PROCESS_WORKPLACE")
-			.setPreFix("PRW")
+			.setTableName("TB_WORKPLACE_PROCESS")
+			.setPreFix("WPR")
 			.setCipers(3)
 			.setFillChar('0')
 			.build();

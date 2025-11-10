@@ -14,10 +14,10 @@ export interface Process {
   sortOrder?: number;
 }
 
-export interface ProcessWorkplace {
-  processWorkplaceId?: string;
-  processId: string;
+export interface WorkplaceProcess {
+  workplaceProcessId?: string;
   workplaceId: string;
+  processId: string;
   workplaceName: string;
   processCode?: string;
   processName?: string;
