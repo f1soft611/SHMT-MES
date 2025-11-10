@@ -1,4 +1,4 @@
-package egovframework.let.basedata.process.domain.model;
+package egovframework.let.basedata.workplace.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -33,23 +33,29 @@ public class WorkplaceProcess implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "작업장 공정 ID")
-	private String workplaceProcessId = "";
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
 
 	@Schema(description = "작업장 ID")
 	private String workplaceId = "";
 
+	@Schema(description = "작업장 코드")
+	private String workplaceCode = "";
+
 	@Schema(description = "공정 ID")
 	private String processId = "";
-
-	@Schema(description = "작업장명")
-	private String workplaceName = "";
 
 	@Schema(description = "공정 코드")
 	private String processCode = "";
 
+	@Schema(description = "작업장명")
+	private String workplaceName = "";
+
 	@Schema(description = "공정명")
 	private String processName = "";
+
+	@Schema(description = "작업장 공정 ID")
+	private String workplaceProcessId = "";
 
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "";

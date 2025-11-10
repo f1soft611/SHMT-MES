@@ -1,7 +1,7 @@
-package egovframework.let.basedata.process.domain.repository;
+package egovframework.let.basedata.workplace.domain.repository;
 
-import egovframework.let.basedata.process.domain.model.WorkplaceProcess;
-import egovframework.let.basedata.process.domain.model.WorkplaceProcessVO;
+import egovframework.let.basedata.workplace.domain.model.WorkplaceProcess;
+import egovframework.let.basedata.workplace.domain.model.WorkplaceProcessVO;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -53,7 +53,7 @@ public class WorkplaceProcessDAO extends EgovAbstractMapper {
      * @param workplaceProcessId
      * @throws Exception
      */
-    public void deleteWorkplaceProcess(String workplaceProcessId) throws Exception {
-        delete("WorkplaceProcessDAO.deleteWorkplaceProcess", workplaceProcessId);
+    public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {
+        delete("WorkplaceProcessDAO.deleteWorkplaceProcess", workplaceProcess);
     }
 }

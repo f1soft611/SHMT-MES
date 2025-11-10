@@ -17,6 +17,7 @@ export interface Process {
 export interface WorkplaceProcess {
   workplaceProcessId?: string;
   workplaceId: string;
+  workplaceCode: string;
   processId: string;
   workplaceName: string;
   processCode?: string;

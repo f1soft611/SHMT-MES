@@ -1,5 +1,9 @@
 import apiClient from './api';
-import { Workplace, WorkplaceWorker, WorkplaceSearchParams } from '../types/workplace';
+import {
+  Workplace,
+  WorkplaceWorker,
+  WorkplaceSearchParams,
+} from '../types/workplace';
 import { WorkplaceProcess } from '../types/process';
 
 /**
@@ -20,7 +24,9 @@ export const workplaceService = {
       pageUnit: pageSize,
       ...params,
     };
-    const response = await apiClient.get('/api/workplaces', { params: requestParams });
+    const response = await apiClient.get('/api/workplaces', {
+      params: requestParams,
+    });
     return response.data;
   },
 
@@ -44,7 +50,10 @@ export const workplaceService = {
    * 작업장 수정
    */
   updateWorkplace: async (workplaceId: string, workplace: Workplace) => {
-    const response = await apiClient.put(`/api/workplaces/${workplaceId}`, workplace);
+    const response = await apiClient.put(
+      `/api/workplaces/${workplaceId}`,
+      workplace
+    );
     return response.data;
   },
 
@@ -60,7 +69,9 @@ export const workplaceService = {
    * 작업장별 작업자 목록 조회
    */
   getWorkplaceWorkers: async (workplaceId: string) => {
-    const response = await apiClient.get(`/api/workplaces/${workplaceId}/workers`);
+    const response = await apiClient.get(
+      `/api/workplaces/${workplaceId}/workers`
+    );
     return response.data;
   },
 
@@ -68,23 +79,38 @@ export const workplaceService = {
    * 작업장별 작업자 등록
    */
   addWorkplaceWorker: async (workplaceId: string, worker: WorkplaceWorker) => {
-    const response = await apiClient.post(`/api/workplaces/${workplaceId}/workers`, worker);
+    const response = await apiClient.post(
+      `/api/workplaces/${workplaceId}/workers`,
+      worker
+    );
     return response.data;
   },
 
   /**
    * 작업장별 작업자 수정
    */
-  updateWorkplaceWorker: async (workplaceId: string, workplaceWorkerId: string, worker: WorkplaceWorker) => {
-    const response = await apiClient.put(`/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`, worker);
+  updateWorkplaceWorker: async (
+    workplaceId: string,
+    workplaceWorkerId: string,
+    worker: WorkplaceWorker
+  ) => {
+    const response = await apiClient.put(
+      `/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`,
+      worker
+    );
     return response.data;
   },
 
   /**
    * 작업장별 작업자 삭제
    */
-  removeWorkplaceWorker: async (workplaceId: string, workplaceWorkerId: string) => {
-    const response = await apiClient.delete(`/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`);
+  removeWorkplaceWorker: async (
+    workplaceId: string,
+    workplaceWorkerId: string
+  ) => {
+    const response = await apiClient.delete(
+      `/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`
+    );
     return response.data;
   },
 
@@ -92,23 +118,36 @@ export const workplaceService = {
    * 작업장별 공정 목록 조회
    */
   getWorkplaceProcesses: async (workplaceId: string) => {
-    const response = await apiClient.get(`/api/workplaces/${workplaceId}/processes`);
+    const response = await apiClient.get(
+      `/api/workplaces/${workplaceId}/processes`
+    );
     return response.data;
   },
 
   /**
    * 작업장별 공정 등록
    */
-  addWorkplaceProcess: async (workplaceId: string, workplaceProcess: WorkplaceProcess) => {
-    const response = await apiClient.post(`/api/workplaces/${workplaceId}/processes`, workplaceProcess);
+  addWorkplaceProcess: async (
+    workplaceId: string,
+    workplaceProcess: WorkplaceProcess
+  ) => {
+    const response = await apiClient.post(
+      `/api/workplaces/${workplaceId}/processes`,
+      workplaceProcess
+    );
     return response.data;
   },
 
   /**
    * 작업장별 공정 삭제
    */
-  removeWorkplaceProcess: async (workplaceId: string, workplaceProcessId: string) => {
-    const response = await apiClient.delete(`/api/workplaces/${workplaceId}/processes/${workplaceProcessId}`);
+  removeWorkplaceProcess: async (
+    workplaceCode: string,
+    processCode: string
+  ) => {
+    const response = await apiClient.delete(
+      `/api/workplaces/${workplaceCode}/processes/${processCode}`
+    );
     return response.data;
   },
 };

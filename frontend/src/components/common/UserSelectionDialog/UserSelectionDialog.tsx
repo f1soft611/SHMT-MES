@@ -147,8 +147,8 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {/* 검색 영역 */}
-        <Box sx={{ mb: 2, mt: 1 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
+        <Box sx={{ mt: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="flex-start">
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel>검색 조건</InputLabel>
               <Select
@@ -174,6 +174,11 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
               variant="contained"
               startIcon={<SearchIcon />}
               onClick={handleSearch}
+              sx={{
+                minWidth: 100,
+                height: 40,
+                flexShrink: 0,
+              }}
             >
               검색
             </Button>
@@ -181,7 +186,7 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
         </Box>
 
         {/* 사용자 목록 */}
-        <Box sx={{ height: 400, width: '100%' }}>
+        <Box sx={{ width: '100%' }}>
           <DataGrid
             rows={users}
             columns={columns}
@@ -215,7 +220,11 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleSelect} variant="contained" disabled={!selectedUser}>
+        <Button
+          onClick={handleSelect}
+          variant="contained"
+          disabled={!selectedUser}
+        >
           선택
         </Button>
         <Button onClick={handleClose}>취소</Button>

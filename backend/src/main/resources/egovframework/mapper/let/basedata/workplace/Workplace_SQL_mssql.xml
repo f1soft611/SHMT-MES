@@ -3,6 +3,7 @@
 <mapper namespace="WorkplaceDAO">
 
 	<resultMap id="workplaceResult" type="egovframework.let.basedata.workplace.domain.model.Workplace">
+		<result property="factoryCode" column="FACTORY_CODE"/>
 		<result property="workplaceId" column="WORKCENTER_ID"/>
 		<result property="workplaceCode" column="WORKCENTER_CODE"/>
 		<result property="workplaceName" column="WORKCENTER_NAME"/>

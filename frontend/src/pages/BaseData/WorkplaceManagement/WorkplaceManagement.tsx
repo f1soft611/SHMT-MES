@@ -697,7 +697,9 @@ const WorkplaceWorkerTab: React.FC<{
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editingWorker, setEditingWorker] = useState<WorkplaceWorker | null>(null);
+  const [editingWorker, setEditingWorker] = useState<WorkplaceWorker | null>(
+    null
+  );
 
   const fetchWorkers = useCallback(async () => {
     try {
@@ -984,8 +986,9 @@ const WorkplaceProcessTab: React.FC<{
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState<WorkplaceProcess>({
     workplaceId: workplace.workplaceId!,
-    processId: '',
+    workplaceCode: workplace.workplaceCode!,
     workplaceName: workplace.workplaceName,
+    processId: '',
     processCode: '',
     processName: '',
     useYn: 'Y',
@@ -1054,12 +1057,12 @@ const WorkplaceProcessTab: React.FC<{
     }
   };
 
-  const handleDelete = async (workplaceProcessId: string) => {
+  const handleDelete = async (workplaceProcessCode: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await workplaceService.removeWorkplaceProcess(
-          workplace.workplaceId!,
-          workplaceProcessId
+          workplace.workplaceCode!,
+          workplaceProcessCode
         );
         showSnackbar('공정이 삭제되었습니다.', 'success');
         fetchProcesses();
@@ -1110,7 +1113,7 @@ const WorkplaceProcessTab: React.FC<{
           <IconButton
             size="small"
             color="error"
-            onClick={() => handleDelete(params.row.workplaceProcessId!)}
+            onClick={() => handleDelete(params.row.processCode!)}
           >
             <DeleteIcon />
           </IconButton>
@@ -1136,6 +1139,7 @@ const WorkplaceProcessTab: React.FC<{
               onClick={() => {
                 setFormData({
                   workplaceId: workplace.workplaceId!,
+                  workplaceCode: workplace.workplaceCode!,
                   processId: '',
                   workplaceName: workplace.workplaceName,
                   processCode: '',
