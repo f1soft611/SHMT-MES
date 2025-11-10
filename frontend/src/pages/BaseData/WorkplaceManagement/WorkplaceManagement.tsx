@@ -40,6 +40,8 @@ import { ProcessWorkplace } from '../../../types/process';
 import workplaceService from '../../../services/workplaceService';
 import processService from '../../../services/processService';
 import { usePermissions } from '../../../contexts/PermissionContext';
+import UserSelectionDialog from '../../../components/common/UserSelectionDialog';
+import { User } from '../../../services/admin/userService';
 
 // 작업장 등록 유효성 검사 스키마
 const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
@@ -693,13 +695,7 @@ const WorkplaceWorkerTab: React.FC<{
 }> = ({ workplace, showSnackbar }) => {
   const { useCallback } = React;
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
-  const [newWorker, setNewWorker] = useState<WorkplaceWorker>({
-    workplaceId: workplace.workplaceId!,
-    workerId: '',
-    workerName: '',
-    position: '',
-    role: 'MEMBER',
-  });
+  const [openUserDialog, setOpenUserDialog] = useState(false);
 
   const fetchWorkers = useCallback(async () => {
     try {
@@ -718,11 +714,14 @@ const WorkplaceWorkerTab: React.FC<{
     fetchWorkers();
   }, [fetchWorkers]);
 
-  const handleAddWorker = async () => {
-    if (!newWorker.workerId || !newWorker.workerName) {
-      showSnackbar('작업자 ID와 이름을 입력해주세요.', 'error');
-      return;
-    }
+  const handleUserSelect = async (user: User) => {
+    const newWorker: WorkplaceWorker = {
+      workplaceId: workplace.workplaceId!,
+      workerId: user.mberId,
+      workerName: user.mberNm,
+      position: '',
+      role: 'MEMBER',
+    };
 
     try {
       await workplaceService.addWorkplaceWorker(
@@ -730,13 +729,6 @@ const WorkplaceWorkerTab: React.FC<{
         newWorker
       );
       showSnackbar('작업자가 추가되었습니다.', 'success');
-      setNewWorker({
-        workplaceId: workplace.workplaceId!,
-        workerId: '',
-        workerName: '',
-        position: '',
-        role: 'MEMBER',
-      });
       fetchWorkers();
     } catch (error) {
       console.error('Failed to add worker:', error);
@@ -834,68 +826,20 @@ const WorkplaceWorkerTab: React.FC<{
     <Box>
       <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom>
-            작업자 관리
-          </Typography>
-          <Stack direction="row" spacing={2} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-            <Box sx={{ flex: '1 1 150px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="작업자 ID"
-                value={newWorker.workerId}
-                onChange={(e) =>
-                  setNewWorker({ ...newWorker, workerId: e.target.value })
-                }
-              />
-            </Box>
-            <Box sx={{ flex: '1 1 150px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="작업자명"
-                value={newWorker.workerName}
-                onChange={(e) =>
-                  setNewWorker({ ...newWorker, workerName: e.target.value })
-                }
-              />
-            </Box>
-            <Box sx={{ flex: '1 1 120px' }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="직책"
-                value={newWorker.position}
-                onChange={(e) =>
-                  setNewWorker({ ...newWorker, position: e.target.value })
-                }
-              />
-            </Box>
-            <Box sx={{ flex: '1 1 120px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>역할</InputLabel>
-                <Select
-                  value={newWorker.role}
-                  label="역할"
-                  onChange={(e) =>
-                    setNewWorker({ ...newWorker, role: e.target.value })
-                  }
-                >
-                  <MenuItem value="LEADER">팀장</MenuItem>
-                  <MenuItem value="MEMBER">팀원</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ flex: '0 0 100px' }}>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handleAddWorker}
-                startIcon={<AddIcon />}
-              >
-                추가
-              </Button>
-            </Box>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">작업자 관리</Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenUserDialog(true)}
+            >
+              작업자 추가
+            </Button>
           </Stack>
         </CardContent>
       </Card>
@@ -922,6 +866,14 @@ const WorkplaceWorkerTab: React.FC<{
           }}
         />
       </Paper>
+
+      {/* 사용자 선택 다이얼로그 */}
+      <UserSelectionDialog
+        open={openUserDialog}
+        onClose={() => setOpenUserDialog(false)}
+        onSelect={handleUserSelect}
+        title="작업자 선택"
+      />
     </Box>
   );
 };
