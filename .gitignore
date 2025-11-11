@@ -1,6 +1,8 @@
 # 루트 .gitignore
 # 공통
 .env
+.env.*
+!.env.example
 .DS_Store
 *.log
 *.bak
@@ -23,3 +25,33 @@ coverage/
 # OS별
 Thumbs.db
 .vercel
+
+# 민감한 설정 파일 (Sensitive configuration files)
+application-local.properties
+application-*.properties
+!application.properties.example
+**/credentials.*
+**/secrets.*
+
+# 회사 문서 (Company documents)
+*.xlsx
+*.xls
+*.hwp
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.pdf
+
+# 데이터베이스 덤프 (Database dumps)
+*.sql.gz
+*.sql.zip
+*_backup.sql
+*_dump.sql
+
+# 키 파일 (Key files)
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
