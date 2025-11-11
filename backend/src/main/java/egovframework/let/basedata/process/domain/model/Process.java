@@ -33,6 +33,9 @@ public class Process implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
+
 	@Schema(description = "공정 ID")
 	private String processId = "";
 

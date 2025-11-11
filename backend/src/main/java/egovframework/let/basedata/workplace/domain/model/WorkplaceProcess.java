@@ -1,4 +1,4 @@
-package egovframework.let.basedata.process.domain.model;
+package egovframework.let.basedata.workplace.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serializable;
 
 /**
- * 공정별 작업장 매핑 데이터 모델 클래스
+ * 작업장별 공정 매핑 데이터 모델 클래스
  * @author SHMT-MES
  * @since 2025.10.24
  * @version 1.0
@@ -23,33 +23,39 @@ import java.io.Serializable;
  *
  * </pre>
  */
-@Schema(description = "공정별 작업장 매핑 모델")
+@Schema(description = "작업장별 공정 매핑 모델")
 @Getter
 @Setter
-public class ProcessWorkplace implements Serializable {
+public class WorkplaceProcess implements Serializable {
 
 	/**
 	 *  serialVersion UID
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "공정 작업장 ID")
-	private String processWorkplaceId = "";
-
-	@Schema(description = "공정 ID")
-	private String processId = "";
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
 
 	@Schema(description = "작업장 ID")
 	private String workplaceId = "";
 
-	@Schema(description = "작업장명")
-	private String workplaceName = "";
+	@Schema(description = "작업장 코드")
+	private String workplaceCode = "";
+
+	@Schema(description = "공정 ID")
+	private String processId = "";
 
 	@Schema(description = "공정 코드")
 	private String processCode = "";
 
+	@Schema(description = "작업장명")
+	private String workplaceName = "";
+
 	@Schema(description = "공정명")
 	private String processName = "";
+
+	@Schema(description = "작업장 공정 ID")
+	private String workplaceProcessId = "";
 
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "";

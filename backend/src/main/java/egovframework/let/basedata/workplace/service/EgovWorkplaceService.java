@@ -1,10 +1,6 @@
 package egovframework.let.basedata.workplace.service;
 
-import egovframework.let.basedata.workplace.domain.model.Workplace;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceVO;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceWorker;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceWorkerVO;
-
+import egovframework.let.basedata.workplace.domain.model.*;
 import java.util.List;
 import java.util.Map;
 
@@ -89,6 +85,30 @@ public interface EgovWorkplaceService {
 	 * @exception Exception
 	 */
 	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception;
+
+	/**
+	 * 작업장별 공정 목록을 조회한다.
+	 *
+	 * @param workplaceProcessVO
+	 * @exception Exception
+	 */
+	public List<WorkplaceProcessVO> selectWorkplaceProcessList(WorkplaceProcessVO workplaceProcessVO) throws Exception;
+
+	/**
+	 * 작업장별 공정을 등록한다.
+	 *
+	 * @param workplaceProcess
+	 * @exception Exception
+	 */
+	public void insertWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception;
+
+	/**
+	 * 작업장별 공정을 삭제한다.
+	 *
+	 * @param workplaceProcessId
+	 * @exception Exception
+	 */
+	public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception;
 
 	/**
 	 * 작업장 코드 존재 여부 확인

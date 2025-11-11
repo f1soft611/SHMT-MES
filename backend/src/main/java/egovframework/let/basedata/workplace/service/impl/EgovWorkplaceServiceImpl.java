@@ -1,10 +1,8 @@
 package egovframework.let.basedata.workplace.service.impl;
 
-import egovframework.let.basedata.workplace.domain.model.Workplace;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceVO;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceWorker;
-import egovframework.let.basedata.workplace.domain.model.WorkplaceWorkerVO;
+import egovframework.let.basedata.workplace.domain.model.*;
 import egovframework.let.basedata.workplace.domain.repository.WorkplaceDAO;
+import egovframework.let.basedata.workplace.domain.repository.WorkplaceProcessDAO;
 import egovframework.let.basedata.workplace.domain.repository.WorkplaceWorkerDAO;
 import egovframework.let.basedata.workplace.service.EgovWorkplaceService;
 import lombok.RequiredArgsConstructor;
@@ -40,12 +38,16 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 
 	private final WorkplaceDAO workplaceDAO;
 	private final WorkplaceWorkerDAO workplaceWorkerDAO;
+	private final WorkplaceProcessDAO workplaceProcessDAO;
 
 	@Resource(name = "egovWorkplaceIdGnrService")
 	private EgovIdGnrService egovWorkplaceIdGnrService;
 
 	@Resource(name = "egovWorkplaceWorkerIdGnrService")
 	private EgovIdGnrService egovWorkplaceWorkerIdGnrService;
+
+	@Resource(name = "egovWorkplaceProcessIdGnrService")
+	private EgovIdGnrService egovWorkplaceProcessIdGnrService;
 
 	/**
 	 * 작업장 목록을 조회한다.
@@ -143,5 +145,33 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 
 		int count = workplaceDAO.selectWorkplaceCodeCheckForUpdate(params);
 		return count > 0;
+	}
+
+	/**
+	 * 작업장별 공정 목록을 조회한다.
+	 */
+	@Override
+	public List<WorkplaceProcessVO> selectWorkplaceProcessList(WorkplaceProcessVO workplaceProcessVO) throws Exception {
+		return workplaceProcessDAO.selectWorkplaceProcessList(workplaceProcessVO);
+	}
+
+	/**
+	 * 작업장별 공정을 등록한다.
+	 */
+	@Override
+	@Transactional
+	public void insertWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {
+		String workplaceProcessId = egovWorkplaceProcessIdGnrService.getNextStringId();
+		workplaceProcess.setWorkplaceProcessId(workplaceProcessId);
+		workplaceProcessDAO.insertWorkplaceProcess(workplaceProcess);
+	}
+
+	/**
+	 * 작업장별 공정을 삭제한다.
+	 */
+	@Override
+	@Transactional
+	public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {
+		workplaceProcessDAO.deleteWorkplaceProcess(workplaceProcess);
 	}
 }

@@ -14,10 +14,11 @@ export interface Process {
   sortOrder?: number;
 }
 
-export interface ProcessWorkplace {
-  processWorkplaceId?: string;
-  processId: string;
+export interface WorkplaceProcess {
+  workplaceProcessId?: string;
   workplaceId: string;
+  workplaceCode: string;
+  processId: string;
   workplaceName: string;
   processCode?: string;
   processName?: string;
@@ -31,6 +32,7 @@ export interface ProcessWorkplace {
 export interface ProcessDefect {
   processDefectId?: string;
   processId: string;
+  processCode: string;
   defectCode: string;
   defectName: string;
   defectType?: string;
@@ -41,6 +43,7 @@ export interface ProcessDefect {
 export interface ProcessInspection {
   processInspectionId?: string;
   processId: string;
+  processCode: string;
   inspectionCode: string;
   inspectionName: string;
   inspectionType?: string;
@@ -55,6 +58,7 @@ export interface ProcessInspection {
 export interface ProcessStopItem {
   processStopItemId?: string;
   processId: string;
+  processCode: string;
   stopItemCode: string;
   stopItemName: string;
   stopType?: string;

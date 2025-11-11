@@ -3,64 +3,66 @@
 <mapper namespace="WorkplaceDAO">
 
 	<resultMap id="workplaceResult" type="egovframework.let.basedata.workplace.domain.model.Workplace">
-		<result property="workplaceId" column="WORKPLACE_ID"/>
-		<result property="workplaceCode" column="WORKPLACE_CODE"/>
-		<result property="workplaceName" column="WORKPLACE_NAME"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="workplaceId" column="WORKCENTER_ID"/>
+		<result property="workplaceCode" column="WORKCENTER_CODE"/>
+		<result property="workplaceName" column="WORKCENTER_NAME"/>
+		<result property="workplaceType" column="WORKCENTER_TYPE"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="location" column="LOCATION"/>
-		<result property="workplaceType" column="WORKPLACE_TYPE"/>
 		<result property="status" column="STATUS"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="proCnt" column="PRO_CNT"/>
 		<result property="workerCnt" column="WORKER_CNT"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="WorkplaceDAO.selectWorkplaceList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultMap="workplaceResult">
 		SELECT
-		W.WORKPLACE_ID,
-		W.WORKPLACE_CODE,
-		W.WORKPLACE_NAME,
+		W.FACTORY_CODE,
+		W.WORKCENTER_ID,
+		W.WORKCENTER_CODE,
+		W.WORKCENTER_NAME,
+		W.WORKCENTER_TYPE,
 		W.DESCRIPTION,
 		W.LOCATION,
-		W.WORKPLACE_TYPE,
 		W.STATUS,
 		W.USE_YN,
-		W.REG_USER_ID,
-		CONVERT(VARCHAR(19), W.REG_DT, 120) AS REG_DT,
-		W.UPD_USER_ID,
-		CONVERT(VARCHAR(19), W.UPD_DT, 120) AS UPD_DT,
-		ISNULL(PC.PROCESS_COUNT, 0) AS PRO_CNT,
-		ISNULL(WC.WORKER_COUNT, 0) AS WORKER_CNT
-		FROM TB_WORKPLACE W
-			LEFT JOIN (
-				SELECT
-					WORKPLACE_ID,
-					COUNT(*) AS PROCESS_COUNT
-				FROM TB_PROCESS_WORKPLACE
-				WHERE USE_YN = 'Y'
-				GROUP BY WORKPLACE_ID
-			) PC ON W.WORKPLACE_ID = PC.WORKPLACE_ID
-
-			LEFT JOIN (
-				SELECT
-					WORKPLACE_ID,
-					COUNT(*) AS WORKER_COUNT
-				FROM TB_WORKPLACE_WORKER
-				WHERE USE_YN = 'Y'
-				GROUP BY WORKPLACE_ID
-			) WC ON W.WORKPLACE_ID = WC.WORKPLACE_ID
+		W.OPMAN_CODE,
+		CONVERT(VARCHAR(19), W.OPTIME, 120) AS OPTIME,
+		W.OPMAN_CODE2,
+		CONVERT(VARCHAR(19), W.OPTIME2, 120) AS OPTIME2,
+		0 AS PRO_CNT,
+		0 AS WORKER_CNT
+		FROM TPR101 W
+		-- 			LEFT JOIN (
+		-- 				SELECT
+		-- 					WORKCENTER_ID,
+		-- 					COUNT(*) AS PROCESS_COUNT
+		-- 				FROM TB_PROCESS_WORKPLACE
+		-- 				WHERE USE_YN = 'Y'
+		-- 				GROUP BY WORKCENTER_ID
+		-- 			) PC ON W.WORKCENTER_ID = PC.WORKCENTER_ID
+		--
+		-- 			LEFT JOIN (
+		-- 				SELECT
+		-- 					WORKCENTER_ID,
+		-- 					COUNT(*) AS WORKER_COUNT
+		-- 				FROM TB_WORKPLACE_WORKER
+		-- 				WHERE USE_YN = 'Y'
+		-- 				GROUP BY WORKCENTER_ID
+		-- 			) WC ON W.WORKCENTER_ID = WC.WORKCENTER_ID
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == 0">
-					AND W.WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
+					AND W.WORKCENTER_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 1">
-					AND W.WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
+					AND W.WORKCENTER_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 2">
 					AND W.LOCATION LIKE '%' + #{searchWrd} + '%'
@@ -73,7 +75,7 @@
 		<if test="useYn != null and useYn != ''">
 			AND W.USE_YN = #{useYn}
 		</if>
-		ORDER BY W.REG_DT DESC
+		ORDER BY W.OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
@@ -82,15 +84,15 @@
 
 	<select id="WorkplaceDAO.selectWorkplaceListCnt" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceVO" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_WORKPLACE
+		FROM TPR101
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '0'">
-					AND WORKPLACE_CODE LIKE '%' + #{searchWrd} + '%'
+					AND WORKCENTER_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '1'">
-					AND WORKPLACE_NAME LIKE '%' + #{searchWrd} + '%'
+					AND WORKCENTER_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2'">
 					AND LOCATION LIKE '%' + #{searchWrd} + '%'
@@ -107,35 +109,40 @@
 
 	<select id="WorkplaceDAO.selectWorkplace" parameterType="string" resultMap="workplaceResult">
 		SELECT
-			WORKPLACE_ID,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
+		    FACTORY_CODE,
+			WORKCENTER_ID,
+			WORKCENTER_CODE,
+			WORKCENTER_NAME,
 			DESCRIPTION,
 			LOCATION,
-			WORKPLACE_TYPE,
+			WORKCENTER_TYPE,
 			STATUS,
 			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_WORKPLACE
-		WHERE WORKPLACE_ID = #{workplaceId}
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2,
+			0 AS PRO_CNT,
+			0 AS WORKER_CNT
+		FROM TPR101
+		WHERE WORKCENTER_ID = #{workplaceId}
 	</select>
 
 	<insert id="WorkplaceDAO.insertWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
-		INSERT INTO TB_WORKPLACE (
-			WORKPLACE_ID,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
+		INSERT INTO TPR101 (
+		    FACTORY_CODE,
+			WORKCENTER_ID,
+			WORKCENTER_CODE,
+			WORKCENTER_NAME,
 			DESCRIPTION,
 			LOCATION,
-			WORKPLACE_TYPE,
+			WORKCENTER_TYPE,
 			STATUS,
 			USE_YN,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
+					 #{factoryCode},
 					 #{workplaceId},
 					 #{workplaceCode},
 					 #{workplaceName},
@@ -150,38 +157,38 @@
 	</insert>
 
 	<update id="WorkplaceDAO.updateWorkplace" parameterType="egovframework.let.basedata.workplace.domain.model.Workplace">
-		UPDATE TB_WORKPLACE
+		UPDATE TPR101
 		SET
-			WORKPLACE_CODE = #{workplaceCode},
-			WORKPLACE_NAME = #{workplaceName},
+			WORKCENTER_CODE = #{workplaceCode},
+			WORKCENTER_NAME = #{workplaceName},
 			DESCRIPTION = #{description},
 			LOCATION = #{location},
-			WORKPLACE_TYPE = #{workplaceType},
+			WORKCENTER_TYPE = #{workplaceType},
 			STATUS = #{status},
 			USE_YN = #{useYn},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE WORKPLACE_ID = #{workplaceId}
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE WORKCENTER_ID = #{workplaceId}
 	</update>
 
 	<delete id="WorkplaceDAO.deleteWorkplace" parameterType="string">
-		DELETE FROM TB_WORKPLACE
-		WHERE WORKPLACE_ID = #{workplaceId}
+		DELETE FROM TPR101
+		WHERE WORKCENTER_ID = #{workplaceId}
 	</delete>
 
 	<!-- 작업장 코드 중복 체크 -->
 	<select id="WorkplaceDAO.selectWorkplaceCodeCheck" parameterType="string" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_WORKPLACE
-		WHERE WORKPLACE_CODE = #{workplaceCode}
+		FROM TPR101
+		WHERE WORKCENTER_CODE = #{workplaceCode}
 	</select>
 
 	<!-- 작업장 코드 중복 체크 (수정 시) -->
 	<select id="WorkplaceDAO.selectWorkplaceCodeCheckForUpdate" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_WORKPLACE
-		WHERE WORKPLACE_CODE = #{workplaceCode}
-		  AND WORKPLACE_ID != #{workplaceId}
+		FROM TPR101
+		WHERE WORKCENTER_CODE = #{workplaceCode}
+		  AND WORKCENTER_ID != #{workplaceId}
 	</select>
 
 </mapper>

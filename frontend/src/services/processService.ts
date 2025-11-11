@@ -1,7 +1,7 @@
 import apiClient from './api';
 import { 
   Process, 
-  ProcessWorkplace, 
+  WorkplaceProcess, 
   ProcessDefect, 
   ProcessInspection, 
   ProcessStopItem,
@@ -73,7 +73,7 @@ export const processService = {
   /**
    * 공정별 작업장 등록
    */
-  addProcessWorkplace: async (processId: string, workplace: ProcessWorkplace) => {
+  addProcessWorkplace: async (processId: string, workplace: WorkplaceProcess) => {
     const response = await apiClient.post(`/api/processes/${processId}/workplaces`, workplace);
     return response.data;
   },
@@ -81,8 +81,8 @@ export const processService = {
   /**
    * 공정별 작업장 삭제
    */
-  removeProcessWorkplace: async (processId: string, processWorkplaceId: string) => {
-    const response = await apiClient.delete(`/api/processes/${processId}/workplaces/${processWorkplaceId}`);
+  removeProcessWorkplace: async (processId: string, workplaceProcessId: string) => {
+    const response = await apiClient.delete(`/api/processes/${processId}/workplaces/${workplaceProcessId}`);
     return response.data;
   },
 

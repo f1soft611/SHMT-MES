@@ -44,6 +44,7 @@ const UserManagement: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // 검색 조건 (UI 입력용)
   const [searchCnd, setSearchCnd] = useState('2');
@@ -88,7 +89,7 @@ const UserManagement: React.FC = () => {
     password: '',
     passwordHint: '',
     passwordCnsr: '',
-    mberSttus: 'A',
+    mberSttus: '',
     sexdstnCode: '',
     adres: '',
     detailAdres: '',
@@ -142,48 +143,110 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // 초기 로드만 수행
+  // 초기 로드만 수행 (처음 마운트 시에만)
   useEffect(() => {
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // searchParams가 변경될 때만 조회 (페이징 포함)
-  useEffect(() => {
-    if (searchParams.pageIndex && searchParams.pageIndex > 1) {
+    if (isInitialLoad) {
       loadUsers();
+      setIsInitialLoad(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
   const handleSearch = () => {
     // 검색 버튼 클릭 시에만 실제 검색 수행
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-    setSearchParams({
+    const newSearchParams = {
       pageIndex: 1,
       searchCnd: searchCnd,
       searchWrd: searchWrd,
-    });
-    loadUsers();
+    };
+    setSearchParams(newSearchParams);
+
+    // 검색 파라미터가 변경되었으므로 즉시 조회
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await userService.getUsers(newSearchParams);
+
+        setUsers(result.resultList || []);
+        setPagination(result.paginationInfo);
+
+        if (result.mberSttus_result) {
+          setCodeData({
+            passwordHint_result: result.passwordHint_result || [],
+            sexdstnCode_result: result.sexdstnCode_result || [],
+            mberSttus_result: result.mberSttus_result || [],
+            groupId_result: result.groupId_result || [],
+          });
+        }
+      } catch (err: any) {
+        setError(err.message || '사용자 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   const handlePageChange = (newModel: GridPaginationModel) => {
     setPaginationModel(newModel);
-    setSearchParams({
+    const newSearchParams = {
       ...searchParams,
       pageIndex: newModel.page + 1,
-    });
+    };
+    setSearchParams(newSearchParams);
+
+    // 페이지 변경 시 즉시 조회
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await userService.getUsers(newSearchParams);
+
+        setUsers(result.resultList || []);
+        setPagination(result.paginationInfo);
+
+        if (result.mberSttus_result) {
+          setCodeData({
+            passwordHint_result: result.passwordHint_result || [],
+            sexdstnCode_result: result.sexdstnCode_result || [],
+            mberSttus_result: result.mberSttus_result || [],
+            groupId_result: result.groupId_result || [],
+          });
+        }
+      } catch (err: any) {
+        setError(err.message || '사용자 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   const handleAdd = async () => {
     setEditingUser(null);
+
+    // 코드 데이터가 없으면 로드
+    if (codeData.mberSttus_result.length === 0) {
+      await loadFormData();
+    }
+
+    // 기본 상태값 설정 (첫 번째 상태 코드 또는 빈 문자열)
+    const defaultStatus =
+      codeData.mberSttus_result.length > 0
+        ? codeData.mberSttus_result[1].code
+        : '';
+
+    // 기본 그룹 설정 (첫 번째 그룹 코드 또는 빈 문자열)
+    const defaultGroup =
+      codeData.groupId_result.length > 0 ? codeData.groupId_result[1].code : '';
+
     setFormData({
       mberId: '',
       mberNm: '',
       password: '',
       passwordHint: '',
       passwordCnsr: '',
-      mberSttus: 'A',
+      mberSttus: defaultStatus,
       sexdstnCode: '',
       adres: '',
       detailAdres: '',
@@ -193,14 +256,9 @@ const UserManagement: React.FC = () => {
       moblphonNo: '',
       mberFxnum: '',
       ihidnum: '',
-      groupId: '',
+      groupId: defaultGroup,
       email: '',
     });
-
-    // 코드 데이터가 없으면 로드
-    if (codeData.mberSttus_result.length === 0) {
-      await loadFormData();
-    }
 
     setOpen(true);
   };
@@ -262,6 +320,7 @@ const UserManagement: React.FC = () => {
       }
 
       setOpen(false);
+      // 저장 후 현재 검색 조건으로 다시 조회
       await loadUsers();
     } catch (err: any) {
       setError(err.message || '사용자 저장에 실패했습니다.');
@@ -276,6 +335,7 @@ const UserManagement: React.FC = () => {
     try {
       setLoading(true);
       await userService.deleteUser(uniqId);
+      // 삭제 후 현재 검색 조건으로 다시 조회
       await loadUsers();
     } catch (err: any) {
       setError(err.message || '사용자 삭제에 실패했습니다.');
@@ -580,7 +640,7 @@ const UserManagement: React.FC = () => {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth required>
                     <InputLabel>사용자 상태</InputLabel>
                     <Select
                       label="사용자 상태"
@@ -598,7 +658,7 @@ const UserManagement: React.FC = () => {
                   </FormControl>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth required>
                     <InputLabel>사용자 그룹</InputLabel>
                     <Select
                       label="사용자 그룹"
@@ -643,7 +703,12 @@ const UserManagement: React.FC = () => {
             <Button
               onClick={handleSave}
               variant="contained"
-              disabled={loading || !formData.mberId || !formData.mberNm}
+              disabled={
+                loading ||
+                !formData.mberId ||
+                !formData.mberNm ||
+                !formData.groupId
+              }
             >
               {editingUser ? '수정' : '추가'}
             </Button>

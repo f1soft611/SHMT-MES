@@ -65,30 +65,6 @@ public interface EgovProcessService {
 	public void deleteProcess(String processId) throws Exception;
 
 	/**
-	 * 공정별 작업장 목록을 조회한다.
-	 * 
-	 * @param processWorkplaceVO
-	 * @exception Exception
-	 */
-	public List<ProcessWorkplaceVO> selectProcessWorkplaceList(ProcessWorkplaceVO processWorkplaceVO) throws Exception;
-
-	/**
-	 * 공정별 작업장을 등록한다.
-	 * 
-	 * @param processWorkplace
-	 * @exception Exception
-	 */
-	public void insertProcessWorkplace(ProcessWorkplace processWorkplace) throws Exception;
-
-	/**
-	 * 공정별 작업장을 삭제한다.
-	 * 
-	 * @param processWorkplaceId
-	 * @exception Exception
-	 */
-	public void deleteProcessWorkplace(String processWorkplaceId) throws Exception;
-
-	/**
 	 * 공정별 불량코드 목록을 조회한다.
 	 * 
 	 * @param processDefectVO

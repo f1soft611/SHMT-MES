@@ -33,6 +33,9 @@ public class Workplace implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
+
 	@Schema(description = "작업장 ID")
 	private String workplaceId = "";
 
@@ -57,11 +60,11 @@ public class Workplace implements Serializable {
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "";
 
-	@Schema(description = "등록된 공정 갯수")
-	private String proCnt = "";
-
 	@Schema(description = "등록된 작업자수")
 	private String workerCnt = "";
+
+	@Schema(description = "등록된 공정 갯수")
+	private String proCnt = "";
 
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";

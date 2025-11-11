@@ -117,7 +117,7 @@
             SBSCRB_DE        )
         VALUES(
                   #{uniqId},
-                  'ORGNZT_0000000000000',
+                  '000001',
                   #{mberId},
                   #{mberNm},
                   #{password},

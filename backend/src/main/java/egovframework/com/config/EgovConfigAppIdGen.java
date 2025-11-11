@@ -567,8 +567,8 @@ public class EgovConfigAppIdGen {
 			.setBlockSize(1)
 			.setTable("COMTECOPSEQ")
 			.setTableName("USRCNFRM_ID")
-			.setPreFix("USRCNFRM_")
-			.setCipers(11)
+			.setPreFix("USR")
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1829,7 +1829,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE")
 			.setPreFix("WP")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1845,7 +1845,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_WORKPLACE_WORKER")
 			.setPreFix("WPW")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1877,23 +1877,23 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS")
 			.setPreFix("PR")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
 
-	/** 공정 작업장 ID Generation  Config
+	/** 작업장 공정 ID Generation  Config
 	 * @return
 	 */
 	@Bean(destroyMethod = "destroy")
-	public EgovTableIdGnrServiceImpl egovProcessWorkplaceIdGnrService() {
+	public EgovTableIdGnrServiceImpl egovWorkplaceProcessIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TB_PROCESS_WORKPLACE")
-			.setPreFix("PRW")
-			.setCipers(4)
+			.setTableName("TB_WORKPLACE_PROCESS")
+			.setPreFix("WPR")
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1909,7 +1909,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_DEFECT")
 			.setPreFix("PRD")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1925,7 +1925,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_INSPECTION")
 			.setPreFix("PRI")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}
@@ -1941,7 +1941,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TB_PROCESS_STOP_ITEM")
 			.setPreFix("PRS")
-			.setCipers(4)
+			.setCipers(3)
 			.setFillChar('0')
 			.build();
 	}

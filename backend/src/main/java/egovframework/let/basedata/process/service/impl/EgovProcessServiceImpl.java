@@ -36,16 +36,12 @@ import java.util.Map;
 public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements EgovProcessService {
 
 	private final ProcessDAO processDAO;
-	private final ProcessWorkplaceDAO processWorkplaceDAO;
 	private final ProcessDefectDAO processDefectDAO;
 	private final ProcessInspectionDAO processInspectionDAO;
 	private final ProcessStopItemDAO processStopItemDAO;
 
 	@Resource(name = "egovProcessIdGnrService")
 	private EgovIdGnrService egovProcessIdGnrService;
-
-	@Resource(name = "egovProcessWorkplaceIdGnrService")
-	private EgovIdGnrService egovProcessWorkplaceIdGnrService;
 
 	@Resource(name = "egovProcessDefectIdGnrService")
 	private EgovIdGnrService egovProcessDefectIdGnrService;
@@ -107,34 +103,6 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	public void deleteProcess(String processId) throws Exception {
 		// Cascade delete will handle related records
 		processDAO.deleteProcess(processId);
-	}
-
-	/**
-	 * 공정별 작업장 목록을 조회한다.
-	 */
-	@Override
-	public List<ProcessWorkplaceVO> selectProcessWorkplaceList(ProcessWorkplaceVO processWorkplaceVO) throws Exception {
-		return processWorkplaceDAO.selectProcessWorkplaceList(processWorkplaceVO);
-	}
-
-	/**
-	 * 공정별 작업장을 등록한다.
-	 */
-	@Override
-	@Transactional
-	public void insertProcessWorkplace(ProcessWorkplace processWorkplace) throws Exception {
-		String processWorkplaceId = egovProcessWorkplaceIdGnrService.getNextStringId();
-		processWorkplace.setProcessWorkplaceId(processWorkplaceId);
-		processWorkplaceDAO.insertProcessWorkplace(processWorkplace);
-	}
-
-	/**
-	 * 공정별 작업장을 삭제한다.
-	 */
-	@Override
-	@Transactional
-	public void deleteProcessWorkplace(String processWorkplaceId) throws Exception {
-		processWorkplaceDAO.deleteProcessWorkplace(processWorkplaceId);
 	}
 
 	/**
