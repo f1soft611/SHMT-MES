@@ -13,7 +13,7 @@ import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
-import WorkplaceManagement from './pages/BaseData/WorkplaceManagement/WorkplaceManagement';
+import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
 import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan/ProductionPlan';

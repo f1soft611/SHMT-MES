@@ -1,0 +1,324 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
+import { Workplace, WorkplaceWorker } from '../../../../types/workplace';
+import workplaceService from '../../../../services/workplaceService';
+import UserSelectionDialog from '../../../../components/common/UserSelectionDialog';
+import { User } from '../../../../services/admin/userService';
+
+interface WorkplaceWorkerTabProps {
+  workplace: Workplace;
+  showSnackbar: (message: string, severity: 'success' | 'error') => void;
+}
+
+const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
+  workplace,
+  showSnackbar,
+}) => {
+  const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
+  const [openUserDialog, setOpenUserDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<WorkplaceWorker | null>(
+    null
+  );
+
+  const fetchWorkers = useCallback(async () => {
+    try {
+      const response = await workplaceService.getWorkplaceWorkers(
+        workplace.workplaceId!
+      );
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkers(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch workers:', error);
+    }
+  }, [workplace.workplaceId]);
+
+  useEffect(() => {
+    fetchWorkers();
+  }, [fetchWorkers]);
+
+  const handleUserSelect = async (user: User) => {
+    const newWorker: WorkplaceWorker = {
+      workplaceId: workplace.workplaceId!,
+      workerId: user.mberId,
+      workerName: user.mberNm,
+      position: '',
+      role: 'MEMBER',
+    };
+
+    try {
+      await workplaceService.addWorkplaceWorker(
+        workplace.workplaceId!,
+        newWorker
+      );
+      showSnackbar('작업자가 추가되었습니다.', 'success');
+      fetchWorkers();
+    } catch (error) {
+      console.error('Failed to add worker:', error);
+      showSnackbar('작업자 추가에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleEditWorker = (worker: WorkplaceWorker) => {
+    setEditingWorker({ ...worker });
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateWorker = async () => {
+    if (!editingWorker) return;
+
+    try {
+      await workplaceService.updateWorkplaceWorker(
+        workplace.workplaceId!,
+        editingWorker.workplaceWorkerId!,
+        editingWorker
+      );
+      showSnackbar('작업자 정보가 수정되었습니다.', 'success');
+      setOpenEditDialog(false);
+      setEditingWorker(null);
+      fetchWorkers();
+    } catch (error) {
+      console.error('Failed to update worker:', error);
+      showSnackbar('작업자 수정에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleRemoveWorker = async (workplaceWorkerId: string) => {
+    if (window.confirm('작업자를 제외하시겠습니까?')) {
+      try {
+        await workplaceService.removeWorkplaceWorker(
+          workplace.workplaceId!,
+          workplaceWorkerId
+        );
+        showSnackbar('작업자가 제외되었습니다.', 'success');
+        fetchWorkers();
+      } catch (error) {
+        console.error('Failed to remove worker:', error);
+        showSnackbar('작업자 제외에 실패했습니다.', 'error');
+      }
+    }
+  };
+
+  const workerColumns: GridColDef[] = [
+    {
+      field: 'workerId',
+      headerName: '작업자 ID',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'workerName',
+      headerName: '작업자명',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'position',
+      headerName: '직책',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'role',
+      headerName: '역할',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value === 'LEADER' ? '팀장' : '팀원'}
+          color={params.value === 'LEADER' ? 'primary' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'regDt',
+      headerName: '등록일',
+      width: 200,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'actions',
+      headerName: '관리',
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleEditWorker(params.row)}
+              title="수정"
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+              title="삭제"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+      ),
+    },
+  ];
+
+  return (
+    <Box>
+      <Card sx={{ mb: 2, bgcolor: '#f5f5f5' }}>
+        <CardContent>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="subtitle1">작업자 관리</Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenUserDialog(true)}
+            >
+              작업자 추가
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Paper sx={{ height: 400, width: '100%' }}>
+        <DataGrid
+          rows={workers}
+          columns={workerColumns}
+          getRowId={(row) => row.workplaceWorkerId || ''}
+          hideFooterPagination
+          disableRowSelectionOnClick
+          sx={{
+            border: 'none',
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+          localeText={{
+            noRowsLabel: '등록된 작업자가 없습니다',
+            footerRowSelected: (count) => `${count}개 선택됨`,
+          }}
+        />
+      </Paper>
+
+      {/* 사용자 선택 다이얼로그 */}
+      <UserSelectionDialog
+        open={openUserDialog}
+        onClose={() => setOpenUserDialog(false)}
+        onSelect={handleUserSelect}
+        title="작업자 선택"
+      />
+
+      {/* 작업자 수정 다이얼로그 */}
+      <Dialog
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>작업자 수정</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="작업자 ID"
+              value={editingWorker?.workerId || ''}
+              disabled
+            />
+            <TextField
+              fullWidth
+              label="작업자명"
+              value={editingWorker?.workerName || ''}
+              disabled
+            />
+            <TextField
+              fullWidth
+              label="직책"
+              value={editingWorker?.position || ''}
+              onChange={(e) =>
+                setEditingWorker({
+                  ...editingWorker!,
+                  position: e.target.value,
+                })
+              }
+            />
+            <FormControl fullWidth>
+              <InputLabel>역할</InputLabel>
+              <Select
+                value={editingWorker?.role || 'MEMBER'}
+                label="역할"
+                onChange={(e) =>
+                  setEditingWorker({
+                    ...editingWorker!,
+                    role: e.target.value,
+                  })
+                }
+              >
+                <MenuItem value="LEADER">팀장</MenuItem>
+                <MenuItem value="MEMBER">팀원</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUpdateWorker} variant="contained">
+            저장
+          </Button>
+          <Button onClick={() => setOpenEditDialog(false)}>취소</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default WorkplaceWorkerTab;
