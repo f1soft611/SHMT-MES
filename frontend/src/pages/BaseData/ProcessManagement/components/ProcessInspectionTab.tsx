@@ -63,7 +63,9 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   const canWrite = hasWritePermission('/base/process');
 
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
-  const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>([]);
+  const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
+    []
+  );
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
@@ -108,7 +110,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   const fetchInspectionCodes = useCallback(async () => {
     try {
       const response = await commonCodeService.getCommonDetailCodeList(
-        'INSPECTION_CODE',
+        'COM004',
         'Y'
       );
       if (response.resultCode === 200 && response.result?.detailCodeList) {

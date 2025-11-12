@@ -100,7 +100,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
   const fetchStopItemCodes = useCallback(async () => {
     try {
       const response = await commonCodeService.getCommonDetailCodeList(
-        'STOP_ITEM_CODE',
+        'COM005',
         'Y'
       );
       if (response.resultCode === 200 && response.result?.detailCodeList) {
@@ -365,7 +365,10 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleStopItemSubmit(handleSave)} variant="contained">
+          <Button
+            onClick={handleStopItemSubmit(handleSave)}
+            variant="contained"
+          >
             저장
           </Button>
           <Button onClick={() => setOpenDialog(false)}>취소</Button>
