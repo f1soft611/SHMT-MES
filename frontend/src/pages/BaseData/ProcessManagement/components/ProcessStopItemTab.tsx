@@ -8,8 +8,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -24,7 +28,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Process, ProcessStopItem } from '../../../../types/process';
+import { CommonDetailCode } from '../../../../types/commonCode';
 import processService from '../../../../services/processService';
+import commonCodeService from '../../../../services/commonCodeService';
 import { usePermissions } from '../../../../contexts/PermissionContext';
 
 // 중지항목 추가 유효성 검사 스키마
@@ -53,6 +59,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
   const canWrite = hasWritePermission('/base/process');
 
   const [stopItems, setStopItems] = useState<ProcessStopItem[]>([]);
+  const [stopItemCodes, setStopItemCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
@@ -61,6 +68,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
     control: stopItemControl,
     handleSubmit: handleStopItemSubmit,
     reset: resetStopItemForm,
+    setValue: setStopItemValue,
     formState: { errors: stopItemErrors },
   } = useForm<ProcessStopItem>({
     resolver: yupResolver(stopItemSchema),
@@ -89,9 +97,35 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
     }
   }, [process.processId]);
 
+  const fetchStopItemCodes = useCallback(async () => {
+    try {
+      const response = await commonCodeService.getCommonDetailCodeList(
+        'STOP_ITEM_CODE',
+        'Y'
+      );
+      if (response.resultCode === 200 && response.result?.detailCodeList) {
+        setStopItemCodes(response.result.detailCodeList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stop item codes:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchStopItems();
-  }, [fetchStopItems]);
+    fetchStopItemCodes();
+  }, [fetchStopItems, fetchStopItemCodes]);
+
+  const handleStopItemCodeChange = (code: string) => {
+    const selectedCode = stopItemCodes.find((sc) => sc.code === code);
+    if (selectedCode) {
+      setStopItemValue('stopItemCode', selectedCode.code);
+      setStopItemValue('stopItemName', selectedCode.codeNm);
+      setStopItemValue('description', selectedCode.codeDc || '');
+    } else {
+      setStopItemValue('stopItemCode', code);
+    }
+  };
 
   const handleSave = async (data: ProcessStopItem) => {
     try {
@@ -256,37 +290,58 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="stopItemCode"
-                control={stopItemControl}
-                render={({ field }) => (
-                  <TextField
+            <Controller
+              name="stopItemCode"
+              control={stopItemControl}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!stopItemErrors.stopItemCode}
+                >
+                  <InputLabel>중지코드</InputLabel>
+                  <Select
                     {...field}
-                    fullWidth
-                    required
-                    label="중지 코드"
+                    label="중지코드"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleStopItemCodeChange(e.target.value);
+                    }}
                     disabled={dialogMode === 'edit'}
-                    error={!!stopItemErrors.stopItemCode}
-                    helperText={stopItemErrors.stopItemCode?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="stopItemName"
-                control={stopItemControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="중지항목명"
-                    error={!!stopItemErrors.stopItemName}
-                    helperText={stopItemErrors.stopItemName?.message}
-                  />
-                )}
-              />
-            </Stack>
+                  >
+                    {stopItemCodes.map((code) => (
+                      <MenuItem key={code.code} value={code.code}>
+                        {code.codeNm} ({code.code})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {stopItemErrors.stopItemCode && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {stopItemErrors.stopItemCode.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
+            <Controller
+              name="stopItemName"
+              control={stopItemControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  required
+                  label="중지항목명"
+                  disabled
+                  error={!!stopItemErrors.stopItemName}
+                  helperText={stopItemErrors.stopItemName?.message}
+                />
+              )}
+            />
             <Controller
               name="stopType"
               control={stopItemControl}

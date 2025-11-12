@@ -115,13 +115,14 @@ BEGIN
 END
 GO
 
--- 샘플 데이터 삽입 (불량코드, 검사항목용)
+-- 샘플 데이터 삽입 (불량코드, 검사항목, 중지항목용)
 IF NOT EXISTS (SELECT 1 FROM MES_CCMMN_CODE WHERE CODE_ID = 'DEFECT_CODE')
 BEGIN
 INSERT INTO MES_CCMMN_CODE (CODE_ID, CODE_ID_NM, CODE_ID_DC, USE_AT, CL_CODE, FRST_REGISTER_ID) 
 VALUES 
     ('DEFECT_CODE', '불량코드', '공정별 불량 코드 관리', 'Y', 'PROCESS', 'socra710'),
-    ('INSPECTION_CODE', '검사항목코드', '공정별 검사 항목 관리', 'Y', 'PROCESS', 'socra710');
+    ('INSPECTION_CODE', '검사항목코드', '공정별 검사 항목 관리', 'Y', 'PROCESS', 'socra710'),
+    ('STOP_ITEM_CODE', '중지항목코드', '공정별 중지 항목 관리', 'Y', 'PROCESS', 'socra710');
 END
 GO
 
@@ -154,5 +155,21 @@ VALUES
     ('INSPECTION_CODE', 'INS006', '경도검사', '재질 경도 검사', 'Y', 'socra710'),
     ('INSPECTION_CODE', 'INS007', '전기저항', '전기 저항 측정', 'Y', 'socra710'),
     ('INSPECTION_CODE', 'INS008', '내압검사', '내압 시험', 'Y', 'socra710');
+END
+GO
+
+-- 중지항목 상세 샘플 데이터
+IF NOT EXISTS (SELECT 1 FROM MES_CCMMNDETAIL_CODE WHERE CODE_ID = 'STOP_ITEM_CODE' AND CODE = 'ST001')
+BEGIN
+INSERT INTO MES_CCMMNDETAIL_CODE (CODE_ID, CODE, CODE_NM, CODE_DC, USE_AT, FRST_REGISTER_ID) 
+VALUES 
+    ('STOP_ITEM_CODE', 'ST001', '설비고장', '설비 고장으로 인한 중지', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST002', '자재부족', '원자재 또는 부자재 부족', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST003', '품질문제', '품질 이슈로 인한 작업 중지', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST004', '인력부족', '작업 인력 부족', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST005', '금형교체', '금형 또는 지그 교체', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST006', '정전', '전력 공급 중단', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST007', '점검정비', '정기 점검 및 정비', 'Y', 'socra710'),
+    ('STOP_ITEM_CODE', 'ST008', '기타', '기타 사유', 'Y', 'socra710');
 END
 GO
