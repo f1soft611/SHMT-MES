@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EquipmentDAO">
+
+	<resultMap id="equipmentResult" type="egovframework.let.basedata.equipment.domain.model.Equipment">
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="equipmentId" column="EQUIPMENT_ID"/>
+		<result property="equipSysCd" column="EQUIP_SYS_CD"/>
+		<result property="equipCd" column="EQUIP_CD"/>
+		<result property="equipSpec" column="EQUIP_SPEC"/>
+		<result property="equipStruct" column="EQUIP_STRUCT"/>
+		<result property="useFlag" column="USE_FLAG"/>
+		<result property="optime" column="OPTIME"/>
+		<result property="managerCode" column="MANAGER_CODE"/>
+		<result property="manager2Code" column="MANAGER2_CODE"/>
+		<result property="opmanCode" column="OPMAN_CODE"/>
+		<result property="opman2Code" column="OPMAN2_CODE"/>
+		<result property="plcAddress" column="PLC_ADDRESS"/>
+		<result property="location" column="LOCATION"/>
+		<result property="statusFlag" column="STATUS_FLAG"/>
+		<result property="optime2" column="OPTIME2"/>
+		<result property="remark" column="REMARK"/>
+		<result property="equipmentName" column="EQUIPMENT_NAME"/>
+		<result property="changeDate" column="CHANGE_DATE"/>
+		<result property="regUserId" column="REG_USER_ID"/>
+		<result property="regDt" column="REG_DT"/>
+		<result property="updUserId" column="UPD_USER_ID"/>
+		<result property="updDt" column="UPD_DT"/>
+	</resultMap>
+
+	<select id="EquipmentDAO.selectEquipmentList" parameterType="egovframework.let.basedata.equipment.domain.model.EquipmentVO" resultMap="equipmentResult">
+		SELECT
+			FACTORY_CODE,
+			EQUIPMENT_ID,
+			EQUIP_SYS_CD,
+			EQUIP_CD,
+			EQUIP_SPEC,
+			EQUIP_STRUCT,
+			USE_FLAG,
+			OPTIME,
+			MANAGER_CODE,
+			MANAGER2_CODE,
+			OPMAN_CODE,
+			OPMAN2_CODE,
+			PLC_ADDRESS,
+			LOCATION,
+			STATUS_FLAG,
+			OPTIME2,
+			REMARK,
+			EQUIPMENT_NAME,
+			CHANGE_DATE,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TBA051
+		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '1'">
+					AND EQUIP_CD LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '2'">
+					AND EQUIPMENT_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '3'">
+					AND LOCATION LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="statusFlag != null and statusFlag != ''">
+			AND STATUS_FLAG = #{statusFlag}
+		</if>
+		<if test="useFlag != null and useFlag != ''">
+			AND USE_FLAG = #{useFlag}
+		</if>
+		ORDER BY REG_DT DESC
+		<if test="firstIndex != null and recordCountPerPage != null">
+			OFFSET #{firstIndex} ROWS
+			FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<select id="EquipmentDAO.selectEquipmentListCnt" parameterType="egovframework.let.basedata.equipment.domain.model.EquipmentVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TBA051
+		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '1'">
+					AND EQUIP_CD LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '2'">
+					AND EQUIPMENT_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '3'">
+					AND LOCATION LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<if test="statusFlag != null and statusFlag != ''">
+			AND STATUS_FLAG = #{statusFlag}
+		</if>
+		<if test="useFlag != null and useFlag != ''">
+			AND USE_FLAG = #{useFlag}
+		</if>
+	</select>
+
+	<select id="EquipmentDAO.selectEquipment" parameterType="string" resultMap="equipmentResult">
+		SELECT
+			FACTORY_CODE,
+			EQUIPMENT_ID,
+			EQUIP_SYS_CD,
+			EQUIP_CD,
+			EQUIP_SPEC,
+			EQUIP_STRUCT,
+			USE_FLAG,
+			OPTIME,
+			MANAGER_CODE,
+			MANAGER2_CODE,
+			OPMAN_CODE,
+			OPMAN2_CODE,
+			PLC_ADDRESS,
+			LOCATION,
+			STATUS_FLAG,
+			OPTIME2,
+			REMARK,
+			EQUIPMENT_NAME,
+			CHANGE_DATE,
+			REG_USER_ID,
+			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
+			UPD_USER_ID,
+			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
+		FROM TBA051
+		WHERE EQUIPMENT_ID = #{equipmentId}
+	</select>
+
+	<insert id="EquipmentDAO.insertEquipment" parameterType="egovframework.let.basedata.equipment.domain.model.Equipment">
+		INSERT INTO TBA051 (
+			FACTORY_CODE,
+			EQUIPMENT_ID,
+			EQUIP_SYS_CD,
+			EQUIP_CD,
+			EQUIP_SPEC,
+			EQUIP_STRUCT,
+			USE_FLAG,
+			OPTIME,
+			MANAGER_CODE,
+			MANAGER2_CODE,
+			OPMAN_CODE,
+			OPMAN2_CODE,
+			PLC_ADDRESS,
+			LOCATION,
+			STATUS_FLAG,
+			OPTIME2,
+			REMARK,
+			EQUIPMENT_NAME,
+			CHANGE_DATE,
+			REG_USER_ID,
+			REG_DT
+		) VALUES (
+			#{factoryCode},
+			#{equipmentId},
+			#{equipSysCd},
+			#{equipCd},
+			#{equipSpec},
+			#{equipStruct},
+			ISNULL(#{useFlag}, 'Y'),
+			#{optime},
+			#{managerCode},
+			#{manager2Code},
+			#{opmanCode},
+			#{opman2Code},
+			#{plcAddress},
+			#{location},
+			ISNULL(#{statusFlag}, '1'),
+			#{optime2},
+			#{remark},
+			#{equipmentName},
+			#{changeDate},
+			#{regUserId},
+			GETDATE()
+		)
+	</insert>
+
+	<update id="EquipmentDAO.updateEquipment" parameterType="egovframework.let.basedata.equipment.domain.model.Equipment">
+		UPDATE TBA051
+		SET
+			EQUIP_SYS_CD = #{equipSysCd},
+			EQUIP_CD = #{equipCd},
+			EQUIP_SPEC = #{equipSpec},
+			EQUIP_STRUCT = #{equipStruct},
+			USE_FLAG = #{useFlag},
+			OPTIME = #{optime},
+			MANAGER_CODE = #{managerCode},
+			MANAGER2_CODE = #{manager2Code},
+			OPMAN_CODE = #{opmanCode},
+			OPMAN2_CODE = #{opman2Code},
+			PLC_ADDRESS = #{plcAddress},
+			LOCATION = #{location},
+			STATUS_FLAG = #{statusFlag},
+			OPTIME2 = #{optime2},
+			REMARK = #{remark},
+			EQUIPMENT_NAME = #{equipmentName},
+			CHANGE_DATE = #{changeDate},
+			UPD_USER_ID = #{updUserId},
+			UPD_DT = GETDATE()
+		WHERE EQUIPMENT_ID = #{equipmentId}
+	</update>
+
+	<delete id="EquipmentDAO.deleteEquipment" parameterType="string">
+		DELETE FROM TBA051
+		WHERE EQUIPMENT_ID = #{equipmentId}
+	</delete>
+
+	<!-- 설비 코드 중복 체크 -->
+	<select id="EquipmentDAO.selectEquipmentCodeCheck" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TBA051
+		WHERE EQUIP_SYS_CD = #{equipSysCd}
+		  AND EQUIP_CD = #{equipCd}
+	</select>
+
+	<!-- 설비 코드 중복 체크 (수정 시) -->
+	<select id="EquipmentDAO.selectEquipmentCodeCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TBA051
+		WHERE EQUIP_SYS_CD = #{equipSysCd}
+		  AND EQUIP_CD = #{equipCd}
+		  AND EQUIPMENT_ID != #{equipmentId}
+	</select>
+
+</mapper>
