@@ -1946,4 +1946,20 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 공정 흐름 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessFlowIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR110")
+				.setPreFix("PF")
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
 }

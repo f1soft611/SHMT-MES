@@ -4,6 +4,7 @@ const URL = {
   LOGIN: '/login', //로그인
   COMMON_CODE_MANAGEMENT: '/base/common-code', //공통코드 관리
   WORKPLACE_MANAGEMENT: '/base/workplace', //작업장 관리
+  PROCESS_FLOW_MANAGEMENT: '/base/processflow', //공정 흐름 관리
   PROCESS_MANAGEMENT: '/base/process', //공정 관리
   ITEM_MANAGEMENT: '/base/item', //품목 관리
   PRODUCTION_PLAN: '/prod/plan', //생산계획 수립
