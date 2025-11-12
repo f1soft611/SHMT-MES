@@ -35,7 +35,7 @@
 			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
 		FROM TPR106
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND WORKCENTER_CODE = #{workplaceId}
+		  AND WORKCENTER_CODE = #{workplaceCode}
 		  AND USE_YN = 'Y'
 		ORDER BY
 			CASE WHEN ROLE = 'LEADER' THEN 1 ELSE 2 END,
@@ -59,7 +59,7 @@
 			OPMAN_CODE2,
 			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
 		FROM TPR106
-		WHERE WPW_ID = #{workplaceWorkerId}
+		WHERE WORKER_CODE = #{workerCode}
 	</select>
 
 	<insert id="WorkplaceWorkerDAO.insertWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
@@ -76,7 +76,7 @@
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
-					 #{workplaceWorkerId},
+					 #{factoryCode},
 					 #{workplaceId},
 					 #{workplaceCode},
 					 #{workerId},
@@ -101,14 +101,14 @@
 			UPD_DT = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		    AND WORKCENTER_CODE = #{workplaceCode}
-			AND WOKER_CODE = #{workerCode}
+			AND WORKER_CODE = #{workerCode}
 	</update>
 
 	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
 		DELETE FROM TPR106
 		WHERE FACTORY_CODE = #{factoryCode}
 		  AND WORKCENTER_CODE = #{workplaceCode}
-		  AND WOKER_CODE = #{workerCode}
+		  AND WORKER_CODE = #{workerCode}
 	</delete>
 
 	<!-- 작업장 삭제 시 모든 작업자 삭제 (물리적 삭제) -->
@@ -127,7 +127,7 @@
 			UPD_DT = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		  AND WORKCENTER_CODE = #{workplaceCode}
-		  AND WOKER_CODE = #{workerCode}
+		  AND WORKER_CODE = #{workerCode}
 	</update>
 
 	<!-- 작업장별 작업자 중복 체크 -->

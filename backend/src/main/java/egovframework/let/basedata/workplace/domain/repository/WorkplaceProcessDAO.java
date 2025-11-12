@@ -50,7 +50,7 @@ public class WorkplaceProcessDAO extends EgovAbstractMapper {
     /**
      * 작업장별 공정을 삭제한다.
      *
-     * @param workplaceProcessId
+     * @param workplaceProcess
      * @throws Exception
      */
     public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {

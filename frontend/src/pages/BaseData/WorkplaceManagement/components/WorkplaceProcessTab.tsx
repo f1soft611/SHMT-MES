@@ -49,7 +49,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
   const fetchProcesses = useCallback(async () => {
     try {
       const response = await workplaceService.getWorkplaceProcesses(
-        workplace.workplaceId!
+        workplace.workplaceCode!
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setProcesses(response.result.resultList);
