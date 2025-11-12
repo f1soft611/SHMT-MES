@@ -62,7 +62,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
     } catch (error) {
       console.error('Failed to fetch processes:', error);
     }
-  }, [workplace.workplaceId]);
+  }, [workplace.workplaceCode]);
 
   const fetchAvailableProcesses = useCallback(async () => {
     try {
