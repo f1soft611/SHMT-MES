@@ -250,19 +250,6 @@ const ProcessManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (processId: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await processService.deleteProcess(processId);
-        showSnackbar('공정이 삭제되었습니다.', 'success');
-        fetchProcesses();
-      } catch (error) {
-        console.error('Failed to delete process:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
-    }
-  };
-
   const handleOpenDetailDialog = (process: Process) => {
     setSelectedProcess(process);
     setDetailTab(0);

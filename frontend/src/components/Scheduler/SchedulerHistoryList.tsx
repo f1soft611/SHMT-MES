@@ -45,7 +45,7 @@ const SchedulerHistoryList: React.FC = () => {
       statusFilter,
     ],
     queryFn: ({ queryKey }) => {
-      const [_key, page, pageSize, keyword, status] = queryKey as any;
+      const [, page, pageSize, keyword, status] = queryKey as any;
 
       // 백엔드가 1-based 페이지를 기대하면 page + 1 사용
       const pageForApi = typeof page === 'number' ? page : page;
