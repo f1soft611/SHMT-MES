@@ -35,26 +35,30 @@
 		CONVERT(VARCHAR(19), W.OPTIME, 120) AS OPTIME,
 		W.OPMAN_CODE2,
 		CONVERT(VARCHAR(19), W.OPTIME2, 120) AS OPTIME2,
-		0 AS PRO_CNT,
-		0 AS WORKER_CNT
+		ISNULL(PC.CNT, 0) AS PRO_CNT,
+		ISNULL(WC.CNT, 0) AS WORKER_CNT
 		FROM TPR101 W
-		-- 			LEFT JOIN (
-		-- 				SELECT
-		-- 					WORKCENTER_ID,
-		-- 					COUNT(*) AS PROCESS_COUNT
-		-- 				FROM TB_PROCESS_WORKPLACE
-		-- 				WHERE USE_YN = 'Y'
-		-- 				GROUP BY WORKCENTER_ID
-		-- 			) PC ON W.WORKCENTER_ID = PC.WORKCENTER_ID
-		--
-		-- 			LEFT JOIN (
-		-- 				SELECT
-		-- 					WORKCENTER_ID,
-		-- 					COUNT(*) AS WORKER_COUNT
-		-- 				FROM TB_WORKPLACE_WORKER
-		-- 				WHERE USE_YN = 'Y'
-		-- 				GROUP BY WORKCENTER_ID
-		-- 			) WC ON W.WORKCENTER_ID = WC.WORKCENTER_ID
+			LEFT JOIN (
+				SELECT
+				    FACTORY_CODE,
+					WORKCENTER_CODE,
+					COUNT(*) AS CNT
+				FROM TPR106
+				WHERE USE_YN = 'Y'
+				GROUP BY FACTORY_CODE, WORKCENTER_CODE
+			) PC ON W.FACTORY_CODE = PC.FACTORY_CODE
+			    AND W.WORKCENTER_CODE = PC.WORKCENTER_CODE
+
+			LEFT JOIN (
+				SELECT
+					FACTORY_CODE,
+					WORKCENTER_CODE,
+					COUNT(*) AS CNT
+				FROM TPR103
+				WHERE USE_YN = 'Y'
+				GROUP BY FACTORY_CODE, WORKCENTER_CODE
+			) WC ON W.FACTORY_CODE = WC.FACTORY_CODE
+				AND W.WORKCENTER_CODE = WC.WORKCENTER_CODE
 		WHERE 1=1
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
@@ -72,9 +76,7 @@
 		<if test="status != null and status != ''">
 			AND W.STATUS = #{status}
 		</if>
-		<if test="useYn != null and useYn != ''">
-			AND W.USE_YN = #{useYn}
-		</if>
+		AND W.USE_YN = 'Y'
 		ORDER BY W.OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS

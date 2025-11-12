@@ -340,7 +340,7 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '관리',
-      width: 200,
+      width: 180,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -396,7 +396,7 @@ const ProcessManagement: React.FC = () => {
             >
               <EditIcon />
             </IconButton>
-            <IconButton
+            {/* <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processId!)}
@@ -404,7 +404,7 @@ const ProcessManagement: React.FC = () => {
               disabled={!canWrite}
             >
               <DeleteIcon />
-            </IconButton>
+            </IconButton> */}
           </Stack>
         </Box>
       ),

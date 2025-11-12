@@ -294,7 +294,7 @@ const WorkplaceManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '관리',
-      width: 200,
+      width: 150,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -339,7 +339,7 @@ const WorkplaceManagement: React.FC = () => {
             >
               <EditIcon />
             </IconButton>
-            <IconButton
+            {/* <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.workplaceId!)}
@@ -347,7 +347,7 @@ const WorkplaceManagement: React.FC = () => {
               disabled={!canWrite}
             >
               <DeleteIcon />
-            </IconButton>
+            </IconButton> */}
           </Stack>
         </Box>
       ),

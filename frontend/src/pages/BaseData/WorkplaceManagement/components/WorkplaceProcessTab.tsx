@@ -23,6 +23,7 @@ import { Workplace } from '../../../../types/workplace';
 import { WorkplaceProcess } from '../../../../types/process';
 import workplaceService from '../../../../services/workplaceService';
 import processService from '../../../../services/processService';
+import { usePermissions } from '../../../../contexts/PermissionContext';
 
 interface WorkplaceProcessTabProps {
   workplace: Workplace;
@@ -33,6 +34,10 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
   workplace,
   showSnackbar,
 }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base/workplace');
+
   const [processes, setProcesses] = useState<WorkplaceProcess[]>([]);
   const [availableProcesses, setAvailableProcesses] = useState<any[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -164,6 +169,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
             size="small"
             color="error"
             onClick={() => handleDelete(params.row.processCode!)}
+            disabled={!canWrite}
           >
             <DeleteIcon />
           </IconButton>
@@ -198,6 +204,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
                 });
                 setOpenDialog(true);
               }}
+              disabled={!canWrite}
             >
               공정 추가
             </Button>
