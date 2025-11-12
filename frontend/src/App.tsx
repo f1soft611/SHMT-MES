@@ -15,6 +15,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
+import EquipmentManagement from './pages/BaseData/EquipmentManagement';
 import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan/ProductionPlan';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
@@ -66,6 +67,10 @@ function App() {
                         <Route
                           path={URL.PROCESS_MANAGEMENT}
                           element={<ProcessManagement />}
+                        />
+                        <Route
+                          path={URL.EQUIPMENT_MANAGEMENT}
+                          element={<EquipmentManagement />}
                         />
                         <Route
                           path={URL.ITEM_MANAGEMENT}
