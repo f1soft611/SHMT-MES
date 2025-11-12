@@ -1825,7 +1825,7 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovWorkplaceIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TPR101")
 			.setPreFix("WP")
@@ -1841,7 +1841,7 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovWorkplaceWorkerIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(10)
+			.setBlockSize(1)
 			.setTable("IDS")
 			.setTableName("TPR106")
 			.setPreFix("WPW")

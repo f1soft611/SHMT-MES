@@ -117,9 +117,9 @@ export const workplaceService = {
   /**
    * 작업장별 공정 목록 조회
    */
-  getWorkplaceProcesses: async (workplaceId: string) => {
+  getWorkplaceProcesses: async (workplaceCode: string) => {
     const response = await apiClient.get(
-      `/api/workplaces/${workplaceId}/processes`
+      `/api/workplaces/${workplaceCode}/processes`
     );
     return response.data;
   },
