@@ -12,7 +12,7 @@ import Layout from './components/common/Layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
-import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
+import CommonCodeManagement from './pages/BaseData/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
 import EquipmentManagement from './pages/BaseData/EquipmentManagement';
