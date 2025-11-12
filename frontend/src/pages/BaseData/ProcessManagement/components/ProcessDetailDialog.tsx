@@ -16,6 +16,8 @@ import {
 } from '@mui/icons-material';
 import { Process } from '../../../../types/process';
 import ProcessDefectTab from './ProcessDefectTab';
+import ProcessInspectionTab from './ProcessInspectionTab';
+import ProcessStopItemTab from './ProcessStopItemTab';
 
 interface ProcessDetailDialogProps {
   open: boolean;
@@ -64,10 +66,10 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
           <ProcessDefectTab process={process} showSnackbar={showSnackbar} />
         )}
         {detailTab === 1 && (
-          <Box>검사항목 관리 (To be extracted)</Box>
+          <ProcessInspectionTab process={process} showSnackbar={showSnackbar} />
         )}
         {detailTab === 2 && (
-          <Box>중지항목 관리 (To be extracted)</Box>
+          <ProcessStopItemTab process={process} showSnackbar={showSnackbar} />
         )}
       </DialogContent>
       <DialogActions>
