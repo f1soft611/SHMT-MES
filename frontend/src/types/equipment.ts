@@ -4,7 +4,7 @@
 
 export interface Equipment {
   equipmentId?: string;
-  equipSysCd: string;
+  equipSysCd?: string;
   equipCd: string;
   equipSpec?: string;
   equipStruct?: string;
