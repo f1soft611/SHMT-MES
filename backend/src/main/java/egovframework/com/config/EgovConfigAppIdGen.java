@@ -1946,4 +1946,20 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 설비 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovEquipmentIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(1)
+			.setTable("IDS")
+			.setTableName("TBA051")
+			.setPreFix("EQ")
+			.setCipers(3)
+			.setFillChar('0')
+			.build();
+	}
+
 }
