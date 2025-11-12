@@ -29,6 +29,7 @@ import { Workplace, WorkplaceWorker } from '../../../../types/workplace';
 import workplaceService from '../../../../services/workplaceService';
 import UserSelectionDialog from '../../../../components/common/UserSelectionDialog';
 import { User } from '../../../../services/admin/userService';
+import { usePermissions } from '../../../../contexts/PermissionContext';
 
 interface WorkplaceWorkerTabProps {
   workplace: Workplace;
@@ -39,6 +40,10 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   workplace,
   showSnackbar,
 }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base/workplace');
+
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -191,6 +196,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               color="primary"
               onClick={() => handleEditWorker(params.row)}
               title="수정"
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
@@ -199,6 +205,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               color="error"
               onClick={() => handleRemoveWorker(params.row.workerCode!)}
               title="삭제"
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -223,6 +230,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setOpenUserDialog(true)}
+              disabled={!canWrite}
             >
               작업자 추가
             </Button>

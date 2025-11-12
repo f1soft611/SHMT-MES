@@ -250,19 +250,6 @@ const ProcessManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (processId: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await processService.deleteProcess(processId);
-        showSnackbar('공정이 삭제되었습니다.', 'success');
-        fetchProcesses();
-      } catch (error) {
-        console.error('Failed to delete process:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
-    }
-  };
-
   const handleOpenDetailDialog = (process: Process) => {
     setSelectedProcess(process);
     setDetailTab(0);
@@ -340,7 +327,7 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '관리',
-      width: 200,
+      width: 180,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -396,7 +383,7 @@ const ProcessManagement: React.FC = () => {
             >
               <EditIcon />
             </IconButton>
-            <IconButton
+            {/* <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processId!)}
@@ -404,7 +391,7 @@ const ProcessManagement: React.FC = () => {
               disabled={!canWrite}
             >
               <DeleteIcon />
-            </IconButton>
+            </IconButton> */}
           </Stack>
         </Box>
       ),
