@@ -281,13 +281,16 @@ public class EgovWorkplaceApiController {
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @DeleteMapping("/workplaces/{workplaceId}/workers/{workplaceWorkerId}")
+    @DeleteMapping("/workplaces/{workplaceCode}/workers/{workerId}")
     public ResultVO deleteWorkplaceWorker(
-            @PathVariable String workplaceId,
-            @PathVariable String workplaceWorkerId,
+            @PathVariable String workplaceCode,
+            @PathVariable String workerId,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        workplaceService.deleteWorkplaceWorker(workplaceWorkerId);
+        WorkplaceWorkerVO workplaceWorkerVO = new WorkplaceWorkerVO();
+        workplaceWorkerVO.setWorkplaceCode(workplaceCode);
+        workplaceWorkerVO.setWorkerId(workerId);
+        workplaceService.deleteWorkplaceWorker(workplaceWorkerVO);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "작업자가 삭제되었습니다.");

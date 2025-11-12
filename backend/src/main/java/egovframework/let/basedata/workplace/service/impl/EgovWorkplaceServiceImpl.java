@@ -127,8 +127,8 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	 */
 	@Override
 	@Transactional
-	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception {
-		workplaceWorkerDAO.deleteWorkplaceWorker(workplaceWorkerId);
+	public void deleteWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
+		workplaceWorkerDAO.deleteWorkplaceWorker(workplaceWorker);
 	}
 
 	@Override

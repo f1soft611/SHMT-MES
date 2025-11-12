@@ -81,10 +81,10 @@ public interface EgovWorkplaceService {
 	/**
 	 * 작업장별 작업자를 삭제한다.
 	 * 
-	 * @param workplaceWorkerId
+	 * @param workplaceWorker
 	 * @exception Exception
 	 */
-	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception;
+	public void deleteWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception;
 
 	/**
 	 * 작업장별 공정 목록을 조회한다.

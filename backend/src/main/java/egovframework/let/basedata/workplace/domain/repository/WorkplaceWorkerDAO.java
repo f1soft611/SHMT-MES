@@ -50,11 +50,11 @@ public class WorkplaceWorkerDAO extends EgovAbstractMapper {
     /**
      * 작업장별 작업자를 삭제한다.
      *
-     * @param workplaceWorkerId
+     * @param workplaceWorker
      * @throws Exception
      */
-    public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception {
-        delete("WorkplaceWorkerDAO.deleteWorkplaceWorker", workplaceWorkerId);
+    public void deleteWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
+        delete("WorkplaceWorkerDAO.deleteWorkplaceWorker", workplaceWorker);
     }
 
     /**
