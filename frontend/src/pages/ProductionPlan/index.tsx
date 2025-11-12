@@ -2,18 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Paper,
   Stack,
   TextField,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   Snackbar,
   IconButton,
@@ -27,7 +19,6 @@ import {
   Collapse,
   Card,
   CardContent,
-  Divider,
   Tooltip,
   Badge,
 } from '@mui/material';
@@ -46,6 +37,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { workplaceService } from '../../services/workplaceService';
+import PlanDialog from './components/PlanDialog';
 
 interface ProductionPlanData {
   id?: string;
@@ -868,126 +860,18 @@ const ProductionPlan: React.FC = () => {
       </Paper>
 
       {/* 등록/수정 다이얼로그 */}
-      <Dialog
+      {/* 등록/수정 다이얼로그 */}
+      <PlanDialog
         open={openDialog}
         onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            bgcolor: 'primary.main',
-            color: 'white',
-            fontWeight: 700,
-            fontSize: '1.25rem',
-          }}
-        >
-          {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
-        </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ mt: 2 }}>
-          <Stack spacing={3}>
-            <TextField
-              fullWidth
-              label="계획일자"
-              value={dialogMode === 'create' ? selectedDate : formData.date}
-              disabled
-            />
-            <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                required
-                label="품목코드"
-                value={formData.itemCode}
-                onChange={(e) => handleChange('itemCode', e.target.value)}
-                placeholder="예: PROD-001"
-              />
-              <TextField
-                fullWidth
-                required
-                label="품목명"
-                value={formData.itemName}
-                onChange={(e) => handleChange('itemName', e.target.value)}
-                placeholder="예: 제품A"
-              />
-            </Stack>
-            <TextField
-              fullWidth
-              required
-              type="number"
-              label="계획수량"
-              value={formData.plannedQty}
-              onChange={(e) =>
-                handleChange('plannedQty', parseInt(e.target.value) || 0)
-              }
-              InputProps={{
-                inputProps: { min: 0 },
-              }}
-            />
-            <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>작업장</InputLabel>
-                <Select
-                  value={formData.workplaceCode}
-                  label="작업장"
-                  onChange={(e) => {
-                    const selectedWorkplace = workplaces.find(
-                      (wp) => wp.workplaceCode === e.target.value
-                    );
-                    handleChange('workplaceCode', e.target.value);
-                    if (selectedWorkplace) {
-                      handleChange(
-                        'workplaceName',
-                        selectedWorkplace.workplaceName
-                      );
-                    }
-                  }}
-                  required
-                >
-                  {workplaces.map((wp) => (
-                    <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
-                      {wp.workplaceName} ({wp.workplaceCode})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>근무조</InputLabel>
-                <Select
-                  value={formData.shift}
-                  label="근무조"
-                  onChange={(e) => handleChange('shift', e.target.value)}
-                >
-                  <MenuItem value="DAY">주간</MenuItem>
-                  <MenuItem value="NIGHT">야간</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="비고"
-              value={formData.remark}
-              onChange={(e) => handleChange('remark', e.target.value)}
-            />
-          </Stack>
-        </DialogContent>
-        <Divider />
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            size="large"
-            sx={{ px: 4 }}
-          >
-            저장
-          </Button>
-          <Button onClick={handleCloseDialog} variant="outlined" size="large">
-            취소
-          </Button>
-        </DialogActions>
-      </Dialog>
+        dialogMode={dialogMode}
+        selectedDate={selectedDate}
+        formData={formData}
+        workplaces={workplaces}
+        onSave={handleSave}
+        onChange={handleChange}
+      />
+
 
       {/* 스낵바 */}
       <Snackbar
