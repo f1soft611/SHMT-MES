@@ -8,8 +8,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   TextField,
   Typography,
@@ -24,7 +28,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Process, ProcessInspection } from '../../../../types/process';
+import { CommonDetailCode } from '../../../../types/commonCode';
 import processService from '../../../../services/processService';
+import commonCodeService from '../../../../services/commonCodeService';
 import { usePermissions } from '../../../../contexts/PermissionContext';
 
 // 검사항목 추가 유효성 검사 스키마
@@ -57,6 +63,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   const canWrite = hasWritePermission('/base/process');
 
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
+  const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
@@ -65,6 +72,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
     control: inspectionControl,
     handleSubmit: handleInspectionSubmit,
     reset: resetInspectionForm,
+    setValue: setInspectionValue,
     formState: { errors: inspectionErrors },
   } = useForm<ProcessInspection>({
     resolver: yupResolver(inspectionSchema),
@@ -97,9 +105,35 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
     }
   }, [process.processId]);
 
+  const fetchInspectionCodes = useCallback(async () => {
+    try {
+      const response = await commonCodeService.getCommonDetailCodeList(
+        'INSPECTION_CODE',
+        'Y'
+      );
+      if (response.resultCode === 200 && response.result?.detailCodeList) {
+        setInspectionCodes(response.result.detailCodeList);
+      }
+    } catch (error) {
+      console.error('Failed to fetch inspection codes:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchInspections();
-  }, [fetchInspections]);
+    fetchInspectionCodes();
+  }, [fetchInspections, fetchInspectionCodes]);
+
+  const handleInspectionCodeChange = (code: string) => {
+    const selectedCode = inspectionCodes.find((ic) => ic.code === code);
+    if (selectedCode) {
+      setInspectionValue('inspectionCode', selectedCode.code);
+      setInspectionValue('inspectionName', selectedCode.codeNm);
+      setInspectionValue('description', selectedCode.codeDc || '');
+    } else {
+      setInspectionValue('inspectionCode', code);
+    }
+  };
 
   const handleSave = async (data: ProcessInspection) => {
     try {
@@ -290,37 +324,58 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="inspectionCode"
-                control={inspectionControl}
-                render={({ field }) => (
-                  <TextField
+            <Controller
+              name="inspectionCode"
+              control={inspectionControl}
+              render={({ field }) => (
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!inspectionErrors.inspectionCode}
+                >
+                  <InputLabel>검사코드</InputLabel>
+                  <Select
                     {...field}
-                    fullWidth
-                    required
-                    label="검사 코드"
+                    label="검사코드"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleInspectionCodeChange(e.target.value);
+                    }}
                     disabled={dialogMode === 'edit'}
-                    error={!!inspectionErrors.inspectionCode}
-                    helperText={inspectionErrors.inspectionCode?.message}
-                  />
-                )}
-              />
-              <Controller
-                name="inspectionName"
-                control={inspectionControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="검사명"
-                    error={!!inspectionErrors.inspectionName}
-                    helperText={inspectionErrors.inspectionName?.message}
-                  />
-                )}
-              />
-            </Stack>
+                  >
+                    {inspectionCodes.map((code) => (
+                      <MenuItem key={code.code} value={code.code}>
+                        {code.codeNm} ({code.code})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {inspectionErrors.inspectionCode && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {inspectionErrors.inspectionCode.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
+            <Controller
+              name="inspectionName"
+              control={inspectionControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  required
+                  label="검사명"
+                  disabled
+                  error={!!inspectionErrors.inspectionName}
+                  helperText={inspectionErrors.inspectionName?.message}
+                />
+              )}
+            />
             <Stack direction="row" spacing={2}>
               <Controller
                 name="inspectionType"
