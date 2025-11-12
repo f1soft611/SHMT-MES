@@ -3,72 +3,84 @@
 <mapper namespace="WorkplaceWorkerDAO">
 
 	<resultMap id="workplaceWorkerResult" type="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
-		<result property="workplaceWorkerId" column="WORKPLACE_WORKER_ID"/>
-		<result property="workplaceId" column="WORKPLACE_ID"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="workplaceId" column="WORKCENTER_ID"/>
+		<result property="workplaceCode" column="WORKCENTER_CODE"/>
 		<result property="workerId" column="WORKER_ID"/>
+		<result property="workerCode" column="WORKER_CODE"/>
 		<result property="workerName" column="WORKER_NAME"/>
 		<result property="position" column="POSITION"/>
 		<result property="role" column="ROLE"/>
 		<result property="useYn" column="USE_YN"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="WorkplaceWorkerDAO.selectWorkplaceWorkerList" parameterType="string" resultMap="workplaceWorkerResult">
 		SELECT
-			WORKPLACE_WORKER_ID,
-			WORKPLACE_ID,
+		    FACTORY_CODE,
+		    WORKCENTER_ID,
+		    WORKCENTER_CODE,
 			WORKER_ID,
+			WORKER_CODE,
 			WORKER_NAME,
 			POSITION,
 			ROLE,
 			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_ID = #{workplaceId}
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR106
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKCENTER_CODE = #{workplaceId}
 		  AND USE_YN = 'Y'
 		ORDER BY
 			CASE WHEN ROLE = 'LEADER' THEN 1 ELSE 2 END,
-			REG_DT ASC
+			OPTIME ASC
 	</select>
 
 	<select id="WorkplaceWorkerDAO.selectWorkplaceWorker" parameterType="string" resultMap="workplaceWorkerResult">
 		SELECT
-			WORKPLACE_WORKER_ID,
-			WORKPLACE_ID,
+		    FACTORY_CODE,
+			WORKCENTER_ID,
+			WORKCENTER_CODE,
 			WORKER_ID,
+			WORKER_CODE,
 			WORKER_NAME,
 			POSITION,
 			ROLE,
 			USE_YN,
 			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_WORKER_ID = #{workplaceWorkerId}
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR106
+		WHERE WPW_ID = #{workplaceWorkerId}
 	</select>
 
 	<insert id="WorkplaceWorkerDAO.insertWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
-		INSERT INTO TB_WORKPLACE_WORKER (
-			WORKPLACE_WORKER_ID,
-			WORKPLACE_ID,
+		INSERT INTO TPR106 (
+		    FACTORY_CODE,
+			WORKCENTER_ID,
+			WORKCENTER_CODE,
 			WORKER_ID,
+			WORKER_CODE,
 			WORKER_NAME,
 			POSITION,
 			ROLE,
 			USE_YN,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
 					 #{workplaceWorkerId},
 					 #{workplaceId},
+					 #{workplaceCode},
 					 #{workerId},
+					 #{workerCode},
 					 #{workerName},
 					 #{position},
 					 ISNULL(#{role}, 'MEMBER'),
@@ -79,7 +91,7 @@
 	</insert>
 
 	<update id="WorkplaceWorkerDAO.updateWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
-		UPDATE TB_WORKPLACE_WORKER
+		UPDATE TPR106
 		SET
 			WORKER_NAME = #{workerName},
 			POSITION = #{position},
@@ -87,44 +99,53 @@
 			USE_YN = #{useYn},
 			UPD_USER_ID = #{updUserId},
 			UPD_DT = GETDATE()
-		WHERE WORKPLACE_WORKER_ID = #{workplaceWorkerId}
+		WHERE FACTORY_CODE = #{factoryCode}
+		    AND WORKCENTER_CODE = #{workplaceCode}
+			AND WOKER_CODE = #{workerCode}
 	</update>
 
-	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorker" parameterType="string">
-		DELETE FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_WORKER_ID = #{workplaceWorkerId}
+	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorker" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceWorker">
+		DELETE FROM TPR106
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKCENTER_CODE = #{workplaceCode}
+		  AND WOKER_CODE = #{workerCode}
 	</delete>
 
 	<!-- 작업장 삭제 시 모든 작업자 삭제 (물리적 삭제) -->
 	<delete id="WorkplaceWorkerDAO.deleteWorkplaceWorkersByWorkplaceId" parameterType="string">
-		DELETE FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_ID = #{workplaceId}
+		DELETE FROM TPR106
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKCENTER_CODE = #{workplaceCode}
 	</delete>
 
 	<!-- 논리적 삭제 (USE_YN = 'N'으로 변경) -->
 	<update id="WorkplaceWorkerDAO.deleteWorkplaceWorkerLogical" parameterType="map">
-		UPDATE TB_WORKPLACE_WORKER
+		UPDATE TPR106
 		SET
 			USE_YN = 'N',
 			UPD_USER_ID = #{updUserId},
 			UPD_DT = GETDATE()
-		WHERE WORKPLACE_WORKER_ID = #{workplaceWorkerId}
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKCENTER_CODE = #{workplaceCode}
+		  AND WOKER_CODE = #{workerCode}
 	</update>
 
 	<!-- 작업장별 작업자 중복 체크 -->
 	<select id="WorkplaceWorkerDAO.selectWorkplaceWorkerDuplicateCheck" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_ID = #{workplaceId}
-		  AND WORKER_ID = #{workerId}
+		FROM TPR106
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKPLACE_CODE = #{workplaceId}
+		  AND WORKER_CODE = #{workerId}
 		  AND USE_YN = 'Y'
 	</select>
 
 	<!-- 작업장별 팀장 존재 여부 체크 -->
 	<select id="WorkplaceWorkerDAO.selectWorkplaceLeaderCheck" parameterType="string" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_WORKPLACE_WORKER
-		WHERE WORKPLACE_ID = #{workplaceId}
+		FROM TPR106
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND WORKPLACE_CODE = #{workplaceId}
 		  AND ROLE = 'LEADER'
 		  AND USE_YN = 'Y'
 	</select>

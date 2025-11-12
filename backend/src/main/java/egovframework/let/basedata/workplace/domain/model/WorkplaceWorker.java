@@ -42,11 +42,11 @@ public class WorkplaceWorker implements Serializable {
 	@Schema(description = "작업장 코드")
 	private String workplaceCode = "";
 
-	@Schema(description = "작업장 작업자 ID")
-	private String workplaceWorkerId = "";
-
 	@Schema(description = "작업자 ID")
 	private String workerId = "";
+
+	@Schema(description = "작업자 Code")
+	private String workerCode = "";
 
 	@Schema(description = "작업자명")
 	private String workerName = "";

@@ -9,7 +9,7 @@
 		<result property="processId" column="WORK_ID"/>
 		<result property="processCode" column="WORK_CODE"/>
 		<result property="processName" column="WORK_NAME"/>
-		<result property="workplaceProcessId" column="WW_ID"/>
+		<result property="workplaceProcessId" column="WORK_ID"/>
 		<result property="processSeq" column="WORK_SEQ"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
@@ -21,10 +21,11 @@
 	<select id="WorkplaceProcessDAO.selectWorkplaceProcessList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceProcessVO" resultMap="workplaceProcessResult">
 		SELECT
 		FACTORY_CODE,
+		WORKCENTER_ID,
 		WORKCENTER_CODE,
 		WORK_CODE,
 		WORK_NAME,
-		WW_ID,
+		WORK_ID,
 		USE_YN,
 		OPMAN_CODE,
 		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
@@ -47,16 +48,18 @@
 	<insert id="WorkplaceProcessDAO.insertWorkplaceProcess" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceProcess">
 		INSERT INTO TPR103 (
 			FACTORY_CODE,
+			WORKCENTER_ID,
 			WORKCENTER_CODE,
 			WORK_CODE,
 			WORK_NAME,
 			WORK_SEQ,
-			WW_ID,
+			WORK_ID,
 			USE_YN,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
 					 #{factoryCode},
+					 #{workplaceId},
 					 #{workplaceCode},
 					 #{processCode},
 					 #{processName},
