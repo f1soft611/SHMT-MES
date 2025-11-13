@@ -363,14 +363,23 @@ const ItemManagement: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        품목 관리
-      </Typography>
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5">품목 관리</Typography>
+        </Box>
+      </Box>
 
-      <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+      <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction="row" spacing={2} alignItems="center">
-          <FormControl sx={{ minWidth: 120 }} size="small">
+          <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>검색조건</InputLabel>
             <Select
               value={inputValues.searchCnd}
@@ -383,15 +392,15 @@ const ItemManagement: React.FC = () => {
           </FormControl>
           <TextField
             size="small"
-            label="검색어"
+            placeholder="검색어를 입력하세요"
             value={inputValues.searchWrd}
             onChange={(e) => handleInputChange('searchWrd', e.target.value)}
             onKeyPress={(e) => {
               if (e.key === 'Enter') handleSearch();
             }}
-            sx={{ minWidth: 200 }}
+            sx={{ flex: 1 }}
           />
-          <FormControl sx={{ minWidth: 120 }} size="small">
+          <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>품목타입</InputLabel>
             <Select
               value={inputValues.itemType}
@@ -420,16 +429,15 @@ const ItemManagement: React.FC = () => {
             startIcon={<SearchIcon />}
             onClick={handleSearch}
           >
-            조회
+            검색
           </Button>
-          <Box sx={{ flexGrow: 1 }} />
           <Button
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleOpenCreateDialog}
           >
-            등록
+            품목 등록
           </Button>
         </Stack>
       </Paper>
