@@ -11,16 +11,9 @@ import {
   Box,
   Typography,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Chip,
-  TablePagination,
-  CircularProgress,
 } from '@mui/material';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Search as SearchIcon,
   Close as CloseIcon,
@@ -51,9 +44,11 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     orderNo: '',
   });
 
-  // 페이지네이션
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  // 페이지네이션 - DataGrid 형식으로 변경
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
@@ -61,14 +56,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       loadProductionRequests();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, page, pageSize]);
+  }, [open, paginationModel.page, paginationModel.pageSize]);
 
   const loadProductionRequests = useCallback(async () => {
     setLoading(true);
     try {
       const response = await productionRequestService.getProductionRequestList(
-        page,
-        pageSize,
+        paginationModel.page,
+        paginationModel.pageSize,
         searchParams
       );
       
@@ -137,19 +132,15 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchParams]);
+  }, [paginationModel.page, paginationModel.pageSize, searchParams]);
 
   const handleSearch = () => {
-    setPage(0);
+    setPaginationModel({ ...paginationModel, page: 0 });
     loadProductionRequests();
   };
 
   const handleSearchParamChange = (field: string, value: string) => {
     setSearchParams({ ...searchParams, [field]: value });
-  };
-
-  const handleSelectRequest = (request: ProductionRequest) => {
-    setSelectedRequest(request);
   };
 
   const handleConfirmSelection = () => {
@@ -160,15 +151,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     }
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
     if (dateStr.length === 8) {
@@ -177,14 +159,118 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     return dateStr;
   };
 
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
+    {
+      field: 'selected',
+      headerName: '선택',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params) => (
+        selectedRequest?.orderNo === params.row.orderNo && 
+        selectedRequest?.orderSeqno === params.row.orderSeqno ? (
+          <CheckCircleIcon color="primary" />
+        ) : null
+      ),
+    },
+    {
+      field: 'orderNo',
+      headerName: '생산의뢰번호',
+      width: 150,
+      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'registDate',
+      headerName: '생산의뢰일',
+      width: 130,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => formatDate(value),
+    },
+    {
+      field: 'itemCode',
+      headerName: '품목코드',
+      width: 130,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip label={params.value} size="small" color="primary" variant="outlined" />
+      ),
+    },
+    {
+      field: 'itemName',
+      headerName: '품목명',
+      flex: 1,
+      minWidth: 150,
+      headerAlign: 'center',
+    },
+    {
+      field: 'specification',
+      headerName: '규격',
+      width: 120,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || '-',
+    },
+    {
+      field: 'unit',
+      headerName: '단위',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || 'EA',
+    },
+    {
+      field: 'orderQty',
+      headerName: '생산의뢰량',
+      width: 130,
+      align: 'right',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip 
+          label={params.value?.toLocaleString()} 
+          size="small" 
+          color="success"
+        />
+      ),
+    },
+    {
+      field: 'deliveryDate',
+      headerName: '납기일',
+      width: 130,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => formatDate(value),
+    },
+    {
+      field: 'registrant',
+      headerName: '등록자',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || '-',
+    },
+    {
+      field: 'registTime',
+      headerName: '등록시간',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || '-',
+    },
+  ];
+
   return (
     <Dialog 
       open={open} 
       onClose={onClose} 
-      maxWidth="lg" 
+      maxWidth="xl" 
       fullWidth
       PaperProps={{
-        sx: { height: '80vh' }
+        sx: { height: '85vh' }
       }}
     >
       <DialogTitle
@@ -219,13 +305,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField
             size="small"
-            label="검색 조건"
-            value="품목코드"
-            disabled
-            sx={{ width: 120 }}
-          />
-          <TextField
-            size="small"
             label="품목코드"
             value={searchParams.itemCode}
             onChange={(e) => handleSearchParamChange('itemCode', e.target.value)}
@@ -258,125 +337,45 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       
       <Divider />
 
-      {/* 테이블 영역 */}
-      <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <TableContainer sx={{ flex: 1 }}>
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      선택
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      생산의뢰번호
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      생산의뢰일
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      품목코드
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      품목명
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      규격
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      단위
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      생산의뢰량
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      납기일
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      등록자
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      등록시간
-                    </TableCell>
-                    <TableCell align="center" sx={{ bgcolor: 'primary.main', color: 'white', fontWeight: 'bold' }}>
-                      등록일자
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requests.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          생산의뢰 데이터가 없습니다.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    requests.map((request, index) => (
-                      <TableRow
-                        key={`${request.orderNo}-${request.orderSeqno}-${index}`}
-                        hover
-                        selected={selectedRequest === request}
-                        onClick={() => handleSelectRequest(request)}
-                        sx={{ 
-                          cursor: 'pointer',
-                          '&.Mui-selected': {
-                            bgcolor: 'primary.light',
-                            '&:hover': {
-                              bgcolor: 'primary.light',
-                            }
-                          }
-                        }}
-                      >
-                        <TableCell align="center">
-                          {selectedRequest === request && (
-                            <CheckCircleIcon color="primary" />
-                          )}
-                        </TableCell>
-                        <TableCell align="center">{request.orderNo}</TableCell>
-                        <TableCell align="center">{formatDate(request.registDate)}</TableCell>
-                        <TableCell align="center">
-                          <Chip label={request.itemCode} size="small" color="primary" variant="outlined" />
-                        </TableCell>
-                        <TableCell>{request.itemName}</TableCell>
-                        <TableCell align="center">{request.specification || '-'}</TableCell>
-                        <TableCell align="center">{request.unit || 'EA'}</TableCell>
-                        <TableCell align="right">
-                          <Chip 
-                            label={request.orderQty?.toLocaleString()} 
-                            size="small" 
-                            color="success"
-                          />
-                        </TableCell>
-                        <TableCell align="center">{formatDate(request.deliveryDate)}</TableCell>
-                        <TableCell align="center">{request.registrant || '-'}</TableCell>
-                        <TableCell align="center">{request.registTime || '-'}</TableCell>
-                        <TableCell align="center">{formatDate(request.registDate)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              component="div"
-              count={totalCount}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={pageSize}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="페이지당 행:"
-              labelDisplayedRows={({ from, to, count }) => `${from}-${to} / 총 ${count}개`}
-            />
-          </>
-        )}
+      {/* DataGrid 영역 */}
+      <DialogContent sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flexGrow: 1, width: '100%' }}>
+          <DataGrid
+            rows={requests}
+            columns={columns}
+            getRowId={(row) => `${row.orderNo}-${row.orderSeqno}`}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[5, 10, 25, 50]}
+            rowCount={totalCount}
+            paginationMode="server"
+            loading={loading}
+            onRowClick={(params) => setSelectedRequest(params.row)}
+            disableRowSelectionOnClick
+            autoHeight
+            sx={{
+              border: 'none',
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row': {
+                cursor: 'pointer',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
+              '& .MuiDataGrid-row.Mui-selected': {
+                backgroundColor: 'primary.light',
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                },
+              },
+            }}
+            localeText={{
+              noRowsLabel: '생산의뢰 데이터가 없습니다.',
+            }}
+          />
+        </Box>
       </DialogContent>
       
       <Divider />
