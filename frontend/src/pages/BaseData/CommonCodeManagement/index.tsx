@@ -452,7 +452,7 @@ const CommonCodeManagement: React.FC = () => {
         <DialogTitle>
           {dialogMode === 'create' ? '공통코드 등록' : '공통코드 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 2 }}>
             <Controller
               name="codeId"

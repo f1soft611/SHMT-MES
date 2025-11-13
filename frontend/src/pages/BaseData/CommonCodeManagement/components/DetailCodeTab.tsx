@@ -293,7 +293,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
         <DialogTitle>
           {detailDialogMode === 'create' ? '상세코드 등록' : '상세코드 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 2 }}>
             <Controller
               name="code"

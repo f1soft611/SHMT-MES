@@ -277,7 +277,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
         fullWidth
       >
         <DialogTitle>작업자 수정</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               fullWidth

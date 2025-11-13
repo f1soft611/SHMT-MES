@@ -38,7 +38,7 @@ const EquipmentDetailDialog: React.FC<EquipmentDetailDialogProps> = ({
       <DialogTitle>
         {dialogMode === 'create' ? '설비 등록' : '설비 수정'}
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Stack direction="row" spacing={2}>
             {/* <Controller

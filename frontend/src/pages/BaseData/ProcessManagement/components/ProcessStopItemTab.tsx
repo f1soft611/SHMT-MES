@@ -288,7 +288,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
         <DialogTitle>
           {dialogMode === 'create' ? '중지항목 등록' : '중지항목 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Controller
               name="stopItemCode"

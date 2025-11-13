@@ -447,7 +447,7 @@ const WorkplaceManagement: React.FC = () => {
         <DialogTitle>
           {dialogMode === 'create' ? '작업장 등록' : '작업장 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
               <Controller

@@ -324,7 +324,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
         <DialogTitle>
           {dialogMode === 'create' ? '검사항목 등록' : '검사항목 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Controller
               name="inspectionCode"

@@ -39,7 +39,7 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>공정 상세 관리 - {process.processName}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs
             value={detailTab}

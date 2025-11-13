@@ -464,7 +464,7 @@ const ProcessManagement: React.FC = () => {
         <DialogTitle>
           {dialogMode === 'create' ? '공정 등록' : '공정 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
               <Controller

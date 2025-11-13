@@ -288,7 +288,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
         <DialogTitle>
           {dialogMode === 'create' ? '불량코드 등록' : '불량코드 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Controller
               name="defectCode"

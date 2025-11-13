@@ -34,7 +34,7 @@ const WorkplaceDetailDialog: React.FC<WorkplaceDetailDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>작업장 상세 관리 - {workplace.workplaceName}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs
             value={detailTab}
