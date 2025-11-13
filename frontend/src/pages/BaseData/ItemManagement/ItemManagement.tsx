@@ -26,8 +26,34 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { Item } from '../../../types/item';
 import itemService from '../../../services/itemService';
+
+// 품목 등록 유효성 검사 스키마
+const itemSchema: yup.ObjectSchema<Item> = yup.object({
+  itemId: yup.string().optional(),
+  itemCode: yup
+    .string()
+    .required('품목 코드는 필수입니다.')
+    .matches(/^[A-Za-z0-9-_]+$/, '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.')
+    .max(50, '품목 코드는 최대 50자까지 입력 가능합니다.'),
+  itemName: yup.string().required('품목명은 필수입니다.'),
+  itemType: yup.string().optional(),
+  specification: yup.string().optional(),
+  unit: yup.string().optional(),
+  stockQty: yup.string().optional(),
+  safetyStock: yup.string().optional(),
+  remark: yup.string().optional(),
+  interfaceYn: yup.string().optional(),
+  useYn: yup.string().optional(),
+  regUserId: yup.string().optional(),
+  regDt: yup.string().optional(),
+  updUserId: yup.string().optional(),
+  updDt: yup.string().optional(),
+});
 
 const ItemManagement: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -48,18 +74,26 @@ const ItemManagement: React.FC = () => {
     severity: 'success',
   });
 
-  // 폼 상태
-  const [formData, setFormData] = useState<Item>({
-    itemCode: '',
-    itemName: '',
-    itemType: 'PRODUCT',
-    specification: '',
-    unit: '',
-    stockQty: '0',
-    safetyStock: '0',
-    remark: '',
-    interfaceYn: 'N',
-    useYn: 'Y',
+  // react-hook-form 설정
+  const {
+    control: itemControl,
+    handleSubmit: handleItemSubmit,
+    reset: resetItemForm,
+    formState: { errors: itemErrors },
+  } = useForm<Item>({
+    resolver: yupResolver(itemSchema),
+    defaultValues: {
+      itemCode: '',
+      itemName: '',
+      itemType: 'PRODUCT',
+      specification: '',
+      unit: '',
+      stockQty: '0',
+      safetyStock: '0',
+      remark: '',
+      interfaceYn: 'N',
+      useYn: 'Y',
+    },
   });
 
   // 실제 검색에 사용되는 파라미터
@@ -122,7 +156,7 @@ const ItemManagement: React.FC = () => {
 
   const handleOpenCreateDialog = () => {
     setDialogMode('create');
-    setFormData({
+    resetItemForm({
       itemCode: '',
       itemName: '',
       itemType: 'PRODUCT',
@@ -139,29 +173,26 @@ const ItemManagement: React.FC = () => {
 
   const handleOpenEditDialog = (item: Item) => {
     setDialogMode('edit');
-    setFormData(item);
+    resetItemForm(item);
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    resetItemForm();
   };
 
-  const handleChange = (field: keyof Item, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (data: Item) => {
     try {
       if (dialogMode === 'create') {
-        const result = await itemService.createItem(formData);
+        const result = await itemService.createItem(data);
         if (result.resultCode === 200) {
           showSnackbar('품목이 등록되었습니다.', 'success');
         } else {
           showSnackbar(result.result.message, 'error');
         }
       } else {
-        await itemService.updateItem(formData.itemId!, formData);
+        await itemService.updateItem(data.itemId!, data);
         showSnackbar('품목이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -405,103 +436,126 @@ const ItemManagement: React.FC = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                required
-                label="품목코드"
-                value={formData.itemCode}
-                onChange={(e) => handleChange('itemCode', e.target.value)}
-                disabled={dialogMode === 'edit' || formData.interfaceYn === 'Y'}
-                helperText={
-                  formData.interfaceYn === 'Y'
-                    ? '인터페이스 항목은 수정할 수 없습니다'
-                    : ''
-                }
+              <Controller
+                name="itemCode"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="품목코드"
+                    disabled={dialogMode === 'edit'}
+                    error={!!itemErrors.itemCode}
+                    helperText={itemErrors.itemCode?.message || (dialogMode === 'edit' ? '수정 시 품목코드는 변경할 수 없습니다' : '')}
+                  />
+                )}
               />
-              <TextField
-                fullWidth
-                required
-                label="품목명"
-                value={formData.itemName}
-                onChange={(e) => handleChange('itemName', e.target.value)}
-                disabled={formData.interfaceYn === 'Y'}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <FormControl fullWidth disabled={formData.interfaceYn === 'Y'}>
-                <InputLabel>품목타입</InputLabel>
-                <Select
-                  value={formData.itemType}
-                  label="품목타입"
-                  onChange={(e) => handleChange('itemType', e.target.value)}
-                >
-                  <MenuItem value="PRODUCT">제품</MenuItem>
-                  <MenuItem value="MATERIAL">자재</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                fullWidth
-                label="규격"
-                value={formData.specification}
-                onChange={(e) => handleChange('specification', e.target.value)}
-                disabled={formData.interfaceYn === 'Y'}
+              <Controller
+                name="itemName"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    required
+                    label="품목명"
+                    error={!!itemErrors.itemName}
+                    helperText={itemErrors.itemName?.message}
+                  />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField
-                fullWidth
-                label="단위"
-                value={formData.unit}
-                onChange={(e) => handleChange('unit', e.target.value)}
-                disabled={formData.interfaceYn === 'Y'}
+              <Controller
+                name="itemType"
+                control={itemControl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>품목타입</InputLabel>
+                    <Select {...field} label="품목타입">
+                      <MenuItem value="PRODUCT">제품</MenuItem>
+                      <MenuItem value="MATERIAL">자재</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
               />
-              <TextField
-                fullWidth
-                label="재고수량"
-                type="number"
-                value={formData.stockQty}
-                onChange={(e) => handleChange('stockQty', e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="안전재고"
-                type="number"
-                value={formData.safetyStock}
-                onChange={(e) => handleChange('safetyStock', e.target.value)}
+              <Controller
+                name="specification"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="규격" />
+                )}
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>사용 여부</InputLabel>
-                <Select
-                  value={formData.useYn}
-                  label="사용 여부"
-                  onChange={(e) => handleChange('useYn', e.target.value)}
-                >
-                  <MenuItem value="Y">사용</MenuItem>
-                  <MenuItem value="N">미사용</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth disabled>
-                <InputLabel>인터페이스 여부</InputLabel>
-                <Select value={formData.interfaceYn} label="인터페이스 여부">
-                  <MenuItem value="Y">예</MenuItem>
-                  <MenuItem value="N">아니오</MenuItem>
-                </Select>
-              </FormControl>
+              <Controller
+                name="unit"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="단위" />
+                )}
+              />
+              <Controller
+                name="stockQty"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="재고수량" type="number" />
+                )}
+              />
+              <Controller
+                name="safetyStock"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="안전재고" type="number" />
+                )}
+              />
             </Stack>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="비고"
-              value={formData.remark}
-              onChange={(e) => handleChange('remark', e.target.value)}
+            <Stack direction="row" spacing={2}>
+              <Controller
+                name="useYn"
+                control={itemControl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>사용 여부</InputLabel>
+                    <Select {...field} label="사용 여부">
+                      <MenuItem value="Y">사용</MenuItem>
+                      <MenuItem value="N">미사용</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              />
+              <Controller
+                name="interfaceYn"
+                control={itemControl}
+                render={({ field }) => (
+                  <FormControl fullWidth disabled>
+                    <InputLabel>인터페이스 여부</InputLabel>
+                    <Select {...field} label="인터페이스 여부">
+                      <MenuItem value="Y">예</MenuItem>
+                      <MenuItem value="N">아니오</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+              />
+            </Stack>
+            <Controller
+              name="remark"
+              control={itemControl}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="비고"
+                />
+              )}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSave} variant="contained" color="primary">
+          <Button onClick={handleItemSubmit(handleSave)} variant="contained" color="primary">
             저장
           </Button>
           <Button onClick={handleCloseDialog}>취소</Button>
