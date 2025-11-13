@@ -166,14 +166,14 @@ public class EgovEquipmentApiController {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @PutMapping("/equipments/{equipmentId}")
+    @PutMapping("/equipments/{equipCd}")
     public ResultVO updateEquipment(
-            @PathVariable String equipmentId,
+            @PathVariable String equipCd,
             @RequestBody Equipment equipment,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
         // 설비 코드 중복 체크 (수정 시)
-        if (equipmentService.isEquipmentCodeExistsForUpdate(equipmentId, equipment.getEquipSysCd(), equipment.getEquipCd())) {
+        if (equipmentService.isEquipmentCodeExistsForUpdate(equipCd, equipment.getEquipSysCd(), equipment.getEquipCd())) {
             Map<String, Object> errorMap = new HashMap<>();
             errorMap.put("message", "이미 존재하는 설비 코드입니다.");
             errorMap.put("duplicateField", "equipCd");
@@ -182,7 +182,7 @@ public class EgovEquipmentApiController {
             return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
         }
 
-        equipment.setEquipmentId(equipmentId);
+        equipment.setEquipCd(equipCd);
         equipment.setUpdUserId(user.getUniqId());
         equipmentService.updateEquipment(equipment);
 

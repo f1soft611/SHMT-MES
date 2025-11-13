@@ -71,6 +71,7 @@ public class EgovEquipmentServiceImpl extends EgovAbstractServiceImpl implements
 	public void insertEquipment(Equipment equipment) throws Exception {
 		String equipmentId = egovEquipmentIdGnrService.getNextStringId();
 		equipment.setEquipmentId(equipmentId);
+		equipment.setEquipSysCd(equipmentId);
 		equipmentDAO.insertEquipment(equipment);
 	}
 

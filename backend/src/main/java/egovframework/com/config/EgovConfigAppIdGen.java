@@ -1861,7 +1861,7 @@ public class EgovConfigAppIdGen {
 			.setTable("IDS")
 			.setTableName("TCO403")
 			.setPreFix("ITEM")
-			.setCipers(15)
+			.setCipers(6)
 			.setFillChar('0')
 			.build();
 	}
@@ -1955,7 +1955,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TBA051")
+			.setTableName("TPR151")
 			.setPreFix("EQ")
 			.setCipers(3)
 			.setFillChar('0')

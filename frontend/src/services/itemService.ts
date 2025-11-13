@@ -19,7 +19,9 @@ export const itemService = {
       pageUnit: pageSize,
       ...params,
     };
-    const response = await apiClient.get('/api/items', { params: requestParams });
+    const response = await apiClient.get('/api/items', {
+      params: requestParams,
+    });
     return response.data;
   },
 
@@ -50,8 +52,8 @@ export const itemService = {
   /**
    * 품목 삭제
    */
-  deleteItem: async (itemId: string) => {
-    const response = await apiClient.delete(`/api/items/${itemId}`);
+  deleteItem: async (itemCode: string) => {
+    const response = await apiClient.delete(`/api/items/${itemCode}`);
     return response.data;
   },
 };

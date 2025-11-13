@@ -19,7 +19,9 @@ export const equipmentService = {
       pageUnit: pageSize,
       ...params,
     };
-    const response = await apiClient.get('/api/equipments', { params: requestParams });
+    const response = await apiClient.get('/api/equipments', {
+      params: requestParams,
+    });
     return response.data;
   },
 
@@ -42,8 +44,11 @@ export const equipmentService = {
   /**
    * 설비 수정
    */
-  updateEquipment: async (equipmentId: string, equipment: Equipment) => {
-    const response = await apiClient.put(`/api/equipments/${equipmentId}`, equipment);
+  updateEquipment: async (equipCd: string, equipment: Equipment) => {
+    const response = await apiClient.put(
+      `/api/equipments/${equipCd}`,
+      equipment
+    );
     return response.data;
   },
 
