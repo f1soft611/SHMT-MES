@@ -16,7 +16,7 @@ import CommonCodeManagement from './pages/BaseData/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement';
 import EquipmentManagement from './pages/BaseData/EquipmentManagement';
-import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
+import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
