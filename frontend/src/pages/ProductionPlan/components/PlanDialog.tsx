@@ -16,10 +16,7 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import {
-  Link as LinkIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
+import { Link as LinkIcon, Info as InfoIcon } from '@mui/icons-material';
 import ProductionRequestDialog from './ProductionRequestDialog';
 import { ProductionRequest } from '../../../types/productionRequest';
 import { Equipment } from '../../../types/equipment';
@@ -63,7 +60,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   onChange,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<ProductionRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<ProductionRequest | null>(null);
 
   const handleOpenRequestDialog = () => {
     setOpenRequestDialog(true);
@@ -132,7 +130,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   </Button>
                 </Stack>
                 {selectedRequest && (
-                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      pt: 1.5,
+                      borderTop: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  >
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Typography variant="caption" color="text.secondary">
                         선택된 생산의뢰:
@@ -205,7 +210,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     );
                     onChange('equipmentCode', e.target.value);
                     if (selectedEquipment) {
-                      onChange('equipmentName', selectedEquipment.equipmentName);
+                      onChange(
+                        'equipmentName',
+                        selectedEquipment.equipmentName
+                      );
                     }
                   }}
                 >
@@ -249,24 +257,29 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   borderColor: 'success.main',
                 }}
               >
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1 }}
+                >
                   연동된 생산의뢰 정보
                 </Typography>
                 <Stack direction="row" spacing={1}>
-                  <Chip label={`생산의뢰번호: ${formData.orderNo}`} size="small" />
+                  <Chip
+                    label={`생산의뢰번호: ${formData.orderNo}`}
+                    size="small"
+                  />
                 </Stack>
               </Box>
             )}
           </Stack>
         </DialogContent>
         <Divider />
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={onSave} variant="contained" size="large" sx={{ px: 4 }}>
+        <DialogActions>
+          <Button onClick={onSave} variant="contained" color="primary">
             저장
           </Button>
-          <Button onClick={onClose} variant="outlined" size="large">
-            취소
-          </Button>
+          <Button onClick={onClose}>취소</Button>
         </DialogActions>
       </Dialog>
 

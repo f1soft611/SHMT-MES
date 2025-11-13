@@ -151,8 +151,8 @@ const ProductionPlan: React.FC = () => {
     true, // 수요일
     true, // 목요일
     true, // 금요일
-    true, // 토요일
-    true, // 일요일
+    false, // 토요일
+    false, // 일요일
   ]);
   const [showDayFilter, setShowDayFilter] = useState(false);
 
@@ -182,9 +182,7 @@ const ProductionPlan: React.FC = () => {
         { equipCd: 'EQ-003', equipmentName: '설비3' },
       ];
       setEquipments(mockEquipments as Equipment[]);
-      setExpandedEquipments(
-        new Set(mockEquipments.map((eq) => eq.equipCd))
-      );
+      setExpandedEquipments(new Set(mockEquipments.map((eq) => eq.equipCd)));
     }
   };
 
@@ -443,21 +441,28 @@ const ProductionPlan: React.FC = () => {
               <VisibilityIcon color="warning" />
               요일 표시 설정
             </Typography>
-            <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              spacing={3}
+              alignItems="center"
+              flexWrap="wrap"
+            >
               <FormGroup row>
-                {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
-                  <FormControlLabel
-                    key={day}
-                    control={
-                      <Checkbox
-                        checked={visibleDays[index]}
-                        onChange={() => toggleDayVisibility(index)}
-                        color="primary"
-                      />
-                    }
-                    label={`${day}요일`}
-                  />
-                ))}
+                {['월', '화', '수', '목', '금', '토', '일'].map(
+                  (day, index) => (
+                    <FormControlLabel
+                      key={day}
+                      control={
+                        <Checkbox
+                          checked={visibleDays[index]}
+                          onChange={() => toggleDayVisibility(index)}
+                          color="primary"
+                        />
+                      }
+                      label={`${day}요일`}
+                    />
+                  )
+                )}
               </FormGroup>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
@@ -610,7 +615,7 @@ const ProductionPlan: React.FC = () => {
               <TableRow>
                 <TableCell
                   sx={{
-                    minWidth: 200,
+                    width: 250,
                     bgcolor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
@@ -625,7 +630,7 @@ const ProductionPlan: React.FC = () => {
                 </TableCell>
                 {weekDays.map((day, dayIndex) => {
                   if (!visibleDays[dayIndex]) return null;
-                  
+
                   const isToday = isSameDay(day, new Date());
                   const isWeekendDay = isWeekend(day);
                   const dateStr = formatDate(day, 'YYYY-MM-DD');
@@ -709,9 +714,7 @@ const ProductionPlan: React.FC = () => {
                 </TableRow>
               ) : (
                 equipments.map((equipment, index) => {
-                  const isExpanded = expandedEquipments.has(
-                    equipment.equipCd
-                  );
+                  const isExpanded = expandedEquipments.has(equipment.equipCd);
                   return (
                     <React.Fragment key={equipment.equipCd}>
                       <TableRow
@@ -727,9 +730,7 @@ const ProductionPlan: React.FC = () => {
                             borderRight: '1px solid',
                             borderColor: 'divider',
                           }}
-                          onClick={() =>
-                            toggleEquipment(equipment.equipCd)
-                          }
+                          onClick={() => toggleEquipment(equipment.equipCd)}
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <IconButton
@@ -766,7 +767,7 @@ const ProductionPlan: React.FC = () => {
                         </TableCell>
                         {weekDays.map((day, dayIndex) => {
                           if (!visibleDays[dayIndex]) return null;
-                          
+
                           const dateStr = formatDate(day, 'YYYY-MM-DD');
                           const dayPlans = getPlansForDateAndEquipment(
                             dateStr,
@@ -987,7 +988,6 @@ const ProductionPlan: React.FC = () => {
         onSave={handleSave}
         onChange={handleChange}
       />
-
 
       {/* 스낵바 */}
       <Snackbar
