@@ -3,62 +3,65 @@
 <mapper namespace="ItemDAO">
 
 	<resultMap id="itemResult" type="egovframework.let.basedata.item.domain.model.Item">
-		<result property="itemId" column="ITEM_ID"/>
-		<result property="itemCode" column="ITEM_CODE"/>
-		<result property="itemName" column="ITEM_NAME"/>
-		<result property="itemType" column="ITEM_TYPE"/>
-		<result property="specification" column="SPECIFICATION"/>
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="itemId" column="MATERIAL_ID"/>
+		<result property="itemCode" column="MATERIAL_CODE"/>
+		<result property="itemName" column="MATERIAL_NAME"/>
+		<result property="itemType" column="MATERIAL_FLAG"/>
+		<result property="specification" column="MATERIAL_SPEC"/>
 		<result property="unit" column="UNIT"/>
 		<result property="stockQty" column="STOCK_QTY"/>
 		<result property="safetyStock" column="SAFETY_STOCK"/>
-		<result property="remark" column="REMARK"/>
+		<result property="remark" column="ETC"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
-		<result property="useYn" column="USE_YN"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="useYn" column="DELETE_FLAG"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="ItemDAO.selectItemList" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultMap="itemResult">
 		SELECT
-		ITEM_ID,
-		ITEM_CODE,
-		ITEM_NAME,
-		ITEM_TYPE,
-		SPECIFICATION,
+		FACTORY_CODE,
+		MATERIAL_ID,
+		MATERIAL_CODE,
+		MATERIAL_NAME,
+		MATERIAL_SPEC,
+		MATERIAL_FLAG,
 		UNIT,
 		STOCK_QTY,
 		SAFETY_STOCK,
-		REMARK,
+		ETC,
 		INTERFACE_YN,
-		USE_YN,
-		REG_USER_ID,
-		CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-		UPD_USER_ID,
-		CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_ITEM
+		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
+		OPMAN_CODE,
+		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+		OPMAN_CODE2,
+		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TCO403
 		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == 0">
-					AND ITEM_CODE LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 1">
-					AND ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == 2">
-					AND SPECIFICATION LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_SPEC LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
 		<if test="itemType != null and itemType != ''">
-			AND ITEM_TYPE = #{itemType}
+			AND MATERIAL_FLAG = #{itemType}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
+			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
 		</if>
-		ORDER BY REG_DT DESC
+		ORDER BY OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
@@ -67,118 +70,130 @@
 
 	<select id="ItemDAO.selectItemListCnt" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_ITEM
+		FROM TCO403
 		WHERE 1=1
+		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '0'">
-					AND ITEM_CODE LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '1'">
-					AND ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2'">
-					AND SPECIFICATION LIKE '%' + #{searchWrd} + '%'
+					AND MATERIAL_SPEC LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
 		<if test="itemType != null and itemType != ''">
-			AND ITEM_TYPE = #{itemType}
+			AND MATERIAL_FLAG = #{itemType}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
+			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
 		</if>
+		AND DELETE_FLAG != '1'
 	</select>
 
 	<select id="ItemDAO.selectItem" parameterType="string" resultMap="itemResult">
 		SELECT
-			ITEM_ID,
-			ITEM_CODE,
-			ITEM_NAME,
-			ITEM_TYPE,
-			SPECIFICATION,
+			FACTORY_CODE,
+			MATERIAL_ID,
+			MATERIAL_CODE,
+			MATERIAL_NAME,
+			MATERIAL_SPEC,
+			MATERIAL_FLAG,
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			REMARK,
+			ETC,
 			INTERFACE_YN,
-			USE_YN,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TB_ITEM
-		WHERE ITEM_ID = #{itemId}
+			CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TCO403
+		WHERE MATERIAL_CODE = #{itemCode}
 	</select>
 
 	<insert id="ItemDAO.insertItem" parameterType="egovframework.let.basedata.item.domain.model.Item">
-		INSERT INTO TB_ITEM (
-			ITEM_ID,
-			ITEM_CODE,
-			ITEM_NAME,
-			ITEM_TYPE,
-			SPECIFICATION,
+		INSERT INTO TCO403 (
+			FACTORY_CODE,
+			MATERIAL_ID,
+			MATERIAL_CODE,
+			MATERIAL_NAME,
+			MATERIAL_SPEC,
+			MATERIAL_FLAG,
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			REMARK,
+			ETC,
 			INTERFACE_YN,
-			USE_YN,
-			REG_USER_ID,
-			REG_DT
+			DELETE_FLAG,
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
+					 #{factoryCode},
 					 #{itemId},
 					 #{itemCode},
 					 #{itemName},
-					 #{itemType},
 					 #{specification},
+					 #{itemType},
 					 #{unit},
 					 ISNULL(#{stockQty}, '0'),
 					 ISNULL(#{safetyStock}, '0'),
 					 #{remark},
 					 ISNULL(#{interfaceYn}, 'N'),
-					 ISNULL(#{useYn}, 'Y'),
+					 CASE WHEN ISNULL(#{useYn}, 'N') = 'Y' THEN '0' ELSE '1' END,
 					 #{regUserId},
 					 GETDATE()
 				 )
 	</insert>
 
 	<update id="ItemDAO.updateItem" parameterType="egovframework.let.basedata.item.domain.model.Item">
-		UPDATE TB_ITEM
+		UPDATE TCO403
 		SET
-			ITEM_CODE = #{itemCode},
-			ITEM_NAME = #{itemName},
-			ITEM_TYPE = #{itemType},
-			SPECIFICATION = #{specification},
+			MATERIAL_CODE = #{itemCode},
+			MATERIAL_NAME = #{itemName},
+			MATERIAL_SPEC = #{specification},
+			MATERIAL_FLAG = #{itemType},
 			UNIT = #{unit},
 			STOCK_QTY = #{stockQty},
 			SAFETY_STOCK = #{safetyStock},
-			REMARK = #{remark},
+			ETC = #{remark},
 			INTERFACE_YN = #{interfaceYn},
-			USE_YN = #{useYn},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE ITEM_ID = #{itemId}
+			DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
+			DELETE_DATE = CASE WHEN #{useYn} = 'Y' THEN '' ELSE GETDATE() END,
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		    AND MATERIAL_CODE = #{itemCode}
 	</update>
 
 	<delete id="ItemDAO.deleteItem" parameterType="string">
-		DELETE FROM TB_ITEM
-		WHERE ITEM_ID = #{itemId}
+-- 		DELETE FROM TCO403
+		UPDATE TCO403
+		    SET
+				DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
+				DELETE_DATE = CASE WHEN #{useYn} = 'Y' THEN '' ELSE GETDATE() END,
+				OPMAN_CODE2 = 'SYSTEM',
+				OPTIME2 = GETDATE()
+		WHERE MATERIAL_CODE = #{itemCode}
 	</delete>
 
 	<!-- 품목 코드 중복 체크 -->
 	<select id="ItemDAO.selectItemCodeCheck" parameterType="string" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_ITEM
-		WHERE ITEM_CODE = #{itemCode}
+		FROM TCO403
+		WHERE MATERIAL_CODE = #{itemCode}
 	</select>
 
 	<!-- 품목 코드 중복 체크 (수정 시) -->
 	<select id="ItemDAO.selectItemCodeCheckForUpdate" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TB_ITEM
-		WHERE ITEM_CODE = #{itemCode}
-		  AND ITEM_ID != #{itemId}
+		FROM TCO403
+		WHERE MATERIAL_CODE = #{itemCode}
 	</select>
 
 </mapper>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, use } from 'react';
 import {
   Box,
   Button,
@@ -32,13 +32,29 @@ import * as yup from 'yup';
 import { Item } from '../../../types/item';
 import itemService from '../../../services/itemService';
 
+// 천단위 콤마 포맷 함수
+const formatNumber = (value: string | number | undefined): string => {
+  if (!value && value !== 0) return '';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '';
+  return num.toLocaleString('ko-KR');
+};
+
+// 콤마 제거 함수
+const removeCommas = (value: string): string => {
+  return value.replace(/,/g, '');
+};
+
 // 품목 등록 유효성 검사 스키마
 const itemSchema: yup.ObjectSchema<Item> = yup.object({
   itemId: yup.string().optional(),
   itemCode: yup
     .string()
     .required('품목 코드는 필수입니다.')
-    .matches(/^[A-Za-z0-9-_]+$/, '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.')
+    .matches(
+      /^[A-Za-z0-9-_]+$/,
+      '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.'
+    )
     .max(50, '품목 코드는 최대 50자까지 입력 가능합니다.'),
   itemName: yup.string().required('품목명은 필수입니다.'),
   itemType: yup.string().optional(),
@@ -101,6 +117,7 @@ const ItemManagement: React.FC = () => {
     searchCnd: '1',
     searchWrd: '',
     itemType: '',
+    useYn: 'Y',
   });
 
   // 입력 필드용 상태 (화면 입력용)
@@ -108,6 +125,7 @@ const ItemManagement: React.FC = () => {
     searchCnd: '1',
     searchWrd: '',
     itemType: '',
+    useYn: 'Y',
   });
 
   // 품목 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
@@ -184,15 +202,22 @@ const ItemManagement: React.FC = () => {
 
   const handleSave = async (data: Item) => {
     try {
+      // 콤마 제거 후 저장
+      const saveData = {
+        ...data,
+        stockQty: removeCommas(data.stockQty || '0'),
+        safetyStock: removeCommas(data.safetyStock || '0'),
+      };
+
       if (dialogMode === 'create') {
-        const result = await itemService.createItem(data);
+        const result = await itemService.createItem(saveData);
         if (result.resultCode === 200) {
           showSnackbar('품목이 등록되었습니다.', 'success');
         } else {
           showSnackbar(result.result.message, 'error');
         }
       } else {
-        await itemService.updateItem(data.itemId!, data);
+        await itemService.updateItem(saveData.itemCode!, saveData);
         showSnackbar('품목이 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -204,10 +229,10 @@ const ItemManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (itemId: string) => {
+  const handleDelete = async (itemCode: string) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
-        await itemService.deleteItem(itemId);
+        await itemService.deleteItem(itemCode);
         showSnackbar('품목이 삭제되었습니다.', 'success');
         // 삭제 후 현재 검색 조건으로 다시 조회
         fetchItems();
@@ -242,7 +267,12 @@ const ItemManagement: React.FC = () => {
       field: 'itemName',
       headerName: '품목명',
       flex: 1.2,
-      align: 'center',
+      headerAlign: 'center',
+    },
+    {
+      field: 'specification',
+      headerName: '규격',
+      flex: 1,
       headerAlign: 'center',
     },
     {
@@ -260,13 +290,6 @@ const ItemManagement: React.FC = () => {
       ),
     },
     {
-      field: 'specification',
-      headerName: '규격',
-      flex: 1,
-      align: 'center',
-      headerAlign: 'center',
-    },
-    {
       field: 'unit',
       headerName: '단위',
       flex: 0.6,
@@ -277,13 +300,29 @@ const ItemManagement: React.FC = () => {
       field: 'stockQty',
       headerName: '재고수량',
       flex: 0.8,
+      align: 'right',
+      headerAlign: 'center',
+      renderCell: (params) => formatNumber(params.value),
+    },
+    {
+      field: 'useYn',
+      headerName: '사용여부',
+      flex: 0.5,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value === 'Y' ? '사용' : '미사용'}
+          color={params.value === 'Y' ? 'success' : 'default'}
+          size="small"
+        />
+      ),
     },
     {
       field: 'regDt',
       headerName: '등록일',
-      flex: 1.2,
+      width: 180,
       align: 'center',
       headerAlign: 'center',
     },
@@ -315,7 +354,7 @@ const ItemManagement: React.FC = () => {
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleDelete(params.row.itemId!)}
+              onClick={() => handleDelete(params.row.itemCode!)}
               title="삭제"
             >
               <DeleteIcon />
@@ -365,7 +404,18 @@ const ItemManagement: React.FC = () => {
             sx={{ flex: 1 }}
             placeholder="검색어를 입력하세요"
           />
-
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>사용여부</InputLabel>
+            <Select
+              value={inputValues.useYn}
+              label="사용여부"
+              onChange={(e) => handleInputChange('useYn', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="Y">사용</MenuItem>
+              <MenuItem value="N">미사용</MenuItem>
+            </Select>
+          </FormControl>
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>품목타입</InputLabel>
             <Select
@@ -447,7 +497,12 @@ const ItemManagement: React.FC = () => {
                     label="품목코드"
                     disabled={dialogMode === 'edit'}
                     error={!!itemErrors.itemCode}
-                    helperText={itemErrors.itemCode?.message || (dialogMode === 'edit' ? '수정 시 품목코드는 변경할 수 없습니다' : '')}
+                    helperText={
+                      itemErrors.itemCode?.message ||
+                      (dialogMode === 'edit'
+                        ? '수정 시 품목코드는 변경할 수 없습니다'
+                        : '')
+                    }
                   />
                 )}
               />
@@ -468,6 +523,13 @@ const ItemManagement: React.FC = () => {
             </Stack>
             <Stack direction="row" spacing={2}>
               <Controller
+                name="specification"
+                control={itemControl}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth label="규격" />
+                )}
+              />
+              <Controller
                 name="itemType"
                 control={itemControl}
                 render={({ field }) => (
@@ -478,13 +540,6 @@ const ItemManagement: React.FC = () => {
                       <MenuItem value="MATERIAL">자재</MenuItem>
                     </Select>
                   </FormControl>
-                )}
-              />
-              <Controller
-                name="specification"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="규격" />
                 )}
               />
             </Stack>
@@ -500,14 +555,46 @@ const ItemManagement: React.FC = () => {
                 name="stockQty"
                 control={itemControl}
                 render={({ field }) => (
-                  <TextField {...field} fullWidth label="재고수량" type="number" />
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="재고수량"
+                    value={formatNumber(field.value)}
+                    onChange={(e) => {
+                      const value = removeCommas(e.target.value);
+                      if (/^\d*$/.test(value)) {
+                        field.onChange(value);
+                      }
+                    }}
+                    inputProps={{
+                      inputMode: 'numeric',
+                      pattern: '[0-9,]*',
+                      style: { textAlign: 'right' },
+                    }}
+                  />
                 )}
               />
               <Controller
                 name="safetyStock"
                 control={itemControl}
                 render={({ field }) => (
-                  <TextField {...field} fullWidth label="안전재고" type="number" />
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="안전재고"
+                    value={formatNumber(field.value)}
+                    onChange={(e) => {
+                      const value = removeCommas(e.target.value);
+                      if (/^\d*$/.test(value)) {
+                        field.onChange(value);
+                      }
+                    }}
+                    inputProps={{
+                      inputMode: 'numeric',
+                      pattern: '[0-9,]*',
+                      style: { textAlign: 'right' },
+                    }}
+                  />
                 )}
               />
             </Stack>
@@ -555,7 +642,11 @@ const ItemManagement: React.FC = () => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleItemSubmit(handleSave)} variant="contained" color="primary">
+          <Button
+            onClick={handleItemSubmit(handleSave)}
+            variant="contained"
+            color="primary"
+          >
             저장
           </Button>
           <Button onClick={handleCloseDialog}>취소</Button>
