@@ -36,7 +36,7 @@ import { usePermissions } from '../../../contexts/PermissionContext';
 // 설비 등록 유효성 검사 스키마
 const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
   equipmentId: yup.string(),
-  equipSysCd: yup.string().required('시스템 코드는 필수입니다.'),
+  equipSysCd: yup.string(),
   equipCd: yup.string().required('설비 코드는 필수입니다.'),
   equipSpec: yup.string(),
   equipStruct: yup.string(),
@@ -46,12 +46,40 @@ const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
   manager2Code: yup.string(),
   opmanCode: yup.string(),
   opman2Code: yup.string(),
-  plcAddress: yup.string(),
+  plcAddress: yup
+    .string()
+    .test(
+      'is-valid-ip-port',
+      '올바른 IP:Port 형식이 아닙니다. (예: 192.168.1.1:502)',
+      (value) => {
+        if (!value) return true; // 빈 값 허용
+
+        // IP:Port 형식 검증
+        const ipPortRegex =
+          /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?::(\d+))?$/;
+        const match = value.match(ipPortRegex);
+
+        if (!match) return false;
+
+        // IP 주소 검증 (0-255)
+        const ipValid = match.slice(1, 5).every((octet) => {
+          const num = parseInt(octet, 10);
+          return num >= 0 && num <= 255;
+        });
+
+        // 포트 번호 검증 (1-65535)
+        const portValid =
+          !match[5] ||
+          (parseInt(match[5], 10) >= 1 && parseInt(match[5], 10) <= 65535);
+
+        return ipValid && portValid;
+      }
+    ),
   location: yup.string(),
   statusFlag: yup.string().required('상태는 필수입니다.'),
   optime2: yup.string(),
   remark: yup.string(),
-  equipmentName: yup.string(),
+  equipmentName: yup.string().required('설비명은 필수입니다.'),
   changeDate: yup.string(),
   regUserId: yup.string(),
   regDt: yup.string(),
@@ -216,7 +244,7 @@ const EquipmentManagement: React.FC = () => {
           );
         }
       } else {
-        await equipmentService.updateEquipment(data.equipmentId!, data);
+        await equipmentService.updateEquipment(data.equipCd!, data);
         showSnackbar('설비가 수정되었습니다.', 'success');
       }
       handleCloseDialog();
@@ -249,22 +277,22 @@ const EquipmentManagement: React.FC = () => {
     return statusFlag === '1' ? '정상' : '정지';
   };
 
-  const getUseFlagColor = (useFlag: string) => {
-    return useFlag === 'Y' ? 'primary' : 'default';
-  };
+  // const getUseFlagColor = (useFlag: string) => {
+  //   return useFlag === 'Y' ? 'primary' : 'default';
+  // };
 
-  const getUseFlagLabel = (useFlag: string) => {
-    return useFlag === 'Y' ? '사용' : '미사용';
-  };
+  // const getUseFlagLabel = (useFlag: string) => {
+  //   return useFlag === 'Y' ? '사용' : '미사용';
+  // };
 
   const columns: GridColDef[] = [
-    {
-      field: 'equipSysCd',
-      headerName: '시스템 코드',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-    },
+    // {
+    //   field: 'equipSysCd',
+    //   headerName: '시스템 코드',
+    //   flex: 1,
+    //   headerAlign: 'center',
+    //   align: 'center',
+    // },
     {
       field: 'equipCd',
       headerName: '설비 코드',
@@ -306,7 +334,7 @@ const EquipmentManagement: React.FC = () => {
     {
       field: 'regDt',
       headerName: '등록일',
-      width: 200,
+      width: 180,
       align: 'center',
       headerAlign: 'center',
     },
@@ -456,7 +484,7 @@ const EquipmentManagement: React.FC = () => {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
-              <Controller
+              {/* <Controller
                 name="equipSysCd"
                 control={equipmentControl}
                 render={({ field }) => (
@@ -470,7 +498,7 @@ const EquipmentManagement: React.FC = () => {
                     helperText={equipmentErrors.equipSysCd?.message}
                   />
                 )}
-              />
+              /> */}
               <Controller
                 name="equipCd"
                 control={equipmentControl}
@@ -491,7 +519,14 @@ const EquipmentManagement: React.FC = () => {
               name="equipmentName"
               control={equipmentControl}
               render={({ field }) => (
-                <TextField {...field} fullWidth label="설비명" />
+                <TextField
+                  {...field}
+                  fullWidth
+                  required
+                  label="설비명"
+                  error={!!equipmentErrors.equipmentName}
+                  helperText={equipmentErrors.equipmentName?.message}
+                />
               )}
             />
             <Stack direction="row" spacing={2}>
@@ -506,7 +541,7 @@ const EquipmentManagement: React.FC = () => {
                 name="equipStruct"
                 control={equipmentControl}
                 render={({ field }) => (
-                  <TextField {...field} fullWidth label="설비 구조" />
+                  <TextField {...field} fullWidth label="설비 종류" />
                 )}
               />
             </Stack>
@@ -517,7 +552,7 @@ const EquipmentManagement: React.FC = () => {
                 <TextField {...field} fullWidth label="위치" />
               )}
             />
-            <Stack direction="row" spacing={2}>
+            {/* <Stack direction="row" spacing={2}>
               <Controller
                 name="managerCode"
                 control={equipmentControl}
@@ -548,8 +583,8 @@ const EquipmentManagement: React.FC = () => {
                   <TextField {...field} fullWidth label="작업자2 코드" />
                 )}
               />
-            </Stack>
-            <Stack direction="row" spacing={2}>
+            </Stack> */}
+            {/* <Stack direction="row" spacing={2}>
               <Controller
                 name="optime"
                 control={equipmentControl}
@@ -574,12 +609,18 @@ const EquipmentManagement: React.FC = () => {
                   />
                 )}
               />
-            </Stack>
+            </Stack> */}
             <Controller
               name="plcAddress"
               control={equipmentControl}
               render={({ field }) => (
-                <TextField {...field} fullWidth label="PLC 주소" />
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="PLC 주소"
+                  error={!!equipmentErrors.plcAddress}
+                  helperText={equipmentErrors.plcAddress?.message}
+                />
               )}
             />
             <Stack direction="row" spacing={2}>

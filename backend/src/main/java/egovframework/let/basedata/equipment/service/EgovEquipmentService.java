@@ -58,10 +58,10 @@ public interface EgovEquipmentService {
 	/**
 	 * 설비를 삭제한다.
 	 * 
-	 * @param equipmentId
+	 * @param equipCd
 	 * @exception Exception
 	 */
-	public void deleteEquipment(String equipmentId) throws Exception;
+	public void deleteEquipment(String equipCd) throws Exception;
 
 	/**
 	 * 설비 코드 존재 여부 확인

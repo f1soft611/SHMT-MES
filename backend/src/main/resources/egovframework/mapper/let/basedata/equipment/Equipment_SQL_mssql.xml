@@ -7,53 +7,43 @@
 		<result property="equipmentId" column="EQUIPMENT_ID"/>
 		<result property="equipSysCd" column="EQUIP_SYS_CD"/>
 		<result property="equipCd" column="EQUIP_CD"/>
+		<result property="equipmentName" column="EQUIPMENT_NAME"/>
 		<result property="equipSpec" column="EQUIP_SPEC"/>
-		<result property="equipStruct" column="EQUIP_STRUCT"/>
-		<result property="useFlag" column="USE_FLAG"/>
-		<result property="optime" column="OPTIME"/>
-		<result property="managerCode" column="MANAGER_CODE"/>
-		<result property="manager2Code" column="MANAGER2_CODE"/>
-		<result property="opmanCode" column="OPMAN_CODE"/>
-		<result property="opman2Code" column="OPMAN2_CODE"/>
+		<result property="equipStruct" column="EQUIP_KIND"/>
 		<result property="plcAddress" column="PLC_ADDRESS"/>
 		<result property="location" column="LOCATION"/>
+		<result property="useFlag" column="USE_FLAG"/>
 		<result property="statusFlag" column="STATUS_FLAG"/>
-		<result property="optime2" column="OPTIME2"/>
-		<result property="remark" column="REMARK"/>
-		<result property="equipmentName" column="EQUIPMENT_NAME"/>
-		<result property="changeDate" column="CHANGE_DATE"/>
-		<result property="regUserId" column="REG_USER_ID"/>
-		<result property="regDt" column="REG_DT"/>
-		<result property="updUserId" column="UPD_USER_ID"/>
-		<result property="updDt" column="UPD_DT"/>
+		<result property="remark" column="BIGO"/>
+		<result property="managerCode" column="MANAGER1_CODE"/>
+		<result property="manager2Code" column="MANAGER2_CODE"/>
+		<result property="regUserId" column="OPMAN_CODE"/>
+		<result property="regDt" column="OPTIME"/>
+		<result property="updUserId" column="OPMAN_CODE2"/>
+		<result property="updDt" column="OPTIME2"/>
 	</resultMap>
 
 	<select id="EquipmentDAO.selectEquipmentList" parameterType="egovframework.let.basedata.equipment.domain.model.EquipmentVO" resultMap="equipmentResult">
 		SELECT
 			FACTORY_CODE,
-			EQUIPMENT_ID,
+			EQUIP_SYS_CD AS EQUIPMENT_ID,
 			EQUIP_SYS_CD,
 			EQUIP_CD,
+			EQUIPMENT_NAME,
 			EQUIP_SPEC,
-			EQUIP_STRUCT,
+			EQUIP_KIND,
 			USE_FLAG,
-			OPTIME,
-			MANAGER_CODE,
+			MANAGER1_CODE,
 			MANAGER2_CODE,
-			OPMAN_CODE,
-			OPMAN2_CODE,
 			PLC_ADDRESS,
 			LOCATION,
 			STATUS_FLAG,
-			OPTIME2,
-			REMARK,
-			EQUIPMENT_NAME,
-			CHANGE_DATE,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TBA051
+			BIGO,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR151
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
@@ -72,10 +62,8 @@
 		<if test="statusFlag != null and statusFlag != ''">
 			AND STATUS_FLAG = #{statusFlag}
 		</if>
-		<if test="useFlag != null and useFlag != ''">
-			AND USE_FLAG = #{useFlag}
-		</if>
-		ORDER BY REG_DT DESC
+		AND USE_FLAG = 'Y'
+		ORDER BY OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
@@ -84,7 +72,7 @@
 
 	<select id="EquipmentDAO.selectEquipmentListCnt" parameterType="egovframework.let.basedata.equipment.domain.model.EquipmentVO" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TBA051
+		FROM TPR151
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
@@ -103,133 +91,111 @@
 		<if test="statusFlag != null and statusFlag != ''">
 			AND STATUS_FLAG = #{statusFlag}
 		</if>
-		<if test="useFlag != null and useFlag != ''">
-			AND USE_FLAG = #{useFlag}
-		</if>
+		AND USE_FLAG = 'Y'
 	</select>
 
 	<select id="EquipmentDAO.selectEquipment" parameterType="string" resultMap="equipmentResult">
 		SELECT
 			FACTORY_CODE,
-			EQUIPMENT_ID,
+			EQUIP_SYS_CD AS EQUIPMENT_ID,
 			EQUIP_SYS_CD,
 			EQUIP_CD,
 			EQUIP_SPEC,
-			EQUIP_STRUCT,
+			EQUIP_KIND,
 			USE_FLAG,
-			OPTIME,
-			MANAGER_CODE,
+			MANAGER1_CODE,
 			MANAGER2_CODE,
-			OPMAN_CODE,
-			OPMAN2_CODE,
 			PLC_ADDRESS,
 			LOCATION,
 			STATUS_FLAG,
-			OPTIME2,
-			REMARK,
+			BIGO,
 			EQUIPMENT_NAME,
-			CHANGE_DATE,
-			REG_USER_ID,
-			CONVERT(VARCHAR(19), REG_DT, 120) AS REG_DT,
-			UPD_USER_ID,
-			CONVERT(VARCHAR(19), UPD_DT, 120) AS UPD_DT
-		FROM TBA051
-		WHERE EQUIPMENT_ID = #{equipmentId}
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR151
+		WHERE EQUIP_SYS_CD = #{equipSysCd}
 	</select>
 
 	<insert id="EquipmentDAO.insertEquipment" parameterType="egovframework.let.basedata.equipment.domain.model.Equipment">
-		INSERT INTO TBA051 (
+		INSERT INTO TPR151 (
 			FACTORY_CODE,
-			EQUIPMENT_ID,
 			EQUIP_SYS_CD,
 			EQUIP_CD,
 			EQUIP_SPEC,
-			EQUIP_STRUCT,
+			EQUIP_KIND,
 			USE_FLAG,
-			OPTIME,
-			MANAGER_CODE,
+			MANAGER1_CODE,
 			MANAGER2_CODE,
-			OPMAN_CODE,
-			OPMAN2_CODE,
 			PLC_ADDRESS,
 			LOCATION,
 			STATUS_FLAG,
-			OPTIME2,
-			REMARK,
+			BIGO,
 			EQUIPMENT_NAME,
-			CHANGE_DATE,
-			REG_USER_ID,
-			REG_DT
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
 			#{factoryCode},
-			#{equipmentId},
 			#{equipSysCd},
 			#{equipCd},
 			#{equipSpec},
 			#{equipStruct},
 			ISNULL(#{useFlag}, 'Y'),
-			#{optime},
 			#{managerCode},
 			#{manager2Code},
-			#{opmanCode},
-			#{opman2Code},
 			#{plcAddress},
 			#{location},
 			ISNULL(#{statusFlag}, '1'),
-			#{optime2},
 			#{remark},
 			#{equipmentName},
-			#{changeDate},
 			#{regUserId},
 			GETDATE()
 		)
 	</insert>
 
 	<update id="EquipmentDAO.updateEquipment" parameterType="egovframework.let.basedata.equipment.domain.model.Equipment">
-		UPDATE TBA051
+		UPDATE TPR151
 		SET
-			EQUIP_SYS_CD = #{equipSysCd},
 			EQUIP_CD = #{equipCd},
 			EQUIP_SPEC = #{equipSpec},
-			EQUIP_STRUCT = #{equipStruct},
+			EQUIP_KIND = #{equipStruct},
 			USE_FLAG = #{useFlag},
-			OPTIME = #{optime},
-			MANAGER_CODE = #{managerCode},
+			MANAGER1_CODE = #{managerCode},
 			MANAGER2_CODE = #{manager2Code},
-			OPMAN_CODE = #{opmanCode},
-			OPMAN2_CODE = #{opman2Code},
 			PLC_ADDRESS = #{plcAddress},
 			LOCATION = #{location},
 			STATUS_FLAG = #{statusFlag},
-			OPTIME2 = #{optime2},
-			REMARK = #{remark},
+			BIGO = #{remark},
 			EQUIPMENT_NAME = #{equipmentName},
-			CHANGE_DATE = #{changeDate},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
-		WHERE EQUIPMENT_ID = #{equipmentId}
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND EQUIP_SYS_CD = #{equipSysCd}
 	</update>
 
 	<delete id="EquipmentDAO.deleteEquipment" parameterType="string">
-		DELETE FROM TBA051
-		WHERE EQUIPMENT_ID = #{equipmentId}
+-- 		DELETE FROM TPR151
+		UPDATE TPR151
+			SET USE_FLAG = 'N',
+				OPMAN_CODE2 = 'SYSTEM',
+				OPTIME2 = GETDATE()
+		WHERE EQUIP_SYS_CD = #{equipSysCd}
 	</delete>
 
 	<!-- 설비 코드 중복 체크 -->
 	<select id="EquipmentDAO.selectEquipmentCodeCheck" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TBA051
-		WHERE EQUIP_SYS_CD = #{equipSysCd}
-		  AND EQUIP_CD = #{equipCd}
+		FROM TPR151
+		WHERE EQUIP_CD = #{equipCd}
+		AND USE_FLAG = 'Y'
 	</select>
 
 	<!-- 설비 코드 중복 체크 (수정 시) -->
 	<select id="EquipmentDAO.selectEquipmentCodeCheckForUpdate" parameterType="map" resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TBA051
-		WHERE EQUIP_SYS_CD = #{equipSysCd}
-		  AND EQUIP_CD = #{equipCd}
-		  AND EQUIPMENT_ID != #{equipmentId}
+		FROM TPR151
+		WHERE EQUIP_CD = #{equipCd}
 	</select>
 
 </mapper>
