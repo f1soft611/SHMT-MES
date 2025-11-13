@@ -267,6 +267,10 @@ const ProductionPlan: React.FC = () => {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleBatchChange = (updates: Partial<ProductionPlanData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
   const handleSearchChange = (field: string, value: string) => {
     setSearchValues({ ...searchValues, [field]: value });
   };
@@ -275,26 +279,16 @@ const ProductionPlan: React.FC = () => {
     showSnackbar('검색 기능은 백엔드 연동 후 구현됩니다.', 'success');
   };
 
-  const handleSave = () => {
-    if (
-      !formData.itemCode ||
-      !formData.itemName ||
-      formData.plannedQty <= 0 ||
-      !formData.equipmentCode
-    ) {
-      showSnackbar('필수 항목을 입력해주세요.', 'error');
-      return;
-    }
-
+  const handleSave = (data: ProductionPlanData) => {
     if (dialogMode === 'create') {
       const newPlan: ProductionPlanData = {
-        ...formData,
+        ...data,
         id: Date.now().toString(),
       };
       setPlans([...plans, newPlan]);
       showSnackbar('생산계획이 등록되었습니다.', 'success');
     } else {
-      setPlans(plans.map((p) => (p.id === formData.id ? formData : p)));
+      setPlans(plans.map((p) => (p.id === formData.id ? data : p)));
       showSnackbar('생산계획이 수정되었습니다.', 'success');
     }
 
@@ -987,6 +981,7 @@ const ProductionPlan: React.FC = () => {
         equipments={equipments}
         onSave={handleSave}
         onChange={handleChange}
+        onBatchChange={handleBatchChange}
       />
 
       {/* 스낵바 */}
