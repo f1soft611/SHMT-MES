@@ -22,7 +22,8 @@ export interface ProcessFlowProcess{
  * TPR112
  */
 export interface ProcessFlowItem {
-
+    itemCode: string;
+    itemName: string;
 }
 
 /**

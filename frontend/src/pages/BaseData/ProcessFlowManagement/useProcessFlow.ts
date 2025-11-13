@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useState} from "react";
 import {GridPaginationModel} from "@mui/x-data-grid";
 import { useForm } from "react-hook-form";
-import {ProcessFlow} from "../../../types/processFlow";
+import {ProcessFlow, ProcessFlowItem} from "../../../types/processFlow";
 import {yupResolver} from "@hookform/resolvers/yup";
 import { processFlowSchema } from "./processFlowSchema";
 import processFlowService from "../../../services/processFlowService";
@@ -14,8 +14,18 @@ export function useProcessFlow() {
 
 
     const [openDialog, setOpenDialog] = useState(false);
-    const [openDetailDialog, setOpenDetailDialog] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+
+    const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
+
+    // 공통 dialog
+    const [openDetailDialog, setOpenDetailDialog] = useState(false);
+
+    // 공정흐름별 공정
+
+    // 공정흐름별 제품
+    const [openItemDialog, setOpenItemDialog] = useState(false);
+    const [itemDialogMode, setItemDialogMode] = useState<"create" | "edit">("create");
 
 
     // 페이지네이션
@@ -38,6 +48,19 @@ export function useProcessFlow() {
             processFlowName:'',
             workplaceCode:''
         },
+    });
+
+    // react-hook-form 설정 - 공정흐름별 제품
+    const {
+        control: itemControl,
+        handleSubmit: handleItemSubmit,
+        reset: resetItemForm,
+        formState: { errors: itemErrors }
+    } = useForm<ProcessFlowItem>({
+        defaultValues: {
+            itemCode: "",
+            itemName: ""
+        }
     });
 
     // 실제 검색에 사용되는 파라미터
@@ -108,6 +131,29 @@ export function useProcessFlow() {
         setOpenDialog(false);
         resetProcessFlowForm();
     };
+
+    // detail Dialog 열기
+    const handleOpenDetailDialog = (row: ProcessFlow) => {
+        setSelectedFlow(row);
+        setOpenDetailDialog(true);
+    };
+
+    // detail Dialog 열기
+    const handleCloseDetailDialog = () => {
+        setOpenDetailDialog(false);
+    };
+
+    // 제품 신규 등록 Dialog 열기
+    const handleOpenItemDialog = () => {
+        setItemDialogMode("create");
+        setOpenItemDialog(true);
+    };
+
+    // 제품 dialog 닫기
+    const handleCloseItemDialog = () => {
+        setOpenItemDialog(false);
+    };
+
 
     // 저장(create or update)
     const handleSave = async (data: ProcessFlow) => {
@@ -207,8 +253,14 @@ export function useProcessFlow() {
 
         // dialog
         openDialog,
-        openDetailDialog,
         dialogMode,
+        openDetailDialog,
+        openItemDialog,
+        itemDialogMode,
+        handleOpenDetailDialog,
+        handleCloseDetailDialog,
+        handleOpenItemDialog,
+        handleCloseItemDialog,
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
@@ -218,6 +270,10 @@ export function useProcessFlow() {
         handleProcessFlowSubmit,
         resetProcessFlowForm,
         processFlowErrors,
+        itemControl,
+        handleItemSubmit,
+        resetItemForm,
+        itemErrors,
 
         // CRUD
         fetchProcessFlows,

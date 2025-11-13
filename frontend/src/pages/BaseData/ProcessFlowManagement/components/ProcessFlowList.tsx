@@ -5,6 +5,8 @@ import {Box, Button, IconButton, Paper, Stack} from "@mui/material";
 import {
     Edit as EditIcon,
     Delete as DeleteIcon,
+    Build as BuildIcon,
+    Extension as ExtensionIcon
 } from "@mui/icons-material";
 import { ProcessFlow } from "../../../../types/processFlow";
 
@@ -15,6 +17,7 @@ interface Props {
     onEdit: (row: ProcessFlow) => void;
     onDelete: (id: string) => void;
     onSelect: (row: ProcessFlow) => void;
+    onDetailOpen: (row: ProcessFlow) => void;
 }
 
 export default function ProcessFlowList({
@@ -23,20 +26,29 @@ export default function ProcessFlowList({
                                             setPaginationModel,
                                             onEdit,
                                             onDelete,
-                                   onSelect,
+                                   onSelect, onDetailOpen
                                         }: Props) {
 
     const columns: GridColDef[] = [
         {
-            field: "processFlowName",
-            headerName: "공정흐름명",
+            field: "workplaceCode",
+            headerName: "작업장",
             headerAlign: 'center',
+            align: 'center',
             flex: 1
         },
         {
-            field: "status",
-            headerName: "상태",
+            field: "processFlowCode",
+            headerName: "공정흐름코드",
             headerAlign: 'center',
+            align: 'center',
+            flex: 1
+        },
+        {
+            field: "processFlowName",
+            headerName: "공정흐름명",
+            headerAlign: 'center',
+            align: 'center',
             flex: 1
         },
         {
@@ -45,6 +57,7 @@ export default function ProcessFlowList({
             sortable: false,
             headerAlign: 'center',
             align: 'center',
+            width: 200,
             renderCell: (params) => (
                 <Box
                     sx={{
@@ -55,6 +68,20 @@ export default function ProcessFlowList({
                     }}
                 >
                     <Stack direction="row" spacing={1}>
+                        <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => onDetailOpen(params.row)}
+                        >
+                            <BuildIcon />
+                        </IconButton>
+                        <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => onDetailOpen(params.row)}
+                        >
+                            <ExtensionIcon />
+                        </IconButton>
                         <IconButton
                             size="small"
                             color="primary"

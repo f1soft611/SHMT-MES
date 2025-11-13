@@ -1,33 +1,25 @@
 // components/ItemList.tsx
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
-import {Box, Button, Paper, Stack} from "@mui/material";
-import {
-    Add as AddIcon,
-    Save as SaveIcon,
-    // Edit as EditIcon,
-    Delete as DeleteIcon,
-    // People as PeopleIcon,
-    Search as SearchIcon,
-    // Build as BuildIcon,
-} from '@mui/icons-material';
-import { Item } from "../../../../types/item";
+import itemService from "../../../../services/itemService";
 
-interface Props {
-    rows: Item[];
-    // paginationModel: GridPaginationModel;
-    // setPaginationModel: (model: GridPaginationModel) => void;
-    // onEdit: (row: Item) => void;
-    // onDelete: (id: string) => void;
-}
+export default function ItemList() {
 
-export default function ItemList({
-                                        rows,
-                                        // paginationModel,
-                                        // setPaginationModel,
-                                        // onEdit,
-                                        // onDelete,
-                                    }: Props) {
+    const [rows, setRows] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await itemService.getItemList(0, 9999);
+                const list = res?.result?.resultList ?? [];
+                setRows(list);
+            } catch (err) {
+                console.error("공정 조회 실패:", err);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const columns: GridColDef[] = [
         {
@@ -56,53 +48,15 @@ export default function ItemList({
             flex: 1,
             headerAlign: 'center',
         },
-        {
-            field: "actions",
-            headerName: "삭제",
-            sortable: false,
-            headerAlign: 'center',
-        },
     ];
 
     return (
         <>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    mb: 1,         // 리스트와 간격
-                }}
-            >
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        // onClick={handleSearch}
-                    >
-                        추가
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<SaveIcon />}
-                        // onClick={handleSearch}
-                    >
-                        저장
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<DeleteIcon />}
-                        // onClick={handleSearch}
-                    >
-                        삭제
-                    </Button>
-                </Stack>
-            </Box>
             <DataGrid
                 rows={rows}
                 columns={columns}
-                // getRowId={(row) => row.processFlowId || ''}
+                getRowId={(row) => row.factoryCode || ''}
                 disableRowSelectionOnClick
-                hideFooter
                 autoHeight
                 sx={{
                     border: 'none',

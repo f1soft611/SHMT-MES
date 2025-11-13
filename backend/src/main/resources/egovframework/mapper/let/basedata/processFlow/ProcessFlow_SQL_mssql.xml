@@ -12,8 +12,8 @@
 
         <result property="regUserId" column="OPMAN_CODE"/>
         <result property="regDt" column="OPTIME"/>
-<!--        <result property="updUserId" column="OPMAN_CODE2"/>-->
-<!--        <result property="updDt" column="OPTIME2"/>-->
+        <result property="updUserId" column="OPMAN_CODE2"/>
+        <result property="updDt" column="OPTIME2"/>
     </resultMap>
 
     <select id="ProcessFlowDAO.selectProcessFlowList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO" resultMap="processFlowResult">
@@ -60,6 +60,27 @@
         )
     </insert>
 
+    <update id="updateProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO">
+        UPDATE TPR110
+        SET
+            WORKCENTER_CODE = #{workplaceCode},
+            WORK_ORDER = #{processFlowCode},
+            WORK_ORDER_NM = #{processFlowName},
+            OPMAN_CODE2 = 'test2',
+            OPTIME2 = GETDATE()
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </update>
+
+    <update id="deleteProcessFlow" parameterType="string">
+        UPDATE TPR110
+        SET DELETE_FLAG = '1'
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </update>
+
+
+
+
+
     <select id="selectProcessByFlowId" parameterType="string" resultType="map">
         SELECT WORK_ORDER_ID, WORK_ORDER, WORK_CODE, WORK_SEQ
         FROM TPR110D
@@ -71,21 +92,6 @@
         FROM TPR112
         WHERE WORK_ORDER_ID = #{processFlowId}
     </select>
-
-    <update id="updateProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO">
-        UPDATE TPR110
-        SET
-            WORKCENTER_CODE = #{workplaceCode},
-            WORK_ORDER = #{processFlowCode},
-            WORK_ORDER_NM = #{processFlowName}
-        WHERE WORK_ORDER_ID = #{processFlowId}
-    </update>
-
-    <update id="deleteProcessFlow" parameterType="string">
-        UPDATE TPR110
-        SET DELETE_FLAG = '1'
-        WHERE WORK_ORDER_ID = #{processFlowId}
-    </update>
 
 
 </mapper>

@@ -20,7 +20,10 @@ import {
     ProcessFlowDialog,
     ProcessFlowList,
     ProcessList,
-    ItemList
+    ItemList,
+    ProcessFlowDetailDialog,
+    ProcessFlowProcessDialog,
+    ProcessFlowItemDialog
 } from "./components";
 
 const ProcessFlowManagement: React.FC = () => {
@@ -49,8 +52,14 @@ const ProcessFlowManagement: React.FC = () => {
 
         // dialog
         openDialog,
-        openDetailDialog,
         dialogMode,
+        openDetailDialog,
+        openItemDialog,
+        itemDialogMode,
+        handleOpenDetailDialog,
+        handleCloseDetailDialog,
+        handleOpenItemDialog,
+        handleCloseItemDialog,
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
@@ -60,6 +69,10 @@ const ProcessFlowManagement: React.FC = () => {
         handleProcessFlowSubmit,
         resetProcessFlowForm,
         processFlowErrors,
+        itemControl,
+        handleItemSubmit,
+        resetItemForm,
+        itemErrors,
 
         // CRUD
         fetchProcessFlows,
@@ -147,7 +160,7 @@ const ProcessFlowManagement: React.FC = () => {
             </Paper>
 
             <Grid container spacing={2} columns={12}>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 12 }}>
                     {/* 공정 흐름 목록 */}
                     <ProcessFlowList
                         rows={rows}
@@ -156,18 +169,22 @@ const ProcessFlowManagement: React.FC = () => {
                         onEdit={handleOpenEditDialog}
                         onDelete={handleDelete}
                         onSelect={handleSelectFlow}
+                        onDetailOpen={handleOpenDetailDialog}
                     />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Grid container spacing={2} direction="column">
-                        <Grid size={{ xs:12 }}>
-                            <ProcessList rows={processRows} />
-                        </Grid>
-                        <Grid size={{ xs:12 }}>
-                            <ItemList rows={itemRows} />
-                        </Grid>
-                    </Grid>
-                </Grid>
+                {/*<Grid size={{ xs: 12, md: 6 }}>*/}
+                {/*    <Grid container spacing={2} direction="column">*/}
+                {/*        <Grid size={{ xs:12 }}>*/}
+                {/*            <ProcessList rows={processRows} />*/}
+                {/*        </Grid>*/}
+                {/*        <Grid size={{ xs:12 }}>*/}
+                {/*            <ItemList*/}
+                {/*                rows={itemRows}*/}
+                {/*                onAdd={handleOpenItemDialog}*/}
+                {/*            />*/}
+                {/*        </Grid>*/}
+                {/*    </Grid>*/}
+                {/*</Grid>*/}
             </Grid>
 
             {/* 공정 흐름 등록/수정 다이얼로그 */}
@@ -179,6 +196,20 @@ const ProcessFlowManagement: React.FC = () => {
                 control={processFlowControl}
                 errors={processFlowErrors}
                 handleSubmit={handleProcessFlowSubmit}
+            />
+
+            <ProcessFlowDetailDialog
+                open={openDetailDialog}
+                onClose={handleCloseDetailDialog}
+                processRows={processRows}   // 공정 목록
+                itemRows={itemRows}         // 제품 목록
+            />
+
+            {/* 공정 흐름별 제품 등록/수정 다이얼로그 */}
+            <ProcessFlowItemDialog
+                open={openItemDialog}
+                dialogMode={itemDialogMode}
+                onClose={handleCloseItemDialog}
             />
 
             {/* 스낵바 */}
