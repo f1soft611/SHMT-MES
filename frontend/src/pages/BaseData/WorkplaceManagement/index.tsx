@@ -23,7 +23,6 @@ import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   People as PeopleIcon,
   Search as SearchIcon,
   Build as BuildIcon,
@@ -200,20 +199,6 @@ const WorkplaceManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (workplaceId: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await workplaceService.deleteWorkplace(workplaceId);
-        showSnackbar('작업장이 삭제되었습니다.', 'success');
-        // 삭제 후 현재 검색 조건으로 다시 조회
-        fetchWorkplaces();
-      } catch (error) {
-        console.error('Failed to delete workplace:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
-    }
-  };
-
   const handleOpenDetailDialog = (workplace: Workplace) => {
     setSelectedWorkplace(workplace);
     setDetailTab(0);
@@ -294,7 +279,7 @@ const WorkplaceManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '관리',
-      width: 200,
+      width: 150,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -339,7 +324,7 @@ const WorkplaceManagement: React.FC = () => {
             >
               <EditIcon />
             </IconButton>
-            <IconButton
+            {/* <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.workplaceId!)}
@@ -347,7 +332,7 @@ const WorkplaceManagement: React.FC = () => {
               disabled={!canWrite}
             >
               <DeleteIcon />
-            </IconButton>
+            </IconButton> */}
           </Stack>
         </Box>
       ),

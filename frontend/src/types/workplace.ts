@@ -16,7 +16,9 @@ export interface Workplace {
 export interface WorkplaceWorker {
   workplaceWorkerId?: string;
   workplaceId: string;
+  workplaceCode: string;
   workerId: string;
+  workerCode: string;
   workerName: string;
   position?: string;
   role?: string;

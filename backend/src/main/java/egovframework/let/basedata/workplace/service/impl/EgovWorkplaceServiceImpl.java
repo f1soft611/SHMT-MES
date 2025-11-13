@@ -118,7 +118,7 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	@Transactional
 	public void insertWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
 		String workplaceWorkerId = egovWorkplaceWorkerIdGnrService.getNextStringId();
-		workplaceWorker.setWorkplaceWorkerId(workplaceWorkerId);
+		workplaceWorker.setWorkerId(workplaceWorkerId);
 		workplaceWorkerDAO.insertWorkplaceWorker(workplaceWorker);
 	}
 
@@ -127,8 +127,8 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	 */
 	@Override
 	@Transactional
-	public void deleteWorkplaceWorker(String workplaceWorkerId) throws Exception {
-		workplaceWorkerDAO.deleteWorkplaceWorker(workplaceWorkerId);
+	public void deleteWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
+		workplaceWorkerDAO.deleteWorkplaceWorker(workplaceWorker);
 	}
 
 	@Override

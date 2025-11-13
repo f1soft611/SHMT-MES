@@ -12,11 +12,12 @@ import Layout from './components/common/Layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
-import CommonCodeManagement from './pages/BaseData/CommonCodeManagement/CommonCodeManagement';
+import CommonCodeManagement from './pages/BaseData/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
-import ProcessManagement from './pages/BaseData/ProcessManagement/ProcessManagement';
+import ProcessManagement from './pages/BaseData/ProcessManagement';
+import EquipmentManagement from './pages/BaseData/EquipmentManagement';
 import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
-import ProductionPlan from './pages/ProductionPlan/ProductionPlan';
+import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
@@ -71,6 +72,10 @@ function App() {
                         <Route
                           path={URL.PROCESS_MANAGEMENT}
                           element={<ProcessManagement />}
+                        />
+                        <Route
+                          path={URL.EQUIPMENT_MANAGEMENT}
+                          element={<EquipmentManagement />}
                         />
                         <Route
                           path={URL.ITEM_MANAGEMENT}

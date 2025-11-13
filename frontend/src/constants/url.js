@@ -6,6 +6,7 @@ const URL = {
   WORKPLACE_MANAGEMENT: '/base/workplace', //작업장 관리
   PROCESS_FLOW_MANAGEMENT: '/base/processflow', //공정 흐름 관리
   PROCESS_MANAGEMENT: '/base/process', //공정 관리
+  EQUIPMENT_MANAGEMENT: '/base/equipment', //설비 관리
   ITEM_MANAGEMENT: '/base/item', //품목 관리
   PRODUCTION_PLAN: '/prod/plan', //생산계획 수립
   PRODUCTION_ORDERS: '/prod/orders', //생산지시

@@ -54,12 +54,10 @@
 		<if test="status != null and status != ''">
 			AND STATUS = #{status}
 		</if>
-		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
-		</if>
 		<if test="equipmentIntegrationYn != null and equipmentIntegrationYn != ''">
 			AND EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn}
 		</if>
+		AND USE_YN = 'Y'
 		ORDER BY SORT_ORDER ASC, OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS

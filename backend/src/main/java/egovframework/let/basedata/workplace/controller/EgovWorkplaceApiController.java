@@ -222,13 +222,13 @@ public class EgovWorkplaceApiController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @GetMapping("/workplaces/{workplaceId}/workers")
+    @GetMapping("/workplaces/{workplaceCode}/workers")
     public ResultVO selectWorkplaceWorkerList(
-            @PathVariable String workplaceId,
+            @PathVariable String workplaceCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
         WorkplaceWorkerVO workplaceWorkerVO = new WorkplaceWorkerVO();
-        workplaceWorkerVO.setWorkplaceId(workplaceId);
+        workplaceWorkerVO.setWorkplaceCode(workplaceCode);
         
         List<WorkplaceWorkerVO> resultList = workplaceService.selectWorkplaceWorkerList(workplaceWorkerVO);
         
@@ -281,13 +281,16 @@ public class EgovWorkplaceApiController {
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @DeleteMapping("/workplaces/{workplaceId}/workers/{workplaceWorkerId}")
+    @DeleteMapping("/workplaces/{workplaceCode}/workers/{workerCode}")
     public ResultVO deleteWorkplaceWorker(
-            @PathVariable String workplaceId,
-            @PathVariable String workplaceWorkerId,
+            @PathVariable String workplaceCode,
+            @PathVariable String workerCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        workplaceService.deleteWorkplaceWorker(workplaceWorkerId);
+        WorkplaceWorkerVO workplaceWorkerVO = new WorkplaceWorkerVO();
+        workplaceWorkerVO.setWorkplaceCode(workplaceCode);
+        workplaceWorkerVO.setWorkerCode(workerCode);
+        workplaceService.deleteWorkplaceWorker(workplaceWorkerVO);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "작업자가 삭제되었습니다.");
@@ -308,13 +311,13 @@ public class EgovWorkplaceApiController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @GetMapping("/workplaces/{workplaceId}/processes")
+    @GetMapping("/workplaces/{workplaceCode}/processes")
     public ResultVO selectWorkplaceProcessList(
-            @PathVariable String workplaceId,
+            @PathVariable String workplaceCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
         WorkplaceProcessVO workplaceProcessVO = new WorkplaceProcessVO();
-        workplaceProcessVO.setWorkplaceId(workplaceId);
+        workplaceProcessVO.setWorkplaceCode(workplaceCode);
         
         List<WorkplaceProcessVO> resultList = workplaceService.selectWorkplaceProcessList(workplaceProcessVO);
         

@@ -29,6 +29,7 @@ import { Workplace, WorkplaceWorker } from '../../../../types/workplace';
 import workplaceService from '../../../../services/workplaceService';
 import UserSelectionDialog from '../../../../components/common/UserSelectionDialog';
 import { User } from '../../../../services/admin/userService';
+import { usePermissions } from '../../../../contexts/PermissionContext';
 
 interface WorkplaceWorkerTabProps {
   workplace: Workplace;
@@ -39,6 +40,10 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   workplace,
   showSnackbar,
 }) => {
+  // 권한 체크
+  const { hasWritePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base/workplace');
+
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -49,7 +54,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   const fetchWorkers = useCallback(async () => {
     try {
       const response = await workplaceService.getWorkplaceWorkers(
-        workplace.workplaceId!
+        workplace.workplaceCode!
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setWorkers(response.result.resultList);
@@ -57,7 +62,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
     } catch (error) {
       console.error('Failed to fetch workers:', error);
     }
-  }, [workplace.workplaceId]);
+  }, [workplace.workplaceCode]);
 
   useEffect(() => {
     fetchWorkers();
@@ -66,7 +71,9 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   const handleUserSelect = async (user: User) => {
     const newWorker: WorkplaceWorker = {
       workplaceId: workplace.workplaceId!,
+      workplaceCode: workplace.workplaceCode!,
       workerId: user.mberId,
+      workerCode: user.mberId,
       workerName: user.mberNm,
       position: '',
       role: 'MEMBER',
@@ -109,12 +116,12 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
     }
   };
 
-  const handleRemoveWorker = async (workplaceWorkerId: string) => {
+  const handleRemoveWorker = async (workplaceWorkerCode: string) => {
     if (window.confirm('작업자를 제외하시겠습니까?')) {
       try {
         await workplaceService.removeWorkplaceWorker(
-          workplace.workplaceId!,
-          workplaceWorkerId
+          workplace.workplaceCode!,
+          workplaceWorkerCode
         );
         showSnackbar('작업자가 제외되었습니다.', 'success');
         fetchWorkers();
@@ -189,14 +196,16 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               color="primary"
               onClick={() => handleEditWorker(params.row)}
               title="수정"
+              disabled={!canWrite}
             >
               <EditIcon />
             </IconButton>
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleRemoveWorker(params.row.workplaceWorkerId!)}
+              onClick={() => handleRemoveWorker(params.row.workerCode!)}
               title="삭제"
+              disabled={!canWrite}
             >
               <DeleteIcon />
             </IconButton>
@@ -221,6 +230,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setOpenUserDialog(true)}
+              disabled={!canWrite}
             >
               작업자 추가
             </Button>
@@ -232,7 +242,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
         <DataGrid
           rows={workers}
           columns={workerColumns}
-          getRowId={(row) => row.workplaceWorkerId || ''}
+          getRowId={(row) => row.workerCode || ''}
           hideFooterPagination
           disableRowSelectionOnClick
           sx={{

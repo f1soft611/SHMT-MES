@@ -101,12 +101,12 @@ public class EgovItemApiController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @GetMapping("/items/{itemId}")
+    @GetMapping("/items/{itemCode}")
     public ResultVO selectItem(
-            @PathVariable String itemId,
+            @PathVariable String itemCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        Item item = itemService.selectItem(itemId);
+        Item item = itemService.selectItem(itemCode);
         
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("item", item);
@@ -165,13 +165,13 @@ public class EgovItemApiController {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @PutMapping("/items/{itemId}")
+    @PutMapping("/items/{itemCode}")
     public ResultVO updateItem(
-            @PathVariable String itemId,
+            @PathVariable String itemCode,
             @RequestBody Item item,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        item.setItemId(itemId);
+        item.setItemCode(itemCode);
         item.setUpdUserId(user.getUniqId());
         itemService.updateItem(item);
 
@@ -194,12 +194,12 @@ public class EgovItemApiController {
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @DeleteMapping("/items/{itemId}")
+    @DeleteMapping("/items/{itemCode}")
     public ResultVO deleteItem(
-            @PathVariable String itemId,
+            @PathVariable String itemCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        itemService.deleteItem(itemId);
+        itemService.deleteItem(itemCode);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "품목이 삭제되었습니다.");

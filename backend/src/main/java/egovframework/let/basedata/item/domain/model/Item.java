@@ -33,6 +33,9 @@ public class Item implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@Schema(description = "회사 코드")
+	private String factoryCode = "000001";
+
 	@Schema(description = "품목 ID")
 	private String itemId = "";
 

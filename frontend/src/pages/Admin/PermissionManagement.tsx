@@ -1,35 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   IconButton,
   Alert,
   Chip,
   Card,
   CardContent,
   Checkbox,
-  FormControlLabel,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Security as SecurityIcon,
   Description as DescriptionIcon,
@@ -65,7 +54,7 @@ const PermissionManagement: React.FC = () => {
     // { id: 5, name: 'ROLE_VIEWER (조회전용)' },
   ];
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -89,11 +78,11 @@ const PermissionManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedRole]);
 
   useEffect(() => {
     loadData();
-  }, [selectedRole]);
+  }, [selectedRole, loadData]);
 
   const handleRoleChange = (roleId: string) => {
     setSelectedRole(roleId);
