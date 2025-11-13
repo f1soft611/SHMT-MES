@@ -104,6 +104,7 @@ export default function ProcessFlowDialog({
                                     size="small"
                                     error={!!errors.processFlowCode}
                                     helperText={errors.processFlowCode?.message}
+                                    disabled={dialogMode === "edit"}
                                 />
                             )}
                         />
