@@ -1825,9 +1825,9 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovWorkplaceIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(1)
+			.setBlockSize(10)
 			.setTable("IDS")
-			.setTableName("TPR101")
+			.setTableName("TB_WORKPLACE")
 			.setPreFix("WP")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1841,9 +1841,9 @@ public class EgovConfigAppIdGen {
 	public EgovTableIdGnrServiceImpl egovWorkplaceWorkerIdGnrService() {
 		return new EgovIdGnrBuilder().setDataSource(dataSource)
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
-			.setBlockSize(1)
+			.setBlockSize(10)
 			.setTable("IDS")
-			.setTableName("TPR106")
+			.setTableName("TB_WORKPLACE_WORKER")
 			.setPreFix("WPW")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1859,9 +1859,9 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(10)
 			.setTable("IDS")
-			.setTableName("TCO403")
+			.setTableName("TB_ITEM")
 			.setPreFix("ITEM")
-			.setCipers(6)
+			.setCipers(15)
 			.setFillChar('0')
 			.build();
 	}
@@ -1875,7 +1875,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TPR102")
+			.setTableName("TB_PROCESS")
 			.setPreFix("PR")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1891,7 +1891,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TPR103")
+			.setTableName("TB_WORKPLACE_PROCESS")
 			.setPreFix("WPR")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1907,7 +1907,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TPR109")
+			.setTableName("TB_PROCESS_DEFECT")
 			.setPreFix("PRD")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1923,7 +1923,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TPR107")
+			.setTableName("TB_PROCESS_INSPECTION")
 			.setPreFix("PRI")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1939,7 +1939,7 @@ public class EgovConfigAppIdGen {
 			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
 			.setBlockSize(1)
 			.setTable("IDS")
-			.setTableName("TPR108")
+			.setTableName("TB_PROCESS_STOP_ITEM")
 			.setPreFix("PRS")
 			.setCipers(3)
 			.setFillChar('0')
@@ -1960,6 +1960,22 @@ public class EgovConfigAppIdGen {
 			.setCipers(3)
 			.setFillChar('0')
 			.build();
+	}
+
+	/** 공정 흐름 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessFlowIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR110")
+				.setPreFix("PF")
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
 	}
 
 }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessFlowDAO">
+    <resultMap id="processFlowResult" type="egovframework.let.basedata.processFlow.domain.model.ProcessFlow">
+        <result property="factoryCode" column="FACTORY_CODE"/>
+        <result property="processFlowId" column="WORK_ORDER_ID"/>
+        <result property="processFlowCode" column="WORK_ORDER"/>
+        <result property="processFlowName" column="WORK_ORDER_NM"/>
+        <result property="workplaceCode" column="WORKCENTER_CODE"/>
+
+        <result property="deleteFlag" column="DELETE_FLAG"/>
+
+        <result property="regUserId" column="OPMAN_CODE"/>
+        <result property="regDt" column="OPTIME"/>
+        <result property="updUserId" column="OPMAN_CODE2"/>
+        <result property="updDt" column="OPTIME2"/>
+    </resultMap>
+
+    <select id="ProcessFlowDAO.selectProcessFlowList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO" resultMap="processFlowResult">
+        SELECT
+        FACTORY_CODE,
+        WORK_ORDER_ID,
+        WORK_ORDER,
+        WORK_ORDER_NM,
+        OPMAN_CODE,
+        WORKCENTER_CODE,
+        USE_YN,
+        OPTIME,
+        OPMAN_CODE
+        FROM TPR110
+        WHERE 1=1
+        AND FACTORY_CODE = #{factoryCode}
+        AND ISNULL(DELETE_FLAG,'') != '1'
+        ORDER BY OPTIME DESC
+        <if test="firstIndex != null and recordCountPerPage != null">
+            OFFSET #{firstIndex} ROWS
+            FETCH NEXT #{recordCountPerPage} ROWS ONLY
+        </if>
+    </select>
+
+    <insert id="ProcessFlowDAO.insertProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlow">
+        INSERT INTO TPR110 (
+            FACTORY_CODE,
+            WORKCENTER_CODE,
+            WORK_ORDER_ID,
+            WORK_ORDER,
+            WORK_ORDER_NM,
+            DELETE_FLAG,
+            OPTIME,
+            OPMAN_CODE
+        ) VALUES (
+            #{factoryCode},
+            #{workplaceCode},
+            #{processFlowId},
+            #{processFlowCode},
+            #{processFlowName},
+            '0',
+            GETDATE(),
+            'test'
+        )
+    </insert>
+
+    <update id="updateProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO">
+        UPDATE TPR110
+        SET
+            WORKCENTER_CODE = #{workplaceCode},
+            WORK_ORDER = #{processFlowCode},
+            WORK_ORDER_NM = #{processFlowName},
+            OPMAN_CODE2 = 'test2',
+            OPTIME2 = GETDATE()
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </update>
+
+    <update id="deleteProcessFlow" parameterType="string">
+        UPDATE TPR110
+        SET DELETE_FLAG = '1'
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </update>
+
+
+
+
+
+    <select id="selectProcessByFlowId" parameterType="string" resultType="map">
+        SELECT WORK_ORDER_ID, WORK_ORDER, WORK_CODE, WORK_SEQ
+        FROM TPR110D
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </select>
+
+    <select id="selectItemByFlowId" parameterType="string" resultType="map">
+        SELECT WORK_ORDER_ID, PROD_CODE
+        FROM TPR112
+        WHERE WORK_ORDER_ID = #{processFlowId}
+    </select>
+
+
+</mapper>

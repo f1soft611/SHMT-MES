@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcessFlowProcessDAO">
+    <resultMap id="processFlowProcessResult" type="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess">
+        <result property="factoryCode" column="FACTORY_CODE"/>
+        <result property="processFlowId" column="WORK_ORDER_ID"/>
+        <result property="processFlowCode" column="WORK_ORDER"/>
+        <result property="flowProcessID" column="FLOW_PROCESS_ID"/>
+        <result property="flowProcessCode" column="WORK_CODE"/>
+        <result property="flowProcessSeq" column="SEQ"/>
+        <result property="flowProcessCodeSeq" column="WORK_SEQ"/>
+        <result property="lastFlag" column="LAST_FLAG"/>
+
+        <result property="regUserId" column="OPMAN_CODE"/>
+        <result property="regDt" column="OPTIME"/>
+        <result property="updUserId" column="OPMAN_CODE2"/>
+        <result property="updDt" column="OPTIME2"/>
+    </resultMap>
+
+    <select id="ProcessFlowProcessDAO.selectProcessFlowProcessList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcessVO" resultMap="processFlowProcessResult">
+        SELECT
+        FACTORY_CODE,
+        WORK_ORDER_ID,
+        WORK_ORDER,
+        FLOW_PROCESS_ID,
+        WORK_CODE,
+        SEQ,
+        WORK_SEQ,
+        LAST_FLAG,
+        OPTIME,
+        OPMAN_CODE,
+        OPTIME2,
+        OPMAN_CODE2
+        FROM TPR110D
+        WHERE 1=1
+        AND FACTORY_CODE = #{factoryCode}
+        AND WORK_ORDER_ID = #{processFlowId}
+        ORDER BY FLOW_PROCESS_ID
+    </select>
+
+    <insert id="ProcessFlowProcessDAO.insertProcessFlowProcess" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess">
+        INSERT INTO TPR110D (
+            FACTORY_CODE,
+            WORK_ORDER_ID,
+            WORK_ORDER,
+            SEQ,
+            WORK_CODE,
+            WORK_SEQ,
+            LAST_FLAG,
+            FLOW_PROCESS_ID,
+            OPTIME,
+            OPMAN_CODE,
+        ) VALUES (
+            #{factoryCode},
+            #{processFlowId},
+            #{processFlowCode},
+            #{flowProcessSeq},
+            #{flowProcessCode},
+            #{flowProcessCodeSeq},
+            #{lastFlag},
+            #{flowProcessID},
+            GETDATE(),
+            'test'
+        )
+    </insert>
+
+    <update id="ProcessFlowProcessDAO.updateProcessFlowProcess" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess">
+        UPDATE TPR110D
+        SET
+            OPMAN_CODE2 = 'test2',
+            OPTIME2 = GETDATE()
+        WHERE WORK_ORDER_ID = #{processFlowId}
+        AND FLOW_PROCESS_ID = #{flowProcessID}
+    </update>
+
+    <update id="ProcessFlowProcessDAO.deleteProcessFlowProcess" parameterType="string">
+        UPDATE TPR110D
+        SET DELETE_FLAG = '1'
+        WHERE FLOW_PROCESS_ID = #{flowProcessID}
+    </update>
+
+
+</mapper>
