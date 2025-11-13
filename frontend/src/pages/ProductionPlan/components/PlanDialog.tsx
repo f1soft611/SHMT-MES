@@ -72,6 +72,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleSelectRequest = (request: ProductionRequest) => {
+    console.log(request);
+
     setSelectedRequest(request);
     // 생산의뢰 정보를 폼 데이터에 반영
     onChange('itemCode', request.itemCode || '');
