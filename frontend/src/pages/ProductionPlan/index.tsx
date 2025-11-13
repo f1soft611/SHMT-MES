@@ -21,6 +21,9 @@ import {
   CardContent,
   Tooltip,
   Badge,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,8 +38,10 @@ import {
   FilterList as FilterListIcon,
   ViewWeek as ViewWeekIcon,
   Refresh as RefreshIcon,
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
-import { workplaceService } from '../../services/workplaceService';
+import equipmentService from '../../services/equipmentService';
+import { Equipment } from '../../types/equipment';
 import PlanDialog from './components/PlanDialog';
 
 interface ProductionPlanData {
@@ -45,17 +50,14 @@ interface ProductionPlanData {
   itemCode: string;
   itemName: string;
   plannedQty: number;
-  workplaceCode: string;
-  workplaceName?: string;
+  equipmentCode: string;
+  equipmentName?: string;
   shift?: string;
   remark?: string;
-}
-
-interface Workplace {
-  workplaceId?: string;
-  workplaceCode: string;
-  workplaceName: string;
-  expanded?: boolean;
+  orderNo?: string;
+  orderSeqno?: number;
+  orderHistno?: number;
+  lotNo?: string;
 }
 
 const ProductionPlan: React.FC = () => {
@@ -122,66 +124,88 @@ const ProductionPlan: React.FC = () => {
     itemCode: '',
     itemName: '',
     plannedQty: 0,
-    workplaceCode: '',
-    workplaceName: '',
+    equipmentCode: '',
+    equipmentName: '',
     shift: 'DAY',
     remark: '',
+    lotNo: '',
   });
 
   const [searchValues, setSearchValues] = useState({
     itemCode: '',
     itemName: '',
-    workplaceCode: '',
+    equipmentCode: '',
   });
 
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
-  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
-  const [expandedWorkplaces, setExpandedWorkplaces] = useState<Set<string>>(
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set()
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
 
+  // 요일별 표시 상태 (월~일)
+  const [visibleDays, setVisibleDays] = useState<boolean[]>([
+    true, // 월요일
+    true, // 화요일
+    true, // 수요일
+    true, // 목요일
+    true, // 금요일
+    true, // 토요일
+    true, // 일요일
+  ]);
+  const [showDayFilter, setShowDayFilter] = useState(false);
+
   useEffect(() => {
-    loadWorkplaces();
+    loadEquipments();
   }, []);
 
-  const loadWorkplaces = async () => {
+  const loadEquipments = async () => {
     try {
-      const response = await workplaceService.getWorkplaceList(0, 100);
+      const response = await equipmentService.getEquipmentList(0, 100);
       if (response.resultCode === 200 && response.result?.resultList) {
-        const workplaceList = response.result.resultList.map((wp: any) => ({
-          workplaceId: wp.workplaceId,
-          workplaceCode: wp.workplaceCode,
-          workplaceName: wp.workplaceName,
-          expanded: false,
+        const equipmentList = response.result.resultList.map((eq: any) => ({
+          equipmentId: eq.equipmentId,
+          equipCd: eq.equipCd,
+          equipmentName: eq.equipmentName,
         }));
-        setWorkplaces(workplaceList);
-        setExpandedWorkplaces(
-          new Set(workplaceList.map((wp: Workplace) => wp.workplaceCode))
+        setEquipments(equipmentList);
+        setExpandedEquipments(
+          new Set(equipmentList.map((eq: Equipment) => eq.equipCd))
         );
       }
     } catch (error) {
-      console.error('Failed to load workplaces:', error);
-      const mockWorkplaces = [
-        { workplaceCode: 'WP-001', workplaceName: '설비1', expanded: true },
-        { workplaceCode: 'WP-002', workplaceName: '설비2', expanded: true },
-        { workplaceCode: 'WP-003', workplaceName: '설비3', expanded: true },
+      console.error('Failed to load equipments:', error);
+      const mockEquipments = [
+        { equipCd: 'EQ-001', equipmentName: '설비1' },
+        { equipCd: 'EQ-002', equipmentName: '설비2' },
+        { equipCd: 'EQ-003', equipmentName: '설비3' },
       ];
-      setWorkplaces(mockWorkplaces);
-      setExpandedWorkplaces(
-        new Set(mockWorkplaces.map((wp) => wp.workplaceCode))
+      setEquipments(mockEquipments as Equipment[]);
+      setExpandedEquipments(
+        new Set(mockEquipments.map((eq) => eq.equipCd))
       );
     }
   };
 
-  const toggleWorkplace = (workplaceCode: string) => {
-    const newExpanded = new Set(expandedWorkplaces);
-    if (newExpanded.has(workplaceCode)) {
-      newExpanded.delete(workplaceCode);
+  const toggleEquipment = (equipmentCode: string) => {
+    const newExpanded = new Set(expandedEquipments);
+    if (newExpanded.has(equipmentCode)) {
+      newExpanded.delete(equipmentCode);
     } else {
-      newExpanded.add(workplaceCode);
+      newExpanded.add(equipmentCode);
     }
-    setExpandedWorkplaces(newExpanded);
+    setExpandedEquipments(newExpanded);
+  };
+
+  const toggleDayVisibility = (dayIndex: number) => {
+    const newVisibleDays = [...visibleDays];
+    newVisibleDays[dayIndex] = !newVisibleDays[dayIndex];
+    setVisibleDays(newVisibleDays);
+  };
+
+  const toggleAllDays = (visible: boolean) => {
+    setVisibleDays(visibleDays.map(() => visible));
   };
 
   const getWeekDays = (): Date[] => {
@@ -214,7 +238,7 @@ const ProductionPlan: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleOpenCreateDialog = (date: string, workplaceCode?: string) => {
+  const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -222,10 +246,11 @@ const ProductionPlan: React.FC = () => {
       itemCode: '',
       itemName: '',
       plannedQty: 0,
-      workplaceCode: workplaceCode || '',
-      workplaceName: '',
+      equipmentCode: equipmentCode || '',
+      equipmentName: '',
       shift: 'DAY',
       remark: '',
+      lotNo: '',
     });
     setOpenDialog(true);
   };
@@ -257,7 +282,7 @@ const ProductionPlan: React.FC = () => {
       !formData.itemCode ||
       !formData.itemName ||
       formData.plannedQty <= 0 ||
-      !formData.workplaceCode
+      !formData.equipmentCode
     ) {
       showSnackbar('필수 항목을 입력해주세요.', 'error');
       return;
@@ -285,9 +310,9 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  const getPlansForDateAndWorkplace = (date: string, workplaceCode: string) => {
+  const getPlansForDateAndEquipment = (date: string, equipmentCode: string) => {
     return plans.filter(
-      (p) => p.date === date && p.workplaceCode === workplaceCode
+      (p) => p.date === date && p.equipmentCode === equipmentCode
     );
   };
 
@@ -357,6 +382,20 @@ const ProductionPlan: React.FC = () => {
             </Box>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="요일 표시 설정">
+              <IconButton
+                onClick={() => setShowDayFilter(!showDayFilter)}
+                sx={{
+                  bgcolor: showDayFilter ? 'warning.main' : 'grey.100',
+                  color: showDayFilter ? 'white' : 'text.secondary',
+                  '&:hover': {
+                    bgcolor: showDayFilter ? 'warning.dark' : 'grey.200',
+                  },
+                }}
+              >
+                <VisibilityIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="검색 필터">
               <IconButton
                 onClick={() => setShowSearchPanel(!showSearchPanel)}
@@ -373,7 +412,7 @@ const ProductionPlan: React.FC = () => {
             </Tooltip>
             <Tooltip title="새로고침">
               <IconButton
-                onClick={loadWorkplaces}
+                onClick={loadEquipments}
                 sx={{
                   bgcolor: 'grey.100',
                   color: 'text.secondary',
@@ -386,6 +425,60 @@ const ProductionPlan: React.FC = () => {
           </Box>
         </Box>
       </Paper>
+
+      {/* 요일 표시 설정 패널 */}
+      <Collapse in={showDayFilter}>
+        <Card sx={{ mb: 2, boxShadow: 2 }}>
+          <CardContent>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                fontWeight: 600,
+              }}
+            >
+              <VisibilityIcon color="warning" />
+              요일 표시 설정
+            </Typography>
+            <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+              <FormGroup row>
+                {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
+                  <FormControlLabel
+                    key={day}
+                    control={
+                      <Checkbox
+                        checked={visibleDays[index]}
+                        onChange={() => toggleDayVisibility(index)}
+                        color="primary"
+                      />
+                    }
+                    label={`${day}요일`}
+                  />
+                ))}
+              </FormGroup>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(true)}
+                >
+                  전체 표시
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(false)}
+                >
+                  전체 숨김
+                </Button>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       {/* 검색 영역 */}
       <Collapse in={showSearchPanel}>
@@ -426,10 +519,10 @@ const ProductionPlan: React.FC = () => {
               />
               <TextField
                 size="small"
-                label="작업장"
-                value={searchValues.workplaceCode}
+                label="설비"
+                value={searchValues.equipmentCode}
                 onChange={(e) =>
-                  handleSearchChange('workplaceCode', e.target.value)
+                  handleSearchChange('equipmentCode', e.target.value)
                 }
                 sx={{ minWidth: 180 }}
               />
@@ -530,7 +623,9 @@ const ProductionPlan: React.FC = () => {
                     설비
                   </Box>
                 </TableCell>
-                {weekDays.map((day) => {
+                {weekDays.map((day, dayIndex) => {
+                  if (!visibleDays[dayIndex]) return null;
+                  
                   const isToday = isSameDay(day, new Date());
                   const isWeekendDay = isWeekend(day);
                   const dateStr = formatDate(day, 'YYYY-MM-DD');
@@ -592,7 +687,7 @@ const ProductionPlan: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {workplaces.length === 0 ? (
+              {equipments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                     <Box sx={{ opacity: 0.6 }}>
@@ -613,12 +708,12 @@ const ProductionPlan: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                workplaces.map((workplace, index) => {
-                  const isExpanded = expandedWorkplaces.has(
-                    workplace.workplaceCode
+                equipments.map((equipment, index) => {
+                  const isExpanded = expandedEquipments.has(
+                    equipment.equipCd
                   );
                   return (
-                    <React.Fragment key={workplace.workplaceCode}>
+                    <React.Fragment key={equipment.equipCd}>
                       <TableRow
                         sx={{
                           '&:hover': { backgroundColor: 'action.hover' },
@@ -633,7 +728,7 @@ const ProductionPlan: React.FC = () => {
                             borderColor: 'divider',
                           }}
                           onClick={() =>
-                            toggleWorkplace(workplace.workplaceCode)
+                            toggleEquipment(equipment.equipCd)
                           }
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -659,21 +754,23 @@ const ProductionPlan: React.FC = () => {
                                 variant="body1"
                                 sx={{ fontWeight: 700, color: 'text.primary' }}
                               >
-                                {workplace.workplaceName}
+                                {equipment.equipmentName}
                               </Typography>
                               <Chip
-                                label={workplace.workplaceCode}
+                                label={equipment.equipCd}
                                 size="small"
                                 sx={{ mt: 0.5 }}
                               />
                             </Box>
                           </Box>
                         </TableCell>
-                        {weekDays.map((day) => {
+                        {weekDays.map((day, dayIndex) => {
+                          if (!visibleDays[dayIndex]) return null;
+                          
                           const dateStr = formatDate(day, 'YYYY-MM-DD');
-                          const dayPlans = getPlansForDateAndWorkplace(
+                          const dayPlans = getPlansForDateAndEquipment(
                             dateStr,
-                            workplace.workplaceCode
+                            equipment.equipCd
                           );
                           const isWeekendDay = isWeekend(day);
 
@@ -703,7 +800,7 @@ const ProductionPlan: React.FC = () => {
                                     onClick={() =>
                                       handleOpenCreateDialog(
                                         dateStr,
-                                        workplace.workplaceCode
+                                        equipment.equipCd
                                       )
                                     }
                                     variant="contained"
@@ -761,6 +858,17 @@ const ProductionPlan: React.FC = () => {
                                               >
                                                 {plan.itemName}
                                               </Typography>
+                                              {plan.lotNo && (
+                                                <Typography
+                                                  variant="caption"
+                                                  sx={{
+                                                    display: 'block',
+                                                    color: 'text.secondary',
+                                                  }}
+                                                >
+                                                  LOT: {plan.lotNo}
+                                                </Typography>
+                                              )}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
@@ -788,6 +896,15 @@ const ProductionPlan: React.FC = () => {
                                                   }
                                                 />
                                               </Box>
+                                              {plan.orderNo && (
+                                                <Chip
+                                                  label={`의뢰: ${plan.orderNo}`}
+                                                  size="small"
+                                                  sx={{ mt: 0.5 }}
+                                                  color="info"
+                                                  variant="outlined"
+                                                />
+                                              )}
                                             </Box>
                                             <Box
                                               sx={{
@@ -860,14 +977,13 @@ const ProductionPlan: React.FC = () => {
       </Paper>
 
       {/* 등록/수정 다이얼로그 */}
-      {/* 등록/수정 다이얼로그 */}
       <PlanDialog
         open={openDialog}
         onClose={handleCloseDialog}
         dialogMode={dialogMode}
         selectedDate={selectedDate}
         formData={formData}
-        workplaces={workplaces}
+        equipments={equipments}
         onSave={handleSave}
         onChange={handleChange}
       />
