@@ -13,7 +13,7 @@ import {
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import { useQuery } from '@tanstack/react-query';
-import { schedulerService } from '../../services/schedulerService';
+import { schedulerService } from '../../../services/schedulerService';
 
 const SchedulerHistoryList: React.FC = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
