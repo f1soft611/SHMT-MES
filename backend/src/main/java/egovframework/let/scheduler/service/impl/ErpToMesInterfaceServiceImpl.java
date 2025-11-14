@@ -321,7 +321,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 				"ZipCode, CustKindName, LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_TDACust " +
 				"WHERE SMCustStatus = '2004001' " +  // 정상 거래처만 동기화 (필요시 조건 수정)
-				"AND CustSeq = 4874 " +
+				"AND CustSeq IN (4305) " +
+				"AND CustKindName IN ('국내매출거래처', '수출거래처') " +
 				"ORDER BY CustSeq";
 
 		return erpJdbcTemplate.query(sql, new ErpCustomerRowMapper());

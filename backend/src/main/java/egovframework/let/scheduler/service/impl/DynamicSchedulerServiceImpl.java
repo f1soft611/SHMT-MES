@@ -103,7 +103,6 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         }
     }
 
-    // backend/src/main/java/egovframework/let/scheduler/service/impl/DynamicSchedulerServiceImpl.java
     private Runnable createTaskRunnable(SchedulerConfig config) {
         return () -> {
             SchedulerHistory history = new SchedulerHistory();
@@ -125,12 +124,6 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
             try {
                 // 스케쥴러 실행
-//                String jobClassName = config.getJobClassName();
-//                Object jobInstance = applicationContext.getBean(jobClassName);
-//                Method executeMethod = jobInstance.getClass().getMethod("execute");
-//                executeMethod.invoke(jobInstance);
-
-                // 실제 작업 실행
                 executeJob(config);
 
                 // ✅ 성공 처리
