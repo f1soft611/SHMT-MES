@@ -18,7 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { schedulerService } from '../../services/schedulerService';
+import { schedulerService } from '../../../services/schedulerService';
 
 interface SchedulerListProps {
   onEdit: (schedulerId: number) => void;
