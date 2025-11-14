@@ -16,6 +16,7 @@
             FACTORY_CODE,
             CUSTOMER_CODE,
             CUSTOMER_NAME,
+            DELETE_FLAG,
             BUSINESS_NO,
             ADDRESS,
             POST_CODE,
