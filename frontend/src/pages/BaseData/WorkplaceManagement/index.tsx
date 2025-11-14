@@ -488,13 +488,37 @@ const WorkplaceManagement: React.FC = () => {
                   <TextField {...field} fullWidth label="위치" />
                 )}
               />
+
               <Controller
+                name="workplaceType"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!workplaceErrors.status}>
+                    <InputLabel>타입</InputLabel>
+                    <Select {...field} label="상태">
+                      <MenuItem value="A">A타입</MenuItem>
+                      <MenuItem value="B">B타입</MenuItem>
+                    </Select>
+                    {workplaceErrors.status && (
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
+                        {workplaceErrors.status.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+
+              {/* <Controller
                 name="workplaceType"
                 control={workplaceControl}
                 render={({ field }) => (
                   <TextField {...field} fullWidth label="타입" />
                 )}
-              />
+              /> */}
             </Stack>
             <Stack direction="row" spacing={2}>
               <Controller
