@@ -100,33 +100,35 @@
             SELECT IDENT_CURRENT('SCHEDULER_HISTORY')
         </selectKey>
         INSERT INTO SCHEDULER_HISTORY (
-        SCHEDULER_ID,
-        SCHEDULER_NAME,
-        START_TIME,
-        END_TIME,
-        STATUS,
-        ERROR_MESSAGE,
-        EXECUTION_TIME_MS,
-        REG_DT
+            SCHEDULER_ID,
+            SCHEDULER_NAME,
+            START_TIME,
+            END_TIME,
+            STATUS,
+            ERROR_MESSAGE,
+            EXECUTION_TIME_MS,
+            REG_DT
         ) VALUES (
-        #{schedulerId},
-        #{schedulerName},
-        #{startTime},
-        #{endTime},
-        #{status},
-        #{errorMessage},
-        #{executionTimeMs},
-        GETDATE()
+            #{schedulerId},
+            #{schedulerName},
+            #{startTime},
+            #{endTime},
+            #{status},
+            #{errorMessage},
+            #{executionTimeMs},
+            GETDATE()
         )
     </insert>
 
     <!-- 스케쥴러 실행 이력 수정 -->
     <update id="SchedulerHistoryDAO.updateSchedulerHistory" parameterType="egovframework.let.scheduler.domain.model.SchedulerHistory">
         UPDATE SCHEDULER_HISTORY
-        SET END_TIME = #{endTime},
-            STATUS = #{status},
-            ERROR_MESSAGE = #{errorMessage},
-            EXECUTION_TIME_MS = #{executionTimeMs}
+            SET END_TIME = #{endTime},
+                STATUS = #{status},
+                ERROR_MESSAGE = #{errorMessage},
+                ERROR_STACK_TRACE = #{errorStackTrace},  <!-- ✨ 추가 -->
+                EXECUTION_TIME_MS = #{executionTimeMs},
+                RETRY_COUNT = #{retryCount}  <!-- ✨ 추가 -->
         WHERE HISTORY_ID = #{historyId}
     </update>
 

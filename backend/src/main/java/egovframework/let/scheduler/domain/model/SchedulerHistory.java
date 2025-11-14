@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 
 /**
  * 스케쥴러 실행 이력 모델
@@ -54,11 +56,39 @@ public class SchedulerHistory implements Serializable {
 	@Schema(description = "에러 메시지")
 	private String errorMessage = "";
 
+	// ✨ 추가: 상세 에러 정보
+	@Schema(description = "에러 스택트레이스")
+	private String errorStackTrace = "";
+
 	@Schema(description = "실행시간(밀리초)")
 	private Long executionTimeMs = null;
 
 	@Schema(description = "등록일시")
 	private String regDt = "";
+
+	// ✨ 추가: 재시도 횟수
+	@Schema(description = "재시도 횟수")
+	private Integer retryCount = 0;
+
+	/**
+	 * Exception을 기반으로 에러 정보를 설정
+	 */
+	public void setErrorFromException(Exception e) {
+		this.errorMessage = e.getMessage();
+
+		// 스택트레이스를 문자열로 변환 (최대 4000자)
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		String stackTrace = sw.toString();
+
+		// DB 컬럼 크기 제한 고려
+		if (stackTrace.length() > 4000) {
+			this.errorStackTrace = stackTrace.substring(0, 4000);
+		} else {
+			this.errorStackTrace = stackTrace;
+		}
+	}
 
 	/**
 	 * toString 메소드를 대치한다.
