@@ -90,12 +90,12 @@ export const workplaceService = {
    * 작업장별 작업자 수정
    */
   updateWorkplaceWorker: async (
-    workplaceId: string,
-    workplaceWorkerId: string,
+    workplaceCode: string,
+    workerCode: string,
     worker: WorkplaceWorker
   ) => {
     const response = await apiClient.put(
-      `/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`,
+      `/api/workplaces/${workplaceCode}/workers/${workerCode}`,
       worker
     );
     return response.data;
@@ -104,12 +104,9 @@ export const workplaceService = {
   /**
    * 작업장별 작업자 삭제
    */
-  removeWorkplaceWorker: async (
-    workplaceId: string,
-    workplaceWorkerId: string
-  ) => {
+  removeWorkplaceWorker: async (workplaceCode: string, workerCode: string) => {
     const response = await apiClient.delete(
-      `/api/workplaces/${workplaceId}/workers/${workplaceWorkerId}`
+      `/api/workplaces/${workplaceCode}/workers/${workerCode}`
     );
     return response.data;
   },

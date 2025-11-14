@@ -20,7 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   schedulerService,
   SchedulerConfig,
-} from '../../services/schedulerService';
+} from '../../../services/schedulerService';
 
 interface SchedulerFormProps {
   open: boolean;

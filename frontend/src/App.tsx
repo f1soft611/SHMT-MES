@@ -16,16 +16,17 @@ import CommonCodeManagement from './pages/BaseData/CommonCodeManagement';
 import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement';
 import EquipmentManagement from './pages/BaseData/EquipmentManagement';
-import ItemManagement from './pages/BaseData/ItemManagement/ItemManagement';
+import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
 import ProductionResultList from './pages/ProductionResult/ProductionResultList';
 import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
-import SchedulerManagement from './pages/Scheduler/SchedulerManagement';
+import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
 import UserManagement from './pages/Admin/UserManagement';
+import ProcessFlowManagement from "./pages/BaseData/ProcessFlowManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,10 @@ function App() {
                         <Route
                           path={URL.WORKPLACE_MANAGEMENT}
                           element={<WorkplaceManagement />}
+                        />
+                        <Route
+                            path={URL.PROCESS_FLOW_MANAGEMENT}
+                            element={<ProcessFlowManagement />}
                         />
                         <Route
                           path={URL.PROCESS_MANAGEMENT}

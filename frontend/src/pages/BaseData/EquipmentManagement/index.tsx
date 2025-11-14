@@ -2,10 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Paper,
   Stack,
@@ -25,13 +21,15 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Equipment } from '../../../types/equipment';
 import equipmentService from '../../../services/equipmentService';
 import { usePermissions } from '../../../contexts/PermissionContext';
+import EquipmentDetailDialog from './components/EquipmentDetailDialog';
 
 // 설비 등록 유효성 검사 스키마
 const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
@@ -395,6 +393,20 @@ const EquipmentManagement: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1rem',
+          }}
+        >
+          <FilterListIcon color="primary" />
+          검색 필터
+        </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>검색 조건</InputLabel>
@@ -472,229 +484,14 @@ const EquipmentManagement: React.FC = () => {
       </Paper>
 
       {/* 설비 등록/수정 다이얼로그 */}
-      <Dialog
+      <EquipmentDetailDialog
         open={openDialog}
+        dialogMode={dialogMode}
         onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {dialogMode === 'create' ? '설비 등록' : '설비 수정'}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={2}>
-              {/* <Controller
-                name="equipSysCd"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="시스템 코드"
-                    disabled={dialogMode === 'edit'}
-                    error={!!equipmentErrors.equipSysCd}
-                    helperText={equipmentErrors.equipSysCd?.message}
-                  />
-                )}
-              /> */}
-              <Controller
-                name="equipCd"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="설비 코드"
-                    disabled={dialogMode === 'edit'}
-                    error={!!equipmentErrors.equipCd}
-                    helperText={equipmentErrors.equipCd?.message}
-                  />
-                )}
-              />
-            </Stack>
-            <Controller
-              name="equipmentName"
-              control={equipmentControl}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  required
-                  label="설비명"
-                  error={!!equipmentErrors.equipmentName}
-                  helperText={equipmentErrors.equipmentName?.message}
-                />
-              )}
-            />
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="equipSpec"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="설비 규격" />
-                )}
-              />
-              <Controller
-                name="equipStruct"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="설비 종류" />
-                )}
-              />
-            </Stack>
-            <Controller
-              name="location"
-              control={equipmentControl}
-              render={({ field }) => (
-                <TextField {...field} fullWidth label="위치" />
-              )}
-            />
-            {/* <Stack direction="row" spacing={2}>
-              <Controller
-                name="managerCode"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="관리자 코드" />
-                )}
-              />
-              <Controller
-                name="manager2Code"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="관리자2 코드" />
-                )}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="opmanCode"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="작업자 코드" />
-                )}
-              />
-              <Controller
-                name="opman2Code"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="작업자2 코드" />
-                )}
-              />
-            </Stack> */}
-            {/* <Stack direction="row" spacing={2}>
-              <Controller
-                name="optime"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="가동 시간"
-                    placeholder="예: 0800-1800"
-                  />
-                )}
-              />
-              <Controller
-                name="optime2"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="가동 시간2"
-                    placeholder="예: 1800-2400"
-                  />
-                )}
-              />
-            </Stack> */}
-            <Controller
-              name="plcAddress"
-              control={equipmentControl}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="PLC 주소"
-                  error={!!equipmentErrors.plcAddress}
-                  helperText={equipmentErrors.plcAddress?.message}
-                />
-              )}
-            />
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="statusFlag"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <FormControl fullWidth error={!!equipmentErrors.statusFlag}>
-                    <InputLabel>상태</InputLabel>
-                    <Select {...field} label="상태">
-                      <MenuItem value="1">정상</MenuItem>
-                      <MenuItem value="0">정지</MenuItem>
-                    </Select>
-                    {equipmentErrors.statusFlag && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ mt: 0.5 }}
-                      >
-                        {equipmentErrors.statusFlag.message}
-                      </Typography>
-                    )}
-                  </FormControl>
-                )}
-              />
-              <Controller
-                name="useFlag"
-                control={equipmentControl}
-                render={({ field }) => (
-                  <FormControl fullWidth error={!!equipmentErrors.useFlag}>
-                    <InputLabel>사용 여부</InputLabel>
-                    <Select {...field} label="사용 여부">
-                      <MenuItem value="Y">사용</MenuItem>
-                      <MenuItem value="N">미사용</MenuItem>
-                    </Select>
-                    {equipmentErrors.useFlag && (
-                      <Typography
-                        variant="caption"
-                        color="error"
-                        sx={{ mt: 0.5 }}
-                      >
-                        {equipmentErrors.useFlag.message}
-                      </Typography>
-                    )}
-                  </FormControl>
-                )}
-              />
-            </Stack>
-            <Controller
-              name="remark"
-              control={equipmentControl}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label="비고"
-                />
-              )}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleEquipmentSubmit(handleSave)}
-            variant="contained"
-            color="primary"
-          >
-            저장
-          </Button>
-          <Button onClick={handleCloseDialog}>취소</Button>
-        </DialogActions>
-      </Dialog>
+        onSave={handleEquipmentSubmit(handleSave)}
+        control={equipmentControl}
+        errors={equipmentErrors}
+      />
 
       <Snackbar
         open={snackbar.open}

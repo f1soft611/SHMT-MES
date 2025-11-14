@@ -9,11 +9,21 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
 import { useQuery } from '@tanstack/react-query';
-import { schedulerService } from '../../services/schedulerService';
+import { schedulerService } from '../../../services/schedulerService';
+import { ErrorMessageDialog } from './ErrorMessageDialog';
+
+// ✅ 타입 정의 추가
+interface ErrorDetail {
+  errorMessage: string;
+  errorStackTrace: string;
+  schedulerName: string;
+}
 
 const SchedulerHistoryList: React.FC = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -22,6 +32,10 @@ const SchedulerHistoryList: React.FC = () => {
   });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+
+  // ✅ 타입 지정
+  const [selectedError, setSelectedError] = useState<ErrorDetail | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // 마지막 정상 응답의 rows/total을 저장
   const lastRowsRef = useRef<any[]>([]);
@@ -58,7 +72,6 @@ const SchedulerHistoryList: React.FC = () => {
         status
       );
     },
-    // keepPreviousData: true,
     staleTime: 30 * 1000, // 30초 동안 데이터 신선하게 유지
   });
 
@@ -182,18 +195,67 @@ const SchedulerHistoryList: React.FC = () => {
       headerName: '에러 메시지',
       flex: 1,
       minWidth: 250,
+      headerAlign: 'center',
       renderCell: (params) => {
-        if (!params.value) return '-';
+        // ✅ 에러 메시지가 없으면 '-' 표시
+        if (!params.value) {
+          return (
+            <Box
+              sx={{
+                textAlign: 'center',
+                width: '100%',
+                color: 'text.secondary',
+              }}
+            >
+              -
+            </Box>
+          );
+        }
+
         return (
           <Box
             sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              gap: 1,
             }}
-            title={params.value}
           >
-            {params.value}
+            <Box
+              sx={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+              title={params.value}
+            >
+              {params.value}
+            </Box>
+            <Tooltip title="상세 보기">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation(); // 행 클릭 이벤트 방지
+
+                  // ✅ 에러 정보 설정 (주석 해제)
+                  setSelectedError({
+                    errorMessage: params.value || '',
+                    errorStackTrace: params.row.errorStackTrace || '',
+                    schedulerName: params.row.schedulerName || '',
+                  });
+                  setDialogOpen(true);
+                }}
+                sx={{
+                  padding: '4px',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                <SearchIcon fontSize="small" color="primary" />
+              </IconButton>
+            </Tooltip>
           </Box>
         );
       },
@@ -258,6 +320,18 @@ const SchedulerHistoryList: React.FC = () => {
           '& .MuiDataGrid-cell:focus': { outline: 'none' },
           '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' },
         }}
+      />
+
+      {/* ✅ 조건부 렌더링 개선 */}
+      <ErrorMessageDialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setSelectedError(null);
+        }}
+        errorMessage={selectedError?.errorMessage || ''}
+        errorStackTrace={selectedError?.errorStackTrace || ''}
+        schedulerName={selectedError?.schedulerName || ''}
       />
     </Box>
   );

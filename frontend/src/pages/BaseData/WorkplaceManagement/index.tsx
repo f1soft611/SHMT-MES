@@ -26,6 +26,7 @@ import {
   People as PeopleIcon,
   Search as SearchIcon,
   Build as BuildIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -243,6 +244,7 @@ const WorkplaceManagement: React.FC = () => {
       headerName: '타입',
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (params.value === 'A' ? 'A(주야)' : 'B(교대)'),
     },
     {
       field: 'status',
@@ -356,6 +358,20 @@ const WorkplaceManagement: React.FC = () => {
 
       {/* 검색 영역 */}
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1rem',
+          }}
+        >
+          <FilterListIcon color="primary" />
+          검색 필터
+        </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>검색 조건</InputLabel>
@@ -447,7 +463,7 @@ const WorkplaceManagement: React.FC = () => {
         <DialogTitle>
           {dialogMode === 'create' ? '작업장 등록' : '작업장 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={2}>
               <Controller
@@ -488,13 +504,37 @@ const WorkplaceManagement: React.FC = () => {
                   <TextField {...field} fullWidth label="위치" />
                 )}
               />
+
               <Controller
+                name="workplaceType"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!workplaceErrors.status}>
+                    <InputLabel>타입</InputLabel>
+                    <Select {...field} label="상태">
+                      <MenuItem value="A">A(주야)</MenuItem>
+                      <MenuItem value="B">B(교대)</MenuItem>
+                    </Select>
+                    {workplaceErrors.status && (
+                      <Typography
+                        variant="caption"
+                        color="error"
+                        sx={{ mt: 0.5 }}
+                      >
+                        {workplaceErrors.status.message}
+                      </Typography>
+                    )}
+                  </FormControl>
+                )}
+              />
+
+              {/* <Controller
                 name="workplaceType"
                 control={workplaceControl}
                 render={({ field }) => (
                   <TextField {...field} fullWidth label="타입" />
                 )}
-              />
+              /> */}
             </Stack>
             <Stack direction="row" spacing={2}>
               <Controller

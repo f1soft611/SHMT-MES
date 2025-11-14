@@ -48,6 +48,16 @@ public class WorkplaceWorkerDAO extends EgovAbstractMapper {
     }
 
     /**
+     * 작업장별 작업자를 수정한다.
+     *
+     * @param workplaceWorker
+     * @throws Exception
+     */
+    public void updateWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
+        delete("WorkplaceWorkerDAO.updateWorkplaceWorker", workplaceWorker);
+    }
+
+    /**
      * 작업장별 작업자를 삭제한다.
      *
      * @param workplaceWorker

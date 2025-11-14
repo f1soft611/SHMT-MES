@@ -124,7 +124,12 @@
 	</update>
 
 	<delete id="CommonCodeDAO.deleteCommonCode" parameterType="String">
-		DELETE FROM MES_CCMMN_CODE
+-- 		DELETE FROM MES_CCMMN_CODE
+		UPDATE MES_CCMMN_CODE
+		SET
+			USE_AT = 'N',
+			LAST_UPDT_PNTTM = GETDATE(),
+			LAST_UPDUSR_ID = 'SYSTEM'
 		WHERE CODE_ID = #{codeId}
 	</delete>
 

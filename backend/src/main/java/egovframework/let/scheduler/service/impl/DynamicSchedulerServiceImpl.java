@@ -105,47 +105,86 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
     private Runnable createTaskRunnable(SchedulerConfig config) {
         return () -> {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String startTimeStr = sdf.format(new Date());
-            long startTime = System.currentTimeMillis();
-
             SchedulerHistory history = new SchedulerHistory();
             history.setSchedulerId(config.getSchedulerId());
             history.setSchedulerName(config.getSchedulerName());
-            history.setStartTime(startTimeStr);
             history.setStatus("RUNNING");
 
+            long startTime = System.currentTimeMillis();
+            history.setStartTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                    .format(new Date(startTime)));
+
+            // 히스토리 시작 기록
             try {
-                // 이력 등록
                 schedulerHistoryDAO.insertSchedulerHistory(history);
-                
-                // 실제 작업 실행
-                executeJob(config);
-                
-                // 성공 처리
-                long endTime = System.currentTimeMillis();
-                history.setEndTime(sdf.format(new Date()));
-                history.setStatus("SUCCESS");
-                history.setExecutionTimeMs(endTime - startTime);
-                
-                log.info("스케쥴러 실행 성공: {} (실행시간: {}ms)", config.getSchedulerName(), (endTime - startTime));
             } catch (Exception e) {
-                // 실패 처리
+                log.error("스케쥴러 이력 등록 실패: {}", config.getSchedulerName(), e);
+                return; // 이력 등록 실패 시 실행 중단
+            }
+
+            try {
+                // 스케쥴러 실행
+                executeJob(config);
+
+                // ✅ 성공 처리
                 long endTime = System.currentTimeMillis();
-                history.setEndTime(sdf.format(new Date()));
-                history.setStatus("FAILED");
-                history.setErrorMessage(e.getMessage());
+                history.setStatus("SUCCESS");
+                history.setEndTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        .format(new Date(endTime)));
                 history.setExecutionTimeMs(endTime - startTime);
-                
-                log.error("스케쥴러 실행 실패: {}", config.getSchedulerName(), e);
+                history.setErrorMessage(null);
+                history.setErrorStackTrace(null);
+
+                log.info("스케쥴러 실행 완료: {} ({}ms)",
+                        config.getSchedulerName(), endTime - startTime);
+
+            } catch (Exception e) {
+                // ❌ 실패 처리
+                long endTime = System.currentTimeMillis();
+                history.setStatus("FAILED");
+                history.setEndTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        .format(new Date(endTime)));
+                history.setExecutionTimeMs(endTime - startTime);
+
+                // ✨ 개선: 상세 에러 정보 저장
+                history.setErrorFromException(e);
+
+                log.error("스케쥴러 실행 실패: {} ({}ms)",
+                        config.getSchedulerName(), endTime - startTime, e);
+
             } finally {
+                // 히스토리 업데이트
                 try {
                     schedulerHistoryDAO.updateSchedulerHistory(history);
+                    log.debug("스케쥴러 이력 업데이트 완료: {}", history.getHistoryId());
                 } catch (Exception e) {
-                    log.error("스케쥴러 이력 업데이트 실패", e);
+                    log.error("스케쥴러 이력 업데이트 실패 - History ID: {}, Scheduler: {}",
+                            history.getHistoryId(), config.getSchedulerName(), e);
+
+                    // ✨ 개선: 업데이트 실패 시 재시도
+                    retryUpdateHistory(history, 3);
                 }
             }
         };
+    }
+
+    /**
+     * 히스토리 업데이트 재시도 로직
+     */
+    private void retryUpdateHistory(SchedulerHistory history, int maxRetries) {
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                Thread.sleep(1000 * (i + 1)); // 1초, 2초, 3초 대기
+                schedulerHistoryDAO.updateSchedulerHistory(history);
+                log.info("스케쥴러 이력 업데이트 재시도 성공: {} ({}회차)",
+                        history.getSchedulerName(), i + 1);
+                return;
+            } catch (Exception e) {
+                log.warn("스케쥴러 이력 업데이트 재시도 실패: {} ({}회차)",
+                        history.getSchedulerName(), i + 1);
+            }
+        }
+        log.error("스케쥴러 이력 업데이트 최종 실패: {}", history.getSchedulerName());
     }
 
     private void executeJob(SchedulerConfig config) throws Exception {

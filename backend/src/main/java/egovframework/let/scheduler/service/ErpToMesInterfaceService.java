@@ -40,13 +40,26 @@ public interface ErpToMesInterfaceService {
 	void syncUsers() throws Exception;
 
 	/**
+	 * 스케쥴러에서 호출되는 거래처정보를 프로세스 실행
+	 * @throws Exception
+	 */
+	void executeCustInterface() throws Exception;
+
+	/**
+	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TDACust 뷰에서 사원 정보를 조회하여 TCO601 테이블에 동기화
+	 * @throws Exception
+	 */
+	void syncCusts() throws Exception;
+
+	/**
 	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
 	 * @throws Exception
 	 */
 	void executeUserInterface() throws Exception;
 
 	/**
-	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
+	 * 스케쥴러에서 호출되는 모든 프로세스 실행
 	 * @throws Exception
 	 */
 	void executeInterface() throws Exception;

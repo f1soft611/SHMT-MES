@@ -181,7 +181,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
     },
     {
       field: 'defectType',
-      headerName: '불량 타입',
+      headerName: '현장표기명',
       flex: 1,
       headerAlign: 'center',
     },
@@ -288,7 +288,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
         <DialogTitle>
           {dialogMode === 'create' ? '불량코드 등록' : '불량코드 수정'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Controller
               name="defectCode"
@@ -346,7 +346,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
               name="defectType"
               control={defectControl}
               render={({ field }) => (
-                <TextField {...field} fullWidth label="불량 타입" />
+                <TextField {...field} fullWidth label="현장표기명" />
               )}
             />
             <Controller

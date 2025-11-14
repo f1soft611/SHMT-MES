@@ -23,7 +23,9 @@ CREATE TABLE SCHEDULER_HISTORY (
                                    END_TIME DATETIME,
                                    STATUS VARCHAR(20) NOT NULL,
                                    ERROR_MESSAGE TEXT,
+                                   ERROR_STACK_TRACE TEXT,
                                    EXECUTION_TIME_MS BIGINT,
+                                   RETRY_COUNT INT DEFAULT 0,
                                    REG_DT DATETIME NOT NULL DEFAULT GETDATE(),
                                    PRIMARY KEY (HISTORY_ID),
                                    CONSTRAINT FK_SCHEDULER_HISTORY_CONFIG FOREIGN KEY (SCHEDULER_ID)

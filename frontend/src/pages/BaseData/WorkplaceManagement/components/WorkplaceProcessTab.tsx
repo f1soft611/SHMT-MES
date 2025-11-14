@@ -229,7 +229,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
         fullWidth
       >
         <DialogTitle>공정 등록</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers={true}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <FormControl fullWidth required>
               <InputLabel>공정</InputLabel>
