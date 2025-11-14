@@ -11,7 +11,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon,
   Close as CloseIcon,
   ContentCopy as CopyIcon,
   Search as SearchIcon,

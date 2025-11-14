@@ -202,7 +202,6 @@ const SchedulerHistoryList: React.FC = () => {
           return (
             <Box
               sx={{
-                textAlign: 'center',
                 width: '100%',
                 color: 'text.secondary',
               }}
