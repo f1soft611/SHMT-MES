@@ -131,8 +131,8 @@ public class SchedulerHistory implements Serializable {
 		String result = message.toString();
 
 		// 4. 최종 길이 제한 (DB 컬럼 크기 고려, 보통 1000~2000)
-		if (result.length() > 1000) {
-			return result.substring(0, 997) + "...";
+		if (result.length() > 2000) {
+			return result.substring(0, 1997) + "...";
 		}
 
 		return result;
