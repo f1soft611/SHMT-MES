@@ -22,7 +22,7 @@
             OPMAN_CODE,
             OPTIME
         ) VALUES (
-                     #{factoryCode}
+                     #{factoryCode},
                      #{custSeq},
                      #{custName},
                      CASE WHEN #{smCustStatus} = '2004001' THEN '0' ELSE '1' END,
