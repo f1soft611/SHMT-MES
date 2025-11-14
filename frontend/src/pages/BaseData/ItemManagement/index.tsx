@@ -22,6 +22,7 @@ import {
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
   Search as SearchIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -391,9 +392,23 @@ const ItemManagement: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1rem',
+          }}
+        >
+          <FilterListIcon color="primary" />
+          검색 필터
+        </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>검색조건</InputLabel>
+            <InputLabel>검색 조건</InputLabel>
             <Select
               value={inputValues.searchCnd}
               label="검색조건"
