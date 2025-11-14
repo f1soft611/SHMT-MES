@@ -20,6 +20,7 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Refresh as RefreshIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
@@ -374,6 +375,18 @@ const ItemManagement: React.FC = () => {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h5">품목 관리</Typography>
+        </Box>
+
+        <Box>
+          <Button
+            variant="contained"
+            color="info"
+            startIcon={<RefreshIcon />}
+            // onClick={handleRestartClick}
+            // disabled={restartMutation.isPending}
+          >
+            ERP 연동
+          </Button>
         </Box>
       </Box>
 

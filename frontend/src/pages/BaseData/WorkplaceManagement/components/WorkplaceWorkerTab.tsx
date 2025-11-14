@@ -102,8 +102,8 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
 
     try {
       await workplaceService.updateWorkplaceWorker(
-        workplace.workplaceId!,
-        editingWorker.workplaceWorkerId!,
+        workplace.workplaceCode!,
+        editingWorker.workerCode!,
         editingWorker
       );
       showSnackbar('작업자 정보가 수정되었습니다.', 'success');
@@ -148,13 +148,6 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
       headerAlign: 'center',
     },
     {
-      field: 'position',
-      headerName: '직책',
-      flex: 1,
-      align: 'center',
-      headerAlign: 'center',
-    },
-    {
       field: 'role',
       headerName: '역할',
       flex: 1,
@@ -167,6 +160,28 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
           size="small"
         />
       ),
+    },
+    {
+      field: 'position',
+      headerName: '근무구분',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => {
+        if (params.value === 'D') {
+          return 'D(주간)';
+        } else if (params.value === 'N') {
+          return 'N(야간)';
+        } else if (params.value === 'A') {
+          return 'A(1교대)';
+        } else if (params.value === 'B') {
+          return 'B(2교대)';
+        } else if (params.value === 'C') {
+          return 'C(3교대)';
+        } else {
+          return '';
+        }
+      },
     },
     {
       field: 'regDt',
@@ -291,17 +306,6 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               value={editingWorker?.workerName || ''}
               disabled
             />
-            <TextField
-              fullWidth
-              label="직책"
-              value={editingWorker?.position || ''}
-              onChange={(e) =>
-                setEditingWorker({
-                  ...editingWorker!,
-                  position: e.target.value,
-                })
-              }
-            />
             <FormControl fullWidth>
               <InputLabel>역할</InputLabel>
               <Select
@@ -318,6 +322,48 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
                 <MenuItem value="MEMBER">팀원</MenuItem>
               </Select>
             </FormControl>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                fullWidth
+                label="작업장타입"
+                value={workplace?.workplaceType || ''}
+                disabled
+              />
+              <FormControl fullWidth>
+                <InputLabel>근무구분</InputLabel>
+                <Select
+                  value={editingWorker?.position || ''}
+                  label="근무구분"
+                  onChange={(e) =>
+                    setEditingWorker({
+                      ...editingWorker!,
+                      position: e.target.value,
+                    })
+                  }
+                >
+                  {workplace?.workplaceType === 'A'
+                    ? [
+                        <MenuItem key="D" value="D">
+                          주간
+                        </MenuItem>,
+                        <MenuItem key="N" value="N">
+                          야간
+                        </MenuItem>,
+                      ]
+                    : [
+                        <MenuItem key="A" value="A">
+                          A(1교대)
+                        </MenuItem>,
+                        <MenuItem key="B" value="B">
+                          B(2교대)
+                        </MenuItem>,
+                        <MenuItem key="C" value="C">
+                          C(3교대)
+                        </MenuItem>,
+                      ]}
+                </Select>
+              </FormControl>
+            </Stack>
           </Stack>
         </DialogContent>
         <DialogActions>

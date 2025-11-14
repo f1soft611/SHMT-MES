@@ -123,6 +123,15 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	}
 
 	/**
+	 * 작업장별 작업자를 수정한다.
+	 */
+	@Override
+	@Transactional
+	public void updateWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception {
+		workplaceWorkerDAO.updateWorkplaceWorker(workplaceWorker);
+	}
+
+	/**
 	 * 작업장별 작업자를 삭제한다.
 	 */
 	@Override

@@ -243,6 +243,7 @@ const WorkplaceManagement: React.FC = () => {
       headerName: '타입',
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (params.value === 'A' ? 'A(주야)' : 'B(교대)'),
     },
     {
       field: 'status',
@@ -496,8 +497,8 @@ const WorkplaceManagement: React.FC = () => {
                   <FormControl fullWidth error={!!workplaceErrors.status}>
                     <InputLabel>타입</InputLabel>
                     <Select {...field} label="상태">
-                      <MenuItem value="A">A타입</MenuItem>
-                      <MenuItem value="B">B타입</MenuItem>
+                      <MenuItem value="A">A(주야)</MenuItem>
+                      <MenuItem value="B">B(교대)</MenuItem>
                     </Select>
                     {workplaceErrors.status && (
                       <Typography
