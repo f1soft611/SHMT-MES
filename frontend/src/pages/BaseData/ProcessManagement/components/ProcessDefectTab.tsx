@@ -181,7 +181,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
     },
     {
       field: 'defectType',
-      headerName: '불량 타입',
+      headerName: '현장표기명',
       flex: 1,
       headerAlign: 'center',
     },
@@ -346,7 +346,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
               name="defectType"
               control={defectControl}
               render={({ field }) => (
-                <TextField {...field} fullWidth label="불량 타입" />
+                <TextField {...field} fullWidth label="현장표기명" />
               )}
             />
             <Controller
