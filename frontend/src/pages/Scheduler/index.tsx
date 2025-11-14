@@ -16,9 +16,9 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { schedulerService } from '../../services/schedulerService';
-import SchedulerList from '../../components/Scheduler/SchedulerList';
-import SchedulerForm from '../../components/Scheduler/SchedulerForm';
-import SchedulerHistoryList from '../../components/Scheduler/SchedulerHistoryList';
+import SchedulerList from './components/SchedulerList';
+import SchedulerForm from './components/SchedulerForm';
+import SchedulerHistoryList from './components/SchedulerHistoryList';
 
 interface TabPanelProps {
   children?: React.ReactNode;
