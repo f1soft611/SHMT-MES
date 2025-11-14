@@ -125,6 +125,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		int insertCount = 0;
 		int updateCount = 0;
 		int errorCount = 0;
+		Exception lastError = null;
 
 		try {
 			// 1. ERP 시스템에서 사원 정보 조회
@@ -156,6 +157,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 					}
 				} catch (Exception e) {
 					errorCount++;
+					lastError = e;
 					log.error("사원 정보 처리 실패: {} ({})", employee.getEmpName(), employee.getEmpId(), e);
 				}
 			}
@@ -163,6 +165,12 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			log.info("=== ERP 사원정보 연동 완료 ===");
 			log.info("총 처리: {}건, 신규등록: {}건, 업데이트: {}건, 오류: {}건",
 					erpEmployees.size(), insertCount, updateCount, errorCount);
+
+			// 오류가 하나라도 있으면 예외를 던져서 스케쥴러 히스토리에 실패로 기록
+			if (errorCount > 0 && lastError != null) {
+				throw new Exception(String.format("사원정보 연동 중 오류 발생 - 총 처리: %d건, 성공: %d건, 실패: %d건. 마지막 오류: %s",
+						erpEmployees.size(), insertCount + updateCount, errorCount, lastError.getMessage()), lastError);
+			}
 
 		} catch (Exception e) {
 			log.error("사원정보 연동 실패", e);
@@ -255,6 +263,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		int insertCount = 0;
 		int updateCount = 0;
 		int errorCount = 0;
+		Exception lastError = null;
 
 		try {
 			// 1. ERP 시스템에서 거래처 정보 조회
@@ -281,6 +290,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 					}
 				} catch (Exception e) {
 					errorCount++;
+					lastError = e;
 					log.error("거래처 정보 처리 실패: {} ({})", customer.getCustName(), customer.getCustSeq(), e);
 				}
 			}
@@ -288,6 +298,12 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			log.info("=== ERP 거래처정보 연동 완료 ===");
 			log.info("총 처리: {}건, 신규등록: {}건, 업데이트: {}건, 오류: {}건",
 					erpCustomers.size(), insertCount, updateCount, errorCount);
+
+			// 오류가 하나라도 있으면 예외를 던져서 스케쥴러 히스토리에 실패로 기록
+			if (errorCount > 0 && lastError != null) {
+				throw new Exception(String.format("거래처정보 연동 중 오류 발생 - 총 처리: %d건, 성공: %d건, 실패: %d건. 마지막 오류: %s",
+						erpCustomers.size(), insertCount + updateCount, errorCount, lastError.getMessage()), lastError);
+			}
 
 		} catch (Exception e) {
 			log.error("거래처정보 연동 실패", e);

@@ -12,7 +12,9 @@
         <result property="endTime" column="END_TIME"/>
         <result property="status" column="STATUS"/>
         <result property="errorMessage" column="ERROR_MESSAGE"/>
+        <result property="errorStackTrace" column="ERROR_STACK_TRACE"/>
         <result property="executionTimeMs" column="EXECUTION_TIME_MS"/>
+        <result property="retryCount" column="RETRY_COUNT"/>
         <result property="regDt" column="REG_DT"/>
     </resultMap>
 
@@ -24,7 +26,9 @@
         <result property="endTime" column="END_TIME"/>
         <result property="status" column="STATUS"/>
         <result property="errorMessage" column="ERROR_MESSAGE"/>
+        <result property="errorStackTrace" column="ERROR_STACK_TRACE"/>
         <result property="executionTimeMs" column="EXECUTION_TIME_MS"/>
+        <result property="retryCount" column="RETRY_COUNT"/>
         <result property="regDt" column="REG_DT"/>
     </resultMap>
 
@@ -39,7 +43,9 @@
         END_TIME,
         STATUS,
         ERROR_MESSAGE,
+        ERROR_STACK_TRACE,
         EXECUTION_TIME_MS,
+        RETRY_COUNT,
         REG_DT
         FROM SCHEDULER_HISTORY
         WHERE 1=1
@@ -88,7 +94,9 @@
             END_TIME,
             STATUS,
             ERROR_MESSAGE,
+            ERROR_STACK_TRACE,
             EXECUTION_TIME_MS,
+            RETRY_COUNT,
             REG_DT
         FROM SCHEDULER_HISTORY
         WHERE HISTORY_ID = #{historyId}

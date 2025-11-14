@@ -16,13 +16,14 @@
             FACTORY_CODE,
             CUSTOMER_CODE,
             CUSTOMER_NAME,
+            DELETE_FLAG,
             BUSINESS_NO,
             ADDRESS,
             POST_CODE,
             OPMAN_CODE,
             OPTIME
         ) VALUES (
-                     #{factoryCode}
+                     #{factoryCode},
                      #{custSeq},
                      #{custName},
                      CASE WHEN #{smCustStatus} = '2004001' THEN '0' ELSE '1' END,
