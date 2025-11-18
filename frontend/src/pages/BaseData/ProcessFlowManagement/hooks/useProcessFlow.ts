@@ -10,13 +10,11 @@ import itemService from "../../../../services/itemService";
 export function useProcessFlow() {
 
     const [rows, setRows] = useState<ProcessFlow[]>([]);
+    const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
 
-
-
+    // 공정 흐름 dialog
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-
-    const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
 
     // 공통 dialog
     const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -27,21 +25,6 @@ export function useProcessFlow() {
         pageSize: 10,
     });
 
-    // react-hook-form 설정 - 공정흐름
-    const {
-        control: processFlowControl,
-        handleSubmit: handleProcessFlowSubmit,
-        reset: resetProcessFlowForm,
-        formState: { errors: processFlowErrors },
-    } = useForm<ProcessFlow>({
-        resolver: yupResolver(processFlowSchema),
-        defaultValues: {
-            processFlowId:"",
-            processFlowCode:"",
-            processFlowName:'',
-            workplaceCode:''
-        },
-    });
 
     // 실제 검색에 사용되는 파라미터
     const [searchParams, setSearchParams] = useState({
@@ -89,27 +72,24 @@ export function useProcessFlow() {
         fetchProcessFlows();
     }, [fetchProcessFlows]);
 
+
     // 신규 등록 Dialog 열기
     const handleOpenCreateDialog = () => {
-        setDialogMode('create');
-        resetProcessFlowForm({
-            processFlowId:"",
-            processFlowCode:""
-        });
+        setDialogMode("create");
+        setSelectedFlow(null);       // 빈 값 전달
         setOpenDialog(true);
     };
 
     // 수정 Dialog 열기
     const handleOpenEditDialog = (row: ProcessFlow) => {
         setDialogMode('edit');
-        resetProcessFlowForm(row);   // 기존 값 채우기
+        setSelectedFlow(row);        // 선택된 데이터 전달
         setOpenDialog(true);
     };
 
     // dialog 닫기
     const handleCloseDialog = () => {
         setOpenDialog(false);
-        resetProcessFlowForm();
     };
 
     // detail Dialog 열기
@@ -124,7 +104,7 @@ export function useProcessFlow() {
     };
 
 
-    // 저장(create or update)
+    // 저장 (폼 제출 후 호출됨)
     const handleSave = async (data: ProcessFlow) => {
         try {
             if (dialogMode === "create") {
@@ -179,19 +159,10 @@ export function useProcessFlow() {
         setSnackbar(prev => ({ ...prev, open: false }));
     };
 
-
-
-
-
     return {
         // 목록
         rows,
         selectedFlow,
-        // handleSelectFlow,
-        // flowProcessRows,
-        // flowItemRows,
-        // processRows,
-        // itemRows,
 
         // 입력 & 검색
         inputValues,
@@ -205,29 +176,15 @@ export function useProcessFlow() {
         paginationModel,
         setPaginationModel,
 
-        // dialog
+        // Dialog 조작
         openDialog,
         dialogMode,
         openDetailDialog,
-        // openItemDialog,
-        // itemDialogMode,
         handleOpenDetailDialog,
         handleCloseDetailDialog,
-        // handleOpenItemDialog,
-        // handleCloseItemDialog,
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
-
-        // form
-        processFlowControl,
-        handleProcessFlowSubmit,
-        resetProcessFlowForm,
-        processFlowErrors,
-        // itemControl,
-        // handleItemSubmit,
-        // resetItemForm,
-        // itemErrors,
 
         // CRUD
         fetchProcessFlows,
@@ -238,9 +195,6 @@ export function useProcessFlow() {
         snackbar,
         showSnackbar,
         handleCloseSnackbar,
-
-        // fetch
-        // fetchItemList
     };
 }
 

@@ -11,58 +11,39 @@ import {
     FormControl,
     FormHelperText,
 } from "@mui/material";
-import { Controller, Control, FieldErrors, useFormContext } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { ProcessFlow } from "../../../../types/processFlow";
-import { workplaceService } from "../../../../services/workplaceService";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
+import { useProcessFlowDialog } from "../hooks/useProcessFlowDialog";
 
-interface Workplace {
-    workplaceId: string;
-    workplaceCode: string;
-    workplaceName: string;
-    description?: string;
-    location?: string;
-    useYn?: string;
-}
 
 interface Props {
     open: boolean;
     dialogMode: "create" | "edit";
+    initialData: ProcessFlow | null;
     onClose: () => void;
-    onSave: (data: ProcessFlow) => void;
-
-    control: Control<ProcessFlow>;
-    errors: FieldErrors<ProcessFlow>;
-
-    handleSubmit: any;
+    onSubmit: (data: ProcessFlow) => void;
 }
 
 export default function ProcessFlowDialog({
                                               open,
                                               dialogMode,
+                                              initialData,
                                               onClose,
-                                              onSave,
-                                              control,
-                                              errors,
-                                              handleSubmit
+                                              onSubmit
                                           }: Props) {
 
-    const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // ✅ page=0, pageSize=9999 로 전체 조회 효과
-                const data = await workplaceService.getWorkplaceList(0, 9999);
-                const list = data?.result?.resultList ?? [];
-                setWorkplaces(list);
-            } catch (e) {
-                console.error("작업장 조회 실패:", e);
-            }
-        };
-        fetchData();
-    }, []);
+    const {
+        control,
+        errors,
+        submitForm,
+        workplaces
+    } = useProcessFlowDialog({
+        mode: dialogMode,
+        initialData,
+        onSubmit
+    });
 
     return (
         <Dialog open={open} maxWidth="md" fullWidth>
@@ -132,7 +113,7 @@ export default function ProcessFlowDialog({
 
             <DialogActions>
                 <Button
-                    onClick={handleSubmit((data: ProcessFlow) => onSave(data))}
+                    onClick={submitForm}
                     variant="contained"
                     color="primary"
                 >

@@ -4,7 +4,7 @@
 
 export interface ProcessFlow {
     workplaceCode: string;
-    processFlowId: string;
+    processFlowId?: string | null;
     processFlowCode: string;
     processFlowName: string;
 }

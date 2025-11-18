@@ -25,10 +25,11 @@ import {
     ProcessFlowProcessDialog,
     ProcessFlowItemDialog
 } from "./components";
+import { ProcessFlow } from "../../../types/processFlow";
 
 const ProcessFlowManagement: React.FC = () => {
 
-    const { hasWritePermission } = usePermissions();
+    const {hasWritePermission} = usePermissions();
     const canWrite = hasWritePermission('/base/processflow');
 
     const {
@@ -61,12 +62,6 @@ const ProcessFlowManagement: React.FC = () => {
         handleOpenEditDialog,
         handleCloseDialog,
 
-        // form
-        processFlowControl,
-        handleProcessFlowSubmit,
-        resetProcessFlowForm,
-        processFlowErrors,
-
         // CRUD
         fetchProcessFlows,
         handleSave,
@@ -78,7 +73,7 @@ const ProcessFlowManagement: React.FC = () => {
         handleCloseSnackbar,
     } = useProcessFlow();
 
-    return(
+    return (
         <Box>
             <Box
                 sx={{
@@ -88,15 +83,15 @@ const ProcessFlowManagement: React.FC = () => {
                     mb: 2,
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                     <Typography variant="h5">공정 흐름 관리</Typography>
                 </Box>
             </Box>
 
             {/* 검색 영역 */}
-            <Paper sx={{ p: 2, mb: 2 }}>
+            <Paper sx={{p: 2, mb: 2}}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{minWidth: 120}}>
                         <InputLabel>검색 조건</InputLabel>
                         <Select
                             value={inputValues.searchCnd}
@@ -114,11 +109,11 @@ const ProcessFlowManagement: React.FC = () => {
                         value={inputValues.searchWrd}
                         onChange={(e) => handleInputChange('searchWrd', e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        sx={{ flex: 1 }}
+                        sx={{flex: 1}}
                         placeholder="검색어를 입력하세요"
                     />
 
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{minWidth: 120}}>
                         <InputLabel>상태</InputLabel>
                         <Select
                             value={inputValues.status}
@@ -133,7 +128,7 @@ const ProcessFlowManagement: React.FC = () => {
 
                     <Button
                         variant="contained"
-                        startIcon={<SearchIcon />}
+                        startIcon={<SearchIcon/>}
                         onClick={handleSearch}
                     >
                         검색
@@ -142,18 +137,18 @@ const ProcessFlowManagement: React.FC = () => {
                     <Button
                         variant="contained"
                         color="primary"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon/>}
                         onClick={handleOpenCreateDialog}
                         disabled={!canWrite}
                     >
                         공정 흐름 등록
                     </Button>
-                    
+
                 </Stack>
             </Paper>
 
             <Grid container spacing={2} columns={12}>
-                <Grid size={{ xs: 12, md: 12 }}>
+                <Grid size={{xs: 12, md: 12}}>
                     {/* 공정 흐름 목록 */}
                     <ProcessFlowList
                         rows={rows}
@@ -166,6 +161,14 @@ const ProcessFlowManagement: React.FC = () => {
                     />
                 </Grid>
             </Grid>
+
+            <ProcessFlowDialog
+                open={openDialog}
+                dialogMode={dialogMode}
+                initialData={selectedFlow}        // create → null / edit → row 데이터
+                onClose={handleCloseDialog}
+                onSubmit={handleSave}             // 저장(create/update) 처리
+            />
 
             <ProcessFlowDetailDialog
                 open={openDetailDialog}
