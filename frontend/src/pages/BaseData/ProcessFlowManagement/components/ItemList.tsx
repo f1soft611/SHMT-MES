@@ -56,7 +56,6 @@ export default function ItemList() {
                 rows={rows}
                 columns={columns}
                 getRowId={(row) => row.factoryCode || ''}
-                disableRowSelectionOnClick
                 autoHeight
                 sx={{
                     border: 'none',

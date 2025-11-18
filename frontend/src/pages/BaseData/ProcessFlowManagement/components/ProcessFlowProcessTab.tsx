@@ -1,4 +1,4 @@
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {DataGrid, GridColDef, GridRowId, GridRowSelectionModel} from "@mui/x-data-grid";
 import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid} from "@mui/material";
 import {
     Add as AddIcon,
@@ -9,16 +9,20 @@ import {
     Search as SearchIcon,
     // Build as BuildIcon,
 } from '@mui/icons-material';
-import React from "react";
+import React, {useState} from "react";
 import { ProcessList} from "./index";
 
 interface Props {
-    rows: any[];
+    // rows: any[];
     // onEdit: (row: Process) => void;
     // onDelete: (id: string) => void;
 }
 
-export default function ProcessFlowProcessTab({rows}:Props) {
+export default function ProcessFlowProcessTab() {
+
+    const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
+
+
     const columns: GridColDef[] = [
         {
             field: 'processCode',
@@ -39,6 +43,10 @@ export default function ProcessFlowProcessTab({rows}:Props) {
             headerAlign: 'center',
         },
     ];
+
+    const handleCheckedToRight = () => {
+        console.log("왼쪽에서 선택된 ID 목록:", leftSelected);
+    };
 
 
     return(
@@ -79,15 +87,50 @@ export default function ProcessFlowProcessTab({rows}:Props) {
 
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.5  }}>
-                    <ProcessList />
+                    <ProcessList onSelectionChange={(ids) => setLeftSelected(ids)} />
                 </Grid>
-                <Grid size={{ xs:1  }}></Grid>
+                <Grid size={{ xs:1  }}>
+                    <Box
+                        sx={{
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 1, // 버튼 간격
+                        }}
+                    >
+                        <Button
+                            sx={{ my: 0.5 }}
+                            variant="outlined"
+                            size="small"
+                            onClick={handleCheckedToRight}
+                            // disabled={leftChecked.length === 0}
+                            aria-label="move selected right"
+                        >
+                            &gt;
+                        </Button>
+                        <Button
+                            sx={{ my: 0.5 }}
+                            variant="outlined"
+                            size="small"
+                            // onClick={handleCheckedLeft}
+                            // disabled={rightChecked.length === 0}
+                            aria-label="move selected left"
+                        >
+                            &lt;
+                        </Button>
+                    </Box>
+                    {/*<Grid container direction="column" sx={{ justifyContent: 'center', alignItems: 'center' }}>*/}
+                    {/*    */}
+                    {/*</Grid>*/}
+                </Grid>
                 <Grid size={{ xs:5.5  }}>
                     <DataGrid
-                        rows={rows}
+                        // rows={rows}
                         columns={columns}
-                        getRowId={(row) => row.factoryCode || ''}
-                        disableRowSelectionOnClick
+                        getRowId={(row) => row.processId || ''}
+                        checkboxSelection
                         autoHeight
                         sx={{
                             border: 'none',

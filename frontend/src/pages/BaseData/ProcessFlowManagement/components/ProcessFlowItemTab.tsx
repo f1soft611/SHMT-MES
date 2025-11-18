@@ -1,4 +1,4 @@
-import { DataGrid, GridColDef, GridPaginationModel } from "@mui/x-data-grid";
+import {DataGrid, GridColDef, GridPaginationModel, GridRowId} from "@mui/x-data-grid";
 import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid} from "@mui/material";
 import {
     Add as AddIcon,
@@ -9,16 +9,46 @@ import {
     Search as SearchIcon,
     // Build as BuildIcon,
 } from '@mui/icons-material';
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {ItemList} from "./index";
 
 interface Props {
-    rows: any[];
-    // onEdit: (row: Process) => void;
-    // onDelete: (id: string) => void;
+    // itemRows: any[];       // 전체 품목
+    // flowItemRows: any[];   // 공정흐름에 등록된 품목
 }
 
-export default function ProcessFlowItemTab( {rows}:Props) {
+export default function ProcessFlowItemTab() {
+
+    // 좌/우 데이터 상태
+    const [leftRows, setLeftRows] = useState<any[]>([]);
+    const [rightRows, setRightRows] = useState<any[]>([]);
+
+    // 선택된 row id 저장
+    const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
+    const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
+
+    const getRowId = (r: any) => r.itemCode;
+
+    // ▶ 좌 → 우 이동
+    const moveRight = () => {
+        const move = leftRows.filter((r) => leftSelected.includes(getRowId(r)));
+        const remain = leftRows.filter((r) => !leftSelected.includes(getRowId(r)));
+
+        setLeftRows(remain);
+        setRightRows([...rightRows, ...move]);
+        setLeftSelected([]);
+    };
+
+    // ◀ 우 → 좌 이동
+    const moveLeft = () => {
+        const move = rightRows.filter((r) => rightSelected.includes(getRowId(r)));
+        const remain = rightRows.filter((r) => !rightSelected.includes(getRowId(r)));
+
+        setRightRows(remain);
+        setLeftRows([...leftRows, ...move]);
+        setRightSelected([]);
+    };
+
     const columns: GridColDef[] = [
         {
             field: 'itemCode',
@@ -47,6 +77,11 @@ export default function ProcessFlowItemTab( {rows}:Props) {
             headerAlign: 'center',
         },
     ];
+
+    // useEffect(() => {
+    //     setLeftRows(itemRows ?? []);        // 전체 품목
+    //     setRightRows(flowItemRows ?? []);   // 등록된 품목
+    // }, [itemRows, flowItemRows, open]);
 
     return(
         <>
@@ -86,24 +121,61 @@ export default function ProcessFlowItemTab( {rows}:Props) {
 
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.5  }}>
-                    <ItemList />
+                    <DataGrid
+                        rows={leftRows}
+                        columns={columns}
+                        getRowId={getRowId}
+                        checkboxSelection
+                        autoHeight
+                        onRowSelectionModelChange={(v) => {
+                            const arr = Array.isArray(v) ? v : [];
+                            setLeftSelected(arr);
+                        }}
+                    />
                 </Grid>
-                <Grid size={{ xs:1  }}></Grid>
+                <Grid size={{ xs:1  }}>
+                    <Box
+                        sx={{
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 1, // 버튼 간격
+                        }}
+                    >
+                        <Button
+                            sx={{ my: 0.5 }}
+                            variant="outlined"
+                            size="small"
+                            // onClick={handleCheckedToRight}
+                            // disabled={leftChecked.length === 0}
+                            aria-label="move selected right"
+                        >
+                            &gt;
+                        </Button>
+                        <Button
+                            sx={{ my: 0.5 }}
+                            variant="outlined"
+                            size="small"
+                            // onClick={handleCheckedLeft}
+                            // disabled={rightChecked.length === 0}
+                            aria-label="move selected left"
+                        >
+                            &lt;
+                        </Button>
+                    </Box>
+                </Grid>
                 <Grid size={{ xs:5.5  }}>
                     <DataGrid
-                        rows={rows}
+                        rows={rightRows}
                         columns={columns}
-                        getRowId={(row) => row.factoryCode || ''}
-                        disableRowSelectionOnClick
+                        getRowId={getRowId}
+                        checkboxSelection
                         autoHeight
-                        sx={{
-                            border: 'none',
-                            '& .MuiDataGrid-cell:focus': {
-                                outline: 'none',
-                            },
-                            '& .MuiDataGrid-row:hover': {
-                                backgroundColor: 'action.hover',
-                            },
+                        onRowSelectionModelChange={(v) => {
+                            const arr = Array.isArray(v) ? v : [];
+                            setRightSelected(arr);
                         }}
                     />
                 </Grid>

@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import { useProcessFlow } from "./useProcessFlow";
+import { useProcessFlow } from "./hooks/useProcessFlow";
 import Typography from "@mui/material/Typography";
 import {
     Alert, Box, Button,
@@ -34,9 +34,10 @@ const ProcessFlowManagement: React.FC = () => {
     const {
         // 목록
         rows,
-        handleSelectFlow,
-        processRows,
-        itemRows,
+        selectedFlow,
+        // handleSelectFlow,
+        // processRows,
+        // itemRows,
 
         // 입력 & 검색
         inputValues,
@@ -54,12 +55,8 @@ const ProcessFlowManagement: React.FC = () => {
         openDialog,
         dialogMode,
         openDetailDialog,
-        openItemDialog,
-        itemDialogMode,
         handleOpenDetailDialog,
         handleCloseDetailDialog,
-        handleOpenItemDialog,
-        handleCloseItemDialog,
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
@@ -69,10 +66,6 @@ const ProcessFlowManagement: React.FC = () => {
         handleProcessFlowSubmit,
         resetProcessFlowForm,
         processFlowErrors,
-        itemControl,
-        handleItemSubmit,
-        resetItemForm,
-        itemErrors,
 
         // CRUD
         fetchProcessFlows,
@@ -168,48 +161,16 @@ const ProcessFlowManagement: React.FC = () => {
                         setPaginationModel={setPaginationModel}
                         onEdit={handleOpenEditDialog}
                         onDelete={handleDelete}
-                        onSelect={handleSelectFlow}
+                        // onSelect={setSelectedFlow}
                         onDetailOpen={handleOpenDetailDialog}
                     />
                 </Grid>
-                {/*<Grid size={{ xs: 12, md: 6 }}>*/}
-                {/*    <Grid container spacing={2} direction="column">*/}
-                {/*        <Grid size={{ xs:12 }}>*/}
-                {/*            <ProcessList rows={processRows} />*/}
-                {/*        </Grid>*/}
-                {/*        <Grid size={{ xs:12 }}>*/}
-                {/*            <ItemList*/}
-                {/*                rows={itemRows}*/}
-                {/*                onAdd={handleOpenItemDialog}*/}
-                {/*            />*/}
-                {/*        </Grid>*/}
-                {/*    </Grid>*/}
-                {/*</Grid>*/}
             </Grid>
-
-            {/* 공정 흐름 등록/수정 다이얼로그 */}
-            <ProcessFlowDialog
-                open={openDialog}
-                dialogMode={dialogMode}
-                onClose={handleCloseDialog}
-                onSave={handleSave}
-                control={processFlowControl}
-                errors={processFlowErrors}
-                handleSubmit={handleProcessFlowSubmit}
-            />
 
             <ProcessFlowDetailDialog
                 open={openDetailDialog}
                 onClose={handleCloseDetailDialog}
-                processRows={processRows}   // 공정 목록
-                itemRows={itemRows}         // 제품 목록
-            />
-
-            {/* 공정 흐름별 제품 등록/수정 다이얼로그 */}
-            <ProcessFlowItemDialog
-                open={openItemDialog}
-                dialogMode={itemDialogMode}
-                onClose={handleCloseItemDialog}
+                selectedFlow={selectedFlow}
             />
 
             {/* 스낵바 */}

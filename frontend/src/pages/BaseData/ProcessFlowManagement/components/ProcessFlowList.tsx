@@ -16,7 +16,7 @@ interface Props {
     setPaginationModel: (model: GridPaginationModel) => void;
     onEdit: (row: ProcessFlow) => void;
     onDelete: (id: string) => void;
-    onSelect: (row: ProcessFlow) => void;
+    // onSelect: (row: ProcessFlow) => void;
     onDetailOpen: (row: ProcessFlow) => void;
 }
 
@@ -26,7 +26,8 @@ export default function ProcessFlowList({
                                             setPaginationModel,
                                             onEdit,
                                             onDelete,
-                                   onSelect, onDetailOpen
+                                   // onSelect,
+                                            onDetailOpen
                                         }: Props) {
 
     const columns: GridColDef[] = [
@@ -113,7 +114,7 @@ export default function ProcessFlowList({
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[5, 10, 25, 50]}
                 // paginationMode="server"
-                onRowClick={(params) => onSelect(params.row)}
+                // onRowClick={(params) => onSelect(params.row)}
                 disableRowSelectionOnClick
                 autoHeight
                 sx={{
