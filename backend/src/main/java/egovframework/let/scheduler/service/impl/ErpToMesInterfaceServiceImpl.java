@@ -473,8 +473,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		String sql = "SELECT ProdReqNo, ProdReqSeq, Serl, ReqDate, CustSeq, DeptSeq, EmpSeq, " +
 				"ItemSeq, ItemNo, ItemName, Spec, UnitSeq, Qty, EndDate, DelvDate, " +
 				"LastUserSeq, LastDateTime " +
-				"FROM SHM_IF_VIEW_ProdReq " +
-				"WHERE ReqDate BETWEEN ? AND ? " +  // 의뢰 날짜 기준으로 필터
+				"FROM SHM_IF_VIEW_TPDMPSProdReqItem " +
+				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY ProdReqSeq, Serl";
 
 		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate);
