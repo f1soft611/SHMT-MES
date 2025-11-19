@@ -59,6 +59,19 @@ public interface ErpToMesInterfaceService {
 	void executeUserInterface() throws Exception;
 
 	/**
+	 * ERP 시스템의 생산 의뢰 정보를 MES 시스템으로 연동
+	 * ERP의 생산의뢰 테이블에서 생산 의뢰 정보를 조회하여 TSA308 테이블에 동기화
+	 * @throws Exception
+	 */
+	void syncProductionRequests() throws Exception;
+
+	/**
+	 * 스케쥴러에서 호출되는 생산 의뢰 정보 프로세스 실행
+	 * @throws Exception
+	 */
+	void executeProdReqInterface() throws Exception;
+
+	/**
 	 * 스케쥴러에서 호출되는 모든 프로세스 실행
 	 * @throws Exception
 	 */
