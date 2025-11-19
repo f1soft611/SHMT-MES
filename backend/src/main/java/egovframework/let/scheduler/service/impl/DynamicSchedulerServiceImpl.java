@@ -1,10 +1,10 @@
 package egovframework.let.scheduler.service.impl;
 
 import egovframework.let.scheduler.domain.repository.SchedulerConfigDAO;
-import egovframework.let.scheduler.domain.repository.SchedulerHistoryDAO;
 import egovframework.let.scheduler.domain.model.SchedulerConfig;
 import egovframework.let.scheduler.domain.model.SchedulerHistory;
 import egovframework.let.scheduler.service.DynamicSchedulerService;
+import egovframework.let.scheduler.service.SchedulerHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -36,7 +36,7 @@ import java.util.concurrent.ScheduledFuture;
 public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, SchedulingConfigurer {
 
     private final SchedulerConfigDAO schedulerConfigDAO;
-    private final SchedulerHistoryDAO schedulerHistoryDAO;
+    private final SchedulerHistoryService schedulerHistoryService;
     private final ApplicationContext applicationContext;
     
     private TaskScheduler taskScheduler;
@@ -116,7 +116,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
             // 히스토리 시작 기록
             try {
-                schedulerHistoryDAO.insertSchedulerHistory(history);
+                schedulerHistoryService.insertSchedulerHistory(history);
             } catch (Exception e) {
                 log.error("스케쥴러 이력 등록 실패: {}", config.getSchedulerName(), e);
                 return; // 이력 등록 실패 시 실행 중단
@@ -155,7 +155,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
             } finally {
                 // 히스토리 업데이트
                 try {
-                    schedulerHistoryDAO.updateSchedulerHistory(history);
+                    schedulerHistoryService.updateSchedulerHistory(history);
                     log.debug("스케쥴러 이력 업데이트 완료: {}", history.getHistoryId());
                 } catch (Exception e) {
                     log.error("스케쥴러 이력 업데이트 실패 - History ID: {}, Scheduler: {}",
@@ -175,7 +175,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         for (int i = 0; i < maxRetries; i++) {
             try {
                 Thread.sleep(1000 * (i + 1)); // 1초, 2초, 3초 대기
-                schedulerHistoryDAO.updateSchedulerHistory(history);
+                schedulerHistoryService.updateSchedulerHistory(history);
                 log.info("스케쥴러 이력 업데이트 재시도 성공: {} ({}회차)",
                         history.getSchedulerName(), i + 1);
                 return;
