@@ -41,7 +41,7 @@ const DateRangeDialog: React.FC<DateRangeDialogProps> = ({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>스케쥴러 즉시 실행 - 기간 선택</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <Box sx={{ mt: 2 }}>
           <Box sx={{ mb: 2 }}>
             <strong>스케쥴러:</strong> {schedulerName}
@@ -70,10 +70,10 @@ const DateRangeDialog: React.FC<DateRangeDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>취소</Button>
         <Button onClick={handleConfirm} variant="contained" color="primary">
           실행
         </Button>
+        <Button onClick={handleClose}>취소</Button>
       </DialogActions>
     </Dialog>
   );

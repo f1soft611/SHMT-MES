@@ -317,7 +317,7 @@ const MenuManagement: React.FC = () => {
           fullWidth
         >
           <DialogTitle>{editingMenu ? '메뉴 수정' : '메뉴 추가'}</DialogTitle>
-          <DialogContent>
+          <DialogContent dividers>
             <Box
               sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
             >

@@ -4,11 +4,13 @@
 <mapper namespace="MesProdReqInterfaceDAO">
 
     <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 존재 여부 확인 -->
-    <select id="selectMesProdReqCount" parameterType="int" resultType="int">
+    <select id="selectMesProdReqCount" parameterType="egovframework.let.scheduler.domain.model.ErpProductionRequest" resultType="int">
         SELECT COUNT(1) AS cnt
         FROM TSA308
-        WHERE FACTORY_CODE = '000001'
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND ORDER_NO = #{prodReqSeq}
           AND ORDER_SEQNO = #{prodReqSeq}
+          AND ORDER_HISTNO = #{prodReqSeq}
     </select>
 
     <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 삽입 -->
@@ -84,7 +86,9 @@
             OPMAN_CODE2 = 'INTERFACE',
             OPTIME2 = GETDATE()
         WHERE FACTORY_CODE = #{factoryCode}
+          AND ORDER_NO = #{prodReqSeq}
           AND ORDER_SEQNO = #{prodReqSeq}
+          AND ORDER_HISTNO = #{prodReqSeq}
     </update>
 
 </mapper>

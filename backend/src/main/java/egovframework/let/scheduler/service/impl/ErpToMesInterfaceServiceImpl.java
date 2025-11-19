@@ -59,7 +59,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * ERP 시스템의 자재 정보를 MES 시스템으로 연동
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncMaterials() throws Exception {
 		log.info("=== ERP 품목 연동 시작 ===");
 
@@ -124,9 +124,9 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncUsers(String fromDate, String toDate) throws Exception {
-		log.info("=== ERP 사원정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
+		log.info("=== ERP 사원정보 연동 시작 ===");
 
 		int insertCount = 0;
 		int updateCount = 0;
@@ -269,9 +269,9 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncCusts(String fromDate, String toDate) throws Exception {
-		log.info("=== ERP 거래처정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
+		log.info("=== ERP 거래처정보 연동 시작 ===");
 
 		int insertCount = 0;
 		int updateCount = 0;
@@ -408,7 +408,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncProductionRequests(String fromDate, String toDate) throws Exception {
 		log.info("=== ERP 생산 의뢰 정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
 
@@ -427,7 +427,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			for (ErpProductionRequest prodReq : erpProdReqs) {
 				try {
 					// 2-1. MES에 해당 생산 의뢰가 존재하는지 확인
-					int count = mesProdReqInterfaceDAO.selectMesProdReqCount(prodReq.getProdReqSeq());
+					int count = mesProdReqInterfaceDAO.selectMesProdReqCount(prodReq);
 
 					if (count == 0) {
 						// 2-2. 신규 생산 의뢰인 경우 INSERT
@@ -473,8 +473,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		String sql = "SELECT ProdReqNo, ProdReqSeq, Serl, ReqDate, CustSeq, DeptSeq, EmpSeq, " +
 				"ItemSeq, ItemNo, ItemName, Spec, UnitSeq, Qty, EndDate, DelvDate, " +
 				"LastUserSeq, LastDateTime " +
-				"FROM SHM_IF_VIEW_ProdReq " +
-				"WHERE ReqDate BETWEEN ? AND ? " +  // 의뢰 날짜 기준으로 필터
+				"FROM SHM_IF_VIEW_TPDMPSProdReqItem " +
+				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY ProdReqSeq, Serl";
 
 		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate);
