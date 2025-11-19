@@ -125,7 +125,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 */
 	@Override
 //	@Transactional
-	public void syncUsers() throws Exception {
+	public void syncUsers(String fromDate, String toDate) throws Exception {
 		log.info("=== ERP 사원정보 연동 시작 ===");
 
 		int insertCount = 0;
@@ -270,7 +270,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 */
 	@Override
 //	@Transactional
-	public void syncCusts() throws Exception {
+	public void syncCusts(String fromDate, String toDate) throws Exception {
 		log.info("=== ERP 거래처정보 연동 시작 ===");
 
 		int insertCount = 0;

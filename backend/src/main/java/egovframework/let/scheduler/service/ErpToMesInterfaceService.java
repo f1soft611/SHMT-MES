@@ -33,13 +33,13 @@ public interface ErpToMesInterfaceService {
 	void executeMaterialInterface() throws Exception;
 
 	/**
-	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
-	 * ERP의 SHM_IF_VIEW_TDAEmp 뷰에서 사원 정보를 조회하여 MES_USER_INFO 테이블에 동기화
+	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TDACust 뷰에서 사원 정보를 조회하여 TCO601 테이블에 동기화
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @throws Exception
 	 */
-	void syncUsers(String fromDate, String toDate) throws Exception;
+	void syncCusts(String fromDate, String toDate) throws Exception;
 
 	/**
 	 * 스케쥴러에서 호출되는 거래처정보를 프로세스 실행
@@ -50,13 +50,13 @@ public interface ErpToMesInterfaceService {
 	void executeCustInterface(String fromDate, String toDate) throws Exception;
 
 	/**
-	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
-	 * ERP의 SHM_IF_VIEW_TDACust 뷰에서 사원 정보를 조회하여 TCO601 테이블에 동기화
+	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TDAEmp 뷰에서 사원 정보를 조회하여 MES_USER_INFO 테이블에 동기화
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @throws Exception
 	 */
-	void syncCusts(String fromDate, String toDate) throws Exception;
+	void syncUsers(String fromDate, String toDate) throws Exception;
 
 	/**
 	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
