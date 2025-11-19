@@ -55,7 +55,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * ERP 시스템의 자재 정보를 MES 시스템으로 연동
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncMaterials() throws Exception {
 		log.info("=== ERP 품목 연동 시작 ===");
 
@@ -118,7 +118,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncUsers() throws Exception {
 		log.info("=== ERP 사원정보 연동 시작 ===");
 
@@ -256,7 +256,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncCusts() throws Exception {
 		log.info("=== ERP 거래처정보 연동 시작 ===");
 
