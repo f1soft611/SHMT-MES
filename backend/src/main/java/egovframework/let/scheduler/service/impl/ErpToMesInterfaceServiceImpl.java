@@ -455,7 +455,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		String sql = "SELECT ProdReqNo, ProdReqSeq, Serl, ReqDate, CustSeq, DeptSeq, EmpSeq, " +
 				"ItemSeq, ItemNo, ItemName, Spec, UnitSeq, Qty, EndDate, DelvDate, " +
 				"LastUserSeq, LastDateTime " +
-				"FROM SHM_IF_VIEW_ProdReq " +
+				"FROM SHM_IF_VIEW_TPDMPSProdReqItem " +
 				"ORDER BY ProdReqSeq, Serl";
 
 		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper());
