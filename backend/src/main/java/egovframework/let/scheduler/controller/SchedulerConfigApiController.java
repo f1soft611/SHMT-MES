@@ -222,7 +222,7 @@ public class SchedulerConfigApiController {
      */
     @Operation(
             summary = "스케쥴러 즉시 실행",
-            description = "특정 스케쥴러를 즉시 실행",
+            description = "특정 스케쥴러를 즉시 실행 (날짜 범위 지정 가능)",
             security = {@SecurityRequirement(name = "Authorization")},
             tags = {"SchedulerConfigApiController"}
     )
@@ -233,10 +233,12 @@ public class SchedulerConfigApiController {
     })
     @PostMapping("/{schedulerId}/execute")
     public ResultVO executeScheduler(@Parameter(description = "스케쥴러 ID") @PathVariable Long schedulerId,
+                                      @Parameter(description = "조회 시작 날짜 (yyyy-MM-dd)") @RequestParam(required = false) String fromDate,
+                                      @Parameter(description = "조회 종료 날짜 (yyyy-MM-dd)") @RequestParam(required = false) String toDate,
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
 
-        schedulerConfigService.executeSchedulerManually(schedulerId);
+        schedulerConfigService.executeSchedulerManually(schedulerId, fromDate, toDate);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "스케쥴러가 실행되었습니다.");
