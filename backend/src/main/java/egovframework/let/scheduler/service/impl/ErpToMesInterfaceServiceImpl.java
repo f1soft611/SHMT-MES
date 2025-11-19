@@ -408,7 +408,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	@Transactional
+//	@Transactional
 	public void syncProductionRequests(String fromDate, String toDate) throws Exception {
 		log.info("=== ERP 생산 의뢰 정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
 
@@ -427,7 +427,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			for (ErpProductionRequest prodReq : erpProdReqs) {
 				try {
 					// 2-1. MES에 해당 생산 의뢰가 존재하는지 확인
-					int count = mesProdReqInterfaceDAO.selectMesProdReqCount(prodReq.getProdReqSeq());
+					int count = mesProdReqInterfaceDAO.selectMesProdReqCount(prodReq);
 
 					if (count == 0) {
 						// 2-2. 신규 생산 의뢰인 경우 INSERT

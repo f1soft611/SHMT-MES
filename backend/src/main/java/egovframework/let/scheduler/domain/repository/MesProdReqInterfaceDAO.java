@@ -30,8 +30,8 @@ public class MesProdReqInterfaceDAO extends EgovAbstractMapper {
 	 * @return 존재 개수
 	 * @throws Exception
 	 */
-	public int selectMesProdReqCount(Integer prodReqSeq) throws Exception {
-		return (Integer) selectOne("MesProdReqInterfaceDAO.selectMesProdReqCount", prodReqSeq);
+	public int selectMesProdReqCount(ErpProductionRequest prodReq) throws Exception {
+		return (Integer) selectOne("MesProdReqInterfaceDAO.selectMesProdReqCount", prodReq);
 	}
 
 	/**
