@@ -120,11 +120,13 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
 	@Transactional
-	public void syncUsers() throws Exception {
-		log.info("=== ERP 사원정보 연동 시작 ===");
+	public void syncUsers(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 사원정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
 
 		int insertCount = 0;
 		int updateCount = 0;
@@ -134,7 +136,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		try {
 			// 1. ERP 시스템에서 사원 정보 조회
 			log.info("ERP 시스템(SHM_IF_VIEW_TDAEmp)에서 사원 데이터 조회 시작");
-			List<ErpEmployee> erpEmployees = selectErpEmployees();
+			List<ErpEmployee> erpEmployees = selectErpEmployees(fromDate, toDate);
 			log.info("ERP 사원 데이터 조회 완료: {}건", erpEmployees.size());
 
 			// 2. MES 시스템에 사원 정보 등록/업데이트
@@ -184,17 +186,20 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP에서 사원 정보 조회 (JdbcTemplate 사용)
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @return 사원 정보 리스트
 	 */
-	private List<ErpEmployee> selectErpEmployees() {
+	private List<ErpEmployee> selectErpEmployees(String fromDate, String toDate) {
 		String sql = "SELECT CompanySeq, EmpSeq, EmpId, EmpName, UMPgSeq, UMPgName, " +
 				"DeptSeq, DeptName, TypeSeq, TypeName, Email, UserId, UserSeq, " +
 				"LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_TDAEmp " +
 				"WHERE TypeSeq = 3031001 " +  // 재직자만 동기화
+				"AND CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY EmpSeq";
 
-		return erpJdbcTemplate.query(sql, new ErpEmployeeRowMapper());
+		return erpJdbcTemplate.query(sql, new ErpEmployeeRowMapper(), fromDate, toDate);
 	}
 
 	/**
@@ -227,9 +232,11 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * 스케쥴러에서 호출되는 사원정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	public void executeUserInterface() throws Exception {
+	public void executeUserInterface(String fromDate, String toDate) throws Exception {
 		log.info("╔══════════════════════════════════════╗");
 		log.info("║  ERP-MES 인터페이스 연동 시작        ║");
 		log.info("╚══════════════════════════════════════╝");
@@ -238,7 +245,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 		try {
 			// 사원 정보 연동 실행
-			syncUsers();
+			syncUsers(fromDate, toDate);
 
 			long executionTime = System.currentTimeMillis() - startTime;
 			log.info("╔══════════════════════════════════════╗");
@@ -258,11 +265,13 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
 	@Transactional
-	public void syncCusts() throws Exception {
-		log.info("=== ERP 거래처정보 연동 시작 ===");
+	public void syncCusts(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 거래처정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
 
 		int insertCount = 0;
 		int updateCount = 0;
@@ -272,7 +281,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		try {
 			// 1. ERP 시스템에서 거래처 정보 조회
 			log.info("ERP 시스템(SHM_IF_VIEW_TDACust)에서 거래처 데이터 조회 시작");
-			List<ErpCustomer> erpCustomers = selectErpCustomers();
+			List<ErpCustomer> erpCustomers = selectErpCustomers(fromDate, toDate);
 			log.info("ERP 거래처 데이터 조회 완료: {}건", erpCustomers.size());
 
 			// 2. MES 시스템에 거래처 정보 등록/업데이트
@@ -317,18 +326,21 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP에서 거래처 정보 조회 (JdbcTemplate 사용)
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @return 거래처 정보 리스트
 	 */
-	private List<ErpCustomer> selectErpCustomers() {
+	private List<ErpCustomer> selectErpCustomers(String fromDate, String toDate) {
 		String sql = "SELECT CompanySeq, CustSeq, CustName, SMCustStatus, SMCustStatusName, " +
 				"SMDomFor, SMDomForName, BizNo, BizAddr, UMChannelSeq, UMChannelName, " +
 				"ZipCode, CustKindName, LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_TDACust " +
 				"WHERE SMCustStatus = '2004001' " +  // 정상 거래처만 동기화 (필요시 조건 수정)
 				"AND CustKindName IN ('국내매출거래처', '수출거래처') " +
+				"AND CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY CustSeq";
 
-		return erpJdbcTemplate.query(sql, new ErpCustomerRowMapper());
+		return erpJdbcTemplate.query(sql, new ErpCustomerRowMapper(), fromDate, toDate);
 	}
 
 	/**
@@ -359,9 +371,11 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * 스케쥴러에서 호출되는 거래처정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	public void executeCustInterface() throws Exception {
+	public void executeCustInterface(String fromDate, String toDate) throws Exception {
 		log.info("╔══════════════════════════════════════╗");
 		log.info("║  ERP-MES 거래처 연동 시작            ║");
 		log.info("╚══════════════════════════════════════╝");
@@ -370,7 +384,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 		try {
 			// 거래처 정보 연동 실행
-			syncCusts();
+			syncCusts(fromDate, toDate);
 
 			long executionTime = System.currentTimeMillis() - startTime;
 			log.info("╔══════════════════════════════════════╗");
@@ -390,11 +404,13 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP 시스템의 생산 의뢰 정보를 MES 시스템으로 연동
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
 	@Transactional
-	public void syncProductionRequests() throws Exception {
-		log.info("=== ERP 생산 의뢰 정보 연동 시작 ===");
+	public void syncProductionRequests(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 생산 의뢰 정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
 
 		int insertCount = 0;
 		int updateCount = 0;
@@ -404,7 +420,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		try {
 			// 1. ERP 시스템에서 생산 의뢰 정보 조회
 			log.info("ERP 시스템에서 생산 의뢰 데이터 조회 시작");
-			List<ErpProductionRequest> erpProdReqs = selectErpProductionRequests();
+			List<ErpProductionRequest> erpProdReqs = selectErpProductionRequests(fromDate, toDate);
 			log.info("ERP 생산 의뢰 데이터 조회 완료: {}건", erpProdReqs.size());
 
 			// 2. MES 시스템에 생산 의뢰 정보 등록/업데이트
@@ -449,16 +465,19 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP에서 생산 의뢰 정보 조회 (JdbcTemplate 사용)
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @return 생산 의뢰 정보 리스트
 	 */
-	private List<ErpProductionRequest> selectErpProductionRequests() {
+	private List<ErpProductionRequest> selectErpProductionRequests(String fromDate, String toDate) {
 		String sql = "SELECT ProdReqNo, ProdReqSeq, Serl, ReqDate, CustSeq, DeptSeq, EmpSeq, " +
 				"ItemSeq, ItemNo, ItemName, Spec, UnitSeq, Qty, EndDate, DelvDate, " +
 				"LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_ProdReq " +
+				"WHERE ReqDate BETWEEN ? AND ? " +  // 의뢰 날짜 기준으로 필터
 				"ORDER BY ProdReqSeq, Serl";
 
-		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper());
+		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate);
 	}
 
 	/**
@@ -491,9 +510,11 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * 스케쥴러에서 호출되는 생산 의뢰 정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	public void executeProdReqInterface() throws Exception {
+	public void executeProdReqInterface(String fromDate, String toDate) throws Exception {
 		log.info("╔══════════════════════════════════════╗");
 		log.info("║  ERP-MES 생산 의뢰 연동 시작         ║");
 		log.info("╚══════════════════════════════════════╝");
@@ -502,7 +523,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 		try {
 			// 생산 의뢰 정보 연동 실행
-			syncProductionRequests();
+			syncProductionRequests(fromDate, toDate);
 
 			long executionTime = System.currentTimeMillis() - startTime;
 			log.info("╔══════════════════════════════════════╗");
@@ -523,9 +544,11 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	/**
 	 * 스케쥴러에서 호출되는 전체 인터페이스 프로세스 실행
 	 * 품목, 사원, 거래처, 생산 의뢰 순서로 연동 수행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
 	@Override
-	public void executeInterface() throws Exception {
+	public void executeInterface(String fromDate, String toDate) throws Exception {
 		log.info("╔══════════════════════════════════════╗");
 		log.info("║  ERP-MES 인터페이스 연동 시작        ║");
 		log.info("╚══════════════════════════════════════╝");
@@ -537,13 +560,13 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			syncMaterials();
 
 			// 사원 정보 연동 실행
-			syncUsers();
+			syncUsers(fromDate, toDate);
 
 			// 거래처 정보 연동 실행
-			syncCusts();
+			syncCusts(fromDate, toDate);
 
 			// 생산 의뢰 정보 연동 실행
-			syncProductionRequests();
+			syncProductionRequests(fromDate, toDate);
 
 			long executionTime = System.currentTimeMillis() - startTime;
 			log.info("╔══════════════════════════════════════╗");

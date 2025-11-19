@@ -92,7 +92,9 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         }
 
         try {
-            Runnable task = createTaskRunnable(config);
+            // 자동 스케쥴러 실행 시 오늘 날짜 사용
+            String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            Runnable task = createTaskRunnable(config, today, today);
             CronTrigger cronTrigger = new CronTrigger(config.getCronExpression());
             ScheduledFuture<?> scheduledTask = taskScheduler.schedule(task, cronTrigger);
             scheduledTasks.put(config.getSchedulerId(), scheduledTask);
@@ -103,7 +105,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         }
     }
 
-    private Runnable createTaskRunnable(SchedulerConfig config) {
+    private Runnable createTaskRunnable(SchedulerConfig config, String fromDate, String toDate) {
         return () -> {
             SchedulerHistory history = new SchedulerHistory();
             history.setSchedulerId(config.getSchedulerId());
@@ -124,7 +126,7 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
             try {
                 // 스케쥴러 실행
-                executeJob(config);
+                executeJob(config, fromDate, toDate);
 
                 // ✅ 성공 처리
                 long endTime = System.currentTimeMillis();
@@ -187,9 +189,9 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         log.error("스케쥴러 이력 업데이트 최종 실패: {}", history.getSchedulerName());
     }
 
-    private void executeJob(SchedulerConfig config) throws Exception {
+    private void executeJob(SchedulerConfig config, String fromDate, String toDate) throws Exception {
         String jobClassName = config.getJobClassName();
-        log.info("스케쥴러 작업 실행: {} - {}", config.getSchedulerName(), jobClassName);
+        log.info("스케쥴러 작업 실행: {} - {} (기간: {} ~ {})", config.getSchedulerName(), jobClassName, fromDate, toDate);
 
         try {
             // jobClassName 형식:
@@ -224,25 +226,39 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
             // 메서드 실행
             if (methodName != null && !methodName.isEmpty()) {
-                // 특정 메서드 호출
-                Method method = serviceBean.getClass().getMethod(methodName);
-                method.invoke(serviceBean);
-                log.info("메서드 실행 완료: {}.{}", beanName, methodName);
+                // 특정 메서드 호출 - 날짜 파라미터가 있는 메서드 먼저 시도
+                try {
+                    Method method = serviceBean.getClass().getMethod(methodName, String.class, String.class);
+                    method.invoke(serviceBean, fromDate, toDate);
+                    log.info("메서드 실행 완료 (날짜 파라미터): {}.{}({}, {})", beanName, methodName, fromDate, toDate);
+                } catch (NoSuchMethodException e) {
+                    // 날짜 파라미터가 없는 메서드 시도
+                    Method method = serviceBean.getClass().getMethod(methodName);
+                    method.invoke(serviceBean);
+                    log.info("메서드 실행 완료: {}.{}", beanName, methodName);
+                }
             } else {
                 // executeInterface 메서드를 기본으로 호출
                 try {
-                    Method executeMethod = serviceBean.getClass().getMethod("executeInterface");
-                    executeMethod.invoke(serviceBean);
-                    log.info("executeInterface 메서드 실행 완료: {}", beanName);
+                    Method executeMethod = serviceBean.getClass().getMethod("executeInterface", String.class, String.class);
+                    executeMethod.invoke(serviceBean, fromDate, toDate);
+                    log.info("executeInterface 메서드 실행 완료 (날짜 파라미터): {}", beanName);
                 } catch (NoSuchMethodException e) {
-                    // execute 메서드 시도
+                    // 날짜 파라미터가 없는 executeInterface 시도
                     try {
-                        Method executeMethod = serviceBean.getClass().getMethod("execute");
+                        Method executeMethod = serviceBean.getClass().getMethod("executeInterface");
                         executeMethod.invoke(serviceBean);
-                        log.info("execute 메서드 실행 완료: {}", beanName);
+                        log.info("executeInterface 메서드 실행 완료: {}", beanName);
                     } catch (NoSuchMethodException e2) {
-                        throw new IllegalArgumentException(
-                                "서비스에 executeInterface() 또는 execute() 메서드가 없습니다: " + beanName);
+                        // execute 메서드 시도
+                        try {
+                            Method executeMethod = serviceBean.getClass().getMethod("execute");
+                            executeMethod.invoke(serviceBean);
+                            log.info("execute 메서드 실행 완료: {}", beanName);
+                        } catch (NoSuchMethodException e3) {
+                            throw new IllegalArgumentException(
+                                    "서비스에 executeInterface() 또는 execute() 메서드가 없습니다: " + beanName);
+                        }
                     }
                 }
             }
@@ -269,8 +285,8 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
     }
 
     @Override
-    public void executeSchedulerManually(Long schedulerId) throws Exception {
-        log.info("스케쥴러 수동 실행 시작: schedulerId={}", schedulerId);
+    public void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception {
+        log.info("스케쥴러 수동 실행 시작: schedulerId={}, 기간: {} ~ {}", schedulerId, fromDate, toDate);
         
         // 스케쥴러 설정 조회
         SchedulerConfig config = schedulerConfigDAO.selectSchedulerDetail(schedulerId);
@@ -278,13 +294,24 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
             throw new IllegalArgumentException("스케쥴러를 찾을 수 없습니다: " + schedulerId);
         }
         
+        // 날짜가 null인 경우 오늘 날짜로 설정
+        if (fromDate == null || fromDate.isEmpty()) {
+            fromDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        }
+        if (toDate == null || toDate.isEmpty()) {
+            toDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        }
+        
+        final String finalFromDate = fromDate;
+        final String finalToDate = toDate;
+        
         // TaskScheduler를 사용하여 비동기로 실행
         if (taskScheduler != null) {
-            Runnable task = createTaskRunnable(config);
+            Runnable task = createTaskRunnable(config, finalFromDate, finalToDate);
             taskScheduler.schedule(task, new Date());
         } else {
             log.warn("TaskScheduler가 초기화되지 않아 동기로 실행합니다.");
-            Runnable task = createTaskRunnable(config);
+            Runnable task = createTaskRunnable(config, finalFromDate, finalToDate);
             task.run();
         }
         

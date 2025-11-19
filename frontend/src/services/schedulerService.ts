@@ -130,8 +130,23 @@ class SchedulerService {
   }
 
   // 스케쥴러 즉시 실행
-  async executeScheduler(schedulerId: number): Promise<any> {
-    const response = await api.post(`/api/schedulers/${schedulerId}/execute`);
+  async executeScheduler(
+    schedulerId: number,
+    fromDate?: string,
+    toDate?: string
+  ): Promise<any> {
+    const params: any = {};
+    if (fromDate) {
+      params.fromDate = fromDate;
+    }
+    if (toDate) {
+      params.toDate = toDate;
+    }
+    const response = await api.post(
+      `/api/schedulers/${schedulerId}/execute`,
+      null,
+      { params }
+    );
     return response.data;
   }
 

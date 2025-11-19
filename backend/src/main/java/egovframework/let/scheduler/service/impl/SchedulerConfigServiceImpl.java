@@ -73,7 +73,7 @@ public class SchedulerConfigServiceImpl implements SchedulerConfigService {
     }
 
     @Override
-    public void executeSchedulerManually(Long schedulerId) throws Exception {
-        dynamicSchedulerService.executeSchedulerManually(schedulerId);
+    public void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception {
+        dynamicSchedulerService.executeSchedulerManually(schedulerId, fromDate, toDate);
     }
 }
