@@ -23,7 +23,9 @@ public interface DynamicSchedulerService {
     /**
      * 특정 스케쥴러를 즉시 실행한다.
      * @param schedulerId 스케쥴러 ID
+     * @param fromDate 조회 시작 날짜 (yyyy-MM-dd), null이면 오늘 날짜 사용
+     * @param toDate 조회 종료 날짜 (yyyy-MM-dd), null이면 오늘 날짜 사용
      * @throws Exception
      */
-    void executeSchedulerManually(Long schedulerId) throws Exception;
+    void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception;
 }
