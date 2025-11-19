@@ -563,7 +563,7 @@ const UserManagement: React.FC = () => {
           <DialogTitle>
             {editingUser ? '사용자 수정' : '사용자 추가'}
           </DialogTitle>
-          <DialogContent>
+          <DialogContent dividers>
             <Box
               sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
             >
