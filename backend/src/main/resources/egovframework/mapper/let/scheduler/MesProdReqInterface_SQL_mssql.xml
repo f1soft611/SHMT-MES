@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MesProdReqInterfaceDAO">
+
+    <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 존재 여부 확인 -->
+    <select id="selectMesProdReqCount" parameterType="int" resultType="int">
+        SELECT COUNT(1) AS cnt
+        FROM TSA308
+        WHERE FACTORY_CODE = '000001'
+          AND ORDER_SEQNO = #{prodReqSeq}
+    </select>
+
+    <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 삽입 -->
+    <insert id="insertMesProdReq" parameterType="egovframework.let.scheduler.domain.model.ErpProductionRequest">
+        INSERT INTO TSA308 (
+            FACTORY_CODE,
+            ORDER_NO,
+            ORDER_SEQNO,
+            ORDER_HISTNO,
+            ITEM_CODE,
+            ITEM_NO,
+            ITEM_NAME,
+            ITEM_SPEC,
+            ITEM_FLAG,
+            CUSTOMER_CODE,
+            EMPLYR_ID,
+            ORDER_QTY,
+            ORDER_PRICE,
+            ORDER_AMOUNT,
+            UNIT_CODE,
+            SHIP_ORDER_QTY,
+            CLOSING_FLAG,
+            DELIVERY_DATE,
+            VAT_FLAG,
+            PROD_PLAN_DATE,
+            END_DATE,
+            OPMAN_CODE,
+            OPTIME
+        ) VALUES (
+            #{factoryCode},
+            #{prodReqNo},
+            #{prodReqSeq},
+            #{serl},
+            #{itemSeq},
+            #{itemNo},
+            #{itemName},
+            #{spec},
+            '0',
+            #{custSeq},
+            #{empSeq},
+            #{qty},
+            0,
+            0,
+            #{unitSeq},
+            0,
+            '0',
+            #{delvDate},
+            '0',
+            #{reqDate},
+            #{endDate},
+            'INTERFACE',
+            GETDATE()
+        )
+    </insert>
+
+    <!-- MES 생산 의뢰 테이블의 생산 의뢰 정보 업데이트 -->
+    <update id="updateMesProdReq" parameterType="egovframework.let.scheduler.domain.model.ErpProductionRequest">
+        UPDATE TSA308
+        SET
+            ORDER_NO = #{prodReqNo},
+            ORDER_HISTNO = #{serl},
+            ITEM_CODE = #{itemSeq},
+            ITEM_NO = #{itemNo},
+            ITEM_NAME = #{itemName},
+            ITEM_SPEC = #{spec},
+            CUSTOMER_CODE = #{custSeq},
+            EMPLYR_ID = #{empSeq},
+            ORDER_QTY = #{qty},
+            UNIT_CODE = #{unitSeq},
+            DELIVERY_DATE = #{delvDate},
+            PROD_PLAN_DATE = #{reqDate},
+            END_DATE = #{endDate},
+            OPMAN_CODE2 = 'INTERFACE',
+            OPTIME2 = GETDATE()
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND ORDER_SEQNO = #{prodReqSeq}
+    </update>
+
+</mapper>

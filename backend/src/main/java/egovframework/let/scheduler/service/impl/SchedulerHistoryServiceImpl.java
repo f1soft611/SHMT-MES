@@ -42,13 +42,13 @@ public class SchedulerHistoryServiceImpl implements SchedulerHistoryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void insertSchedulerHistory(SchedulerHistory history) throws Exception {
         schedulerHistoryDAO.insertSchedulerHistory(history);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void updateSchedulerHistory(SchedulerHistory history) throws Exception {
         schedulerHistoryDAO.updateSchedulerHistory(history);
     }
