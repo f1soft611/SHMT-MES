@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { Item } from '../../../../types/item';
+import { CommonDetailCode } from '../../../../types/commonCode';
+import commonCodeService from '../../../../services/commonCodeService';
 
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
@@ -45,6 +47,26 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   control,
   errors,
 }) => {
+  const [unitCodes, setUnitCodes] = useState<CommonDetailCode[]>([]);
+
+  // Fetch unit codes from COM007
+  useEffect(() => {
+    const fetchUnitCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList('COM007', 'Y');
+        if (response.resultCode === 200 && response.result?.detailCodeList) {
+          setUnitCodes(response.result.detailCodeList);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unit codes:', error);
+      }
+    };
+
+    if (open) {
+      fetchUnitCodes();
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -115,7 +137,16 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
               name="unit"
               control={control}
               render={({ field }) => (
-                <TextField {...field} fullWidth label="단위" />
+                <FormControl fullWidth>
+                  <InputLabel>단위</InputLabel>
+                  <Select {...field} label="단위">
+                    {unitCodes.map((unitCode) => (
+                      <MenuItem key={unitCode.code} value={unitCode.code}>
+                        {unitCode.codeNm}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               )}
             />
             <Controller
