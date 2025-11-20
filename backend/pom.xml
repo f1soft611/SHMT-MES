@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.egovframe.template</groupId>
-	<artifactId>simpleHomePage</artifactId> 
+	<artifactId>shmtMes</artifactId>
 	<packaging>war</packaging>
 	<version>1.0.0</version>
 	<name>egovframework</name>
@@ -422,7 +422,8 @@
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>
-				<!-- war 배포 시 maven-war-plugin 주석 해제
+
+				<!-- war 배포 시 maven-war-plugin 주석 해제  -->
 				<plugin>
                 	<groupId>org.apache.maven.plugins</groupId>
                 	<artifactId>maven-war-plugin</artifactId>
@@ -431,7 +432,6 @@
                 		<failOnMissingWebXml>false</failOnMissingWebXml>
                 	</configuration>
                 </plugin>
-                 -->
             </plugins>
         </pluginManagement>
  
@@ -481,6 +481,60 @@
                 	<executable>true</executable>
             	</configuration>
             </plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<delimiters>
+						<delimiter>@</delimiter>
+					</delimiters>
+					<useDefaultDelimiters>false</useDefaultDelimiters>
+				</configuration>
+			</plugin>
         </plugins>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+		<!-- 테스트 리소스도 filtering 적용 -->
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<filtering>true</filtering>
+			</testResource>
+		</testResources>
     </build>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<spring.profiles.active>dev</spring.profiles.active>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>prod</id>
+			<properties>
+				<spring.profiles.active>prod</spring.profiles.active>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>test</id>
+			<properties>
+				<spring.profiles.active>test</spring.profiles.active>
+			</properties>
+		</profile>
+	</profiles>
 </project>

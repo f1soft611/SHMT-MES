@@ -57,3 +57,5 @@ application-*.properties
 *.keystore
 문서/ERD/새한마이크로텍_V1.0_20251107.erwin
 frontend/env.production
+backend/backend-dev
+backend/backend-prod
