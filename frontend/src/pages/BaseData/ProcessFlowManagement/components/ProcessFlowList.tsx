@@ -16,8 +16,7 @@ interface Props {
     setPaginationModel: (model: GridPaginationModel) => void;
     onEdit: (row: ProcessFlow) => void;
     onDelete: (id: string) => void;
-    // onSelect: (row: ProcessFlow) => void;
-    onDetailOpen: (row: ProcessFlow) => void;
+    onDetailOpen: (row: ProcessFlow, tabIndex: number) => void;
 }
 
 export default function ProcessFlowList({
@@ -32,7 +31,7 @@ export default function ProcessFlowList({
 
     const columns: GridColDef[] = [
         {
-            field: "workplaceCode",
+            field: "workplaceName",
             headerName: "작업장",
             headerAlign: 'center',
             align: 'center',
@@ -72,14 +71,14 @@ export default function ProcessFlowList({
                         <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onDetailOpen(params.row)}
+                            onClick={() => onDetailOpen(params.row, 0)}
                         >
                             <BuildIcon />
                         </IconButton>
                         <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onDetailOpen(params.row)}
+                            onClick={() => onDetailOpen(params.row, 1)}
                         >
                             <ExtensionIcon />
                         </IconButton>

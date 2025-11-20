@@ -1,16 +1,13 @@
 import {useCallback, useEffect, useState} from "react";
 import {GridPaginationModel} from "@mui/x-data-grid";
-import { useForm } from "react-hook-form";
-import {ProcessFlow, ProcessFlowItem} from "../../../../types/processFlow";
-import {yupResolver} from "@hookform/resolvers/yup";
-import { processFlowSchema } from "../processFlowSchema";
+import {ProcessFlow, ProcessFlowItem, ProcessFlowProcess, DetailSavePayload } from "../../../../types/processFlow";
 import processFlowService from "../../../../services/processFlowService";
-import itemService from "../../../../services/itemService";
 
 export function useProcessFlow() {
 
     const [rows, setRows] = useState<ProcessFlow[]>([]);
     const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
+    const [detailTab, setDetailTab] = useState(0);
 
     // 공정 흐름 dialog
     const [openDialog, setOpenDialog] = useState(false);
@@ -49,9 +46,17 @@ export function useProcessFlow() {
     const handleSearch = () => {
         setSearchParams({ ...inputValues });
         setPaginationModel(prev => ({ ...prev, page: 0 }));
+
+        // 조회 실행
+        fetchProcessFlows(0, paginationModel.pageSize, {
+            ...inputValues
+        });
+
     };
 
-    const fetchProcessFlows = useCallback(async () => {
+    const fetchProcessFlows = useCallback(async (page = paginationModel.page,
+                                                 pageSize = paginationModel.pageSize,
+                                                 params = searchParams) => {
         try {
             const response = await processFlowService.getProcessFlowList(
                 paginationModel.page,
@@ -93,8 +98,9 @@ export function useProcessFlow() {
     };
 
     // detail Dialog 열기
-    const handleOpenDetailDialog = (row: ProcessFlow) => {
+    const handleOpenDetailDialog = (row: ProcessFlow, tabIndex: number) => {
         setSelectedFlow(row);
+        setDetailTab(tabIndex);
         setOpenDetailDialog(true);
     };
 
@@ -132,6 +138,62 @@ export function useProcessFlow() {
             fetchProcessFlows();
         } catch (error) {
             console.error("삭제 실패:", error);
+        }
+    };
+
+
+    // 공정 흐름별 공정/제품 저장 및 수정
+    const handleDetailSave = async ({ processes, items }: DetailSavePayload) => {
+
+        // selectedFlow가 반드시 있어야 저장 가능
+        if (!selectedFlow?.processFlowId) {
+            showSnackbar("선택된 공정흐름이 없습니다.", "error");
+            return;
+        }
+
+        try {
+            // 공정 저장 요청일 때
+            if (processes !== undefined) {
+                // UI 전용 flowRowId 제거 + DTO 변환
+                const processList = processes.map((p: ProcessFlowProcess) => ({
+                    flowProcessId: p.flowProcessId ?? null,
+                    flowProcessCode: p.flowProcessCode,
+                    processFlowId: selectedFlow.processFlowId,   // 여기 고정
+                    processFlowCode: selectedFlow.processFlowCode,
+                    seq: p.seq,
+                    processSeq: p.processSeq,
+                    lastFlag: p.lastFlag,
+                }));
+
+                await processFlowService.createFlowProcesses(
+                    selectedFlow.processFlowId,
+                    processList
+                );
+            }
+
+            // 품목 저장 요청일 때
+            if (items !== undefined) {
+                const itemList = items.map((it: ProcessFlowItem) => ({
+                    flowItemId: it.flowItemId ?? null,
+                    flowItemCode: it.flowItemCode,
+                    flowItemName: it.flowItemName,
+                    specification: it.specification,
+                    unit: it.unit,
+                    processFlowId: selectedFlow.processFlowId,
+                    processFlowCode: selectedFlow.processFlowCode,
+                }));
+
+                await processFlowService.createFlowItems(
+                    selectedFlow.processFlowId,
+                    itemList
+                );
+            }
+
+            showSnackbar("등록되었습니다.", "success");
+            return true;
+        } catch (e) {
+            showSnackbar("저장 실패", "error");
+            return false;
         }
     };
 
@@ -185,11 +247,14 @@ export function useProcessFlow() {
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
+        detailTab,
 
         // CRUD
         fetchProcessFlows,
         handleSave,
         handleDelete,
+
+        handleDetailSave,
 
         // Snackbar
         snackbar,
@@ -198,74 +263,3 @@ export function useProcessFlow() {
     };
 }
 
-
-// const [flowProcessRows, setFlowProcessRows] = useState([]);
-// const [flowItemRows, setFlowItemRows] = useState([]);
-//
-// const [processRows, setProcessRows] = useState([]);
-// const [itemRows, setItemRows] = useState([]);
-
-// 공정흐름별 공정
-
-// 공정흐름별 제품
-// const [openItemDialog, setOpenItemDialog] = useState(false);
-// const [itemDialogMode, setItemDialogMode] = useState<"create" | "edit">("create");
-
-// // react-hook-form 설정 - 공정흐름별 제품
-// const {
-//     control: itemControl,
-//     handleSubmit: handleItemSubmit,
-//     reset: resetItemForm,
-//     formState: { errors: itemErrors }
-// } = useForm<ProcessFlowItem>({
-//     defaultValues: {
-//         itemCode: "",
-//         itemName: ""
-//     }
-// });
-
-
-// const fetchItemList = async () => {
-//     try {
-//         const res = await itemService.getItemList(0,9999);
-//         setItemRows(res?.result?.resultList ?? []);
-//     } catch (err) {
-//         console.error("품목 조회 실패:", err);
-//         showSnackbar("품목 조회 실패", "error");
-//     }
-// };
-
-
-
-// // 공정 흐름 선택시 공정+품목 가져오기
-// const handleSelectFlow = async (flow: ProcessFlow) => {
-//     const flowId = flow.processFlowId;
-//
-//     try {
-//         // ✅ 병렬로 API 호출
-//         const [processRes, itemRes] = await Promise.all([
-//             processFlowService.getProcessFlowProcess(flowId),
-//             processFlowService.getProcessFlowItem(flowId),
-//         ]);
-//
-//         // ✅ 상태 업데이트
-//         setFlowProcessRows(processRes.result?.resultList ?? []);
-//         setFlowItemRows(itemRes.result?.resultList ?? []);
-//
-//     } catch (e) {
-//         console.error("❌ 공정흐름 세부 조회 실패:", e);
-//         showSnackbar("데이터 조회 실패", "error");
-//     }
-// };
-
-
-// // 제품 신규 등록 Dialog 열기
-// const handleOpenItemDialog = () => {
-//     setItemDialogMode("create");
-//     setOpenItemDialog(true);
-// };
-
-// // 제품 dialog 닫기
-// const handleCloseItemDialog = () => {
-//     setOpenItemDialog(false);
-// };

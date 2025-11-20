@@ -19,13 +19,8 @@ import {usePermissions} from "../../../contexts/PermissionContext";
 import {
     ProcessFlowDialog,
     ProcessFlowList,
-    ProcessList,
-    ItemList,
     ProcessFlowDetailDialog,
-    ProcessFlowProcessDialog,
-    ProcessFlowItemDialog
 } from "./components";
-import { ProcessFlow } from "../../../types/processFlow";
 
 const ProcessFlowManagement: React.FC = () => {
 
@@ -36,9 +31,6 @@ const ProcessFlowManagement: React.FC = () => {
         // 목록
         rows,
         selectedFlow,
-        // handleSelectFlow,
-        // processRows,
-        // itemRows,
 
         // 입력 & 검색
         inputValues,
@@ -61,11 +53,13 @@ const ProcessFlowManagement: React.FC = () => {
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
+        detailTab,
 
         // CRUD
         fetchProcessFlows,
         handleSave,
         handleDelete,
+        handleDetailSave,
 
         // Snackbar
         snackbar,
@@ -98,9 +92,8 @@ const ProcessFlowManagement: React.FC = () => {
                             label="검색 조건"
                             onChange={(e) => handleInputChange('searchCnd', e.target.value)}
                         >
-                            <MenuItem value="0">작업장 코드</MenuItem>
-                            <MenuItem value="1">작업장명</MenuItem>
-                            <MenuItem value="2">위치</MenuItem>
+                            <MenuItem value="0">작업장 이름</MenuItem>
+                            <MenuItem value="1">공정흐름 명</MenuItem>
                         </Select>
                     </FormControl>
 
@@ -113,18 +106,18 @@ const ProcessFlowManagement: React.FC = () => {
                         placeholder="검색어를 입력하세요"
                     />
 
-                    <FormControl size="small" sx={{minWidth: 120}}>
-                        <InputLabel>상태</InputLabel>
-                        <Select
-                            value={inputValues.status}
-                            label="상태"
-                            onChange={(e) => handleInputChange('status', e.target.value)}
-                        >
-                            <MenuItem value="">전체</MenuItem>
-                            <MenuItem value="ACTIVE">활성</MenuItem>
-                            <MenuItem value="INACTIVE">비활성</MenuItem>
-                        </Select>
-                    </FormControl>
+                    {/*<FormControl size="small" sx={{minWidth: 120}}>*/}
+                    {/*    <InputLabel>상태</InputLabel>*/}
+                    {/*    <Select*/}
+                    {/*        value={inputValues.status}*/}
+                    {/*        label="상태"*/}
+                    {/*        onChange={(e) => handleInputChange('status', e.target.value)}*/}
+                    {/*    >*/}
+                    {/*        <MenuItem value="">전체</MenuItem>*/}
+                    {/*        <MenuItem value="ACTIVE">활성</MenuItem>*/}
+                    {/*        <MenuItem value="INACTIVE">비활성</MenuItem>*/}
+                    {/*    </Select>*/}
+                    {/*</FormControl>*/}
 
                     <Button
                         variant="contained"
@@ -174,6 +167,8 @@ const ProcessFlowManagement: React.FC = () => {
                 open={openDetailDialog}
                 onClose={handleCloseDetailDialog}
                 selectedFlow={selectedFlow}
+                onSave={handleDetailSave}
+                initialTab={detailTab}
             />
 
             {/* 스낵바 */}

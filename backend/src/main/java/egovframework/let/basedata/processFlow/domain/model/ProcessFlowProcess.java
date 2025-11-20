@@ -43,16 +43,19 @@ public class ProcessFlowProcess implements Serializable {
 	private String processFlowCode = "";
 
 	@Schema(description = "흐름별 공정 ID") // FLOW_PROCESS_ID
-	private String flowProcessID = "";
+	private String flowProcessId = "";
 
 	@Schema(description = "흐름별 공정 코드") // WORK_CODE
 	private String flowProcessCode = "";
 
+	@Schema(description = "흐름별 공정 명") // WORK_CODE_NAME
+	private String flowProcessName;
+
 	@Schema(description = "공정 흐름 순번")// SEQ
-	private String flowProcessSeq = "";
+	private String seq = "";
 
 	@Schema(description = "공정 순서") // WORK_SEQ
-	private String flowProcessCodeSeq = "";
+	private String processSeq = "";
 
 	@Schema(description = "최종 공정") // LAST_FLAG
 	private String lastFlag = "";

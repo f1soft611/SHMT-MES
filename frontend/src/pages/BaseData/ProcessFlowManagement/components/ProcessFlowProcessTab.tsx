@@ -1,5 +1,5 @@
 import {DataGrid, GridColDef, GridRowId, GridRowSelectionModel} from "@mui/x-data-grid";
-import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid} from "@mui/material";
+import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio} from "@mui/material";
 import {
     Add as AddIcon,
     Save as SaveIcon,
@@ -9,44 +9,142 @@ import {
     Search as SearchIcon,
     // Build as BuildIcon,
 } from '@mui/icons-material';
-import React, {useState} from "react";
-import { ProcessList} from "./index";
+import React, {useEffect, useState} from "react";
+import {Process} from "../../../../types/process";
 
-interface Props {
-    // rows: any[];
-    // onEdit: (row: Process) => void;
-    // onDelete: (id: string) => void;
-}
+import { useProcessFlowDetailContext } from "../hooks/useProcessFlowDetailContext";
+import {ProcessFlowProcess} from "../../../../types/processFlow";
+import {useProcessFlowDetail} from "../hooks/useProcessFlowDetail"
 
 export default function ProcessFlowProcessTab() {
 
+    const {
+        processFlow,
+        processRows,        // 전체 공정 목록
+        flowProcessRows,    // 흐름에 속한 공정 목록
+        setFlowProcessRows, // 흐름 공정 setter
+    } = useProcessFlowDetailContext();
+
+    const {
+        inputValues,
+        handleInputChange,
+        handleSearch,
+        filteredRows: filteredProcessRows,
+    } = useProcessFlowDetail(processRows, {
+        fields: {
+            "0": (row) => row.processCode,
+            "1": (row) => row.processName,
+        }
+    });
+
     const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
+    const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
+
+    const [lastProcessId, setLastProcessId] = useState<string | null>(null);
+
+
 
 
     const columns: GridColDef[] = [
-        {
-            field: 'processCode',
-            headerName: '공정 코드',
-            flex: 1,
-            headerAlign: 'center',
-        },
-        {
-            field: 'processName',
-            headerName: '공정 명',
-            flex: 1,
-            headerAlign: 'center',
-        },
-        {
-            field: 'bigo',
-            headerName: '비고',
-            flex: 1,
-            headerAlign: 'center',
-        },
+        { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
+        { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
+        { field: 'equipmentIntegrationYn', headerName: '설비연동', width: 80, headerAlign: 'center', align:'center' },
     ];
 
-    const handleCheckedToRight = () => {
-        console.log("왼쪽에서 선택된 ID 목록:", leftSelected);
+    const rightColumns: GridColDef[] = [
+        { field: 'flowProcessCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
+        { field: 'flowProcessName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
+        {
+            field: 'seq',
+            headerName: '순서',
+            width: 80,
+            headerAlign: 'center',
+            renderCell: (params) => (
+                <TextField
+                    size="small"
+                    value={params.row.seq ?? ""}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        const rid = params.row.flowRowId;
+
+                        setFlowProcessRows(prev =>
+                            prev.map(p =>
+                                p.flowRowId === rid ? { ...p, seq: value } : p
+                            )
+                        );
+                    }}
+                />
+            ),
+        },
+        {
+            field: 'lastFlag',
+            headerName: '마지막',
+            width: 80,
+            headerAlign: 'center',
+            renderCell: (params) => {
+                const rid = params.row.flowRowId;
+
+                return (
+                    <Radio
+                        name="lastProcess"
+                        checked={lastProcessId === rid}
+                        onChange={() => {
+                            setLastProcessId(rid);
+
+                            // ★ 모든 lastFlag 초기화 + 선택된 것만 Y
+                            setFlowProcessRows(prev =>
+                                prev.map(p =>
+                                    p.flowRowId === rid
+                                        ? { ...p, lastFlag: "Y" }
+                                        : { ...p, lastFlag: "N" }
+                                )
+                            );
+                        }}
+                    />
+                );
+            },
+        }
+    ];
+
+
+    const handleMoveRight = () => {
+        if (leftSelected.length === 0 || !processFlow) return;
+
+        const newRows: ProcessFlowProcess[] = processRows
+        .filter(p => leftSelected.includes(p.processCode)) // processCode 기준 선택
+        .map(p => ({
+            flowRowId: crypto.randomUUID(),        // ★ 유일키 (중복 허용)
+            flowProcessId: null,
+
+            seq: "",
+            processFlowCode: processFlow.processFlowCode ?? "",
+            processFlowId: processFlow.processFlowId ?? "",
+            lastFlag: "N",
+
+            flowProcessCode: p.processCode,
+            flowProcessName: p.processName,
+            processSeq: String(p.sortOrder ?? ""),
+        }));
+
+        setFlowProcessRows(prev => [...prev, ...newRows]);
+        setLeftSelected([]);
     };
+
+
+    const handleRemoveRight  = () => {
+        if (rightSelected.length === 0) return;
+        setFlowProcessRows(prev =>
+            prev.filter(p => !rightSelected.includes(p.flowProcessId ?? p.flowRowId))
+        );
+    }
+
+    // // ★ flowProcessRows가 변경될 때 lastFlag=Y 인 행을 찾아 lastProcessId로 세팅
+    // useEffect(() => {
+    //     const target = flowProcessRows.find(p => p.lastFlag === "Y");
+    //     if (target) {
+    //         setLastProcessId(target.flowRowId);
+    //     }
+    // }, [flowProcessRows]);
 
 
     return(
@@ -54,31 +152,31 @@ export default function ProcessFlowProcessTab() {
             {/* 검색 영역 */}
             <Box sx={{mb: 2 }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
                         <InputLabel>검색 조건</InputLabel>
                         <Select
-                            // value={inputValues.searchCnd}
+                            value={inputValues.searchCnd}
                             label="검색 조건"
-                            // onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+                            onChange={(e) => handleInputChange('searchCnd', e.target.value)}
                         >
-                            <MenuItem value="0">작업장 코드</MenuItem>
-                            <MenuItem value="1">작업장명</MenuItem>
-                            <MenuItem value="2">위치</MenuItem>
+                            <MenuItem value="0">공정 코드</MenuItem>
+                            <MenuItem value="1">공정 이름</MenuItem>
                         </Select>
                     </FormControl>
 
                     <TextField
                         size="small"
-                        // value={inputValues.searchWrd}
-                        // onChange={(e) => handleInputChange('searchWrd', e.target.value)}
-                        // onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         sx={{ flex: 1 }}
                         placeholder="검색어를 입력하세요"
+                        value={inputValues.searchWrd}
+                        onChange={(e)=>handleInputChange("searchWrd", e.target.value)}
+                        onKeyDown={(e)=>e.key==="Enter" && handleSearch()}
                     />
                     <Button
                         variant="contained"
                         startIcon={<SearchIcon />}
-                        // onClick={handleSearch}
+                        onClick={handleSearch}
+                        sx={{ minWidth: 150 }}
                     >
                         검색
                     </Button>
@@ -87,7 +185,18 @@ export default function ProcessFlowProcessTab() {
 
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.5  }}>
-                    <ProcessList onSelectionChange={(ids) => setLeftSelected(ids)} />
+                    <DataGrid
+                        rows={filteredProcessRows}
+                        columns={columns}
+                        getRowId={(row:Process) => row.processCode}
+                        autoHeight
+                        checkboxSelection
+                        disableRowSelectionExcludeModel
+                        onRowSelectionModelChange={(model) => {
+                            const anyModel = model as { ids: Set<GridRowId> };
+                            setLeftSelected(Array.from(anyModel.ids ?? []));
+                        }}
+                    />
                 </Grid>
                 <Grid size={{ xs:1  }}>
                     <Box
@@ -104,8 +213,8 @@ export default function ProcessFlowProcessTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={handleCheckedToRight}
-                            // disabled={leftChecked.length === 0}
+                            onClick={handleMoveRight}
+                            disabled={leftSelected.length === 0}
                             aria-label="move selected right"
                         >
                             &gt;
@@ -114,33 +223,27 @@ export default function ProcessFlowProcessTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            // onClick={handleCheckedLeft}
-                            // disabled={rightChecked.length === 0}
+                            onClick={handleRemoveRight}
+                            disabled={rightSelected.length === 0}
                             aria-label="move selected left"
                         >
                             &lt;
                         </Button>
                     </Box>
-                    {/*<Grid container direction="column" sx={{ justifyContent: 'center', alignItems: 'center' }}>*/}
-                    {/*    */}
-                    {/*</Grid>*/}
                 </Grid>
                 <Grid size={{ xs:5.5  }}>
                     <DataGrid
-                        // rows={rows}
-                        columns={columns}
-                        getRowId={(row) => row.processId || ''}
+                        rows={flowProcessRows}
+                        columns={rightColumns}
+                        getRowId={(row) => row.flowProcessId ?? row.flowRowId}
                         checkboxSelection
-                        autoHeight
-                        sx={{
-                            border: 'none',
-                            '& .MuiDataGrid-cell:focus': {
-                                outline: 'none',
-                            },
-                            '& .MuiDataGrid-row:hover': {
-                                backgroundColor: 'action.hover',
-                            },
+                        disableRowSelectionOnClick
+                        disableRowSelectionExcludeModel
+                        onRowSelectionModelChange={(model) => {
+                            const anyModel = model as { ids: Set<GridRowId> };
+                            setRightSelected(Array.from(anyModel.ids ?? []))
                         }}
+                        autoHeight
                     />
                 </Grid>
             </Grid>
