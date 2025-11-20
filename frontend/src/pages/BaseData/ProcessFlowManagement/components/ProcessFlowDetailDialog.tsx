@@ -14,7 +14,7 @@ import {
     Build as BuildIcon
 } from '@mui/icons-material';
 import {ProcessFlowItemTab, ProcessFlowProcessTab} from "./index";
-import { ProcessFlow, ProcessFlowProcess, DetailSavePayload } from '../../../../types/processFlow';
+import { ProcessFlow, DetailSavePayload } from '../../../../types/processFlow';
 import {
     ProcessFlowDetailProvider,
     useProcessFlowDetailContext

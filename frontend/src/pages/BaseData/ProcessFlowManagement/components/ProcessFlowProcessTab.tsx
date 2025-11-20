@@ -1,13 +1,7 @@
-import {DataGrid, GridColDef, GridRowId, GridRowSelectionModel} from "@mui/x-data-grid";
-import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio} from "@mui/material";
+import {DataGrid, GridColDef, GridRowId} from "@mui/x-data-grid";
+import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio} from "@mui/material";
 import {
-    Add as AddIcon,
-    Save as SaveIcon,
-    // Edit as EditIcon,
-    Delete as DeleteIcon,
-    // People as PeopleIcon,
     Search as SearchIcon,
-    // Build as BuildIcon,
 } from '@mui/icons-material';
 import React, {useEffect, useState} from "react";
 import {Process} from "../../../../types/process";
@@ -62,11 +56,11 @@ export default function ProcessFlowProcessTab() {
                     value={params.row.seq ?? ""}
                     onChange={(e) => {
                         const value = e.target.value;
-                        const rid = params.row.flowRowId;
+                        const rid = params.row.flowProcessId ?? params.row.flowRowId;
 
                         setFlowProcessRows(prev =>
                             prev.map(p =>
-                                p.flowRowId === rid ? { ...p, seq: value } : p
+                                (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
                             )
                         );
                     }}
