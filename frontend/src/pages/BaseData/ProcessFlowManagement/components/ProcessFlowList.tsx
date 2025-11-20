@@ -16,8 +16,7 @@ interface Props {
     setPaginationModel: (model: GridPaginationModel) => void;
     onEdit: (row: ProcessFlow) => void;
     onDelete: (id: string) => void;
-    onSelect: (row: ProcessFlow) => void;
-    onDetailOpen: (row: ProcessFlow) => void;
+    onDetailOpen: (row: ProcessFlow, tabIndex: number) => void;
 }
 
 export default function ProcessFlowList({
@@ -26,12 +25,13 @@ export default function ProcessFlowList({
                                             setPaginationModel,
                                             onEdit,
                                             onDelete,
-                                   onSelect, onDetailOpen
+                                   // onSelect,
+                                            onDetailOpen
                                         }: Props) {
 
     const columns: GridColDef[] = [
         {
-            field: "workplaceCode",
+            field: "workplaceName",
             headerName: "작업장",
             headerAlign: 'center',
             align: 'center',
@@ -71,14 +71,14 @@ export default function ProcessFlowList({
                         <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onDetailOpen(params.row)}
+                            onClick={() => onDetailOpen(params.row, 0)}
                         >
                             <BuildIcon />
                         </IconButton>
                         <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onDetailOpen(params.row)}
+                            onClick={() => onDetailOpen(params.row, 1)}
                         >
                             <ExtensionIcon />
                         </IconButton>
@@ -113,7 +113,7 @@ export default function ProcessFlowList({
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[5, 10, 25, 50]}
                 // paginationMode="server"
-                onRowClick={(params) => onSelect(params.row)}
+                // onRowClick={(params) => onSelect(params.row)}
                 disableRowSelectionOnClick
                 autoHeight
                 sx={{

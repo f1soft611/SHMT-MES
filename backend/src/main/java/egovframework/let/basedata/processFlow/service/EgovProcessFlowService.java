@@ -2,6 +2,8 @@ package egovframework.let.basedata.processFlow.service;
 
 
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlow;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 
 import java.util.List;
@@ -35,9 +37,12 @@ public interface EgovProcessFlowService {
 
 	void createProcessFlow(ProcessFlow pf) throws Exception;
 
-	List<Map<String, Object>> selectProcessByFlowId(String processFlowId) throws Exception;
-	List<Map<String, Object>> selectItemByFlowId(String processFlowId) throws Exception;
+	List<ProcessFlowProcess> selectProcessByFlowId(String processFlowId) throws Exception;
+	List<ProcessFlowItem> selectItemByFlowId(String processFlowId) throws Exception;
 
 	void updateProcessFlow(ProcessFlow processFlow) throws Exception;
 	void deleteProcessFlow(String processFlowId) throws Exception;
+
+	void createProcessFlowProcess(String processFlowId, List<ProcessFlowProcess> processList) throws Exception;
+	void createProcessFlowItem(String processFlowId, List<ProcessFlowItem> itemList) throws Exception;
 }

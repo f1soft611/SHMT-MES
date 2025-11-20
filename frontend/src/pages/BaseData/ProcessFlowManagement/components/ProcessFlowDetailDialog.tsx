@@ -1,72 +1,135 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Tab,
-  Tabs,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Tab,
+    Tabs,
 } from '@mui/material';
 import {
     Extension as ExtensionIcon,
     Build as BuildIcon
 } from '@mui/icons-material';
 import {ProcessFlowItemTab, ProcessFlowProcessTab} from "./index";
+import { ProcessFlow, ProcessFlowProcess, DetailSavePayload } from '../../../../types/processFlow';
+import {
+    ProcessFlowDetailProvider,
+    useProcessFlowDetailContext
+} from "../hooks/useProcessFlowDetailContext";
 
-interface ProcessFlowDetailDialogProps {
-  open: boolean;
-  onClose: () => void;
 
-    processRows: any[];  // 공정 리스트
-    itemRows: any[];     // 제품 리스트
-
+interface Props {
+    open: boolean;
+    onClose: () => void;
+    selectedFlow: ProcessFlow | null;
+    onSave: (data: DetailSavePayload) => Promise<boolean>;
+    initialTab: number;
 }
 
-const ProcessFlowDetailDialog: React.FC<ProcessFlowDetailDialogProps> = ({
-  open,
-  onClose,
-     processRows,
-     itemRows
-}) => {
+function DetailDialogContent({
+                                selectedFlow,
+                                tabIndex,
+                                setTabIndex
+                            }: {
+    selectedFlow: ProcessFlow | null;
+    tabIndex: number;
+    setTabIndex: (v: number) => void;
+}) {
+    return (
+        <>
+            <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)}>
+                <Tab label="공정 관리" icon={<BuildIcon />} iconPosition="start" />
+                <Tab label="제품 관리" icon={<ExtensionIcon />} iconPosition="start" />
+            </Tabs>
+
+            <Box sx={{ mt: 2, minHeight: 0, }}>
+                {tabIndex === 0 && <ProcessFlowProcessTab />}
+                {tabIndex === 1 && <ProcessFlowItemTab />}
+            </Box>
+        </>
+    );
+}
+
+function DetailDialogActions({
+                                onSave,
+                                onClose,
+                                tabIndex
+                            }: {
+    onSave: any;
+    onClose: any;
+    tabIndex: number;
+}) {
+    const { flowProcessRows, flowItemRows, fetchDetail, processFlow  } = useProcessFlowDetailContext();
+
+
+    return (
+        <DialogActions>
+            <Button
+                variant="contained"
+                onClick={async () => {
+                    const payload =
+                        tabIndex === 0
+                            ? { processes: flowProcessRows }
+                            : { items: flowItemRows };
+
+                    const result = await onSave(payload);
+
+                    if (result) {
+                        await fetchDetail(processFlow?.processFlowId ?? ""); // 성공 시 최신 데이터 다시 반영
+                    }
+                }}
+            >
+                저장
+            </Button>
+            <Button onClick={onClose}>닫기</Button>
+        </DialogActions>
+    );
+}
+
+export default function ProcessFlowDetailDialog({
+                                                    open,
+                                                    onClose,
+                                                    selectedFlow,
+                                                    onSave,
+                                                    initialTab
+}: Props) {
     const [tabIndex, setTabIndex] = React.useState(0);
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-        setTabIndex(newValue);
-    };
+    useEffect(() => {
+        if (open) {
+            setTabIndex(initialTab);
+        }
+    },[open, initialTab]);
 
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+            <ProcessFlowDetailProvider processFlow={selectedFlow}>
+                <DialogTitle>공정흐름 상세 관리</DialogTitle>
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>공정흐름 상세 관리</DialogTitle>
-      <DialogContent dividers={true}>
-          <Tabs value={tabIndex} onChange={handleTabChange}>
-              <Tab label="공정 관리" icon={<BuildIcon />} iconPosition="start" />
-              <Tab
-                  label="제품 관리"
-                  icon={<ExtensionIcon />}
-                  iconPosition="start"
-              />
-          </Tabs>
-          <Box sx={{ mt: 2 }}>
-              {/* 공정 관리 그리드 */}
-              {tabIndex === 0 && (
-                  <ProcessFlowProcessTab rows={processRows} />
-              )}
+                <DialogContent
+                    sx={{
+                        height: '650px',          // 원하는 높이
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                    }}
+                    dividers>
+                    <DetailDialogContent
+                        selectedFlow={selectedFlow}
+                        tabIndex={tabIndex}
+                        setTabIndex={setTabIndex}
+                    />
+                </DialogContent>
 
-              {/* 제품 관리 그리드 */}
-              {tabIndex === 1 && (
-                  <ProcessFlowItemTab rows={itemRows} />
-              )}
-          </Box>
-
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>닫기</Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-export default ProcessFlowDetailDialog;
+                <DetailDialogActions
+                    tabIndex={tabIndex}
+                    onSave={onSave}
+                    onClose={onClose}
+                />
+            </ProcessFlowDetailProvider>
+        </Dialog>
+    );
+}

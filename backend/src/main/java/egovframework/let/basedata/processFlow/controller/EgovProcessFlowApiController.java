@@ -5,6 +5,8 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlow;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import egovframework.let.basedata.processFlow.service.EgovProcessFlowService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,7 +105,7 @@ public class EgovProcessFlowApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
     @PostMapping
-    public ResultVO insertProcessFlow(
+    public ResultVO createProcessFlow(
             @RequestBody ProcessFlow processFlow,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
@@ -113,59 +115,6 @@ public class EgovProcessFlowApiController {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "공정흐름이 등록되었습니다.");
         resultMap.put("user", user);
-
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
-    }
-
-    /**
-     * 공정흐름별 공정 목록 조회
-     */
-    @Operation(
-            summary = "공정흐름별 공정 조회",
-            description = "선택한 공정흐름에 포함된 공정 목록을 조회한다",
-            security = {@SecurityRequirement(name = "Authorization")},
-            tags = {"EgovProcessFlowApiController"}
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "404", description = "데이터 없음")
-    })
-    @GetMapping("/{processFlowId}/process")
-    public ResultVO selectProcessByFlowId(
-            @PathVariable("processFlowId") String processFlowId
-    ) throws Exception {
-
-        List<Map<String, Object>> processList = processFlowService.selectProcessByFlowId(processFlowId);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("processList", processList);
-
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
-    }
-
-
-    /**
-     * 공정흐름별 품목 목록 조회
-     */
-    @Operation(
-            summary = "공정흐름별 품목 조회",
-            description = "선택한 공정흐름에 포함된 품목 목록을 조회한다",
-            security = {@SecurityRequirement(name = "Authorization")},
-            tags = {"EgovProcessFlowApiController"}
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "404", description = "데이터 없음")
-    })
-    @GetMapping("/{processFlowId}/item")
-    public ResultVO selectItemByFlowId(
-            @PathVariable("processFlowId") String processFlowId
-    ) throws Exception {
-
-        List<Map<String, Object>> itemList = processFlowService.selectItemByFlowId(processFlowId);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("itemList", itemList);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
@@ -235,5 +184,127 @@ public class EgovProcessFlowApiController {
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
 
+
+    /**
+     * 공정흐름별 공정 저장
+     */
+    @Operation(
+            summary = "공정흐름별 공정 저장",
+            description = "선택한 공정흐름에 대한 공정 목록을 저장한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessFlowApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/{processFlowId}/process")
+    public ResultVO createProcessFlowProcess(
+            @PathVariable("processFlowId") String processFlowId,
+            @RequestBody List<ProcessFlowProcess> processList,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        // 사용자 ID 세팅
+        for (ProcessFlowProcess p : processList) {
+            p.setRegUserId(user.getId());
+        }
+
+        // 저장 서비스 호출
+        processFlowService.createProcessFlowProcess(processFlowId, processList);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "공정흐름별 공정이 저장되었습니다.");
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+
+
+    /**
+     * 공정흐름별 공정 목록 조회
+     */
+    @Operation(
+            summary = "공정흐름별 공정 조회",
+            description = "선택한 공정흐름에 포함된 공정 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessFlowApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "데이터 없음")
+    })
+    @GetMapping("/{processFlowId}/process")
+    public ResultVO selectProcessByFlowId(
+            @PathVariable("processFlowId") String processFlowId
+    ) throws Exception {
+
+        List<ProcessFlowProcess> processList = processFlowService.selectProcessByFlowId(processFlowId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", processList);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 공정흐름별 제품 저장
+     */
+    @Operation(
+            summary = "공정흐름별 제품 저장",
+            description = "선택한 공정흐름에 대한 제품 목록을 저장한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessFlowApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/{processFlowId}/item")
+    public ResultVO createProcessFlowItem(
+            @PathVariable("processFlowId") String processFlowId,
+            @RequestBody List<ProcessFlowItem> itemList,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+        // 사용자 ID 세팅
+        for (ProcessFlowItem it : itemList) {
+            it.setRegUserId(user.getId());
+        }
+        processFlowService.createProcessFlowItem(processFlowId, itemList);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "공정흐름별 품목이 저장되었습니다.");
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+
+    /**
+     * 공정흐름별 품목 목록 조회
+     */
+    @Operation(
+            summary = "공정흐름별 품목 조회",
+            description = "선택한 공정흐름에 포함된 품목 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessFlowApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "데이터 없음")
+    })
+    @GetMapping("/{processFlowId}/item")
+    public ResultVO selectItemByFlowId(
+            @PathVariable("processFlowId") String processFlowId
+    ) throws Exception {
+
+        List<ProcessFlowItem> itemList = processFlowService.selectItemByFlowId(processFlowId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", itemList);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
 
 }

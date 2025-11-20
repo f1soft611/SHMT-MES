@@ -46,7 +46,7 @@ public class JwtAuthenticationFilterTest {
         String fakeToken = "valid.jwt.token";
 
         LoginVO loginVO = new LoginVO();
-        loginVO.setId("user1");
+        loginVO.setId("admin");
         loginVO.setGroupNm("ROLE_ADMIN");
 
         request.addHeader("Authorization", fakeToken);
@@ -55,7 +55,7 @@ public class JwtAuthenticationFilterTest {
         filter.doFilterInternal(request, response, filterChain);
 
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-        assertEquals("user1", ((LoginVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        assertEquals("admin", ((LoginVO) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
     }
 
     @DisplayName("유효하지 않은 토큰이 주어지면 인증 객체가 설정되지 않는다")

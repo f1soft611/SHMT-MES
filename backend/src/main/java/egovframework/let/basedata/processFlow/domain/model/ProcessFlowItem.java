@@ -43,10 +43,19 @@ public class ProcessFlowItem implements Serializable {
 	private String processFlowCode = "";
 
 	@Schema(description = "제품 ID")
-	private String flowItemID = "";
+	private String flowItemId = "";
 
 	@Schema(description = "제품 코드")
 	private String flowItemCode = "";
+
+	@Schema(description = "제품 명")
+	private String flowItemName = "";
+
+	@Schema(description = "제품 규격")
+	private String specification = "";
+
+	@Schema(description = "제품 단위")
+	private String unit = "";
 
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";
