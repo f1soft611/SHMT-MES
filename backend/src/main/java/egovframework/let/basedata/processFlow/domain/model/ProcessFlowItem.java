@@ -57,6 +57,9 @@ public class ProcessFlowItem implements Serializable {
 	@Schema(description = "제품 단위")
 	private String unit = "";
 
+	@Schema(description = "제품 단위 이름")
+	private String unitName = "";
+
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";
 

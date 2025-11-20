@@ -47,7 +47,7 @@ export default function ProcessFlowItemTab() {
         { field: 'flowItemCode', headerName: '품목 코드', flex: 1, headerAlign: 'center' },
         { field: 'flowItemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
-        { field: 'unit', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
+        { field: 'unitName', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
     ];
 
 
