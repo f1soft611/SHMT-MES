@@ -82,19 +82,18 @@ export default function ProcessFlowProcessTab() {
             width: 80,
             headerAlign: 'center',
             renderCell: (params) => {
-                const rid = params.row.flowRowId;
+                const rid = params.row.flowProcessId ?? params.row.flowRowId;
 
                 return (
                     <Radio
                         name="lastProcess"
-                        checked={lastProcessId === rid}
+                        checked={params.row.lastFlag === "Y"}
                         onChange={() => {
                             setLastProcessId(rid);
-
                             // ★ 모든 lastFlag 초기화 + 선택된 것만 Y
                             setFlowProcessRows(prev =>
                                 prev.map(p =>
-                                    p.flowRowId === rid
+                                    (p.flowProcessId ?? p.flowRowId) === rid
                                         ? { ...p, lastFlag: "Y" }
                                         : { ...p, lastFlag: "N" }
                                 )
@@ -138,13 +137,13 @@ export default function ProcessFlowProcessTab() {
         );
     }
 
-    // // ★ flowProcessRows가 변경될 때 lastFlag=Y 인 행을 찾아 lastProcessId로 세팅
-    // useEffect(() => {
-    //     const target = flowProcessRows.find(p => p.lastFlag === "Y");
-    //     if (target) {
-    //         setLastProcessId(target.flowRowId);
-    //     }
-    // }, [flowProcessRows]);
+    // ★ flowProcessRows가 변경될 때 lastFlag=Y 인 행을 찾아 lastProcessId로 세팅
+    useEffect(() => {
+        const target = flowProcessRows.find(p => p.lastFlag === "Y");
+        if (target) {
+            setLastProcessId(target.flowProcessId ?? null);
+        }
+    }, [flowProcessRows]);
 
 
     return(
