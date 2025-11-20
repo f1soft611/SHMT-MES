@@ -1,7 +1,8 @@
 package egovframework.let.basedata.processFlow.domain.repository;
 
-import egovframework.let.basedata.process.domain.model.ProcessVO;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlow;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
@@ -27,13 +28,6 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         insert("ProcessFlowDAO.insertProcessFlow", pf);
     }
 
-    public List<Map<String, Object>> selectProcessByFlowId(String processFlowId) {
-        return selectList("ProcessFlowDAO.selectProcessByFlowId", processFlowId);
-    }
-
-    public List<Map<String, Object>> selectItemByFlowId(String processFlowId) {
-        return selectList("ProcessFlowDAO.selectItemByFlowId", processFlowId);
-    }
 
     public void updateProcessFlow(ProcessFlow processFlow) {
         update("ProcessFlowDAO.updateProcessFlow", processFlow);
@@ -41,5 +35,33 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
 
     public void deleteProcessFlow(String processFlowId) {
         delete("ProcessFlowDAO.deleteProcessFlow", processFlowId);
+    }
+
+    public void deleteProcessFlowProcess(String workOderId) {
+        delete("ProcessFlowProcessDAO.deleteAllByProcessFlowId", workOderId);
+    }
+
+    public void insertProcessFlowProcess(ProcessFlowProcess p) {
+        insert("ProcessFlowProcessDAO.insertProcessFlowProcess", p);
+    }
+
+    public List<ProcessFlowProcess> selectProcessByFlowId(String processFlowId) {
+        return selectList("ProcessFlowProcessDAO.selectByProcessFlowId", processFlowId);
+    }
+
+    public void deleteProcessFlowItem(String workOderId) {
+        delete("ProcessFlowItemDAO.deleteAllByProcessFlowId", workOderId);
+    }
+
+    public void deleteProcessFlowItemById(String flowItemId) {
+        delete("ProcessFlowItemDAO.deleteProcessFlowItemById", flowItemId);
+    }
+
+    public void insertProcessFlowItem(ProcessFlowItem item) {
+        insert("ProcessFlowItemDAO.insertProcessFlowItem", item);
+    }
+
+    public List<ProcessFlowItem> selectItemByFlowId(String processFlowId) {
+        return selectList("ProcessFlowItemDAO.selectItemByFlowId", processFlowId);
     }
 }

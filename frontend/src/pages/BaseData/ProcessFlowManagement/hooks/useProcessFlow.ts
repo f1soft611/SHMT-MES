@@ -1,32 +1,20 @@
 import {useCallback, useEffect, useState} from "react";
 import {GridPaginationModel} from "@mui/x-data-grid";
-import { useForm } from "react-hook-form";
-import {ProcessFlow, ProcessFlowItem} from "../../../types/processFlow";
-import {yupResolver} from "@hookform/resolvers/yup";
-import { processFlowSchema } from "./processFlowSchema";
-import processFlowService from "../../../services/processFlowService";
+import {ProcessFlow, ProcessFlowItem, ProcessFlowProcess, DetailSavePayload } from "../../../../types/processFlow";
+import processFlowService from "../../../../services/processFlowService";
 
 export function useProcessFlow() {
 
     const [rows, setRows] = useState<ProcessFlow[]>([]);
-    const [processRows, setProcessRows] = useState([]);
-    const [itemRows, setItemRows] = useState([]);
+    const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
+    const [detailTab, setDetailTab] = useState(0);
 
-
+    // 공정 흐름 dialog
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
-    const [selectedFlow, setSelectedFlow] = useState<ProcessFlow | null>(null);
-
     // 공통 dialog
     const [openDetailDialog, setOpenDetailDialog] = useState(false);
-
-    // 공정흐름별 공정
-
-    // 공정흐름별 제품
-    const [openItemDialog, setOpenItemDialog] = useState(false);
-    const [itemDialogMode, setItemDialogMode] = useState<"create" | "edit">("create");
-
 
     // 페이지네이션
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -34,34 +22,6 @@ export function useProcessFlow() {
         pageSize: 10,
     });
 
-    // react-hook-form 설정 - 공정흐름
-    const {
-        control: processFlowControl,
-        handleSubmit: handleProcessFlowSubmit,
-        reset: resetProcessFlowForm,
-        formState: { errors: processFlowErrors },
-    } = useForm<ProcessFlow>({
-        resolver: yupResolver(processFlowSchema),
-        defaultValues: {
-            processFlowId:"",
-            processFlowCode:"",
-            processFlowName:'',
-            workplaceCode:''
-        },
-    });
-
-    // react-hook-form 설정 - 공정흐름별 제품
-    const {
-        control: itemControl,
-        handleSubmit: handleItemSubmit,
-        reset: resetItemForm,
-        formState: { errors: itemErrors }
-    } = useForm<ProcessFlowItem>({
-        defaultValues: {
-            itemCode: "",
-            itemName: ""
-        }
-    });
 
     // 실제 검색에 사용되는 파라미터
     const [searchParams, setSearchParams] = useState({
@@ -86,9 +46,17 @@ export function useProcessFlow() {
     const handleSearch = () => {
         setSearchParams({ ...inputValues });
         setPaginationModel(prev => ({ ...prev, page: 0 }));
+
+        // 조회 실행
+        fetchProcessFlows(0, paginationModel.pageSize, {
+            ...inputValues
+        });
+
     };
 
-    const fetchProcessFlows = useCallback(async () => {
+    const fetchProcessFlows = useCallback(async (page = paginationModel.page,
+                                                 pageSize = paginationModel.pageSize,
+                                                 params = searchParams) => {
         try {
             const response = await processFlowService.getProcessFlowList(
                 paginationModel.page,
@@ -109,53 +77,40 @@ export function useProcessFlow() {
         fetchProcessFlows();
     }, [fetchProcessFlows]);
 
+
     // 신규 등록 Dialog 열기
     const handleOpenCreateDialog = () => {
-        setDialogMode('create');
-        resetProcessFlowForm({
-            processFlowId:"",
-            processFlowCode:""
-        });
+        setDialogMode("create");
+        setSelectedFlow(null);       // 빈 값 전달
         setOpenDialog(true);
     };
 
     // 수정 Dialog 열기
     const handleOpenEditDialog = (row: ProcessFlow) => {
         setDialogMode('edit');
-        resetProcessFlowForm(row);   // 기존 값 채우기
+        setSelectedFlow(row);        // 선택된 데이터 전달
         setOpenDialog(true);
     };
 
     // dialog 닫기
     const handleCloseDialog = () => {
         setOpenDialog(false);
-        resetProcessFlowForm();
     };
 
     // detail Dialog 열기
-    const handleOpenDetailDialog = (row: ProcessFlow) => {
+    const handleOpenDetailDialog = (row: ProcessFlow, tabIndex: number) => {
         setSelectedFlow(row);
+        setDetailTab(tabIndex);
         setOpenDetailDialog(true);
     };
 
-    // detail Dialog 열기
+    // detail Dialog 닫기
     const handleCloseDetailDialog = () => {
         setOpenDetailDialog(false);
     };
 
-    // 제품 신규 등록 Dialog 열기
-    const handleOpenItemDialog = () => {
-        setItemDialogMode("create");
-        setOpenItemDialog(true);
-    };
 
-    // 제품 dialog 닫기
-    const handleCloseItemDialog = () => {
-        setOpenItemDialog(false);
-    };
-
-
-    // 저장(create or update)
+    // 저장 (폼 제출 후 호출됨)
     const handleSave = async (data: ProcessFlow) => {
         try {
             if (dialogMode === "create") {
@@ -186,24 +141,59 @@ export function useProcessFlow() {
         }
     };
 
-    // 공정 흐름 선택시 공정+품목 가져오기
-    const handleSelectFlow = async (flow: ProcessFlow) => {
-        const flowId = flow.processFlowId;
+
+    // 공정 흐름별 공정/제품 저장 및 수정
+    const handleDetailSave = async ({ processes, items }: DetailSavePayload): Promise<boolean> => {
+
+        // selectedFlow가 반드시 있어야 저장 가능
+        if (!selectedFlow?.processFlowId) {
+            showSnackbar("선택된 공정흐름이 없습니다.", "error");
+            return false;
+        }
 
         try {
-            // ✅ 병렬로 API 호출
-            const [processRes, itemRes] = await Promise.all([
-                processFlowService.getProcessFlowProcess(flowId),
-                processFlowService.getProcessFlowItem(flowId),
-            ]);
+            // 공정 저장 요청일 때
+            if (processes !== undefined) {
+                // UI 전용 flowRowId 제거 + DTO 변환
+                const processList = processes.map((p: ProcessFlowProcess) => ({
+                    flowProcessId: p.flowProcessId ?? null,
+                    flowProcessCode: p.flowProcessCode,
+                    processFlowId: selectedFlow.processFlowId,   // 여기 고정
+                    processFlowCode: selectedFlow.processFlowCode,
+                    seq: p.seq,
+                    processSeq: p.processSeq,
+                    lastFlag: p.lastFlag,
+                }));
 
-            // ✅ 상태 업데이트
-            setProcessRows(processRes.result?.resultList ?? []);
-            setItemRows(itemRes.result?.resultList ?? []);
+                await processFlowService.createFlowProcesses(
+                    selectedFlow.processFlowId,
+                    processList
+                );
+            }
 
+            // 품목 저장 요청일 때
+            if (items !== undefined) {
+                const itemList = items.map((it: ProcessFlowItem) => ({
+                    flowItemId: it.flowItemId ?? null,
+                    flowItemCode: it.flowItemCode,
+                    flowItemName: it.flowItemName,
+                    specification: it.specification,
+                    unit: it.unit,
+                    processFlowId: selectedFlow.processFlowId,
+                    processFlowCode: selectedFlow.processFlowCode,
+                }));
+
+                await processFlowService.createFlowItems(
+                    selectedFlow.processFlowId,
+                    itemList
+                );
+            }
+
+            showSnackbar("등록되었습니다.", "success");
+            return true;
         } catch (e) {
-            console.error("❌ 공정흐름 세부 조회 실패:", e);
-            showSnackbar("데이터 조회 실패", "error");
+            showSnackbar("저장 실패", "error");
+            return false;
         }
     };
 
@@ -231,13 +221,10 @@ export function useProcessFlow() {
         setSnackbar(prev => ({ ...prev, open: false }));
     };
 
-
     return {
         // 목록
         rows,
-        handleSelectFlow,
-        processRows,
-        itemRows,
+        selectedFlow,
 
         // 입력 & 검색
         inputValues,
@@ -251,34 +238,23 @@ export function useProcessFlow() {
         paginationModel,
         setPaginationModel,
 
-        // dialog
+        // Dialog 조작
         openDialog,
         dialogMode,
         openDetailDialog,
-        openItemDialog,
-        itemDialogMode,
         handleOpenDetailDialog,
         handleCloseDetailDialog,
-        handleOpenItemDialog,
-        handleCloseItemDialog,
         handleOpenCreateDialog,
         handleOpenEditDialog,
         handleCloseDialog,
-
-        // form
-        processFlowControl,
-        handleProcessFlowSubmit,
-        resetProcessFlowForm,
-        processFlowErrors,
-        itemControl,
-        handleItemSubmit,
-        resetItemForm,
-        itemErrors,
+        detailTab,
 
         // CRUD
         fetchProcessFlows,
         handleSave,
         handleDelete,
+
+        handleDetailSave,
 
         // Snackbar
         snackbar,
@@ -286,3 +262,4 @@ export function useProcessFlow() {
         handleCloseSnackbar,
     };
 }
+

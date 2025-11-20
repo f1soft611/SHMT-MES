@@ -3,8 +3,9 @@
  */
 
 export interface ProcessFlow {
-    workplaceCode: string;
-    processFlowId: string;
+    workplaceCode: string; // 작업장
+    workplaceName: string;
+    processFlowId?: string | null;
     processFlowCode: string;
     processFlowName: string;
 }
@@ -13,8 +14,16 @@ export interface ProcessFlow {
  * 공정 흐름별 공정 타입 정의
  * TPR110D
  */
-export interface ProcessFlowProcess{
-
+export interface ProcessFlowProcess {
+    flowRowId: string;  // UI 전용 고유 ID
+    flowProcessId?: string | null;   // PK (신규면 null)
+    seq: string;                     // 정렬 순서 (UI에서 입력)
+    processFlowCode: string;         // 상위 공정흐름 코드
+    processFlowId: string;           // 상위 공정흐름 ID
+    lastFlag: string;                // 마지막 공정 여부(Y/N)
+    flowProcessCode: string;             // 공정 코드
+    flowProcessName: string;            // 공정 명
+    processSeq: string;             // 공정별 순서(백엔드 기준)
 }
 
 /**
@@ -22,13 +31,24 @@ export interface ProcessFlowProcess{
  * TPR112
  */
 export interface ProcessFlowItem {
-    itemCode: string;
-    itemName: string;
+    flowRowId: string;              // UI 전용 고유 ID
+    flowItemId?: string | null;     // PK (신규면 null)
+    flowItemCode: string;           // 제품 코드
+    flowItemName: string;           // 제품 이름
+    specification: string;
+    unit: string;
+    processFlowCode: string;        // 상위 공정흐름 코드
+    processFlowId: string;          // 상위 공정흐름 ID
+}
+
+
+export interface DetailSavePayload {
+    processes: ProcessFlowProcess[];
+    items: ProcessFlowItem[];
 }
 
 /**
- * 공정 흐름별 제품 타입 정의
- * TPR112
+ *
  */
 export interface ProcessFlowSearchParams {
     searchCnd?: string;

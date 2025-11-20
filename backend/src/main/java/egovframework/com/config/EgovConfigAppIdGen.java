@@ -1978,4 +1978,36 @@ public class EgovConfigAppIdGen {
 				.build();
 	}
 
+	/** 공정 흐름별 공정 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessFlowProcessIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR110D")
+				.setPreFix("PFP")
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
+	/** 공정 흐름별 제품 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessFlowItemIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR112")
+				.setPreFix("PFI")
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
 }

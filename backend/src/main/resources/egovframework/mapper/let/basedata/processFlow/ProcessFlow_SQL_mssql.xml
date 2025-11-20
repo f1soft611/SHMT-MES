@@ -7,6 +7,7 @@
         <result property="processFlowCode" column="WORK_ORDER"/>
         <result property="processFlowName" column="WORK_ORDER_NM"/>
         <result property="workplaceCode" column="WORKCENTER_CODE"/>
+        <result property="workplaceName" column="WORKCENTER_NAME"/>
 
         <result property="deleteFlag" column="DELETE_FLAG"/>
 
@@ -18,20 +19,33 @@
 
     <select id="ProcessFlowDAO.selectProcessFlowList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO" resultMap="processFlowResult">
         SELECT
-        FACTORY_CODE,
-        WORK_ORDER_ID,
-        WORK_ORDER,
-        WORK_ORDER_NM,
-        OPMAN_CODE,
-        WORKCENTER_CODE,
-        USE_YN,
-        OPTIME,
-        OPMAN_CODE
-        FROM TPR110
+        A.FACTORY_CODE,
+        A.WORK_ORDER_ID,
+        A.WORK_ORDER,
+        A.WORK_ORDER_NM,
+        A.WORKCENTER_CODE,
+        B.WORKCENTER_NAME,
+        A.USE_YN,
+        A.OPTIME,
+        A.OPMAN_CODE
+        FROM TPR110 A
+        LEFT JOIN TPR101 B
+            ON A.FACTORY_CODE = B.FACTORY_CODE
+            AND A.WORKCENTER_CODE = B.WORKCENTER_CODE
         WHERE 1=1
-        AND FACTORY_CODE = #{factoryCode}
-        AND ISNULL(DELETE_FLAG,'') != '1'
-        ORDER BY OPTIME DESC
+        AND A.FACTORY_CODE = #{factoryCode}
+        AND ISNULL(A.DELETE_FLAG,'') != '1'
+        <if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+            <choose>
+                <when test="searchCnd == 0">
+                    AND B.WORKCENTER_NAME LIKE '%' + #{searchWrd} + '%'
+                </when>
+                <when test="searchCnd == 1">
+                    AND  A.WORK_ORDER_NM LIKE '%' + #{searchWrd} + '%'
+                </when>
+            </choose>
+        </if>
+        ORDER BY A.OPTIME
         <if test="firstIndex != null and recordCountPerPage != null">
             OFFSET #{firstIndex} ROWS
             FETCH NEXT #{recordCountPerPage} ROWS ONLY

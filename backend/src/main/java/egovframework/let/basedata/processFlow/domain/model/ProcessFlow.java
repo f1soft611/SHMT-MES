@@ -45,6 +45,9 @@ public class ProcessFlow implements Serializable {
 	@Schema(description = "작업장 코드")
 	private String workplaceCode = "";
 
+	@Schema(description = "작업장 이름")
+	private String workplaceName = "";
+
 	@Schema(description = "공정 흐름명")
 	private String processFlowName = "";
 
