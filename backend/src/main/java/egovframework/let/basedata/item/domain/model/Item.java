@@ -54,6 +54,9 @@ public class Item implements Serializable {
 	@Schema(description = "단위")
 	private String unit = "";
 
+	@Schema(description = "단위명")
+	private String unitName = "";
+
 	@Schema(description = "재고 수량")
 	private String stockQty = "";
 
