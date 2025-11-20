@@ -13,7 +13,7 @@ import {
   BugReport as BugReportIcon,
   CheckCircle as CheckCircleIcon,
   PanTool as PanToolIcon,
-  Precision Manufacturing as PrecisionManufacturingIcon,
+  PrecisionManufacturing as PrecisionManufacturingIcon,
 } from '@mui/icons-material';
 import { Process } from '../../../../types/process';
 import ProcessDefectTab from './ProcessDefectTab';
