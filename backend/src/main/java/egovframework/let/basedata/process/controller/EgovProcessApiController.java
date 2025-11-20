@@ -558,4 +558,131 @@ public class EgovProcessApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+    /**
+     * 공정별 설비 목록을 조회한다.
+     */
+    @Operation(
+            summary = "공정별 설비 목록 조회",
+            description = "공정별 설비 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/processes/{processId}/equipments")
+    public ResultVO selectProcessEquipmentList(
+            @PathVariable String processId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        ProcessEquipmentVO processEquipmentVO = new ProcessEquipmentVO();
+        processEquipmentVO.setProcessId(processId);
+        
+        List<ProcessEquipmentVO> resultList = processService.selectProcessEquipmentList(processEquipmentVO);
+        
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", resultList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 공정별 설비를 등록한다.
+     */
+    @Operation(
+            summary = "공정별 설비 등록",
+            description = "공정별 설비를 등록한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "등록 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/processes/{processId}/equipments")
+    public ResultVO insertProcessEquipment(
+            @PathVariable String processId,
+            @RequestBody ProcessEquipment processEquipment,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processEquipment.setProcessId(processId);
+        processEquipment.setRegUserId(user.getUniqId());
+        
+        try {
+            processService.insertProcessEquipment(processEquipment);
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("message", "설비가 등록되었습니다.");
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("message", e.getMessage());
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SAVE_ERROR);
+        }
+    }
+
+    /**
+     * 공정별 설비를 수정한다.
+     */
+    @Operation(
+            summary = "공정별 설비 수정",
+            description = "공정별 설비를 수정한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PutMapping("/processes/{processId}/equipments/{processEquipmentId}")
+    public ResultVO updateProcessEquipment(
+            @PathVariable String processId,
+            @PathVariable String processEquipmentId,
+            @RequestBody ProcessEquipment processEquipment,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processEquipment.setProcessId(processId);
+        processEquipment.setProcessEquipmentId(processEquipmentId);
+        processEquipment.setUpdUserId(user.getUniqId());
+        
+        try {
+            processService.updateProcessEquipment(processEquipment);
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("message", "설비가 수정되었습니다.");
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+        } catch (Exception e) {
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("message", e.getMessage());
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SAVE_ERROR);
+        }
+    }
+
+    /**
+     * 공정별 설비를 삭제한다.
+     */
+    @Operation(
+            summary = "공정별 설비 삭제",
+            description = "공정별 설비를 삭제한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @DeleteMapping("/processes/{processId}/equipments/{processEquipmentId}")
+    public ResultVO deleteProcessEquipment(
+            @PathVariable String processId,
+            @PathVariable String processEquipmentId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        processService.deleteProcessEquipment(processEquipmentId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "설비가 삭제되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
 }
