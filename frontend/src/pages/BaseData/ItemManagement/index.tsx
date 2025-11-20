@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useCallback, use } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Paper,
   Stack,
@@ -24,13 +20,16 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Refresh as RefreshIcon,
   Search as SearchIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Item } from '../../../types/item';
 import itemService from '../../../services/itemService';
+import ItemDetailDialog from './components/ItemDetailDialog';
 
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
@@ -349,15 +348,15 @@ const ItemManagement: React.FC = () => {
               onClick={() => handleOpenEditDialog(params.row)}
               title="수정"
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
               color="error"
-              onClick={() => handleDelete(params.row.itemCode!)}
+              onClick={() => handleDelete(params.row.itemCode)}
               title="삭제"
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>
@@ -378,44 +377,57 @@ const ItemManagement: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h5">품목 관리</Typography>
         </Box>
+
+        <Box>
+          <Button
+            variant="contained"
+            color="info"
+            startIcon={<RefreshIcon />}
+            // onClick={handleRestartClick}
+            // disabled={restartMutation.isPending}
+          >
+            ERP 연동
+          </Button>
+        </Box>
       </Box>
 
-      {/* 검색 영역 */}
       <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1rem',
+          }}
+        >
+          <FilterListIcon color="primary" />
+          검색 필터
+        </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>검색조건</InputLabel>
+            <InputLabel>검색 조건</InputLabel>
             <Select
               value={inputValues.searchCnd}
               label="검색조건"
               onChange={(e) => handleInputChange('searchCnd', e.target.value)}
             >
-              <MenuItem value="0">코드 ID</MenuItem>
-              <MenuItem value="1">코드명</MenuItem>
-              <MenuItem value="2">설명</MenuItem>
+              <MenuItem value="1">품목코드</MenuItem>
+              <MenuItem value="2">품목명</MenuItem>
             </Select>
           </FormControl>
-
           <TextField
             size="small"
+            placeholder="검색어를 입력하세요"
             value={inputValues.searchWrd}
             onChange={(e) => handleInputChange('searchWrd', e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') handleSearch();
+            }}
             sx={{ flex: 1 }}
-            placeholder="검색어를 입력하세요"
           />
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>사용여부</InputLabel>
-            <Select
-              value={inputValues.useYn}
-              label="사용여부"
-              onChange={(e) => handleInputChange('useYn', e.target.value)}
-            >
-              <MenuItem value="">전체</MenuItem>
-              <MenuItem value="Y">사용</MenuItem>
-              <MenuItem value="N">미사용</MenuItem>
-            </Select>
-          </FormControl>
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>품목타입</InputLabel>
             <Select
@@ -428,7 +440,18 @@ const ItemManagement: React.FC = () => {
               <MenuItem value="MATERIAL">자재</MenuItem>
             </Select>
           </FormControl>
-
+          <FormControl sx={{ minWidth: 120 }} size="small">
+            <InputLabel>사용여부</InputLabel>
+            <Select
+              value={inputValues.useYn}
+              label="사용여부"
+              onChange={(e) => handleInputChange('useYn', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="Y">사용</MenuItem>
+              <MenuItem value="N">미사용</MenuItem>
+            </Select>
+          </FormControl>
           <Button
             variant="contained"
             startIcon={<SearchIcon />}
@@ -436,7 +459,6 @@ const ItemManagement: React.FC = () => {
           >
             검색
           </Button>
-
           <Button
             variant="contained"
             color="primary"
@@ -448,19 +470,21 @@ const ItemManagement: React.FC = () => {
         </Stack>
       </Paper>
 
-      {/* 품목 목록 */}
-      <Paper sx={{ width: '100%' }}>
+      <Paper
+        elevation={2}
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
         <DataGrid
           rows={items}
           columns={columns}
-          getRowId={(row) => row.itemId || ''}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 50]}
           rowCount={totalCount}
+          loading={false}
+          pageSizeOptions={[10, 25, 50]}
+          paginationModel={paginationModel}
           paginationMode="server"
+          onPaginationModelChange={setPaginationModel}
+          getRowId={(row) => row.itemCode}
           disableRowSelectionOnClick
-          autoHeight
           sx={{
             border: 'none',
             '& .MuiDataGrid-cell:focus': {
@@ -474,184 +498,14 @@ const ItemManagement: React.FC = () => {
       </Paper>
 
       {/* 품목 등록/수정 다이얼로그 */}
-      <Dialog
+      <ItemDetailDialog
         open={openDialog}
+        dialogMode={dialogMode}
         onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {dialogMode === 'create' ? '품목 등록' : '품목 수정'}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="itemCode"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="품목코드"
-                    disabled={dialogMode === 'edit'}
-                    error={!!itemErrors.itemCode}
-                    helperText={
-                      itemErrors.itemCode?.message ||
-                      (dialogMode === 'edit'
-                        ? '수정 시 품목코드는 변경할 수 없습니다'
-                        : '')
-                    }
-                  />
-                )}
-              />
-              <Controller
-                name="itemName"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    required
-                    label="품목명"
-                    error={!!itemErrors.itemName}
-                    helperText={itemErrors.itemName?.message}
-                  />
-                )}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="specification"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="규격" />
-                )}
-              />
-              <Controller
-                name="itemType"
-                control={itemControl}
-                render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel>품목타입</InputLabel>
-                    <Select {...field} label="품목타입">
-                      <MenuItem value="PRODUCT">제품</MenuItem>
-                      <MenuItem value="MATERIAL">자재</MenuItem>
-                    </Select>
-                  </FormControl>
-                )}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="unit"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth label="단위" />
-                )}
-              />
-              <Controller
-                name="stockQty"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="재고수량"
-                    value={formatNumber(field.value)}
-                    onChange={(e) => {
-                      const value = removeCommas(e.target.value);
-                      if (/^\d*$/.test(value)) {
-                        field.onChange(value);
-                      }
-                    }}
-                    inputProps={{
-                      inputMode: 'numeric',
-                      pattern: '[0-9,]*',
-                      style: { textAlign: 'right' },
-                    }}
-                  />
-                )}
-              />
-              <Controller
-                name="safetyStock"
-                control={itemControl}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="안전재고"
-                    value={formatNumber(field.value)}
-                    onChange={(e) => {
-                      const value = removeCommas(e.target.value);
-                      if (/^\d*$/.test(value)) {
-                        field.onChange(value);
-                      }
-                    }}
-                    inputProps={{
-                      inputMode: 'numeric',
-                      pattern: '[0-9,]*',
-                      style: { textAlign: 'right' },
-                    }}
-                  />
-                )}
-              />
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <Controller
-                name="useYn"
-                control={itemControl}
-                render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel>사용 여부</InputLabel>
-                    <Select {...field} label="사용 여부">
-                      <MenuItem value="Y">사용</MenuItem>
-                      <MenuItem value="N">미사용</MenuItem>
-                    </Select>
-                  </FormControl>
-                )}
-              />
-              <Controller
-                name="interfaceYn"
-                control={itemControl}
-                render={({ field }) => (
-                  <FormControl fullWidth disabled>
-                    <InputLabel>인터페이스 여부</InputLabel>
-                    <Select {...field} label="인터페이스 여부">
-                      <MenuItem value="Y">예</MenuItem>
-                      <MenuItem value="N">아니오</MenuItem>
-                    </Select>
-                  </FormControl>
-                )}
-              />
-            </Stack>
-            <Controller
-              name="remark"
-              control={itemControl}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label="비고"
-                />
-              )}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleItemSubmit(handleSave)}
-            variant="contained"
-            color="primary"
-          >
-            저장
-          </Button>
-          <Button onClick={handleCloseDialog}>취소</Button>
-        </DialogActions>
-      </Dialog>
+        onSave={handleItemSubmit(handleSave)}
+        control={itemControl}
+        errors={itemErrors}
+      />
 
       {/* 스낵바 */}
       <Snackbar

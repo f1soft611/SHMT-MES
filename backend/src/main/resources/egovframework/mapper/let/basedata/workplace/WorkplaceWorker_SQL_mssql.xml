@@ -97,8 +97,8 @@
 			POSITION = #{position},
 			ROLE = #{role},
 			USE_YN = #{useYn},
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		    AND WORKCENTER_CODE = #{workplaceCode}
 			AND WORKER_CODE = #{workerCode}
@@ -123,8 +123,8 @@
 		UPDATE TPR106
 		SET
 			USE_YN = 'N',
-			UPD_USER_ID = #{updUserId},
-			UPD_DT = GETDATE()
+			OPMAN_CODE2 = #{updUserId},
+			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		  AND WORKCENTER_CODE = #{workplaceCode}
 		  AND WORKER_CODE = #{workerCode}

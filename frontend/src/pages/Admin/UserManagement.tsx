@@ -28,6 +28,7 @@ import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import {
   User,
@@ -469,6 +470,20 @@ const UserManagement: React.FC = () => {
 
         {/* 검색 영역 */}
         <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              fontWeight: 600,
+              fontSize: '1rem',
+            }}
+          >
+            <FilterListIcon color="primary" />
+            검색 필터
+          </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel>검색조건</InputLabel>
@@ -548,7 +563,7 @@ const UserManagement: React.FC = () => {
           <DialogTitle>
             {editingUser ? '사용자 수정' : '사용자 추가'}
           </DialogTitle>
-          <DialogContent>
+          <DialogContent dividers>
             <Box
               sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
             >

@@ -18,7 +18,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { schedulerService } from '../../services/schedulerService';
+import { schedulerService } from '../../../services/schedulerService';
+import DateRangeDialog from './DateRangeDialog';
 
 interface SchedulerListProps {
   onEdit: (schedulerId: number) => void;
@@ -33,6 +34,11 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
   const [alertMessage, setAlertMessage] = useState<{
     type: 'success' | 'error';
     message: string;
+  } | null>(null);
+  const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
+  const [selectedScheduler, setSelectedScheduler] = useState<{
+    id: number;
+    name: string;
   } | null>(null);
 
   // 마지막 정상 응답의 rows/total을 저장
@@ -104,8 +110,15 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
   });
 
   const executeMutation = useMutation({
-    mutationFn: (schedulerId: number) =>
-      schedulerService.executeScheduler(schedulerId),
+    mutationFn: ({
+      schedulerId,
+      fromDate,
+      toDate,
+    }: {
+      schedulerId: number;
+      fromDate?: string;
+      toDate?: string;
+    }) => schedulerService.executeScheduler(schedulerId, fromDate, toDate),
     onSuccess: () => {
       setAlertMessage({
         type: 'success',
@@ -132,9 +145,18 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
     }
   };
 
-  const handleExecuteClick = (schedulerId: number) => {
-    if (window.confirm('이 스케쥴러를 즉시 실행하시겠습니까?')) {
-      executeMutation.mutate(schedulerId);
+  const handleExecuteClick = (schedulerId: number, schedulerName: string) => {
+    setSelectedScheduler({ id: schedulerId, name: schedulerName });
+    setDateRangeDialogOpen(true);
+  };
+
+  const handleDateRangeConfirm = (fromDate: string, toDate: string) => {
+    if (selectedScheduler) {
+      executeMutation.mutate({
+        schedulerId: selectedScheduler.id,
+        fromDate,
+        toDate,
+      });
     }
   };
 
@@ -209,7 +231,12 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
             </Tooltip>
           }
           label="실행"
-          onClick={() => handleExecuteClick(params.row.schedulerId)}
+          onClick={() =>
+            handleExecuteClick(
+              params.row.schedulerId,
+              params.row.schedulerName
+            )
+          }
         />,
         <GridActionsCellItem
           icon={
@@ -294,6 +321,13 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
             backgroundColor: 'action.hover',
           },
         }}
+      />
+
+      <DateRangeDialog
+        open={dateRangeDialogOpen}
+        onClose={() => setDateRangeDialogOpen(false)}
+        onConfirm={handleDateRangeConfirm}
+        schedulerName={selectedScheduler?.name || ''}
       />
     </Box>
   );

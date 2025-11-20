@@ -20,7 +20,9 @@
 ### 4. 실행 이력 및 에러 로그
 - 각 스케쥴러의 실행 이력이 자동으로 기록됩니다.
 - 실행 시작/종료 시간, 실행 시간(ms), 상태(성공/실패/실행중)가 기록됩니다.
-- 실패 시 에러 메시지가 함께 저장되어 디버깅에 활용할 수 있습니다.
+- 실패 시 에러 메시지와 상세한 스택트레이스가 함께 저장되어 디버깅에 활용할 수 있습니다.
+- SQL 오류, 런타임 예외 등 모든 종류의 에러가 캡처되어 저장됩니다.
+- 재시도 횟수가 기록되어 실행 안정성을 추적할 수 있습니다.
 
 ## 데이터베이스 스키마
 
@@ -52,7 +54,9 @@
 | end_time | DATETIME | 종료시간 |
 | status | VARCHAR(20) | 실행상태 (SUCCESS/FAILED/RUNNING) |
 | error_message | TEXT | 에러 메시지 |
+| error_stack_trace | TEXT | 에러 스택트레이스 (상세 에러 정보) |
 | execution_time_ms | BIGINT | 실행시간(밀리초) |
+| retry_count | INT | 재시도 횟수 |
 | created_date | DATETIME | 등록일시 |
 
 ## API 엔드포인트
@@ -72,10 +76,19 @@
 ## 사용 방법
 
 ### 1. 데이터베이스 설정
+
+**신규 설치:**
 ```sql
 -- 사용 중인 데이터베이스에 맞는 DDL 파일을 실행하여 테이블을 생성합니다.
 -- MySQL: backend/DATABASE/scheduler_ddl_mysql.sql
--- MSSQL: backend/DATABASE/scheduler_ddl_mssql.sql (별도 생성 필요)
+-- MSSQL: backend/DATABASE/scheduler_ddl_mssql.sql
+```
+
+**기존 설치 업그레이드:**
+```sql
+-- 기존 시스템에 error_stack_trace와 retry_count 컬럼을 추가합니다.
+-- MySQL: backend/DATABASE/scheduler_migration_add_error_fields_mysql.sql
+-- MSSQL: backend/DATABASE/scheduler_migration_add_error_fields_mssql.sql
 ```
 
 **지원하는 데이터베이스:**
@@ -103,7 +116,8 @@
 1. "실행 이력" 탭을 클릭합니다.
 2. 스케쥴러별 실행 이력을 확인할 수 있습니다.
 3. 상태 필터를 사용하여 성공/실패만 조회할 수 있습니다.
-4. 실패한 작업의 에러 메시지를 확인하여 문제를 해결합니다.
+4. 실패한 작업의 에러 메시지와 상세한 스택트레이스를 확인하여 문제를 해결합니다.
+5. SQL 오류, 런타임 예외 등의 상세 정보가 모두 기록되어 있습니다.
 
 ## 아키텍처
 
@@ -125,6 +139,33 @@
 2. **CRON 표현식**이 잘못되면 스케쥴러가 실행되지 않습니다.
 3. 스케쥴러 수정/삭제 시 자동으로 재시작되므로 진행 중인 작업이 중단될 수 있습니다.
 4. 실행 이력은 자동으로 쌓이므로 주기적으로 정리가 필요할 수 있습니다.
+
+## 트러블슈팅
+
+### 에러 메시지가 저장되지 않는 경우
+기존 설치에서 업그레이드한 경우, 다음 컬럼들이 누락되었을 수 있습니다:
+- `error_stack_trace` - 상세 에러 정보 저장
+- `retry_count` - 재시도 횟수 추적
+
+**해결 방법:**
+```sql
+-- MySQL
+source backend/DATABASE/scheduler_migration_add_error_fields_mysql.sql
+
+-- MSSQL
+-- backend/DATABASE/scheduler_migration_add_error_fields_mssql.sql 파일 실행
+```
+
+### SQL 오류 발생 시
+스케쥴러 실행 중 SQL 오류가 발생하면:
+1. 스케쥴러 히스토리 테이블에서 `error_message`와 `error_stack_trace` 컬럼을 확인
+2. 전체 오류 내용과 스택트레이스가 기록되어 있음
+3. SQL 구문 오류, 파라미터 불일치 등의 상세 정보 확인 가능
+
+### 일반적인 에러 패턴
+1. **SQL 구문 오류**: `error_message`에 SQL 구문 오류 내용 표시
+2. **DB 연결 오류**: 연결 타임아웃이나 권한 문제 확인
+3. **런타임 예외**: `error_stack_trace`에서 전체 호출 스택 확인
 
 ## 기존 샘플 스케쥴러
 

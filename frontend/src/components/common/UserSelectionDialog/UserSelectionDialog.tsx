@@ -145,7 +145,7 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
+      <DialogContent dividers={true}>
         {/* 검색 영역 */}
         <Box sx={{ mt: 1 }}>
           <Stack direction="row" spacing={2} alignItems="flex-start">

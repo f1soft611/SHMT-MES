@@ -269,6 +269,37 @@ public class EgovWorkplaceApiController {
     }
 
     /**
+     * 작업장별 작업자를 수정한다.
+     */
+    @Operation(
+            summary = "작업장별 작업자 수정",
+            description = "작업장별 작업자를 수정한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovWorkplaceApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PutMapping("/workplaces/{workplaceCode}/workers/{workerCode}")
+    public ResultVO updateWorkplaceWorker(
+            @PathVariable String workplaceCode,
+            @PathVariable String workerCode,
+            @RequestBody WorkplaceWorker workplaceWorker,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        workplaceWorker.setWorkplaceCode(workplaceCode);
+        workplaceWorker.setWorkerCode(workerCode);
+        workplaceWorker.setUpdUserId(user.getUniqId());
+        workplaceService.updateWorkplaceWorker(workplaceWorker);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "작업자가 수정되었습니다.");
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
      * 작업장별 작업자를 삭제한다.
      */
     @Operation(
@@ -290,6 +321,7 @@ public class EgovWorkplaceApiController {
         WorkplaceWorkerVO workplaceWorkerVO = new WorkplaceWorkerVO();
         workplaceWorkerVO.setWorkplaceCode(workplaceCode);
         workplaceWorkerVO.setWorkerCode(workerCode);
+        workplaceWorkerVO.setUpdUserId(user.getUniqId());
         workplaceService.deleteWorkplaceWorker(workplaceWorkerVO);
 
         Map<String, Object> resultMap = new HashMap<>();

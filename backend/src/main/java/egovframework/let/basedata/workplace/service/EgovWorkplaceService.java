@@ -79,6 +79,14 @@ public interface EgovWorkplaceService {
 	public void insertWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception;
 
 	/**
+	 * 작업장별 작업자를 수정한다.
+	 *
+	 * @param workplaceWorker
+	 * @exception Exception
+	 */
+	public void updateWorkplaceWorker(WorkplaceWorker workplaceWorker) throws Exception;
+
+	/**
 	 * 작업장별 작업자를 삭제한다.
 	 * 
 	 * @param workplaceWorker
@@ -105,7 +113,7 @@ public interface EgovWorkplaceService {
 	/**
 	 * 작업장별 공정을 삭제한다.
 	 *
-	 * @param workplaceProcessId
+	 * @param workplaceProcess
 	 * @exception Exception
 	 */
 	public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception;
