@@ -45,7 +45,7 @@ function DetailDialogContent({
                 <Tab label="제품 관리" icon={<ExtensionIcon />} iconPosition="start" />
             </Tabs>
 
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2, flex: 1, minHeight: 0, overflow: 'auto' }}>
                 {tabIndex === 0 && <ProcessFlowProcessTab />}
                 {tabIndex === 1 && <ProcessFlowItemTab />}
             </Box>
@@ -104,7 +104,14 @@ export default function ProcessFlowDetailDialog({ open, onClose, selectedFlow, o
             <ProcessFlowDetailProvider processFlow={selectedFlow}>
                 <DialogTitle>공정흐름 상세 관리</DialogTitle>
 
-                <DialogContent dividers>
+                <DialogContent
+                    sx={{
+                        height: '650px',          // 원하는 높이
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                    }}
+                    dividers>
                     <DetailDialogContent
                         selectedFlow={selectedFlow}
                         tabIndex={tabIndex}

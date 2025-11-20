@@ -136,12 +136,15 @@ export default function ProcessFlowItemTab() {
                         rows={filteredItemRows}
                         columns={columns}
                         getRowId={(row:Item) => row.itemCode}
-                        autoHeight
                         checkboxSelection
                         disableRowSelectionExcludeModel
                         onRowSelectionModelChange={(model) => {
                             const anyModel = model as { ids: Set<GridRowId> };
                             setLeftSelected(Array.from(anyModel.ids ?? []));
+                        }}
+                        autoHeight={false}
+                        sx={{
+                            height: 450,
                         }}
                     />
                 </Grid>
@@ -190,7 +193,10 @@ export default function ProcessFlowItemTab() {
                             const anyModel = model as { ids: Set<GridRowId> };
                             setRightSelected(Array.from(anyModel.ids ?? []))
                         }}
-                        autoHeight
+                        autoHeight={false}
+                        sx={{
+                            height: 450,
+                        }}
                     />
                 </Grid>
             </Grid>
