@@ -25,17 +25,19 @@ import { ProductionRequest } from '../../../types/productionRequest';
 interface ProductionRequestDialogProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (request: ProductionRequest) => void;
+  onSelect: (requests: ProductionRequest[]) => void; // Changed to array for multi-selection
+  multiSelect?: boolean; // Enable multi-selection mode
 }
 
 const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   open,
   onClose,
   onSelect,
+  multiSelect = true, // Default to multi-select mode
 }) => {
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<ProductionRequest | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>([]);
   
   // 검색 조건
   const [searchParams, setSearchParams] = useState({
@@ -144,11 +146,49 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   };
 
   const handleConfirmSelection = () => {
-    if (selectedRequest) {
-      onSelect(selectedRequest);
+    if (selectedRequests.length > 0) {
+      onSelect(selectedRequests);
       onClose();
-      setSelectedRequest(null);
+      setSelectedRequests([]);
     }
+  };
+
+  const handleRowClick = (request: ProductionRequest) => {
+    if (!multiSelect) {
+      // Single selection mode
+      setSelectedRequests([request]);
+      return;
+    }
+
+    // Multi-selection mode with same item code restriction
+    const isAlreadySelected = selectedRequests.some(
+      (r) => r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno
+    );
+
+    if (isAlreadySelected) {
+      // Deselect
+      setSelectedRequests(
+        selectedRequests.filter(
+          (r) => !(r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno)
+        )
+      );
+    } else {
+      // Check if same item code
+      if (selectedRequests.length > 0) {
+        const firstItemCode = selectedRequests[0].itemCode;
+        if (request.itemCode !== firstItemCode) {
+          alert(`같은 품목코드(${firstItemCode})만 선택할 수 있습니다.`);
+          return;
+        }
+      }
+      setSelectedRequests([...selectedRequests, request]);
+    }
+  };
+
+  const isRowSelected = (request: ProductionRequest) => {
+    return selectedRequests.some(
+      (r) => r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno
+    );
   };
 
   const formatDate = (dateStr?: string) => {
@@ -169,8 +209,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
-        selectedRequest?.orderNo === params.row.orderNo && 
-        selectedRequest?.orderSeqno === params.row.orderSeqno ? (
+        isRowSelected(params.row) ? (
           <CheckCircleIcon color="primary" />
         ) : null
       ),
@@ -189,6 +228,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (value) => formatDate(value),
+    },
+    {
+      field: 'customerName',
+      headerName: '거래처',
+      width: 150,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || '-',
     },
     {
       field: 'itemCode',
@@ -350,7 +397,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             rowCount={totalCount}
             paginationMode="server"
             loading={loading}
-            onRowClick={(params) => setSelectedRequest(params.row)}
+            onRowClick={(params) => handleRowClick(params.row)}
             disableRowSelectionOnClick
             autoHeight
             sx={{
@@ -380,12 +427,18 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       
       <Divider />
       <DialogActions sx={{ p: 2.5 }}>
+        {multiSelect && selectedRequests.length > 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 'auto' }}>
+            선택된 항목: {selectedRequests.length}건
+            {selectedRequests.length > 0 && ` (품목: ${selectedRequests[0].itemName})`}
+          </Typography>
+        )}
         <Button 
           onClick={handleConfirmSelection} 
           variant="contained" 
           size="large" 
           sx={{ px: 4 }}
-          disabled={!selectedRequest}
+          disabled={selectedRequests.length === 0}
           startIcon={<CheckCircleIcon />}
         >
           선택

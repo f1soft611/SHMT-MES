@@ -24,6 +24,10 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -41,7 +45,9 @@ import {
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
+import workplaceService from '../../services/workplaceService';
 import { Equipment } from '../../types/equipment';
+import { Workplace, WorkplaceWorker } from '../../types/workplace';
 import PlanDialog from './components/PlanDialog';
 
 interface ProductionPlanData {
@@ -58,6 +64,13 @@ interface ProductionPlanData {
   orderSeqno?: number;
   orderHistno?: number;
   lotNo?: string;
+  workplaceCode?: string;
+  workplaceName?: string;
+  workerCode?: string;
+  workerName?: string;
+  customerCode?: string;
+  customerName?: string;
+  additionalCustomers?: string[]; // 추가 거래처 목록
 }
 
 const ProductionPlan: React.FC = () => {
@@ -139,6 +152,9 @@ const ProductionPlan: React.FC = () => {
 
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string>('');
+  const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>([]);
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set()
   );
@@ -157,8 +173,74 @@ const ProductionPlan: React.FC = () => {
   const [showDayFilter, setShowDayFilter] = useState(false);
 
   useEffect(() => {
-    loadEquipments();
+    loadWorkplaces();
   }, []);
+
+  useEffect(() => {
+    if (selectedWorkplace) {
+      loadEquipmentsByWorkplace(selectedWorkplace);
+      loadWorkplaceWorkers(selectedWorkplace);
+    } else {
+      setEquipments([]);
+      setWorkplaceWorkers([]);
+    }
+  }, [selectedWorkplace]);
+
+  const loadWorkplaces = async () => {
+    try {
+      const response = await workplaceService.getWorkplaceList(0, 100);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaces(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplaces:', error);
+      // Mock data for development
+      const mockWorkplaces = [
+        { workplaceCode: 'WP001', workplaceName: '작업장1' },
+        { workplaceCode: 'WP002', workplaceName: '작업장2' },
+      ];
+      setWorkplaces(mockWorkplaces as Workplace[]);
+    }
+  };
+
+  const loadEquipmentsByWorkplace = async (workplaceCode: string) => {
+    try {
+      // 작업장별 공정 조회
+      const processResponse = await workplaceService.getWorkplaceProcesses(workplaceCode);
+      
+      if (processResponse.resultCode === 200 && processResponse.result?.resultList) {
+        // 설비연동 플래그가 'Y'인 설비만 필터링
+        const filteredEquipments = processResponse.result.resultList
+          .filter((process: any) => process.equipmentIntegrationYn === 'Y')
+          .map((process: any) => ({
+            equipCd: process.equipmentCode,
+            equipmentName: process.equipmentName,
+            equipmentId: process.equipmentId,
+          }));
+        
+        setEquipments(filteredEquipments);
+        setExpandedEquipments(
+          new Set(filteredEquipments.map((eq: Equipment) => eq.equipCd))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load equipments:', error);
+      // Fallback to loading all equipments if workplace-specific loading fails
+      loadEquipments();
+    }
+  };
+
+  const loadWorkplaceWorkers = async (workplaceCode: string) => {
+    try {
+      const response = await workplaceService.getWorkplaceWorkers(workplaceCode);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaceWorkers(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplace workers:', error);
+      setWorkplaceWorkers([]);
+    }
+  };
 
   const loadEquipments = async () => {
     try {
@@ -237,6 +319,11 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
+    if (!selectedWorkplace) {
+      showSnackbar('먼저 작업장을 선택해주세요.', 'error');
+      return;
+    }
+    
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -249,6 +336,8 @@ const ProductionPlan: React.FC = () => {
       shift: 'DAY',
       remark: '',
       lotNo: '',
+      workplaceCode: selectedWorkplace,
+      workplaceName: workplaces.find(w => w.workplaceCode === selectedWorkplace)?.workplaceName || '',
     });
     setOpenDialog(true);
   };
@@ -343,6 +432,7 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            mb: 2,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -404,7 +494,12 @@ const ProductionPlan: React.FC = () => {
             </Tooltip>
             <Tooltip title="새로고침">
               <IconButton
-                onClick={loadEquipments}
+                onClick={() => {
+                  loadWorkplaces();
+                  if (selectedWorkplace) {
+                    loadEquipmentsByWorkplace(selectedWorkplace);
+                  }
+                }}
                 sx={{
                   bgcolor: 'grey.100',
                   color: 'text.secondary',
@@ -415,6 +510,33 @@ const ProductionPlan: React.FC = () => {
               </IconButton>
             </Tooltip>
           </Box>
+        </Box>
+        
+        {/* 작업장 선택 영역 */}
+        <Box sx={{ mt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>작업장 선택 *</InputLabel>
+            <Select
+              value={selectedWorkplace}
+              onChange={(e) => setSelectedWorkplace(e.target.value)}
+              label="작업장 선택 *"
+              required
+            >
+              <MenuItem value="">
+                <em>작업장을 선택하세요</em>
+              </MenuItem>
+              {workplaces.map((workplace) => (
+                <MenuItem key={workplace.workplaceCode} value={workplace.workplaceCode}>
+                  {workplace.workplaceName} ({workplace.workplaceCode})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {!selectedWorkplace && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+              생산계획을 등록하려면 먼저 작업장을 선택해주세요.
+            </Typography>
+          )}
         </Box>
       </Paper>
 
@@ -900,6 +1022,27 @@ const ProductionPlan: React.FC = () => {
                                                   variant="outlined"
                                                 />
                                               )}
+                                              {/* 거래처 정보 표시 */}
+                                              {plan.customerName && (
+                                                <Box sx={{ mt: 0.5 }}>
+                                                  <Chip
+                                                    label={
+                                                      plan.additionalCustomers && plan.additionalCustomers.length > 0
+                                                        ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
+                                                        : plan.customerName
+                                                    }
+                                                    size="small"
+                                                    color="secondary"
+                                                    variant="outlined"
+                                                    sx={{ cursor: plan.additionalCustomers?.length ? 'pointer' : 'default' }}
+                                                    onClick={() => {
+                                                      if (plan.additionalCustomers && plan.additionalCustomers.length > 0) {
+                                                        alert(`거래처 목록:\n- ${plan.customerName}\n- ${plan.additionalCustomers.join('\n- ')}`);
+                                                      }
+                                                    }}
+                                                  />
+                                                </Box>
+                                              )}
                                             </Box>
                                             <Box
                                               sx={{
@@ -979,6 +1122,7 @@ const ProductionPlan: React.FC = () => {
         selectedDate={selectedDate}
         formData={formData}
         equipments={equipments}
+        workplaceWorkers={workplaceWorkers}
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}

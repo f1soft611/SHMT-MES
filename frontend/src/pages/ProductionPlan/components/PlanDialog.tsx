@@ -24,6 +24,7 @@ import * as yup from 'yup';
 import ProductionRequestDialog from './ProductionRequestDialog';
 import { ProductionRequest } from '../../../types/productionRequest';
 import { Equipment } from '../../../types/equipment';
+import { WorkplaceWorker } from '../../../types/workplace';
 
 interface ProductionPlanData {
   id?: string;
@@ -40,6 +41,15 @@ interface ProductionPlanData {
   orderSeqno?: number;
   orderHistno?: number;
   lotNo?: string;
+  // 작업장 및 작업자 정보
+  workplaceCode?: string;
+  workplaceName?: string;
+  workerCode?: string;
+  workerName?: string;
+  // 거래처 정보
+  customerCode?: string;
+  customerName?: string;
+  additionalCustomers?: string[]; // 추가 거래처 목록
 }
 
 // 생산계획 등록 유효성 검사 스키마
@@ -61,6 +71,13 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   orderSeqno: yup.number(),
   orderHistno: yup.number(),
   lotNo: yup.string(),
+  workplaceCode: yup.string(),
+  workplaceName: yup.string(),
+  workerCode: yup.string(),
+  workerName: yup.string(),
+  customerCode: yup.string(),
+  customerName: yup.string(),
+  additionalCustomers: yup.array().of(yup.string().required()),
 });
 
 interface PlanDialogProps {
@@ -70,6 +87,7 @@ interface PlanDialogProps {
   selectedDate: string;
   formData: ProductionPlanData;
   equipments: Equipment[];
+  workplaceWorkers?: WorkplaceWorker[];
   onSave: (data: ProductionPlanData) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
@@ -82,13 +100,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   selectedDate,
   formData,
   equipments,
+  workplaceWorkers = [],
   onSave,
   onChange,
   onBatchChange,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
-  const [selectedRequest, setSelectedRequest] =
-    useState<ProductionRequest | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>([]);
 
   // react-hook-form 설정
   const {
@@ -115,18 +133,34 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setOpenRequestDialog(false);
   };
 
-  const handleSelectRequest = (request: ProductionRequest) => {
-    console.log(request);
+  const handleSelectRequest = (requests: ProductionRequest[]) => {
+    console.log('Selected requests:', requests);
 
-    setSelectedRequest(request);
-    // 생산의뢰 정보를 폼 데이터에 한 번에 반영
+    if (requests.length === 0) return;
+
+    setSelectedRequests(requests);
+    
+    // 첫 번째 생산의뢰의 품목 정보를 기준으로 설정
+    const firstRequest = requests[0];
+    
+    // 여러 생산의뢰의 수량 합계
+    const totalQty = requests.reduce((sum, req) => sum + (req.orderQty || 0), 0);
+    
+    // 거래처 정보 처리
+    const customerCodes = requests.map(r => r.customerCode).filter(Boolean) as string[];
+    const customerNames = requests.map(r => r.customerName).filter(Boolean) as string[];
+    const uniqueCustomers = Array.from(new Set(customerCodes));
+    
     const updates = {
-      itemCode: request.itemCode || '',
-      itemName: request.itemName || '',
-      plannedQty: request.orderQty || 0,
-      orderNo: request.orderNo,
-      orderSeqno: request.orderSeqno,
-      orderHistno: request.orderHistno,
+      itemCode: firstRequest.itemCode || '',
+      itemName: firstRequest.itemName || '',
+      plannedQty: totalQty,
+      orderNo: firstRequest.orderNo,
+      orderSeqno: firstRequest.orderSeqno,
+      orderHistno: firstRequest.orderHistno,
+      customerCode: uniqueCustomers[0],
+      customerName: customerNames[0],
+      additionalCustomers: uniqueCustomers.slice(1),
     };
     
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
@@ -144,7 +178,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleDialogClose = () => {
-    setSelectedRequest(null);
+    setSelectedRequests([]);
     onClose();
   };
 
@@ -183,7 +217,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         생산의뢰 연동
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        ERP 생산의뢰 정보를 불러와 계획을 생성할 수 있습니다.
+                        ERP 생산의뢰 정보를 불러와 계획을 생성할 수 있습니다. (멀티 선택 가능, 동일 품목만)
                       </Typography>
                     </Box>
                     <Button
@@ -195,7 +229,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       생산의뢰 선택
                     </Button>
                   </Stack>
-                  {selectedRequest && (
+                  {selectedRequests.length > 0 && (
                     <Box
                       sx={{
                         mt: 1.5,
@@ -204,15 +238,19 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         borderColor: 'divider',
                       }}
                     >
-                      <Stack direction="row" spacing={1} alignItems="center">
+                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                         <Typography variant="caption" color="text.secondary">
-                          선택된 생산의뢰:
+                          선택된 생산의뢰: {selectedRequests.length}건
                         </Typography>
-                        <Chip
-                          label={`${selectedRequest.orderNo} - ${selectedRequest.itemName}`}
-                          size="small"
-                          color="primary"
-                        />
+                        {selectedRequests.map((req, idx) => (
+                          <Chip
+                            key={`${req.orderNo}-${req.orderSeqno}`}
+                            label={`${req.orderNo} (${req.customerName || '거래처 미상'})`}
+                            size="small"
+                            color="primary"
+                            sx={{ mt: 0.5 }}
+                          />
+                        ))}
                       </Stack>
                     </Box>
                   )}
@@ -261,7 +299,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목코드"
-                      disabled={!!selectedRequest}
+                      disabled={selectedRequests.length > 0}
                       error={!!errors.itemCode}
                       helperText={errors.itemCode?.message}
                     />
@@ -276,7 +314,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목명"
-                      disabled={!!selectedRequest}
+                      disabled={selectedRequests.length > 0}
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
                     />
@@ -347,6 +385,74 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   )}
                 />
               </Stack>
+
+              {/* 작업자 선택 */}
+              {workplaceWorkers.length > 0 && (
+                <Controller
+                  name="workerCode"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth>
+                      <InputLabel>작업자</InputLabel>
+                      <Select
+                        {...field}
+                        label="작업자"
+                        onChange={(e) => {
+                          const selectedWorker = workplaceWorkers.find(
+                            (w) => w.workerCode === e.target.value
+                          );
+                          field.onChange(e.target.value);
+                          if (selectedWorker) {
+                            setValue('workerName', selectedWorker.workerName);
+                            // 작업자의 근무구분 정보가 있으면 자동 설정
+                            // TODO: WorkplaceWorker 타입에 shift 정보 추가 필요
+                          }
+                        }}
+                      >
+                        <MenuItem value="">
+                          <em>작업자를 선택하세요</em>
+                        </MenuItem>
+                        {workplaceWorkers.map((worker) => (
+                          <MenuItem key={worker.workerCode} value={worker.workerCode}>
+                            {worker.workerName} ({worker.workerCode})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              )}
+
+              {/* 거래처 정보 표시 */}
+              {formData.customerName && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'grey.300',
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                    거래처 정보
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip
+                      label={formData.customerName}
+                      size="small"
+                      color="primary"
+                    />
+                    {formData.additionalCustomers && formData.additionalCustomers.length > 0 && (
+                      <Chip
+                        label={`외 ${formData.additionalCustomers.length}건`}
+                        size="small"
+                        color="default"
+                      />
+                    )}
+                  </Stack>
+                </Box>
+              )}
 
               <Controller
                 name="remark"
