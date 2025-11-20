@@ -25,15 +25,15 @@ interface Props {
     open: boolean;
     onClose: () => void;
     selectedFlow: ProcessFlow | null;
-    onSave: (data: DetailSavePayload) => void;
+    onSave: (data: DetailSavePayload) => Promise<boolean>;
     initialTab: number;
 }
 
 function DetailDialogContent({
-                                 selectedFlow,
-                                 tabIndex,
-                                 setTabIndex
-                             }: {
+                                selectedFlow,
+                                tabIndex,
+                                setTabIndex
+                            }: {
     selectedFlow: ProcessFlow | null;
     tabIndex: number;
     setTabIndex: (v: number) => void;
@@ -45,7 +45,7 @@ function DetailDialogContent({
                 <Tab label="제품 관리" icon={<ExtensionIcon />} iconPosition="start" />
             </Tabs>
 
-            <Box sx={{ mt: 2, flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Box sx={{ mt: 2, minHeight: 0, }}>
                 {tabIndex === 0 && <ProcessFlowProcessTab />}
                 {tabIndex === 1 && <ProcessFlowItemTab />}
             </Box>
@@ -54,32 +54,31 @@ function DetailDialogContent({
 }
 
 function DetailDialogActions({
-                                 onSave,
-                                 onClose,
-                                 tabIndex
-                             }: {
+                                onSave,
+                                onClose,
+                                tabIndex
+                            }: {
     onSave: any;
     onClose: any;
     tabIndex: number;
 }) {
-    const { flowProcessRows, flowItemRows  } = useProcessFlowDetailContext();
+    const { flowProcessRows, flowItemRows, fetchDetail, processFlow  } = useProcessFlowDetailContext();
 
 
     return (
         <DialogActions>
             <Button
                 variant="contained"
-                onClick={() => {
-                    if (tabIndex === 0) {
-                        // 공정 탭 → 공정만 저장
-                        onSave({
-                            processes: flowProcessRows,
-                        });
-                    } else {
-                        // 제품 탭 → 제품만 저장
-                        onSave({
-                            items: flowItemRows,
-                        });
+                onClick={async () => {
+                    const payload =
+                        tabIndex === 0
+                            ? { processes: flowProcessRows }
+                            : { items: flowItemRows };
+
+                    const result = await onSave(payload);
+
+                    if (result) {
+                        await fetchDetail(processFlow?.processFlowId ?? ""); // 성공 시 최신 데이터 다시 반영
                     }
                 }}
             >
@@ -90,7 +89,13 @@ function DetailDialogActions({
     );
 }
 
-export default function ProcessFlowDetailDialog({ open, onClose, selectedFlow, onSave, initialTab }: Props) {
+export default function ProcessFlowDetailDialog({
+                                                    open,
+                                                    onClose,
+                                                    selectedFlow,
+                                                    onSave,
+                                                    initialTab
+}: Props) {
     const [tabIndex, setTabIndex] = React.useState(0);
 
     useEffect(() => {

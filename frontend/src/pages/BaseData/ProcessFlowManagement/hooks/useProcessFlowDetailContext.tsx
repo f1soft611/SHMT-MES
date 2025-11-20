@@ -46,7 +46,6 @@ export function ProcessFlowDetailProvider({
 
     const flowId = processFlow?.processFlowId ?? null;  // ★ 공정 흐름 ID 추출
 
-
     // 전체 공정 조회
     useEffect(() => {
         (async () => {
@@ -83,11 +82,25 @@ export function ProcessFlowDetailProvider({
 
     // 흐름 상세 재조회 함수
     const fetchDetail = async (flowId: string) => {
+        const proc = await processService.getProcessList(0, 9999);
+        setProcessRows(
+            proc?.result?.resultList?.map((r: Process) => ({ ...r })) ?? []
+        );
+
+        const item = await itemService.getItemList(0, 9999);
+        setItemRows(
+            item?.result?.resultList?.map((r: Item) => ({ ...r })) ?? []
+        );
+
         const resProc = await processFlowService.getProcessFlowProcess(flowId);
-        setFlowProcessRows(resProc?.result?.resultList ?? []);
+        setFlowProcessRows(
+            resProc?.result?.resultList?.map((r: ProcessFlowProcess) => ({ ...r })) ?? []
+        );
 
         const resItem = await processFlowService.getProcessFlowItem(flowId);
-        setFlowItemRows(resItem?.result?.resultList ?? []);
+        setFlowItemRows(
+            resItem?.result?.resultList?.map((r: ProcessFlowItem) => ({ ...r })) ?? []
+        );
     };
 
 
@@ -101,7 +114,7 @@ export function ProcessFlowDetailProvider({
                 flowItemRows,
                 setFlowProcessRows,
                 setFlowItemRows,
-                fetchDetail
+                fetchDetail,
             }}
         >
             {children}

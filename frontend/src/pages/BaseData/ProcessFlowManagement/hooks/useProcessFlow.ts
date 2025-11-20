@@ -143,12 +143,12 @@ export function useProcessFlow() {
 
 
     // 공정 흐름별 공정/제품 저장 및 수정
-    const handleDetailSave = async ({ processes, items }: DetailSavePayload) => {
+    const handleDetailSave = async ({ processes, items }: DetailSavePayload): Promise<boolean> => {
 
         // selectedFlow가 반드시 있어야 저장 가능
         if (!selectedFlow?.processFlowId) {
             showSnackbar("선택된 공정흐름이 없습니다.", "error");
-            return;
+            return false;
         }
 
         try {

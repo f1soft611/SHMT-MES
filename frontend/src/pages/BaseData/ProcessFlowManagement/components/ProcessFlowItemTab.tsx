@@ -138,10 +138,18 @@ export default function ProcessFlowItemTab() {
                         getRowId={(row:Item) => row.itemCode}
                         checkboxSelection
                         disableRowSelectionExcludeModel
-                        onRowSelectionModelChange={(model) => {
-                            const anyModel = model as { ids: Set<GridRowId> };
-                            setLeftSelected(Array.from(anyModel.ids ?? []));
+                        // ★ selectionModel은 include 방식으로만 설정 가능
+                        rowSelectionModel={{
+                            type: 'include',
+                            ids: new Set(leftSelected),
                         }}
+                        onRowSelectionModelChange={(model) => {
+                            setLeftSelected(Array.from(model.ids));
+                        }}
+                        // onRowSelectionModelChange={(model) => {
+                        //     const anyModel = model as { ids: Set<GridRowId> };
+                        //     setLeftSelected(Array.from(anyModel.ids ?? []));
+                        // }}
                         autoHeight={false}
                         sx={{
                             height: 450,

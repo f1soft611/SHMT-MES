@@ -42,9 +42,6 @@ export default function ProcessFlowProcessTab() {
 
     const [lastProcessId, setLastProcessId] = useState<string | null>(null);
 
-
-
-
     const columns: GridColDef[] = [
         { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
         { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
@@ -145,6 +142,11 @@ export default function ProcessFlowProcessTab() {
         }
     }, [flowProcessRows]);
 
+    useEffect(() => {
+        setLeftSelected([]);
+        setRightSelected([]);
+    }, [flowProcessRows]);
+
 
     return(
         <>
@@ -190,9 +192,13 @@ export default function ProcessFlowProcessTab() {
                         getRowId={(row:Process) => row.processCode}
                         checkboxSelection
                         disableRowSelectionExcludeModel
+                        // ★ selectionModel은 include 방식으로만 설정 가능
+                        rowSelectionModel={{
+                            type: 'include',
+                            ids: new Set(leftSelected),
+                        }}
                         onRowSelectionModelChange={(model) => {
-                            const anyModel = model as { ids: Set<GridRowId> };
-                            setLeftSelected(Array.from(anyModel.ids ?? []));
+                            setLeftSelected(Array.from(model.ids));
                         }}
                         autoHeight={false}
                         sx={{
