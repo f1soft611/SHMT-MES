@@ -1,5 +1,5 @@
-import {DataGrid, GridColDef, GridPaginationModel, GridRowId} from "@mui/x-data-grid";
-import {Button, Paper, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid} from "@mui/material";
+import {DataGrid, GridColDef, GridRowId} from "@mui/x-data-grid";
+import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid} from "@mui/material";
 import {
     Search as SearchIcon,
 } from '@mui/icons-material';
@@ -40,7 +40,7 @@ export default function ProcessFlowItemTab() {
         { field: 'itemCode', headerName: '품목 코드', flex: 1, headerAlign: 'center' },
         { field: 'itemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
-        { field: 'unit', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
+        { field: 'unitName', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
     ];
 
     const rightColumns: GridColDef[] = [
@@ -71,6 +71,7 @@ export default function ProcessFlowItemTab() {
             flowItemName: i.itemName,
             specification: i.specification ?? "",
             unit: i.unit ?? "",
+            unitName: i.unit ?? "",
             processFlowCode: processFlow.processFlowCode ?? "",
             processFlowId: processFlow.processFlowId ?? "",
         }));

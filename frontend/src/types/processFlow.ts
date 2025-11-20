@@ -37,6 +37,7 @@ export interface ProcessFlowItem {
     flowItemName: string;           // 제품 이름
     specification: string;
     unit: string;
+    unitName: string;
     processFlowCode: string;        // 상위 공정흐름 코드
     processFlowId: string;          // 상위 공정흐름 ID
 }

@@ -27,12 +27,12 @@ interface Props {
 }
 
 export default function ProcessFlowDialog({
-                                              open,
-                                              dialogMode,
-                                              initialData,
-                                              onClose,
-                                              onSubmit
-                                          }: Props) {
+                                            open,
+                                            dialogMode,
+                                            initialData,
+                                            onClose,
+                                            onSubmit
+                                        }: Props) {
 
     const {
         control,
