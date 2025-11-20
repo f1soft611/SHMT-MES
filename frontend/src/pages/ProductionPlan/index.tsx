@@ -184,6 +184,7 @@ const ProductionPlan: React.FC = () => {
       setEquipments([]);
       setWorkplaceWorkers([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWorkplace]);
 
   const loadWorkplaces = async () => {
