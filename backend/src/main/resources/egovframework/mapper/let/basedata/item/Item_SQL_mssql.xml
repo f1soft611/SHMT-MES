@@ -10,6 +10,7 @@
 		<result property="itemType" column="MATERIAL_FLAG"/>
 		<result property="specification" column="MATERIAL_SPEC"/>
 		<result property="unit" column="UNIT"/>
+		<result property="unitName" column="UNIT_NAME"/>
 		<result property="stockQty" column="STOCK_QTY"/>
 		<result property="safetyStock" column="SAFETY_STOCK"/>
 		<result property="remark" column="ETC"/>
@@ -30,6 +31,7 @@
 		MATERIAL_SPEC,
 		MATERIAL_FLAG,
 		UNIT,
+		ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
 		STOCK_QTY,
 		SAFETY_STOCK,
 		ETC,
@@ -39,7 +41,10 @@
 		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
 		OPMAN_CODE2,
 		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
-		FROM TCO403
+		FROM TCO403 A
+			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1
+			ON CODE1.CODE_ID = 'COM007'
+			AND CODE1.CODE = A.UNIT
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">

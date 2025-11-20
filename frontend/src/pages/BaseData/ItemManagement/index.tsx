@@ -289,7 +289,7 @@ const ItemManagement: React.FC = () => {
       ),
     },
     {
-      field: 'unit',
+      field: 'unitName',
       headerName: '단위',
       flex: 0.6,
       align: 'center',
