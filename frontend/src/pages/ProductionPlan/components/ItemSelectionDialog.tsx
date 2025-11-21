@@ -11,7 +11,12 @@ import {
   Divider,
   Alert,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridRowId,
+  GridRowSelectionModel,
+} from '@mui/x-data-grid';
 import { Search as SearchIcon } from '@mui/icons-material';
 import itemService from '../../../services/itemService';
 import { Item } from '../../../types/item';
@@ -29,7 +34,10 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
 }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
+    type: 'include',
+    ids: new Set<GridRowId>(),
+  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -55,7 +63,8 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       if (response.resultCode === 200 && response.result?.resultList) {
         setItems(response.result.resultList);
         setTotalCount(
-          response.result.paginationInfo?.totalRecordCount || response.result.resultList.length
+          response.result.paginationInfo?.totalRecordCount ||
+            response.result.resultList.length
         );
       } else {
         setError('품목 목록을 불러오는데 실패했습니다.');
@@ -74,24 +83,26 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
   };
 
   const handleSelect = () => {
-    if (selectionModel.length === 0) {
+    if (selectionModel.ids.size === 0) {
       setError('품목을 선택해주세요.');
       return;
     }
 
-    const selectedItemCode = String(selectionModel[0]);
-    const selectedItem = items.find((item) => item.itemCode === selectedItemCode);
+    const selectedItemCode = String(Array.from(selectionModel.ids)[0]);
+    const selectedItem = items.find(
+      (item) => item.itemCode === selectedItemCode
+    );
     if (!selectedItem) {
       setError('선택한 품목을 찾을 수 없습니다.');
       return;
     }
-    
+
     onSelect(selectedItem);
     handleClose();
   };
 
   const handleClose = () => {
-    setSelectionModel([]);
+    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setSearchKeyword('');
     setPage(0);
     setError('');
@@ -220,7 +231,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
           onClick={handleSelect}
           variant="contained"
           color="primary"
-          disabled={selectionModel.length === 0}
+          disabled={selectionModel.ids.size === 0}
         >
           선택
         </Button>
