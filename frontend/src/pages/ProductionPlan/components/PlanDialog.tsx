@@ -27,6 +27,34 @@ import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
 import { WorkplaceWorker } from '../../../types/workplace';
 
+/**
+ * 근무구분(COM006) 코드를 한글 표시명으로 변환
+ * @param code 근무구분 코드 (D, N, A, B, C, DAY, NIGHT)
+ * @returns 한글 표시명
+ */
+const getShiftDisplayName = (code?: string): string => {
+  if (!code) return '';
+  
+  switch (code) {
+    case 'D':
+      return 'D - 주간';
+    case 'N':
+      return 'N - 야간';
+    case 'A':
+      return 'A - 1교대';
+    case 'B':
+      return 'B - 2교대';
+    case 'C':
+      return 'C - 3교대';
+    case 'DAY':
+      return '주간';
+    case 'NIGHT':
+      return '야간';
+    default:
+      return '';
+  }
+};
+
 interface ProductionPlanData {
   id?: string;
   date: string;
@@ -509,13 +537,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         {workplaceWorkers.map((worker) => (
                           <MenuItem key={worker.workerCode} value={worker.workerCode}>
                             {worker.workerName} ({worker.workerCode})
-                            {worker.position && ` - ${
-                              worker.position === 'D' ? '주간' :
-                              worker.position === 'N' ? '야간' :
-                              worker.position === 'A' ? 'A(1교대)' :
-                              worker.position === 'B' ? 'B(2교대)' :
-                              worker.position === 'C' ? 'C(3교대)' : ''
-                            }`}
+                            {worker.position && ` - ${getShiftDisplayName(worker.position)}`}
                           </MenuItem>
                         ))}
                       </Select>
@@ -533,16 +555,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     {...field}
                     fullWidth
                     label="근무구분"
-                    value={
-                      field.value === 'D' ? 'D - 주간' :
-                      field.value === 'N' ? 'N - 야간' :
-                      field.value === 'A' ? 'A - 1교대' :
-                      field.value === 'B' ? 'B - 2교대' :
-                      field.value === 'C' ? 'C - 3교대' :
-                      field.value === 'DAY' ? '주간' :
-                      field.value === 'NIGHT' ? '야간' :
-                      ''
-                    }
+                    value={getShiftDisplayName(field.value)}
                     disabled
                     InputProps={{
                       readOnly: true,
