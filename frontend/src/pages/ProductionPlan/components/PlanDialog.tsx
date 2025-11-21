@@ -17,12 +17,14 @@ import {
   Chip,
   FormHelperText,
 } from '@mui/material';
-import { Link as LinkIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Link as LinkIcon, Info as InfoIcon, Inventory as InventoryIcon } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import ProductionRequestDialog from './ProductionRequestDialog';
+import ItemSelectionDialog from './ItemSelectionDialog';
 import { ProductionRequest } from '../../../types/productionRequest';
+import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
 import { WorkplaceWorker } from '../../../types/workplace';
 
@@ -106,7 +108,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   onBatchChange,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
+  const [openItemDialog, setOpenItemDialog] = useState(false);
   const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>([]);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   // react-hook-form 설정
   const {
@@ -131,6 +135,34 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 
   const handleCloseRequestDialog = () => {
     setOpenRequestDialog(false);
+  };
+
+  const handleOpenItemDialog = () => {
+    setOpenItemDialog(true);
+  };
+
+  const handleCloseItemDialog = () => {
+    setOpenItemDialog(false);
+  };
+
+  const handleSelectItem = (item: Item) => {
+    console.log('Selected item:', item);
+    setSelectedItem(item);
+
+    const updates = {
+      itemCode: item.itemCode || '',
+      itemName: item.itemName || '',
+      plannedQty: 1, // 기본값
+    };
+
+    // react-hook-form의 setValue를 사용하여 각 필드 업데이트
+    Object.entries(updates).forEach(([key, value]) => {
+      setValue(key as keyof ProductionPlanData, value);
+    });
+
+    // 부모 컴포넌트의 상태도 업데이트
+    onBatchChange(updates);
+    setOpenItemDialog(false);
   };
 
   const handleSelectRequest = (requests: ProductionRequest[]) => {
@@ -179,6 +211,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 
   const handleDialogClose = () => {
     setSelectedRequests([]);
+    setSelectedItem(null);
     onClose();
   };
 
@@ -257,6 +290,61 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 </Box>
               )}
 
+              {/* 품목 직접 선택 버튼 */}
+              {dialogMode === 'create' && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'success.light',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'success.main',
+                  }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <InventoryIcon color="success" />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        품목 직접 선택
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        품목 마스터에서 직접 품목을 선택하여 계획을 생성할 수 있습니다.
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<InventoryIcon />}
+                      onClick={handleOpenItemDialog}
+                      size="small"
+                    >
+                      품목 선택
+                    </Button>
+                  </Stack>
+                  {selectedItem && (
+                    <Box
+                      sx={{
+                        mt: 1.5,
+                        pt: 1.5,
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary">
+                          선택된 품목:
+                        </Typography>
+                        <Chip
+                          label={`${selectedItem.itemCode} - ${selectedItem.itemName}`}
+                          size="small"
+                          color="success"
+                        />
+                      </Stack>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
               <Controller
                 name="date"
                 control={control}
@@ -299,7 +387,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목코드"
-                      disabled={selectedRequests.length > 0}
+                      disabled={selectedRequests.length > 0 || selectedItem !== null}
                       error={!!errors.itemCode}
                       helperText={errors.itemCode?.message}
                     />
@@ -314,7 +402,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목명"
-                      disabled={selectedRequests.length > 0}
+                      disabled={selectedRequests.length > 0 || selectedItem !== null}
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
                     />
@@ -511,6 +599,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         open={openRequestDialog}
         onClose={handleCloseRequestDialog}
         onSelect={handleSelectRequest}
+      />
+
+      {/* 품목 선택 다이얼로그 */}
+      <ItemSelectionDialog
+        open={openItemDialog}
+        onClose={handleCloseItemDialog}
+        onSelect={handleSelectItem}
       />
     </>
   );
