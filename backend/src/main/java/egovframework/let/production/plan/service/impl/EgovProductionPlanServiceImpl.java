@@ -1,6 +1,6 @@
 package egovframework.let.production.plan.service.impl;
 
-import egovframework.com.cmm.service.EgovIdGnrService;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
@@ -38,15 +38,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EgovProductionPlanServiceImpl implements EgovProductionPlanService {
 
-	// 계획번호 생성 상수
-	private static final String PLAN_NO_PREFIX = "PL";
-	private static final String PLAN_NO_DATE_FORMAT = "yyyyMMdd";
-	private static final int PLAN_NO_SEQUENCE_LENGTH = 4;
-
 	private final ProductionPlanDAO productionPlanDAO;
 
-	@Resource(name = "egovIdGnrService")
-	private EgovIdGnrService idgenService;
+	@Resource(name = "egovProdPlanIdGnrService")
+	private EgovIdGnrService egovProdPlanIdgenService;
 
 	/**
 	 * 생산계획을 등록한다. (마스터 + 상세 트랜잭션 처리)
@@ -54,12 +49,7 @@ public class EgovProductionPlanServiceImpl implements EgovProductionPlanService 
 	@Override
 	@Transactional
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
-		// 계획번호 생성 (날짜 + 시퀀스)
-		SimpleDateFormat sdf = new SimpleDateFormat(PLAN_NO_DATE_FORMAT);
-		String dateStr = sdf.format(new Date());
-		String planNo = PLAN_NO_PREFIX + dateStr + String.format("%0" + PLAN_NO_SEQUENCE_LENGTH + "d", 
-				idgenService.getNextIntegerId("TPR301M"));
-		
+		String planNo = egovProdPlanIdgenService.getNextStringId();
 		master.setPlanNo(planNo);
 		
 		// 총 계획수량 계산
