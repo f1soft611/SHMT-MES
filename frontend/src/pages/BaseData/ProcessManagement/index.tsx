@@ -29,6 +29,7 @@ import {
   BugReport as BugReportIcon,
   CheckCircle as CheckCircleIcon,
   PanTool as PanToolIcon,
+  PrecisionManufacturing as PrecisionManufacturingIcon,
   FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
@@ -277,7 +278,7 @@ const ProcessManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '관리',
-      width: 180,
+      width: 220,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -323,6 +324,17 @@ const ProcessManagement: React.FC = () => {
               title="중지항목 관리"
             >
               <PanToolIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => {
+                handleOpenDetailDialog(params.row);
+                setDetailTab(3);
+              }}
+              title="설비 관리"
+            >
+              <PrecisionManufacturingIcon />
             </IconButton>
             <IconButton
               size="small"

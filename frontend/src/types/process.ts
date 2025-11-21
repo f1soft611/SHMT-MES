@@ -66,6 +66,19 @@ export interface ProcessStopItem {
   useYn?: string;
 }
 
+export interface ProcessEquipment {
+  processEquipmentId?: string;
+  processId: string;
+  processCode: string;
+  equipSysCd: string;
+  equipCd?: string;
+  equipmentName?: string;
+  equipSpec?: string;
+  location?: string;
+  description?: string;
+  useYn?: string;
+}
+
 export interface ProcessSearchParams {
   searchCnd?: string;
   searchWrd?: string;

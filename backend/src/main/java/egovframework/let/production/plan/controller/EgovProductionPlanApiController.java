@@ -1,0 +1,249 @@
+package egovframework.let.production.plan.controller;
+
+import egovframework.com.cmm.LoginVO;
+import egovframework.com.cmm.ResponseCode;
+import egovframework.com.cmm.service.ResultVO;
+import egovframework.com.cmm.util.ResultVoHelper;
+import egovframework.let.production.plan.domain.model.ProductionPlan;
+import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
+import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.production.plan.service.EgovProductionPlanService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 생산계획을 관리하기 위한 컨트롤러 클래스
+ * @author SHMT-MES
+ * @since 2025.11.21
+ * @version 1.0
+ * @see
+ *
+ * <pre>
+ * << 개정이력(Modification Information) >>
+ *
+ *   수정일      수정자           수정내용
+ *  -------    --------    ---------------------------
+ *   2025.11.21 SHMT-MES          최초 생성
+ *
+ * </pre>
+ */
+@RestController
+@RequiredArgsConstructor
+@Tag(name="EgovProductionPlanApiController", description = "생산계획 관리")
+public class EgovProductionPlanApiController {
+
+	private final ResultVoHelper resultVoHelper;
+	private final EgovProductionPlanService productionPlanService;
+
+	/**
+	 * 생산계획 목록을 조회한다.
+	 *
+	 * @param searchVO 검색 조건
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 목록 조회",
+			description = "생산계획 목록을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping(value = "/api/production-plans")
+	public ResultVO selectProductionPlanList(
+			@ModelAttribute ProductionPlanVO searchVO,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		Map<String, Object> resultMap = productionPlanService.selectProductionPlanMasterList(searchVO, user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 생산계획 상세 목록을 조회한다.
+	 *
+	 * @param planNo 계획번호
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 상세 조회",
+			description = "계획번호로 생산계획 상세 목록을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping(value = "/api/production-plans/{planNo}")
+	public ResultVO selectProductionPlanByPlanNo(
+			@PathVariable("planNo") String planNo,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		List<ProductionPlan> planList = productionPlanService.selectProductionPlanByPlanNo(planNo);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("planList", planList);
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 생산계획을 등록한다. (마스터 + 상세 트랜잭션 처리)
+	 *
+	 * @param requestBody 생산계획 등록 요청 정보
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 등록",
+			description = "생산계획을 등록한다. (TPR301M, TPR301 테이블에 트랜잭션 처리)",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "등록 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@PostMapping(value = "/api/production-plans")
+	public ResultVO insertProductionPlan(
+			@RequestBody ProductionPlanRequest requestBody,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		// 마스터 정보 설정
+		ProductionPlanMaster master = requestBody.getMaster();
+		master.setOpmanCode(user.getUniqId());
+
+		// 상세 정보 설정
+		List<ProductionPlan> planList = requestBody.getDetails();
+		for (ProductionPlan plan : planList) {
+			plan.setOpmanCode(user.getUniqId());
+		}
+
+		// 생산계획 등록 (트랜잭션 처리)
+		String planNo = productionPlanService.insertProductionPlan(master, planList);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("message", "생산계획이 등록되었습니다.");
+		resultMap.put("planNo", planNo);
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 생산계획을 수정한다.
+	 *
+	 * @param planNo 계획번호
+	 * @param requestBody 생산계획 수정 요청 정보
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 수정",
+			description = "생산계획을 수정한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "수정 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@PutMapping(value = "/api/production-plans/{planNo}")
+	public ResultVO updateProductionPlan(
+			@PathVariable("planNo") String planNo,
+			@RequestBody ProductionPlanRequest requestBody,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		// 마스터 정보 설정
+		ProductionPlanMaster master = requestBody.getMaster();
+		master.setPlanNo(planNo);
+		master.setOpmanCode2(user.getUniqId());
+
+		// 상세 정보 설정
+		List<ProductionPlan> planList = requestBody.getDetails();
+		for (ProductionPlan plan : planList) {
+			plan.setPlanNo(planNo);
+			plan.setOpmanCode2(user.getUniqId());
+		}
+
+		// 생산계획 수정 (트랜잭션 처리)
+		productionPlanService.updateProductionPlan(master, planList);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("message", "생산계획이 수정되었습니다.");
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 생산계획을 삭제한다.
+	 *
+	 * @param planNo 계획번호
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 삭제",
+			description = "생산계획을 삭제한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "삭제 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@DeleteMapping(value = "/api/production-plans/{planNo}")
+	public ResultVO deleteProductionPlan(
+			@PathVariable("planNo") String planNo,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		// 마스터 정보 설정
+		ProductionPlanMaster master = new ProductionPlanMaster();
+		master.setPlanNo(planNo);
+		master.setOpmanCode2(user.getUniqId());
+
+		// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)
+		productionPlanService.deleteProductionPlan(master);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("message", "생산계획이 삭제되었습니다.");
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 생산계획 등록/수정 요청 클래스
+	 */
+	@Getter
+	@Setter
+	public static class ProductionPlanRequest {
+		private ProductionPlanMaster master;
+		private List<ProductionPlan> details;
+	}
+}

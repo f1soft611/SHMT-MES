@@ -24,6 +24,10 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -41,8 +45,14 @@ import {
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
+import workplaceService from '../../services/workplaceService';
 import { Equipment } from '../../types/equipment';
+import { Workplace, WorkplaceWorker } from '../../types/workplace';
 import PlanDialog from './components/PlanDialog';
+
+// localStorage 키 상수
+const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
+const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
 
 interface ProductionPlanData {
   id?: string;
@@ -57,7 +67,13 @@ interface ProductionPlanData {
   orderNo?: string;
   orderSeqno?: number;
   orderHistno?: number;
-  lotNo?: string;
+  workplaceCode?: string;
+  workplaceName?: string;
+  workerCode?: string;
+  workerName?: string;
+  customerCode?: string;
+  customerName?: string;
+  additionalCustomers?: string[]; // 추가 거래처 목록
 }
 
 const ProductionPlan: React.FC = () => {
@@ -128,7 +144,6 @@ const ProductionPlan: React.FC = () => {
     equipmentName: '',
     shift: 'DAY',
     remark: '',
-    lotNo: '',
   });
 
   const [searchValues, setSearchValues] = useState({
@@ -139,26 +154,177 @@ const ProductionPlan: React.FC = () => {
 
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string>('');
+  const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>([]);
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set()
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
 
-  // 요일별 표시 상태 (월~일)
-  const [visibleDays, setVisibleDays] = useState<boolean[]>([
-    true, // 월요일
-    true, // 화요일
-    true, // 수요일
-    true, // 목요일
-    true, // 금요일
-    false, // 토요일
-    false, // 일요일
-  ]);
+  // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
+  const getDefault3DaysFilter = (): boolean[] => {
+    const today = new Date();
+    const todayDayOfWeek = today.getDay(); // 0(일) ~ 6(토)
+    const mondayBasedDay = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // 0(월) ~ 6(일)
+    
+    const filter = [false, false, false, false, false, false, false];
+    
+    // 어제 (월요일일 때 일요일로 wrap)
+    const yesterday = mondayBasedDay - 1;
+    if (yesterday >= 0) {
+      filter[yesterday] = true;
+    } else {
+      filter[6] = true; // 일요일
+    }
+    
+    // 오늘
+    filter[mondayBasedDay] = true;
+    
+    // 내일 (일요일일 때 월요일로 wrap)
+    const tomorrow = mondayBasedDay + 1;
+    if (tomorrow < 7) {
+      filter[tomorrow] = true;
+    } else {
+      filter[0] = true; // 월요일
+    }
+    
+    return filter;
+  };
+
+  // localStorage에 필터 저장하는 헬퍼 함수
+  const saveFilterToStorage = (filter: boolean[]) => {
+    try {
+      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
+      localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+    } catch (error) {
+      console.error('Failed to save day filter to localStorage:', error);
+    }
+  };
+
+  // 날짜가 변경되었는지 확인하고 필터 초기화하는 함수
+  const checkAndResetIfDateChanged = (): boolean[] | null => {
+    try {
+      const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
+      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      
+      // 날짜가 변경되었으면 기본 3일로 초기화
+      if (lastAccessDate && lastAccessDate !== currentDate) {
+        const default3Days = getDefault3DaysFilter();
+        saveFilterToStorage(default3Days);
+        return default3Days;
+      }
+    } catch (error) {
+      console.error('Failed to check date change:', error);
+    }
+    return null;
+  };
+
+  // localStorage에서 저장된 필터 로드 또는 기본값 사용
+  const loadVisibleDaysFromStorage = (): boolean[] => {
+    try {
+      // 날짜 변경 확인
+      const resetFilter = checkAndResetIfDateChanged();
+      if (resetFilter) {
+        return resetFilter;
+      }
+      
+      // 저장된 필터 로드
+      const saved = localStorage.getItem(STORAGE_KEY_DAY_FILTER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === 7) {
+          return parsed;
+        }
+      }
+      
+      // 첫 방문이거나 데이터가 없으면 기본 3일로 초기화
+      const default3Days = getDefault3DaysFilter();
+      saveFilterToStorage(default3Days);
+      return default3Days;
+    } catch (error) {
+      console.error('Failed to load day filter from localStorage:', error);
+      // 오류 시 기본 3일 표시
+      return getDefault3DaysFilter();
+    }
+  };
+
+  // 요일별 표시 상태 (월~일) - lazy initialization
+  const [visibleDays, setVisibleDays] = useState<boolean[]>(() => loadVisibleDaysFromStorage());
   const [showDayFilter, setShowDayFilter] = useState(false);
 
   useEffect(() => {
-    loadEquipments();
+    loadWorkplaces();
+    // 날짜 변경 체크는 컴포넌트 마운트 시 loadVisibleDaysFromStorage()에서 자동으로 수행됨
   }, []);
+
+  useEffect(() => {
+    if (selectedWorkplace) {
+      loadEquipmentsByWorkplace(selectedWorkplace);
+      loadWorkplaceWorkers(selectedWorkplace);
+    } else {
+      setEquipments([]);
+      setWorkplaceWorkers([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWorkplace]);
+
+  const loadWorkplaces = async () => {
+    try {
+      const response = await workplaceService.getWorkplaceList(0, 100);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaces(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplaces:', error);
+      // Mock data for development
+      const mockWorkplaces = [
+        { workplaceCode: 'WP001', workplaceName: '작업장1' },
+        { workplaceCode: 'WP002', workplaceName: '작업장2' },
+      ];
+      setWorkplaces(mockWorkplaces as Workplace[]);
+    }
+  };
+
+  const loadEquipmentsByWorkplace = async (workplaceCode: string) => {
+    try {
+      // 작업장별 공정 조회
+      const processResponse = await workplaceService.getWorkplaceProcesses(workplaceCode);
+      
+      if (processResponse.resultCode === 200 && processResponse.result?.resultList) {
+        // 설비연동 플래그가 'Y'인 설비만 필터링
+        const filteredEquipments = processResponse.result.resultList
+          .filter((process: any) => process.equipmentIntegrationYn === 'Y')
+          .map((process: any) => ({
+            equipCd: process.equipmentCode,
+            equipmentName: process.equipmentName,
+            equipmentId: process.equipmentId,
+          }));
+        
+        setEquipments(filteredEquipments);
+        setExpandedEquipments(
+          new Set(filteredEquipments.map((eq: Equipment) => eq.equipCd))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load equipments:', error);
+      // Fallback to loading all equipments if workplace-specific loading fails
+      loadEquipments();
+    }
+  };
+
+  const loadWorkplaceWorkers = async (workplaceCode: string) => {
+    try {
+      const response = await workplaceService.getWorkplaceWorkers(workplaceCode);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaceWorkers(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplace workers:', error);
+      setWorkplaceWorkers([]);
+    }
+  };
 
   const loadEquipments = async () => {
     try {
@@ -200,10 +366,13 @@ const ProductionPlan: React.FC = () => {
     const newVisibleDays = [...visibleDays];
     newVisibleDays[dayIndex] = !newVisibleDays[dayIndex];
     setVisibleDays(newVisibleDays);
+    saveFilterToStorage(newVisibleDays);
   };
 
   const toggleAllDays = (visible: boolean) => {
-    setVisibleDays(visibleDays.map(() => visible));
+    const newVisibleDays = visibleDays.map(() => visible);
+    setVisibleDays(newVisibleDays);
+    saveFilterToStorage(newVisibleDays);
   };
 
   const getWeekDays = (): Date[] => {
@@ -237,6 +406,11 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
+    if (!selectedWorkplace) {
+      showSnackbar('먼저 작업장을 선택해주세요.', 'error');
+      return;
+    }
+    
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -245,10 +419,11 @@ const ProductionPlan: React.FC = () => {
       itemName: '',
       plannedQty: 0,
       equipmentCode: equipmentCode || '',
-      equipmentName: '',
+      equipmentName: equipments.find(e => e.equipCd === equipmentCode)?.equipmentName || '',
       shift: 'DAY',
       remark: '',
-      lotNo: '',
+      workplaceCode: selectedWorkplace,
+      workplaceName: workplaces.find(w => w.workplaceCode === selectedWorkplace)?.workplaceName || '',
     });
     setOpenDialog(true);
   };
@@ -343,6 +518,7 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            mb: 2,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -404,7 +580,12 @@ const ProductionPlan: React.FC = () => {
             </Tooltip>
             <Tooltip title="새로고침">
               <IconButton
-                onClick={loadEquipments}
+                onClick={() => {
+                  loadWorkplaces();
+                  if (selectedWorkplace) {
+                    loadEquipmentsByWorkplace(selectedWorkplace);
+                  }
+                }}
                 sx={{
                   bgcolor: 'grey.100',
                   color: 'text.secondary',
@@ -415,6 +596,33 @@ const ProductionPlan: React.FC = () => {
               </IconButton>
             </Tooltip>
           </Box>
+        </Box>
+        
+        {/* 작업장 선택 영역 */}
+        <Box sx={{ mt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>작업장 선택 *</InputLabel>
+            <Select
+              value={selectedWorkplace}
+              onChange={(e) => setSelectedWorkplace(e.target.value)}
+              label="작업장 선택 *"
+              required
+            >
+              <MenuItem value="">
+                <em>작업장을 선택하세요</em>
+              </MenuItem>
+              {workplaces.map((workplace) => (
+                <MenuItem key={workplace.workplaceCode} value={workplace.workplaceCode}>
+                  {workplace.workplaceName} ({workplace.workplaceCode})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {!selectedWorkplace && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+              생산계획을 등록하려면 먼저 작업장을 선택해주세요.
+            </Typography>
+          )}
         </Box>
       </Paper>
 
@@ -462,6 +670,18 @@ const ProductionPlan: React.FC = () => {
                 <Button
                   size="small"
                   variant="outlined"
+                  onClick={() => {
+                    const default3Days = getDefault3DaysFilter();
+                    setVisibleDays(default3Days);
+                    saveFilterToStorage(default3Days);
+                  }}
+                  color="info"
+                >
+                  기본 3일
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
                   onClick={() => toggleAllDays(true)}
                 >
                   전체 표시
@@ -475,6 +695,9 @@ const ProductionPlan: React.FC = () => {
                 </Button>
               </Box>
             </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
+              💡 선택한 요일 설정은 자동으로 저장되며, 다음날이 되면 기본 3일(어제, 오늘, 내일)로 자동 초기화됩니다.
+            </Typography>
           </CardContent>
         </Card>
       </Collapse>
@@ -853,17 +1076,6 @@ const ProductionPlan: React.FC = () => {
                                               >
                                                 {plan.itemName}
                                               </Typography>
-                                              {plan.lotNo && (
-                                                <Typography
-                                                  variant="caption"
-                                                  sx={{
-                                                    display: 'block',
-                                                    color: 'text.secondary',
-                                                  }}
-                                                >
-                                                  LOT: {plan.lotNo}
-                                                </Typography>
-                                              )}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
@@ -899,6 +1111,27 @@ const ProductionPlan: React.FC = () => {
                                                   color="info"
                                                   variant="outlined"
                                                 />
+                                              )}
+                                              {/* 거래처 정보 표시 */}
+                                              {plan.customerName && (
+                                                <Box sx={{ mt: 0.5 }}>
+                                                  <Chip
+                                                    label={
+                                                      plan.additionalCustomers && plan.additionalCustomers.length > 0
+                                                        ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
+                                                        : plan.customerName
+                                                    }
+                                                    size="small"
+                                                    color="secondary"
+                                                    variant="outlined"
+                                                    sx={{ cursor: plan.additionalCustomers?.length ? 'pointer' : 'default' }}
+                                                    onClick={() => {
+                                                      if (plan.additionalCustomers && plan.additionalCustomers.length > 0) {
+                                                        alert(`거래처 목록:\n- ${plan.customerName}\n- ${plan.additionalCustomers.join('\n- ')}`);
+                                                      }
+                                                    }}
+                                                  />
+                                                </Box>
                                               )}
                                             </Box>
                                             <Box
@@ -979,6 +1212,7 @@ const ProductionPlan: React.FC = () => {
         selectedDate={selectedDate}
         formData={formData}
         equipments={equipments}
+        workplaceWorkers={workplaceWorkers}
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}

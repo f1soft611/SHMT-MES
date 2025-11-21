@@ -176,4 +176,36 @@ public interface EgovProcessService {
 	 * @throws Exception
 	 */
 	boolean isProcessCodeExistsForUpdate(String processId, String processCode) throws Exception;
+
+	/**
+	 * 공정별 설비 목록을 조회한다.
+	 * 
+	 * @param processEquipmentVO
+	 * @exception Exception
+	 */
+	public List<ProcessEquipmentVO> selectProcessEquipmentList(ProcessEquipmentVO processEquipmentVO) throws Exception;
+
+	/**
+	 * 공정별 설비를 등록한다.
+	 * 
+	 * @param processEquipment
+	 * @exception Exception
+	 */
+	public void insertProcessEquipment(ProcessEquipment processEquipment) throws Exception;
+
+	/**
+	 * 공정별 설비를 수정한다.
+	 * 
+	 * @param processEquipment
+	 * @exception Exception
+	 */
+	public void updateProcessEquipment(ProcessEquipment processEquipment) throws Exception;
+
+	/**
+	 * 공정별 설비를 삭제한다.
+	 * 
+	 * @param processEquipmentId
+	 * @exception Exception
+	 */
+	public void deleteProcessEquipment(String processEquipmentId) throws Exception;
 }

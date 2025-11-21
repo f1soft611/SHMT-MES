@@ -1,4 +1,4 @@
-package egovframework.let.basedata.workplace.domain.model;
+package egovframework.let.basedata.process.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -8,9 +8,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.io.Serializable;
 
 /**
- * 작업장별 작업자 관리를 위한 데이터 모델 클래스
+ * 공정별 설비 데이터 모델 클래스
  * @author SHMT-MES
- * @since 2025.10.21
+ * @since 2025.11.20
  * @version 1.0
  * @see
  *
@@ -19,14 +19,14 @@ import java.io.Serializable;
  *
  *   수정일      수정자           수정내용
  *  -------    --------    ---------------------------
- *   2025.10.21 SHMT-MES          최초 생성
+ *   2025.11.20 SHMT-MES          최초 생성
  *
  * </pre>
  */
-@Schema(description = "작업장 작업자 모델")
+@Schema(description = "공정별 설비 모델")
 @Getter
 @Setter
-public class WorkplaceWorker implements Serializable {
+public class ProcessEquipment implements Serializable {
 
 	/**
 	 *  serialVersion UID
@@ -36,29 +36,38 @@ public class WorkplaceWorker implements Serializable {
 	@Schema(description = "회사 코드")
 	private String factoryCode = "000001";
 
-	@Schema(description = "작업장 ID")
-	private String workplaceId = "";
+	@Schema(description = "공정 ID")
+	private String processId = "";
 
-	@Schema(description = "작업장 코드")
-	private String workplaceCode = "";
+	@Schema(description = "공정 코드")
+	private String processCode = "";
 
-	@Schema(description = "작업자 ID")
-	private String workerId = "";
+	@Schema(description = "공정 설비 ID")
+	private String processEquipmentId = "";
 
-	@Schema(description = "작업자 Code")
-	private String workerCode = "";
+	@Schema(description = "설비 시스템 코드")
+	private String equipSysCd = "";
 
-	@Schema(description = "작업자명")
-	private String workerName = "";
+	@Schema(description = "설비 코드")
+	private String equipCd = "";
 
-	@Schema(description = "근무구분 (DAY/NIGHT/SWING)")
-	private String position = "";
+	@Schema(description = "설비명")
+	private String equipmentName = "";
 
-	@Schema(description = "역할 (LEADER/MEMBER)")
-	private String role = "";
+	@Schema(description = "설비 규격")
+	private String equipSpec = "";
+
+	@Schema(description = "설비 구조")
+	private String equipStruct = "";
+
+	@Schema(description = "위치")
+	private String location = "";
+
+	@Schema(description = "설명")
+	private String description = "";
 
 	@Schema(description = "사용 여부 (Y/N)")
-	private String useYn = "Y";
+	private String useYn = "";
 
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";

@@ -1,0 +1,187 @@
+# 백엔드 구현 완료 요약
+
+## 구현된 기능
+
+이슈 #185에서 요청하신 미구현 백엔드 기능을 모두 구현했습니다.
+
+### 1. 데이터베이스 저장 구현 ✅
+
+**생성된 테이블**:
+- **TPR301M**: 생산계획 마스터 (계획번호, 작업장, 총 수량 등)
+- **TPR301**: 생산계획 상세 (품목, 수량, 설비, 작업자, 근무구분 등)
+- **TPR301R**: 생산계획 실적 (실적수량, 양품/불량, 작업시간 등)
+
+**구현 특징**:
+- 3개 테이블 간 트랜잭션 처리 완벽 구현
+- MyBatis 매퍼 개발 완료
+- MSSQL과 MySQL 양쪽 지원
+- CHECK 제약조건으로 데이터 무결성 보장
+- CASCADE DELETE로 참조 무결성 유지
+
+### 2. 근무구분 자동 설정 ✅
+
+**변경 사항**:
+- WorkplaceWorker 테이블(TPR106)에 `SHIFT` 컬럼 추가
+- 백엔드 모델 클래스에 shift 필드 추가
+- MyBatis 매퍼의 모든 CRUD 쿼리에 shift 반영
+- 프론트엔드 TypeScript 타입 정의 업데이트
+
+**지원되는 근무구분**:
+- DAY (주간)
+- NIGHT (야간)
+- SWING (교대)
+
+### 3. REST API 엔드포인트 ✅
+
+```
+GET    /api/production-plans              # 생산계획 목록 조회
+GET    /api/production-plans/{planNo}     # 생산계획 상세 조회
+POST   /api/production-plans              # 생산계획 등록
+PUT    /api/production-plans/{planNo}     # 생산계획 수정
+DELETE /api/production-plans/{planNo}     # 생산계획 삭제
+```
+
+**POST 요청 예시**:
+```json
+{
+  "master": {
+    "planDate": "20251121",
+    "workplaceCode": "WP001",
+    "workplaceName": "작업장1"
+  },
+  "details": [
+    {
+      "planDate": "20251121",
+      "itemCode": "ITEM001",
+      "itemName": "품목명",
+      "plannedQty": 100,
+      "equipmentCode": "EQ001",
+      "shift": "DAY",
+      "workerCode": "W001"
+    }
+  ]
+}
+```
+
+## 파일 구조
+
+```
+backend/
+├── DATABASE/
+│   ├── production_plan_ddl_mssql.sql               # 생산계획 테이블 생성 (MSSQL)
+│   ├── production_plan_ddl_mysql.sql               # 생산계획 테이블 생성 (MySQL)
+│   ├── workplace_migration_add_shift_mssql.sql     # 근무구분 컬럼 추가 (MSSQL)
+│   └── workplace_migration_add_shift_mysql.sql     # 근무구분 컬럼 추가 (MySQL)
+│
+├── src/main/java/egovframework/let/production/plan/
+│   ├── controller/
+│   │   └── EgovProductionPlanApiController.java    # REST API 컨트롤러
+│   ├── service/
+│   │   ├── EgovProductionPlanService.java          # 서비스 인터페이스
+│   │   └── impl/
+│   │       └── EgovProductionPlanServiceImpl.java  # 서비스 구현 (트랜잭션 관리)
+│   └── domain/
+│       ├── model/
+│       │   ├── ProductionPlanMaster.java           # 마스터 모델
+│       │   ├── ProductionPlan.java                 # 상세 모델
+│       │   └── ProductionPlanVO.java               # 검색용 VO
+│       └── repository/
+│           └── ProductionPlanDAO.java              # DAO 인터페이스
+│
+├── src/main/resources/egovframework/mapper/let/production/plan/
+│   └── ProductionPlan_SQL_mssql.xml                # MyBatis 매퍼
+│
+└── PRODUCTION_PLAN_IMPLEMENTATION.md               # 상세 구현 가이드
+```
+
+## 주요 기능
+
+### 트랜잭션 관리
+- Spring `@Transactional` 어노테이션 사용
+- 마스터와 상세를 하나의 트랜잭션으로 처리
+- 롤백 시 전체 데이터 일관성 보장
+
+### 계획번호 자동 생성
+- 형식: `PL + YYYYMMDD + 0001`
+- 예시: `PL202511210001`
+- 날짜별 순번 자동 증가
+
+### 데이터 검증
+- CHECK 제약조건으로 유효한 상태만 허용
+  - PLANNED (계획됨)
+  - CONFIRMED (확정)
+  - IN_PROGRESS (진행중)
+  - COMPLETED (완료)
+  - CANCELLED (취소)
+
+### 논리적 삭제
+- 물리적 삭제 대신 `USE_YN = 'N'` 설정
+- 데이터 이력 보존
+
+## 배포 방법
+
+### 1. 데이터베이스 마이그레이션
+
+**MSSQL**:
+```sql
+-- 근무구분 컬럼 추가
+\i backend/DATABASE/workplace_migration_add_shift_mssql.sql
+
+-- 생산계획 테이블 생성
+\i backend/DATABASE/production_plan_ddl_mssql.sql
+```
+
+**MySQL**:
+```sql
+-- 근무구분 컬럼 추가
+source backend/DATABASE/workplace_migration_add_shift_mysql.sql;
+
+-- 생산계획 테이블 생성
+source backend/DATABASE/production_plan_ddl_mysql.sql;
+```
+
+### 2. 애플리케이션 빌드 및 배포
+
+```bash
+cd backend
+mvn clean package
+# WAR 파일을 서버에 배포
+```
+
+### 3. API 테스트
+
+Swagger UI에서 테스트:
+- URL: `http://localhost:8080/swagger-ui.html`
+- Controller: `EgovProductionPlanApiController`
+
+## 보안
+
+- JWT 인증 필수
+- 모든 API 엔드포인트에 `@SecurityRequirement` 적용
+- 사용자 정보 자동 주입으로 등록자/수정자 추적
+- CodeQL 스캔 통과 (취약점 없음)
+
+## 코드 품질
+
+✅ 모든 코드 리뷰 피드백 반영
+✅ 상수 추출로 유지보수성 향상
+✅ 문서화 완료
+✅ XML 구문 검증 완료
+✅ 보안 취약점 없음
+
+## 다음 단계
+
+이 구현으로 다음 작업이 가능합니다:
+
+1. **프론트엔드 연동**: API를 호출하여 실제 데이터 저장
+2. **승인 워크플로우**: PLAN_STATUS를 활용한 결재 프로세스
+3. **실적 관리**: TPR301R 테이블을 활용한 생산실적 입력
+4. **분석 리포트**: 계획 대비 실적 분석
+
+## 참고 문서
+
+- **상세 구현 가이드**: `backend/PRODUCTION_PLAN_IMPLEMENTATION.md`
+- **API 명세**: Swagger UI
+- **데이터베이스 스키마**: DDL 파일 참조
+
+구현에 대한 질문이나 추가 요청사항이 있으시면 이슈에 코멘트 남겨주세요.

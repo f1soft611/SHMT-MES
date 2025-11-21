@@ -12,6 +12,7 @@
 		<result property="workplaceProcessId" column="WORK_ID"/>
 		<result property="processSeq" column="WORK_SEQ"/>
 		<result property="useYn" column="USE_YN"/>
+		<result property="equipmentIntegrationYn" column="EQUIPMENT_INTEGRATION_YN"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
 		<result property="regDt" column="OPTIME"/>
 		<result property="updUserId" column="OPMAN_CODE2"/>
@@ -20,29 +21,33 @@
 
 	<select id="WorkplaceProcessDAO.selectWorkplaceProcessList" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceProcessVO" resultMap="workplaceProcessResult">
 		SELECT
-		FACTORY_CODE,
-		WORKCENTER_ID,
-		WORKCENTER_CODE,
-		WORK_CODE,
-		WORK_NAME,
-		WORK_ID,
-		USE_YN,
-		OPMAN_CODE,
-		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
-		OPMAN_CODE2,
-		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
-		FROM TPR103
+		A.FACTORY_CODE,
+		A.WORKCENTER_ID,
+		A.WORKCENTER_CODE,
+		A.WORK_CODE,
+		A.WORK_NAME,
+		A.WORK_ID,
+		A.USE_YN,
+		PR.EQUIPMENT_INTEGRATION_YN,
+		A.OPMAN_CODE,
+		CONVERT(VARCHAR(19), A.OPTIME, 120) AS OPTIME,
+		A.OPMAN_CODE2,
+		CONVERT(VARCHAR(19), A.OPTIME2, 120) AS OPTIME2
+		FROM TPR103 A
+			INNER JOIN TPR102 PR
+			ON A.FACTORY_CODE = PR.FACTORY_CODE
+			AND A.WORK_CODE = PR.WORK_CODE
 		WHERE 1=1
 		<if test="workplaceCode != null and workplaceCode != ''">
-			AND WORKCENTER_CODE = #{workplaceCode}
+			AND A.WORKCENTER_CODE = #{workplaceCode}
 		</if>
 		<if test="processCode != null and processCode != ''">
-			AND WORK_CODE = #{processCode}
+			AND A.WORK_CODE = #{processCode}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND USE_YN = #{useYn}
+			AND A.USE_YN = #{useYn}
 		</if>
-		ORDER BY OPTIME
+		ORDER BY A.OPTIME
 	</select>
 
 	<insert id="WorkplaceProcessDAO.insertWorkplaceProcess" parameterType="egovframework.let.basedata.workplace.domain.model.WorkplaceProcess">

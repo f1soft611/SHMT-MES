@@ -29,6 +29,8 @@ export interface ProductionRequest {
   registrant?: string;             // 등록자
   registTime?: string;             // 등록시간
   registDate?: string;             // 등록일자
+  customerCode?: string;           // 거래처 코드
+  customerName?: string;           // 거래처명
 }
 
 /**

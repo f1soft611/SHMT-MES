@@ -6,6 +6,7 @@
 
 	<!-- 로그인 처리를 위한 resultMap -->
 	<resultMap id="login" type="egovframework.com.cmm.LoginVO">
+		<result property="factoryCode" column="factoryCode"/>
 		<result property="id" column="id"/>
 		<result property="name" column="name"/>
 		<result property="ihidNum" column="ihidNum"/>
@@ -32,6 +33,7 @@
 	<!-- 일반 로그인 -->
 	<select id="actionLogin" resultMap="login">
 		SELECT
+		    '000001'		   AS factoryCode,
 			a.ESNTL_ID         AS id,
 			a.USER_NM          AS name,
 			a.PASSWORD         AS password,
