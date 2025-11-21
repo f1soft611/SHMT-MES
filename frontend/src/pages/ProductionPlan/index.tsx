@@ -67,7 +67,6 @@ interface ProductionPlanData {
   orderNo?: string;
   orderSeqno?: number;
   orderHistno?: number;
-  lotNo?: string;
   workplaceCode?: string;
   workplaceName?: string;
   workerCode?: string;
@@ -145,7 +144,6 @@ const ProductionPlan: React.FC = () => {
     equipmentName: '',
     shift: 'DAY',
     remark: '',
-    lotNo: '',
   });
 
   const [searchValues, setSearchValues] = useState({
@@ -421,10 +419,9 @@ const ProductionPlan: React.FC = () => {
       itemName: '',
       plannedQty: 0,
       equipmentCode: equipmentCode || '',
-      equipmentName: '',
+      equipmentName: equipments.find(e => e.equipCd === equipmentCode)?.equipmentName || '',
       shift: 'DAY',
       remark: '',
-      lotNo: '',
       workplaceCode: selectedWorkplace,
       workplaceName: workplaces.find(w => w.workplaceCode === selectedWorkplace)?.workplaceName || '',
     });
@@ -1079,17 +1076,6 @@ const ProductionPlan: React.FC = () => {
                                               >
                                                 {plan.itemName}
                                               </Typography>
-                                              {plan.lotNo && (
-                                                <Typography
-                                                  variant="caption"
-                                                  sx={{
-                                                    display: 'block',
-                                                    color: 'text.secondary',
-                                                  }}
-                                                >
-                                                  LOT: {plan.lotNo}
-                                                </Typography>
-                                              )}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
