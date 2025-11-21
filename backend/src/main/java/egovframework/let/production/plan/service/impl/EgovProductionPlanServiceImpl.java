@@ -1,5 +1,7 @@
 package egovframework.let.production.plan.service.impl;
 
+import egovframework.com.cmm.LoginVO;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
@@ -12,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Service("egovProductionPlanService")
 @RequiredArgsConstructor
-public class EgovProductionPlanServiceImpl implements EgovProductionPlanService {
+public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl implements EgovProductionPlanService {
 
 	private final ProductionPlanDAO productionPlanDAO;
 
@@ -78,13 +78,14 @@ public class EgovProductionPlanServiceImpl implements EgovProductionPlanService 
 	 * 생산계획 마스터 목록을 조회한다.
 	 */
 	@Override
-	public Map<String, Object> selectProductionPlanMasterList(ProductionPlanVO searchVO, String userId) throws Exception {
+	public Map<String, Object> selectProductionPlanMasterList(ProductionPlanVO searchVO, LoginVO user) throws Exception {
 		List<ProductionPlanMaster> resultList = productionPlanDAO.selectProductionPlanMasterList(searchVO);
 		int totCnt = productionPlanDAO.selectProductionPlanMasterListTotCnt(searchVO);
 		
 		Map<String, Object> map = new HashMap<>();
 		map.put("resultList", resultList);
 		map.put("resultCnt", String.valueOf(totCnt));
+		map.put("user", user);
 		
 		return map;
 	}

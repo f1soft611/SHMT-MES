@@ -22,7 +22,6 @@ export interface WorkplaceWorker {
   workerName: string;
   position?: string;
   role?: string;
-  shift?: string;
   useYn?: string;
   regUserId?: string;
   regDt?: string;

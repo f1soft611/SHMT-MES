@@ -60,6 +60,9 @@ public class WorkplaceProcess implements Serializable {
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "";
 
+	@Schema(description = "설비연동공정 여부 (Y/N)")
+	private String equipmentIntegrationYn = "";
+
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";
 

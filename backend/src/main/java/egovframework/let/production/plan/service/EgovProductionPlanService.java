@@ -1,5 +1,6 @@
 package egovframework.let.production.plan.service;
 
+import egovframework.com.cmm.LoginVO;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
@@ -37,11 +38,11 @@ public interface EgovProductionPlanService {
 	/**
 	 * 생산계획 마스터 목록을 조회한다.
 	 * @param searchVO 검색 조건
-	 * @param userId 사용자 ID
+	 * @param user 사용자 VO
 	 * @return 생산계획 마스터 목록과 총 건수
 	 * @throws Exception
 	 */
-	Map<String, Object> selectProductionPlanMasterList(ProductionPlanVO searchVO, String userId) throws Exception;
+	Map<String, Object> selectProductionPlanMasterList(ProductionPlanVO searchVO, LoginVO user) throws Exception;
 
 	/**
 	 * 생산계획 상세 목록을 조회한다.

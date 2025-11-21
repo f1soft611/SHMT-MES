@@ -51,14 +51,11 @@ public class WorkplaceWorker implements Serializable {
 	@Schema(description = "작업자명")
 	private String workerName = "";
 
-	@Schema(description = "직책")
+	@Schema(description = "근무구분 (DAY/NIGHT/SWING)")
 	private String position = "";
 
 	@Schema(description = "역할 (LEADER/MEMBER)")
 	private String role = "";
-
-	@Schema(description = "근무구분 (DAY/NIGHT/SWING)")
-	private String shift = "";
 
 	@Schema(description = "사용 여부 (Y/N)")
 	private String useYn = "Y";

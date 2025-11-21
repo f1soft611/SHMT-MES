@@ -71,7 +71,7 @@ public class EgovProductionPlanApiController {
 			@ModelAttribute ProductionPlanVO searchVO,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		Map<String, Object> resultMap = productionPlanService.selectProductionPlanMasterList(searchVO, user.getUniqId());
+		Map<String, Object> resultMap = productionPlanService.selectProductionPlanMasterList(searchVO, user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
@@ -145,8 +145,9 @@ public class EgovProductionPlanApiController {
 		String planNo = productionPlanService.insertProductionPlan(master, planList);
 
 		Map<String, Object> resultMap = new HashMap<>();
-		resultMap.put("planNo", planNo);
 		resultMap.put("message", "생산계획이 등록되었습니다.");
+		resultMap.put("planNo", planNo);
+		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
@@ -193,6 +194,7 @@ public class EgovProductionPlanApiController {
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 수정되었습니다.");
+		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
@@ -230,6 +232,7 @@ public class EgovProductionPlanApiController {
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 삭제되었습니다.");
+		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
