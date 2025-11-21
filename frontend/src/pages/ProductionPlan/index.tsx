@@ -194,8 +194,19 @@ const ProductionPlan: React.FC = () => {
     return filter;
   };
 
-  // localStorage에서 저장된 필터 로드 또는 기본값 사용
-  const loadVisibleDaysFromStorage = (): boolean[] => {
+  // localStorage에 필터 저장하는 헬퍼 함수
+  const saveFilterToStorage = (filter: boolean[]) => {
+    try {
+      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
+      localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+    } catch (error) {
+      console.error('Failed to save day filter to localStorage:', error);
+    }
+  };
+
+  // 날짜가 변경되었는지 확인하고 필터 초기화하는 함수
+  const checkAndResetIfDateChanged = (): boolean[] | null => {
     try {
       const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
       const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
@@ -203,26 +214,36 @@ const ProductionPlan: React.FC = () => {
       // 날짜가 변경되었으면 기본 3일로 초기화
       if (lastAccessDate && lastAccessDate !== currentDate) {
         const default3Days = getDefault3DaysFilter();
-        localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(default3Days));
-        localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+        saveFilterToStorage(default3Days);
         return default3Days;
       }
+    } catch (error) {
+      console.error('Failed to check date change:', error);
+    }
+    return null;
+  };
+
+  // localStorage에서 저장된 필터 로드 또는 기본값 사용
+  const loadVisibleDaysFromStorage = (): boolean[] => {
+    try {
+      // 날짜 변경 확인
+      const resetFilter = checkAndResetIfDateChanged();
+      if (resetFilter) {
+        return resetFilter;
+      }
       
-      // 날짜가 같으면 저장된 필터 로드
-      if (lastAccessDate === currentDate) {
-        const saved = localStorage.getItem(STORAGE_KEY_DAY_FILTER);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length === 7) {
-            return parsed;
-          }
+      // 저장된 필터 로드
+      const saved = localStorage.getItem(STORAGE_KEY_DAY_FILTER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === 7) {
+          return parsed;
         }
       }
       
       // 첫 방문이거나 데이터가 없으면 기본 3일로 초기화
       const default3Days = getDefault3DaysFilter();
-      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(default3Days));
-      localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+      saveFilterToStorage(default3Days);
       return default3Days;
     } catch (error) {
       console.error('Failed to load day filter from localStorage:', error);
@@ -240,14 +261,9 @@ const ProductionPlan: React.FC = () => {
     
     // 날짜 변경 체크를 위한 interval 설정 (1시간마다)
     const checkDateInterval = setInterval(() => {
-      const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
-      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
-      
-      if (lastAccessDate && lastAccessDate !== currentDate) {
-        const default3Days = getDefault3DaysFilter();
-        setVisibleDays(default3Days);
-        localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(default3Days));
-        localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+      const resetFilter = checkAndResetIfDateChanged();
+      if (resetFilter) {
+        setVisibleDays(resetFilter);
       }
     }, 3600000); // 1시간 = 3600000ms
     
@@ -362,26 +378,14 @@ const ProductionPlan: React.FC = () => {
     const newVisibleDays = [...visibleDays];
     newVisibleDays[dayIndex] = !newVisibleDays[dayIndex];
     setVisibleDays(newVisibleDays);
-    
-    // localStorage에 저장
-    try {
-      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(newVisibleDays));
-      localStorage.setItem(STORAGE_KEY_LAST_DATE, formatDate(new Date(), 'YYYY-MM-DD'));
-    } catch (error) {
-      console.error('Failed to save day filter to localStorage:', error);
-    }
+    saveFilterToStorage(newVisibleDays);
   };
 
   const toggleAllDays = (visible: boolean) => {
     const newVisibleDays = visibleDays.map(() => visible);
     setVisibleDays(newVisibleDays);
-    
-    // localStorage에 저장
-    try {
-      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(newVisibleDays));
-      localStorage.setItem(STORAGE_KEY_LAST_DATE, formatDate(new Date(), 'YYYY-MM-DD'));
-    } catch (error) {
-      console.error('Failed to save day filter to localStorage:', error);
+    saveFilterToStorage(newVisibleDays);
+  };
     }
   };
 
@@ -684,12 +688,7 @@ const ProductionPlan: React.FC = () => {
                   onClick={() => {
                     const default3Days = getDefault3DaysFilter();
                     setVisibleDays(default3Days);
-                    try {
-                      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(default3Days));
-                      localStorage.setItem(STORAGE_KEY_LAST_DATE, formatDate(new Date(), 'YYYY-MM-DD'));
-                    } catch (error) {
-                      console.error('Failed to save day filter to localStorage:', error);
-                    }
+                    saveFilterToStorage(default3Days);
                   }}
                   color="info"
                 >
