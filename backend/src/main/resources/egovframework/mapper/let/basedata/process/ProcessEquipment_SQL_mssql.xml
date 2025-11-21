@@ -97,7 +97,6 @@
 		SELECT COUNT(*) AS CNT
 		FROM TPR104
 		WHERE FACTORY_CODE = #{factoryCode}
-		AND WORK_CODE = #{processCode}
 		AND EQUIP_SYS_CD = #{equipSysCd}
 		<if test="processEquipmentId != null and processEquipmentId != ''">
 			AND EQUIPMENT_ID != #{processEquipmentId}

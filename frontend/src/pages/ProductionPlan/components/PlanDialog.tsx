@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import {
   Link as LinkIcon,
-  Info as InfoIcon,
   Inventory as InventoryIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';

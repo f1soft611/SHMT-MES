@@ -45,37 +45,37 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
+    const loadItems = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await itemService.getItemList(page, pageSize, {
+          searchCnd: 'itemName',
+          searchWrd: searchKeyword,
+          useYn: 'Y',
+        });
+
+        if (response.resultCode === 200 && response.result?.resultList) {
+          setItems(response.result.resultList);
+          setTotalCount(
+            response.result.paginationInfo?.totalRecordCount ||
+              response.result.resultList.length
+          );
+        } else {
+          setError('품목 목록을 불러오는데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('Failed to load items:', error);
+        setError('품목 목록을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (open) {
       loadItems();
     }
   }, [open, page, pageSize, searchKeyword]);
-
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await itemService.getItemList(page, pageSize, {
-        searchCnd: 'itemName',
-        searchWrd: searchKeyword,
-        useYn: 'Y',
-      });
-
-      if (response.resultCode === 200 && response.result?.resultList) {
-        setItems(response.result.resultList);
-        setTotalCount(
-          response.result.paginationInfo?.totalRecordCount ||
-            response.result.resultList.length
-        );
-      } else {
-        setError('품목 목록을 불러오는데 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Failed to load items:', error);
-      setError('품목 목록을 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = () => {
     setPage(0);

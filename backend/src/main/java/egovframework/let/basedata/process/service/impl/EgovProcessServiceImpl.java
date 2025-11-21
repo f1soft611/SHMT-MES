@@ -253,7 +253,7 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 		// 중복 체크
 		int duplicateCount = processEquipmentDAO.checkProcessEquipmentDuplicate(processEquipment);
 		if (duplicateCount > 0) {
-			throw new Exception("이미 등록된 설비입니다. (공장코드: " + processEquipment.getFactoryCode() + 
+			throw new Exception("이미 등록된 설비입니다. (회사코드: " + processEquipment.getFactoryCode() +
 					", 공정코드: " + processEquipment.getProcessCode() + 
 					", 설비시스템코드: " + processEquipment.getEquipSysCd() + ")");
 		}
@@ -272,7 +272,7 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 		// 중복 체크 (자기 자신 제외)
 		int duplicateCount = processEquipmentDAO.checkProcessEquipmentDuplicate(processEquipment);
 		if (duplicateCount > 0) {
-			throw new Exception("이미 등록된 설비입니다. (공장코드: " + processEquipment.getFactoryCode() + 
+			throw new Exception("이미 등록된 설비입니다. (회사코드: " + processEquipment.getFactoryCode() +
 					", 공정코드: " + processEquipment.getProcessCode() + 
 					", 설비시스템코드: " + processEquipment.getEquipSysCd() + ")");
 		}
