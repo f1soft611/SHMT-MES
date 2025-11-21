@@ -63,14 +63,6 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     } catch (error) {
       console.error('Failed to load items:', error);
       setError('품목 목록을 불러오는 중 오류가 발생했습니다.');
-      // Mock 데이터로 폴백
-      const mockItems: Item[] = [
-        { itemCode: 'ITEM001', itemName: '테스트 품목 1', unit: 'EA', specification: '규격1' },
-        { itemCode: 'ITEM002', itemName: '테스트 품목 2', unit: 'EA', specification: '규격2' },
-        { itemCode: 'ITEM003', itemName: '테스트 품목 3', unit: 'KG', specification: '규격3' },
-      ];
-      setItems(mockItems);
-      setTotalCount(mockItems.length);
     } finally {
       setLoading(false);
     }
@@ -87,7 +79,8 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       return;
     }
 
-    const selectedItem = items.find((item) => item.itemCode === selectionModel[0]);
+    const selectedItemCode = String(selectionModel[0]);
+    const selectedItem = items.find((item) => item.itemCode === selectedItemCode);
     if (!selectedItem) {
       setError('선택한 품목을 찾을 수 없습니다.');
       return;
