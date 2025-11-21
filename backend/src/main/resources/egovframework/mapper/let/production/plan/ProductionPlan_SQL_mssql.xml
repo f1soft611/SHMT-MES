@@ -66,7 +66,7 @@
 			#{planDate},
 			#{workplaceCode},
 			#{workplaceName},
-			ISNULL(#{planStatus}, 'PLANNED'),
+			ISNULL(#{planStatus}, 'PLANNED'),  -- Default matches ProductionPlanMaster.STATUS_PLANNED
 			ISNULL(#{totalPlanQty}, 0),
 			#{remark},
 			ISNULL(#{useYn}, 'Y'),

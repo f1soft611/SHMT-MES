@@ -38,6 +38,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EgovProductionPlanServiceImpl implements EgovProductionPlanService {
 
+	// 계획번호 생성 상수
+	private static final String PLAN_NO_PREFIX = "PL";
+	private static final String PLAN_NO_DATE_FORMAT = "yyyyMMdd";
+	private static final int PLAN_NO_SEQUENCE_LENGTH = 4;
+
 	private final ProductionPlanDAO productionPlanDAO;
 
 	@Resource(name = "egovIdGnrService")
@@ -50,9 +55,10 @@ public class EgovProductionPlanServiceImpl implements EgovProductionPlanService 
 	@Transactional
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
 		// 계획번호 생성 (날짜 + 시퀀스)
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		SimpleDateFormat sdf = new SimpleDateFormat(PLAN_NO_DATE_FORMAT);
 		String dateStr = sdf.format(new Date());
-		String planNo = "PL" + dateStr + String.format("%04d", idgenService.getNextIntegerId("TPR301M"));
+		String planNo = PLAN_NO_PREFIX + dateStr + String.format("%0" + PLAN_NO_SEQUENCE_LENGTH + "d", 
+				idgenService.getNextIntegerId("TPR301M"));
 		
 		master.setPlanNo(planNo);
 		
@@ -140,12 +146,13 @@ public class EgovProductionPlanServiceImpl implements EgovProductionPlanService 
 	}
 
 	/**
-	 * 생산계획을 삭제한다. (마스터 삭제 시 상세도 함께 삭제)
+	 * 생산계획을 삭제한다. (마스터 삭제 시 상세도 함께 논리적 삭제)
 	 */
 	@Override
 	@Transactional
 	public void deleteProductionPlan(ProductionPlanMaster master) throws Exception {
-		// 마스터 삭제 (논리적 삭제, CASCADE로 상세도 함께 삭제됨)
+		// 마스터 논리적 삭제 (USE_YN = 'N' 설정)
+		// 상세 데이터는 외래키 CASCADE 옵션에 의해 함께 논리적 삭제됨
 		productionPlanDAO.deleteProductionPlanMaster(master);
 	}
 }

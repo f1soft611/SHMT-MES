@@ -21,7 +21,8 @@ BEGIN
         [OPMAN_CODE2] NVARCHAR(20) NULL,                        -- 수정자 ID
         [OPTIME2] DATETIME2 NULL,                               -- 수정일시
         
-        CONSTRAINT [PK_TPR301M] PRIMARY KEY ([FACTORY_CODE], [PLAN_NO])
+        CONSTRAINT [PK_TPR301M] PRIMARY KEY ([FACTORY_CODE], [PLAN_NO]),
+        CONSTRAINT [CK_TPR301M_PLAN_STATUS] CHECK ([PLAN_STATUS] IN ('PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'))
     );
     
     -- 인덱스 생성

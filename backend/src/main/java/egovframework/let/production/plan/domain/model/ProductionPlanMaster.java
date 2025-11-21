@@ -34,6 +34,13 @@ public class ProductionPlanMaster implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	// 계획상태 상수
+	public static final String STATUS_PLANNED = "PLANNED";
+	public static final String STATUS_CONFIRMED = "CONFIRMED";
+	public static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
+	public static final String STATUS_COMPLETED = "COMPLETED";
+	public static final String STATUS_CANCELLED = "CANCELLED";
+
 	@Schema(description = "회사 코드")
 	private String factoryCode = "000001";
 
@@ -50,7 +57,7 @@ public class ProductionPlanMaster implements Serializable {
 	private String workplaceName = "";
 
 	@Schema(description = "계획상태 (PLANNED/CONFIRMED/IN_PROGRESS/COMPLETED/CANCELLED)")
-	private String planStatus = "PLANNED";
+	private String planStatus = STATUS_PLANNED;
 
 	@Schema(description = "총 계획수량")
 	private BigDecimal totalPlanQty = BigDecimal.ZERO;
