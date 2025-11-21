@@ -50,6 +50,13 @@ import { Equipment } from '../../types/equipment';
 import { Workplace, WorkplaceWorker } from '../../types/workplace';
 import PlanDialog from './components/PlanDialog';
 
+// localStorage 키 상수
+const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
+const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
+
+// 시간 상수
+const ONE_HOUR_MS = 60 * 60 * 1000; // 1시간 = 3600000ms
+
 interface ProductionPlanData {
   id?: string;
   date: string;
@@ -160,10 +167,6 @@ const ProductionPlan: React.FC = () => {
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
 
-  // localStorage 키
-  const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
-  const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
-
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
   const getDefault3DaysFilter = (): boolean[] => {
     const today = new Date();
@@ -252,23 +255,22 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  // 요일별 표시 상태 (월~일)
-  const [visibleDays, setVisibleDays] = useState<boolean[]>(loadVisibleDaysFromStorage);
+  // 요일별 표시 상태 (월~일) - lazy initialization
+  const [visibleDays, setVisibleDays] = useState<boolean[]>(() => loadVisibleDaysFromStorage());
   const [showDayFilter, setShowDayFilter] = useState(false);
 
   useEffect(() => {
     loadWorkplaces();
     
-    // 날짜 변경 체크를 위한 interval 설정 (1시간마다)
+    // 날짜 변경 체크를 위한 interval 설정
     const checkDateInterval = setInterval(() => {
       const resetFilter = checkAndResetIfDateChanged();
       if (resetFilter) {
         setVisibleDays(resetFilter);
       }
-    }, 3600000); // 1시간 = 3600000ms
+    }, ONE_HOUR_MS);
     
     return () => clearInterval(checkDateInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
