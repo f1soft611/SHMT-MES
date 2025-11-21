@@ -386,8 +386,6 @@ const ProductionPlan: React.FC = () => {
     setVisibleDays(newVisibleDays);
     saveFilterToStorage(newVisibleDays);
   };
-    }
-  };
 
   const getWeekDays = (): Date[] => {
     const days: Date[] = [];
