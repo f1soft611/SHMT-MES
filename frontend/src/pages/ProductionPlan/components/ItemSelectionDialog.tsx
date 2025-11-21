@@ -40,7 +40,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     if (open) {
       loadItems();
     }
-  }, [open, page, pageSize]);
+  }, [open, page, pageSize, searchKeyword]);
 
   const loadItems = async () => {
     try {
@@ -78,20 +78,23 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
 
   const handleSearch = () => {
     setPage(0);
-    loadItems();
+    // searchKeyword state change will trigger useEffect to reload items
   };
 
   const handleSelect = () => {
     if (selectionModel.length === 0) {
-      alert('품목을 선택해주세요.');
+      setError('품목을 선택해주세요.');
       return;
     }
 
     const selectedItem = items.find((item) => item.itemCode === selectionModel[0]);
-    if (selectedItem) {
-      onSelect(selectedItem);
-      handleClose();
+    if (!selectedItem) {
+      setError('선택한 품목을 찾을 수 없습니다.');
+      return;
     }
+    
+    onSelect(selectedItem);
+    handleClose();
   };
 
   const handleClose = () => {

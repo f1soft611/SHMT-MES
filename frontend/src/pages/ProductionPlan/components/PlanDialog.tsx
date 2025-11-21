@@ -146,7 +146,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleSelectItem = (item: Item) => {
-    console.log('Selected item:', item);
     setSelectedItem(item);
 
     const updates = {
