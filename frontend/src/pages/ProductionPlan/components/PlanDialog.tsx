@@ -15,7 +15,6 @@ import {
   Box,
   Typography,
   Chip,
-  FormHelperText,
 } from '@mui/material';
 import { Link as LinkIcon, Info as InfoIcon, Inventory as InventoryIcon } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
@@ -42,7 +41,6 @@ interface ProductionPlanData {
   orderNo?: string;
   orderSeqno?: number;
   orderHistno?: number;
-  lotNo?: string;
   // 작업장 및 작업자 정보
   workplaceCode?: string;
   workplaceName?: string;
@@ -72,7 +70,6 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   orderNo: yup.string(),
   orderSeqno: yup.number(),
   orderHistno: yup.number(),
-  lotNo: yup.string(),
   workplaceCode: yup.string(),
   workplaceName: yup.string(),
   workerCode: yup.string(),
@@ -146,12 +143,21 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleSelectItem = (item: Item) => {
+    // 품목 선택 시 생산의뢰 선택 초기화
+    setSelectedRequests([]);
     setSelectedItem(item);
 
     const updates = {
       itemCode: item.itemCode || '',
       itemName: item.itemName || '',
       plannedQty: 1, // 기본값
+      // 생산의뢰 정보 초기화
+      orderNo: undefined,
+      orderSeqno: undefined,
+      orderHistno: undefined,
+      customerCode: undefined,
+      customerName: undefined,
+      additionalCustomers: undefined,
     };
 
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
@@ -169,6 +175,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 
     if (requests.length === 0) return;
 
+    // 생산의뢰 선택 시 품목 선택 초기화
+    setSelectedItem(null);
     setSelectedRequests(requests);
     
     // 첫 번째 생산의뢰의 품목 정보를 기준으로 설정
@@ -231,6 +239,40 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogContent sx={{ mt: 2 }}>
             <Stack spacing={3}>
+              {/* 생산의뢰 정보 표시 (연동된 경우) - 상단으로 이동 */}
+              {formData.orderNo && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'success.light',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'success.main',
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ display: 'block', mb: 1, fontWeight: 600 }}
+                  >
+                    연동된 생산의뢰 정보
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Chip
+                      label={`생산의뢰번호: ${formData.orderNo}`}
+                      size="small"
+                      color="primary"
+                    />
+                    {formData.customerName && (
+                      <Chip
+                        label={`거래처: ${formData.customerName}${formData.additionalCustomers && formData.additionalCustomers.length > 0 ? ` 외 ${formData.additionalCustomers.length}건` : ''}`}
+                        size="small"
+                        color="secondary"
+                      />
+                    )}
+                  </Stack>
+                </Box>
+              )}
+
               {/* 생산의뢰 연동 버튼 */}
               {dialogMode === 'create' && (
                 <Box
@@ -360,21 +402,18 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
-              {/* LOT 번호 */}
-              <Controller
-                name="lotNo"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="LOT 번호"
-                    placeholder="LOT 번호를 입력하세요"
-                    error={!!errors.lotNo}
-                    helperText={errors.lotNo?.message}
-                  />
-                )}
+              {/* 작업장 정보 (읽기전용) */}
+              <TextField
+                fullWidth
+                label="작업장"
+                value={formData.workplaceName ? `${formData.workplaceName} (${formData.workplaceCode})` : ''}
+                disabled
+                InputProps={{
+                  readOnly: true,
+                }}
               />
+
+
 
               <Stack direction="row" spacing={2}>
                 <Controller
@@ -426,52 +465,18 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
-              <Stack direction="row" spacing={2}>
-                <Controller
-                  name="equipmentCode"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth required error={!!errors.equipmentCode}>
-                      <InputLabel>설비</InputLabel>
-                      <Select
-                        {...field}
-                        label="설비"
-                        onChange={(e) => {
-                          const selectedEquipment = equipments.find(
-                            (eq) => eq.equipCd === e.target.value
-                          );
-                          field.onChange(e.target.value);
-                          if (selectedEquipment) {
-                            setValue('equipmentName', selectedEquipment.equipmentName);
-                          }
-                        }}
-                      >
-                        {equipments.map((eq) => (
-                          <MenuItem key={eq.equipCd} value={eq.equipCd}>
-                            {eq.equipmentName} ({eq.equipCd})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.equipmentCode && (
-                        <FormHelperText>{errors.equipmentCode.message}</FormHelperText>
-                      )}
-                    </FormControl>
-                  )}
-                />
-                <Controller
-                  name="shift"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControl fullWidth>
-                      <InputLabel>교대</InputLabel>
-                      <Select {...field} label="교대">
-                        <MenuItem value="DAY">주간</MenuItem>
-                        <MenuItem value="NIGHT">야간</MenuItem>
-                      </Select>
-                    </FormControl>
-                  )}
-                />
-              </Stack>
+              {/* 설비 정보 (읽기전용) */}
+              <TextField
+                fullWidth
+                required
+                label="설비"
+                value={formData.equipmentCode ? `${formData.equipmentName || ''} (${formData.equipmentCode})` : ''}
+                disabled
+                InputProps={{
+                  readOnly: true,
+                }}
+                helperText="설비는 계획 추가 버튼 클릭 시 자동으로 설정됩니다."
+              />
 
               {/* 작업자 선택 */}
               {workplaceWorkers.length > 0 && (
@@ -480,10 +485,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   control={control}
                   render={({ field }) => (
                     <FormControl fullWidth>
-                      <InputLabel>작업자</InputLabel>
+                      <InputLabel>작업자 선택</InputLabel>
                       <Select
                         {...field}
-                        label="작업자"
+                        label="작업자 선택"
                         onChange={(e) => {
                           const selectedWorker = workplaceWorkers.find(
                             (w) => w.workerCode === e.target.value
@@ -491,8 +496,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           field.onChange(e.target.value);
                           if (selectedWorker) {
                             setValue('workerName', selectedWorker.workerName);
-                            // 작업자의 근무구분 정보가 있으면 자동 설정
-                            // TODO: WorkplaceWorker 타입에 shift 정보 추가 필요
+                            // 작업자의 근무구분(position) 정보로 shift 자동 설정
+                            if (selectedWorker.position) {
+                              setValue('shift', selectedWorker.position);
+                            }
                           }
                         }}
                       >
@@ -502,6 +509,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         {workplaceWorkers.map((worker) => (
                           <MenuItem key={worker.workerCode} value={worker.workerCode}>
                             {worker.workerName} ({worker.workerCode})
+                            {worker.position && ` - ${
+                              worker.position === 'D' ? '주간' :
+                              worker.position === 'N' ? '야간' :
+                              worker.position === 'A' ? 'A(1교대)' :
+                              worker.position === 'B' ? 'B(2교대)' :
+                              worker.position === 'C' ? 'C(3교대)' : ''
+                            }`}
                           </MenuItem>
                         ))}
                       </Select>
@@ -510,36 +524,33 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 />
               )}
 
-              {/* 거래처 정보 표시 */}
-              {formData.customerName && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: 'grey.50',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'grey.300',
-                  }}
-                >
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    거래처 정보
-                  </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Chip
-                      label={formData.customerName}
-                      size="small"
-                      color="primary"
-                    />
-                    {formData.additionalCustomers && formData.additionalCustomers.length > 0 && (
-                      <Chip
-                        label={`외 ${formData.additionalCustomers.length}건`}
-                        size="small"
-                        color="default"
-                      />
-                    )}
-                  </Stack>
-                </Box>
-              )}
+              {/* 근무구분 (읽기전용) - 작업자 선택 시 자동 세팅 */}
+              <Controller
+                name="shift"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="근무구분"
+                    value={
+                      field.value === 'D' ? 'D - 주간' :
+                      field.value === 'N' ? 'N - 야간' :
+                      field.value === 'A' ? 'A - 1교대' :
+                      field.value === 'B' ? 'B - 2교대' :
+                      field.value === 'C' ? 'C - 3교대' :
+                      field.value === 'DAY' ? '주간' :
+                      field.value === 'NIGHT' ? '야간' :
+                      ''
+                    }
+                    disabled
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                    helperText="근무구분은 작업자 선택 시 자동으로 설정됩니다. (공통코드 COM006)"
+                  />
+                )}
+              />
 
               <Controller
                 name="remark"
@@ -554,33 +565,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   />
                 )}
               />
-
-              {/* 생산의뢰 정보 표시 (연동된 경우) */}
-              {formData.orderNo && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: 'success.light',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'success.main',
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', mb: 1 }}
-                  >
-                    연동된 생산의뢰 정보
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Chip
-                      label={`생산의뢰번호: ${formData.orderNo}`}
-                      size="small"
-                    />
-                  </Stack>
-                </Box>
-              )}
             </Stack>
           </DialogContent>
           <Divider />
