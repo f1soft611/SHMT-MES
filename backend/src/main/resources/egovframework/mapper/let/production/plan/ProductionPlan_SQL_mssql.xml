@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProductionPlanDAO">
+
+	<resultMap id="productionPlanMasterResult" type="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="planNo" column="PLAN_NO"/>
+		<result property="planDate" column="PLAN_DATE"/>
+		<result property="workplaceCode" column="WORKPLACE_CODE"/>
+		<result property="workplaceName" column="WORKPLACE_NAME"/>
+		<result property="planStatus" column="PLAN_STATUS"/>
+		<result property="totalPlanQty" column="TOTAL_PLAN_QTY"/>
+		<result property="remark" column="REMARK"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="opmanCode" column="OPMAN_CODE"/>
+		<result property="optime" column="OPTIME"/>
+		<result property="opmanCode2" column="OPMAN_CODE2"/>
+		<result property="optime2" column="OPTIME2"/>
+	</resultMap>
+
+	<resultMap id="productionPlanResult" type="egovframework.let.production.plan.domain.model.ProductionPlan">
+		<result property="factoryCode" column="FACTORY_CODE"/>
+		<result property="planNo" column="PLAN_NO"/>
+		<result property="planSeq" column="PLAN_SEQ"/>
+		<result property="planDate" column="PLAN_DATE"/>
+		<result property="itemCode" column="ITEM_CODE"/>
+		<result property="itemName" column="ITEM_NAME"/>
+		<result property="plannedQty" column="PLANNED_QTY"/>
+		<result property="actualQty" column="ACTUAL_QTY"/>
+		<result property="equipmentCode" column="EQUIPMENT_CODE"/>
+		<result property="equipmentName" column="EQUIPMENT_NAME"/>
+		<result property="shift" column="SHIFT"/>
+		<result property="workerCode" column="WORKER_CODE"/>
+		<result property="workerName" column="WORKER_NAME"/>
+		<result property="orderNo" column="ORDER_NO"/>
+		<result property="orderSeqno" column="ORDER_SEQNO"/>
+		<result property="orderHistno" column="ORDER_HISTNO"/>
+		<result property="lotNo" column="LOT_NO"/>
+		<result property="customerCode" column="CUSTOMER_CODE"/>
+		<result property="customerName" column="CUSTOMER_NAME"/>
+		<result property="remark" column="REMARK"/>
+		<result property="useYn" column="USE_YN"/>
+		<result property="opmanCode" column="OPMAN_CODE"/>
+		<result property="optime" column="OPTIME"/>
+		<result property="opmanCode2" column="OPMAN_CODE2"/>
+		<result property="optime2" column="OPTIME2"/>
+	</resultMap>
+
+	<!-- 생산계획 마스터 등록 -->
+	<insert id="ProductionPlanDAO.insertProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		INSERT INTO TPR301M (
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_DATE,
+			WORKPLACE_CODE,
+			WORKPLACE_NAME,
+			PLAN_STATUS,
+			TOTAL_PLAN_QTY,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			OPTIME
+		) VALUES (
+			#{factoryCode},
+			#{planNo},
+			#{planDate},
+			#{workplaceCode},
+			#{workplaceName},
+			ISNULL(#{planStatus}, 'PLANNED'),
+			ISNULL(#{totalPlanQty}, 0),
+			#{remark},
+			ISNULL(#{useYn}, 'Y'),
+			#{opmanCode},
+			GETDATE()
+		)
+	</insert>
+
+	<!-- 생산계획 상세 등록 -->
+	<insert id="ProductionPlanDAO.insertProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		INSERT INTO TPR301 (
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_SEQ,
+			PLAN_DATE,
+			ITEM_CODE,
+			ITEM_NAME,
+			PLANNED_QTY,
+			ACTUAL_QTY,
+			EQUIPMENT_CODE,
+			EQUIPMENT_NAME,
+			SHIFT,
+			WORKER_CODE,
+			WORKER_NAME,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			LOT_NO,
+			CUSTOMER_CODE,
+			CUSTOMER_NAME,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			OPTIME
+		) VALUES (
+			#{factoryCode},
+			#{planNo},
+			#{planSeq},
+			#{planDate},
+			#{itemCode},
+			#{itemName},
+			#{plannedQty},
+			ISNULL(#{actualQty}, 0),
+			#{equipmentCode},
+			#{equipmentName},
+			#{shift},
+			#{workerCode},
+			#{workerName},
+			#{orderNo},
+			#{orderSeqno},
+			#{orderHistno},
+			#{lotNo},
+			#{customerCode},
+			#{customerName},
+			#{remark},
+			ISNULL(#{useYn}, 'Y'),
+			#{opmanCode},
+			GETDATE()
+		)
+	</insert>
+
+	<!-- 생산계획 마스터 목록 조회 -->
+	<select id="ProductionPlanDAO.selectProductionPlanMasterList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultMap="productionPlanMasterResult">
+		SELECT
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_DATE,
+			WORKPLACE_CODE,
+			WORKPLACE_NAME,
+			PLAN_STATUS,
+			TOTAL_PLAN_QTY,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR301M
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND USE_YN = 'Y'
+		<if test="startDate != null and startDate != ''">
+			AND PLAN_DATE &gt;= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND PLAN_DATE &lt;= #{endDate}
+		</if>
+		<if test="workplaceCode != null and workplaceCode != ''">
+			AND WORKPLACE_CODE = #{workplaceCode}
+		</if>
+		<if test="planStatus != null and planStatus != ''">
+			AND PLAN_STATUS = #{planStatus}
+		</if>
+		ORDER BY PLAN_DATE DESC, PLAN_NO DESC
+		OFFSET #{firstIndex} ROWS
+		FETCH NEXT #{recordCountPerPage} ROWS ONLY
+	</select>
+
+	<!-- 생산계획 상세 목록 조회 -->
+	<select id="ProductionPlanDAO.selectProductionPlanList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultMap="productionPlanResult">
+		SELECT
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_SEQ,
+			PLAN_DATE,
+			ITEM_CODE,
+			ITEM_NAME,
+			PLANNED_QTY,
+			ACTUAL_QTY,
+			EQUIPMENT_CODE,
+			EQUIPMENT_NAME,
+			SHIFT,
+			WORKER_CODE,
+			WORKER_NAME,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			LOT_NO,
+			CUSTOMER_CODE,
+			CUSTOMER_NAME,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR301
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND USE_YN = 'Y'
+		<if test="planNo != null and planNo != ''">
+			AND PLAN_NO = #{planNo}
+		</if>
+		<if test="startDate != null and startDate != ''">
+			AND PLAN_DATE &gt;= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND PLAN_DATE &lt;= #{endDate}
+		</if>
+		<if test="itemCode != null and itemCode != ''">
+			AND ITEM_CODE = #{itemCode}
+		</if>
+		<if test="equipmentCode != null and equipmentCode != ''">
+			AND EQUIPMENT_CODE = #{equipmentCode}
+		</if>
+		ORDER BY PLAN_DATE DESC, PLAN_NO DESC, PLAN_SEQ ASC
+	</select>
+
+	<!-- 생산계획 상세 조회 -->
+	<select id="ProductionPlanDAO.selectProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan" resultMap="productionPlanResult">
+		SELECT
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_SEQ,
+			PLAN_DATE,
+			ITEM_CODE,
+			ITEM_NAME,
+			PLANNED_QTY,
+			ACTUAL_QTY,
+			EQUIPMENT_CODE,
+			EQUIPMENT_NAME,
+			SHIFT,
+			WORKER_CODE,
+			WORKER_NAME,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			LOT_NO,
+			CUSTOMER_CODE,
+			CUSTOMER_NAME,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR301
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PLAN_NO = #{planNo}
+		  AND PLAN_SEQ = #{planSeq}
+	</select>
+
+	<!-- 생산계획 마스터 총 건수 조회 -->
+	<select id="ProductionPlanDAO.selectProductionPlanMasterListTotCnt" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TPR301M
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND USE_YN = 'Y'
+		<if test="startDate != null and startDate != ''">
+			AND PLAN_DATE &gt;= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND PLAN_DATE &lt;= #{endDate}
+		</if>
+		<if test="workplaceCode != null and workplaceCode != ''">
+			AND WORKPLACE_CODE = #{workplaceCode}
+		</if>
+		<if test="planStatus != null and planStatus != ''">
+			AND PLAN_STATUS = #{planStatus}
+		</if>
+	</select>
+
+	<!-- 계획번호로 생산계획 상세 목록 조회 -->
+	<select id="ProductionPlanDAO.selectProductionPlanByPlanNo" parameterType="string" resultMap="productionPlanResult">
+		SELECT
+			FACTORY_CODE,
+			PLAN_NO,
+			PLAN_SEQ,
+			PLAN_DATE,
+			ITEM_CODE,
+			ITEM_NAME,
+			PLANNED_QTY,
+			ACTUAL_QTY,
+			EQUIPMENT_CODE,
+			EQUIPMENT_NAME,
+			SHIFT,
+			WORKER_CODE,
+			WORKER_NAME,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			LOT_NO,
+			CUSTOMER_CODE,
+			CUSTOMER_NAME,
+			REMARK,
+			USE_YN,
+			OPMAN_CODE,
+			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
+			OPMAN_CODE2,
+			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		FROM TPR301
+		WHERE PLAN_NO = #{planNo}
+		  AND USE_YN = 'Y'
+		ORDER BY PLAN_SEQ ASC
+	</select>
+
+	<!-- 생산계획 마스터 수정 -->
+	<update id="ProductionPlanDAO.updateProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		UPDATE TPR301M
+		SET
+			PLAN_STATUS = #{planStatus},
+			TOTAL_PLAN_QTY = #{totalPlanQty},
+			REMARK = #{remark},
+			OPMAN_CODE2 = #{opmanCode2},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PLAN_NO = #{planNo}
+	</update>
+
+	<!-- 생산계획 상세 수정 -->
+	<update id="ProductionPlanDAO.updateProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		UPDATE TPR301
+		SET
+			PLANNED_QTY = #{plannedQty},
+			ACTUAL_QTY = #{actualQty},
+			SHIFT = #{shift},
+			WORKER_CODE = #{workerCode},
+			WORKER_NAME = #{workerName},
+			REMARK = #{remark},
+			OPMAN_CODE2 = #{opmanCode2},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PLAN_NO = #{planNo}
+		  AND PLAN_SEQ = #{planSeq}
+	</update>
+
+	<!-- 생산계획 마스터 삭제 (논리적 삭제) -->
+	<update id="ProductionPlanDAO.deleteProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		UPDATE TPR301M
+		SET
+			USE_YN = 'N',
+			OPMAN_CODE2 = #{opmanCode2},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PLAN_NO = #{planNo}
+	</update>
+
+	<!-- 생산계획 상세 삭제 (논리적 삭제) -->
+	<update id="ProductionPlanDAO.deleteProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		UPDATE TPR301
+		SET
+			USE_YN = 'N',
+			OPMAN_CODE2 = #{opmanCode2},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PLAN_NO = #{planNo}
+		  AND PLAN_SEQ = #{planSeq}
+	</update>
+
+</mapper>
