@@ -54,9 +54,6 @@ import PlanDialog from './components/PlanDialog';
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
 const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
 
-// 시간 상수
-const ONE_HOUR_MS = 60 * 60 * 1000; // 1시간 = 3600000ms
-
 interface ProductionPlanData {
   id?: string;
   date: string;
@@ -261,16 +258,7 @@ const ProductionPlan: React.FC = () => {
 
   useEffect(() => {
     loadWorkplaces();
-    
-    // 날짜 변경 체크를 위한 interval 설정
-    const checkDateInterval = setInterval(() => {
-      const resetFilter = checkAndResetIfDateChanged();
-      if (resetFilter) {
-        setVisibleDays(resetFilter);
-      }
-    }, ONE_HOUR_MS);
-    
-    return () => clearInterval(checkDateInterval);
+    // 날짜 변경 체크는 컴포넌트 마운트 시 loadVisibleDaysFromStorage()에서 자동으로 수행됨
   }, []);
 
   useEffect(() => {
