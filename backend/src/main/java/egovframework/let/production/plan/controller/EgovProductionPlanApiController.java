@@ -20,6 +20,7 @@ import lombok.Setter;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,7 +73,7 @@ public class EgovProductionPlanApiController {
 
 		Map<String, Object> resultMap = productionPlanService.selectProductionPlanMasterList(searchVO, user.getUniqId());
 
-		return resultVoHelper.ok(ResponseCode.SUCCESS.getMessage(), resultMap);
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
 	/**
@@ -100,7 +101,11 @@ public class EgovProductionPlanApiController {
 
 		List<ProductionPlan> planList = productionPlanService.selectProductionPlanByPlanNo(planNo);
 
-		return resultVoHelper.ok(ResponseCode.SUCCESS.getMessage(), planList);
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("planList", planList);
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
 	/**
@@ -139,7 +144,11 @@ public class EgovProductionPlanApiController {
 		// 생산계획 등록 (트랜잭션 처리)
 		String planNo = productionPlanService.insertProductionPlan(master, planList);
 
-		return resultVoHelper.ok(ResponseCode.SUCCESS.getMessage(), planNo);
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("planNo", planNo);
+		resultMap.put("message", "생산계획이 등록되었습니다.");
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
 	/**
@@ -182,7 +191,10 @@ public class EgovProductionPlanApiController {
 		// 생산계획 수정 (트랜잭션 처리)
 		productionPlanService.updateProductionPlan(master, planList);
 
-		return resultVoHelper.ok(ResponseCode.SUCCESS.getMessage());
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("message", "생산계획이 수정되었습니다.");
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
 	/**
@@ -216,7 +228,10 @@ public class EgovProductionPlanApiController {
 		// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)
 		productionPlanService.deleteProductionPlan(master);
 
-		return resultVoHelper.ok(ResponseCode.SUCCESS.getMessage());
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("message", "생산계획이 삭제되었습니다.");
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
 	/**
