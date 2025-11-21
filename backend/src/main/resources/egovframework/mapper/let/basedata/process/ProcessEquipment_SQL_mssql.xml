@@ -12,6 +12,7 @@
 		<result property="equipmentName" column="EQUIPMENT_NAME"/>
 		<result property="equipSpec" column="EQUIP_SPEC"/>
 		<result property="equipStruct" column="EQUIP_STRUCT"/>
+		<result property="location" column="LOCATION"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
@@ -36,7 +37,7 @@
 		CONVERT(VARCHAR(19), PE.OPTIME2, 120) AS OPTIME2,
 		E.EQUIPMENT_NAME,
 		E.EQUIP_SPEC,
-		E.EQUIP_STRUCT
+		E.LOCATION
 		FROM TPR104 PE
 		LEFT JOIN TPR151 E ON PE.EQUIP_SYS_CD = E.EQUIP_SYS_CD AND PE.EQUIP_CD = E.EQUIP_CD
 		WHERE 1=1

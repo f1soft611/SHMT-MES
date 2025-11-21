@@ -60,6 +60,9 @@ public class ProcessEquipment implements Serializable {
 	@Schema(description = "설비 구조")
 	private String equipStruct = "";
 
+	@Schema(description = "위치")
+	private String location = "";
+
 	@Schema(description = "설명")
 	private String description = "";
 

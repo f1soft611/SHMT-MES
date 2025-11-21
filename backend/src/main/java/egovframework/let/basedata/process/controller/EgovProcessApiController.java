@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.egovframe.rte.fdl.cmmn.exception.BaseException;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -616,9 +617,28 @@ public class EgovProcessApiController {
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("message", "설비가 등록되었습니다.");
             return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+        } catch (BaseException e) {
+            Map<String, Object> resultMap = new HashMap<>();
+
+            // cause에서 원본 메시지 추출
+            String errorMessage = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                String causeMessage = e.getCause().getMessage();
+                // "이미 등록된 설비입니다"로 시작하면 중복 에러
+                if (causeMessage.startsWith("이미 등록된 설비입니다")) {
+                    errorMessage = causeMessage;
+                    resultMap.put("message", errorMessage);
+                    return resultVoHelper.buildFromMap(resultMap, ResponseCode.SAVE_ERROR);
+                }
+                errorMessage = causeMessage;
+            }
+
+            resultMap.put("message", errorMessage);
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SAVE_ERROR);
+
         } catch (Exception e) {
             Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("message", e.getMessage());
+            resultMap.put("message", "설비 등록 중 오류가 발생했습니다.");
             return resultVoHelper.buildFromMap(resultMap, ResponseCode.SAVE_ERROR);
         }
     }

@@ -42,7 +42,7 @@ const equipmentSchema: yup.ObjectSchema<ProcessEquipment> = yup.object({
   equipCd: yup.string(),
   equipmentName: yup.string(),
   equipSpec: yup.string(),
-  equipStruct: yup.string(),
+  location: yup.string(),
   description: yup.string(),
   useYn: yup.string().required('사용 여부는 필수입니다.'),
 });
@@ -61,7 +61,9 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
   const canWrite = hasWritePermission('/base/process');
 
   const [equipments, setEquipments] = useState<ProcessEquipment[]>([]);
-  const [availableEquipments, setAvailableEquipments] = useState<Equipment[]>([]);
+  const [availableEquipments, setAvailableEquipments] = useState<Equipment[]>(
+    []
+  );
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
 
@@ -83,7 +85,7 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
       equipCd: '',
       equipmentName: '',
       equipSpec: '',
-      equipStruct: '',
+      location: '',
       description: '',
       useYn: 'Y',
     },
@@ -127,9 +129,12 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
       );
       if (selectedEquipment) {
         setEquipmentValue('equipCd', selectedEquipment.equipCd || '');
-        setEquipmentValue('equipmentName', selectedEquipment.equipmentName || '');
+        setEquipmentValue(
+          'equipmentName',
+          selectedEquipment.equipmentName || ''
+        );
         setEquipmentValue('equipSpec', selectedEquipment.equipSpec || '');
-        setEquipmentValue('equipStruct', selectedEquipment.equipStruct || '');
+        setEquipmentValue('location', selectedEquipment.location || '');
       }
     }
   }, [selectedEquipSysCd, availableEquipments, dialogMode, setEquipmentValue]);
@@ -137,11 +142,17 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
   const handleSave = async (data: ProcessEquipment) => {
     try {
       if (dialogMode === 'create') {
-        const result = await processService.addProcessEquipment(process.processId!, data);
+        const result = await processService.addProcessEquipment(
+          process.processId!,
+          data
+        );
         if (result.resultCode === 200) {
           showSnackbar('설비가 등록되었습니다.', 'success');
         } else {
-          showSnackbar(result.result?.message || '등록에 실패했습니다.', 'error');
+          showSnackbar(
+            result.result?.message || '등록에 실패했습니다.',
+            'error'
+          );
           return;
         }
       } else {
@@ -157,7 +168,10 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
       fetchEquipments();
     } catch (error: any) {
       console.error('Failed to save equipment:', error);
-      showSnackbar(error?.response?.data?.result?.message || '저장에 실패했습니다.', 'error');
+      showSnackbar(
+        error?.response?.data?.result?.message || '저장에 실패했습니다.',
+        'error'
+      );
     }
   };
 
@@ -179,8 +193,8 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
 
   const equipmentColumns: GridColDef[] = [
     {
-      field: 'equipSysCd',
-      headerName: '설비 시스템 코드',
+      field: 'equipCd',
+      headerName: '설비 코드',
       flex: 1,
       align: 'center',
       headerAlign: 'center',
@@ -198,8 +212,8 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
       headerAlign: 'center',
     },
     {
-      field: 'equipStruct',
-      headerName: '설비 구조',
+      field: 'location',
+      headerName: '위치',
       flex: 1,
       headerAlign: 'center',
     },
@@ -275,7 +289,7 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
                   equipCd: '',
                   equipmentName: '',
                   equipSpec: '',
-                  equipStruct: '',
+                  location: '',
                   description: '',
                   useYn: 'Y',
                 });
@@ -326,7 +340,10 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
                     disabled={dialogMode === 'edit'}
                   >
                     {availableEquipments.map((equipment) => (
-                      <MenuItem key={equipment.equipSysCd} value={equipment.equipSysCd}>
+                      <MenuItem
+                        key={equipment.equipSysCd}
+                        value={equipment.equipSysCd}
+                      >
                         {equipment.equipmentName} ({equipment.equipSysCd})
                       </MenuItem>
                     ))}
@@ -347,12 +364,7 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
               name="equipmentName"
               control={equipmentControl}
               render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="설비명"
-                  disabled
-                />
+                <TextField {...field} fullWidth label="설비명" disabled />
               )}
             />
             <Stack direction="row" spacing={2}>
@@ -360,24 +372,14 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
                 name="equipSpec"
                 control={equipmentControl}
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="설비 규격"
-                    disabled
-                  />
+                  <TextField {...field} fullWidth label="설비 규격" disabled />
                 )}
               />
               <Controller
-                name="equipStruct"
+                name="location"
                 control={equipmentControl}
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="설비 구조"
-                    disabled
-                  />
+                  <TextField {...field} fullWidth label="위치" disabled />
                 )}
               />
             </Stack>

@@ -74,7 +74,7 @@ export interface ProcessEquipment {
   equipCd?: string;
   equipmentName?: string;
   equipSpec?: string;
-  equipStruct?: string;
+  location?: string;
   description?: string;
   useYn?: string;
 }
