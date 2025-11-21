@@ -105,7 +105,7 @@
     <!-- 스케쥴러 실행 이력 등록 -->
     <insert id="SchedulerHistoryDAO.insertSchedulerHistory" parameterType="egovframework.let.scheduler.domain.model.SchedulerHistory">
         <selectKey keyProperty="historyId" resultType="long" order="AFTER">
-            SELECT IDENT_CURRENT('SCHEDULER_HISTORY')
+            SELECT CAST(SCOPE_IDENTITY() AS BIGINT)
         </selectKey>
         INSERT INTO SCHEDULER_HISTORY (
             SCHEDULER_ID,
