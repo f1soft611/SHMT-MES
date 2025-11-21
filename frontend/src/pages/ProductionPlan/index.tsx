@@ -172,24 +172,23 @@ const ProductionPlan: React.FC = () => {
     
     const filter = [false, false, false, false, false, false, false];
     
-    // 어제
+    // 어제 (월요일일 때 일요일로 wrap)
     const yesterday = mondayBasedDay - 1;
     if (yesterday >= 0) {
       filter[yesterday] = true;
+    } else {
+      filter[6] = true; // 일요일
     }
     
     // 오늘
     filter[mondayBasedDay] = true;
     
-    // 내일
+    // 내일 (일요일일 때 월요일로 wrap)
     const tomorrow = mondayBasedDay + 1;
     if (tomorrow < 7) {
       filter[tomorrow] = true;
-    }
-    
-    // 최소 1일은 표시되어야 함
-    if (!filter.some(f => f)) {
-      filter[mondayBasedDay] = true;
+    } else {
+      filter[0] = true; // 월요일
     }
     
     return filter;
@@ -227,8 +226,8 @@ const ProductionPlan: React.FC = () => {
       return default3Days;
     } catch (error) {
       console.error('Failed to load day filter from localStorage:', error);
-      // 오류 시 기본 평일 표시
-      return [true, true, true, true, true, false, false];
+      // 오류 시 기본 3일 표시
+      return getDefault3DaysFilter();
     }
   };
 
