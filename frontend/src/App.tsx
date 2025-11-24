@@ -26,7 +26,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
 import UserManagement from './pages/Admin/UserManagement';
-import ProcessFlowManagement from "./pages/BaseData/ProcessFlowManagement";
+import ProcessFlowManagement from './pages/BaseData/ProcessFlowManagement';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,8 +66,8 @@ function App() {
                           element={<WorkplaceManagement />}
                         />
                         <Route
-                            path={URL.PROCESS_FLOW_MANAGEMENT}
-                            element={<ProcessFlowManagement />}
+                          path={URL.PROCESS_FLOW_MANAGEMENT}
+                          element={<ProcessFlowManagement />}
                         />
                         <Route
                           path={URL.PROCESS_MANAGEMENT}
