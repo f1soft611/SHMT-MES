@@ -21,16 +21,37 @@ package egovframework.let.scheduler.service;
 public interface ErpToMesInterfaceService {
 
 	/**
-	 * ERP 시스템의 품목 정보를 MES 시스템으로 연동
+	 * ERP 시스템의 품목 정보를 MES 시스템으로 연동 (deprecated)
+	 * @deprecated Use syncItems instead
 	 * @throws Exception
 	 */
+	@Deprecated
 	void syncMaterials() throws Exception;
 
 	/**
-	 * 스케쥴러에서 호출되는 품목정보 프로세스 실행
+	 * 스케쥴러에서 호출되는 품목정보 프로세스 실행 (deprecated)
+	 * @deprecated Use executeItemInterface instead
 	 * @throws Exception
 	 */
+	@Deprecated
 	void executeMaterialInterface() throws Exception;
+
+	/**
+	 * ERP 시스템의 품목 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TDAItem 뷰에서 품목 정보를 조회하여 TCO403 테이블에 동기화
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @throws Exception
+	 */
+	void syncItems(String fromDate, String toDate) throws Exception;
+
+	/**
+	 * 스케쥴러에서 호출되는 품목정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @throws Exception
+	 */
+	void executeItemInterface(String fromDate, String toDate) throws Exception;
 
 	/**
 	 * ERP 시스템의 거래처 정보를 MES 시스템으로 연동
