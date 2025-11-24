@@ -83,4 +83,12 @@ public interface EgovProductionPlanService {
 	 * @throws Exception
 	 */
 	void deleteProductionPlan(ProductionPlanMaster master) throws Exception;
+
+	/**
+	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화)
+	 * @param searchVO 검색 조건 (workplaceCode, startDate, endDate 필수)
+	 * @return 설비별 주간 계획 데이터
+	 * @throws Exception
+	 */
+	Map<String, Object> selectWeeklyProductionPlans(ProductionPlanVO searchVO) throws Exception;
 }

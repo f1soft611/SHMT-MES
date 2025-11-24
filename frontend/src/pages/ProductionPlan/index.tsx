@@ -355,43 +355,48 @@ const ProductionPlan: React.FC = () => {
     const weekEnd = addDays(currentWeekStart, 6);
 
     try {
-      const response = await productionPlanService.getProductionPlans({
+      const response = await productionPlanService.getWeeklyProductionPlans({
+        workplaceCode: selectedWorkplace,
         startDate: formatDate(weekStart, 'YYYYMMDD'),
         endDate: formatDate(weekEnd, 'YYYYMMDD'),
-        workplaceCode: selectedWorkplace,
       });
 
-      if (response.resultCode === 200 && response.result?.resultList) {
-        // Map API response to frontend model
-        const mappedPlans: ProductionPlanData[] =
-          response.result.resultList.map((p: any) => {
-            // Convert YYYYMMDD to YYYY-MM-DD
-            const formattedDate = p.planDate.replace(
-              /(\d{4})(\d{2})(\d{2})/,
-              '$1-$2-$3'
-            );
+      if (response.resultCode === 200 && response.result?.equipmentPlans) {
+        // 새로운 API 응답 구조: equipmentPlans 배열
+        // 각 equipmentPlan은 { equipmentCode, equipmentName, weeklyPlans: { "YYYY-MM-DD": [plans] } }
 
-            return {
-              id: `${p.planNo}-${p.planSeq}`,
-              date: formattedDate,
-              itemCode: p.itemCode,
-              itemName: p.itemName,
-              plannedQty: p.plannedQty,
-              equipmentCode: p.equipmentCode,
-              equipmentName: p.equipmentName,
-              shift: p.shift,
-              remark: p.remark,
-              orderNo: p.orderNo,
-              orderSeqno: p.orderSeqno,
-              orderHistno: p.orderHistno,
-              workplaceCode: selectedWorkplace,
-              workerCode: p.workerCode,
-              workerName: p.workerName,
-              customerCode: p.customerCode,
-              customerName: p.customerName,
-            };
-          });
-        setPlans(mappedPlans);
+        // 기존 plans 배열 형식으로 변환 (기존 UI 로직 유지)
+        const allPlans: ProductionPlanData[] = [];
+
+        response.result.equipmentPlans.forEach((equipPlan: any) => {
+          Object.entries(equipPlan.weeklyPlans || {}).forEach(
+            ([date, dailyPlans]: [string, any]) => {
+              (dailyPlans as any[]).forEach((plan: any) => {
+                allPlans.push({
+                  id: `${plan.planNo}-${plan.planSeq}`,
+                  date: date, // Already in YYYY-MM-DD format
+                  itemCode: plan.itemCode,
+                  itemName: plan.itemName,
+                  plannedQty: plan.plannedQty,
+                  equipmentCode: equipPlan.equipmentCode,
+                  equipmentName: equipPlan.equipmentName,
+                  shift: plan.shift,
+                  remark: plan.remark,
+                  orderNo: plan.orderNo,
+                  orderSeqno: plan.orderSeqno,
+                  orderHistno: plan.orderHistno,
+                  workplaceCode: selectedWorkplace,
+                  workerCode: plan.workerCode,
+                  workerName: plan.workerName,
+                  customerCode: plan.customerCode,
+                  customerName: plan.customerName,
+                });
+              });
+            }
+          );
+        });
+
+        setPlans(allPlans);
       }
     } catch (error) {
       console.error('Failed to load production plans:', error);

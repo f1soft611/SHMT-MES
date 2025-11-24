@@ -148,4 +148,80 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		// 상세 데이터는 외래키 CASCADE 옵션에 의해 함께 논리적 삭제됨
 		productionPlanDAO.deleteProductionPlanMaster(master);
 	}
+
+	/**
+	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화)
+	 */
+	@Override
+	public Map<String, Object> selectWeeklyProductionPlans(ProductionPlanVO searchVO) throws Exception {
+		// 1. DB에서 설비 및 계획 데이터 조회
+		List<Object> rawData = productionPlanDAO.selectWeeklyProductionPlansByWorkplace(searchVO);
+		
+		// 2. 설비별로 그룹화
+		Map<String, egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan> equipmentMap = new java.util.LinkedHashMap<>();
+		
+		for (Object obj : rawData) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> row = (Map<String, Object>) obj;
+			
+			String equipmentCode = (String) row.get("equipmentCode");
+			String equipmentName = (String) row.get("equipmentName");
+			String equipmentId = (String) row.get("equipmentId");
+			
+			// 설비가 처음 등장하면 초기화
+			if (!equipmentMap.containsKey(equipmentCode)) {
+				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan equipPlan = 
+					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan.builder()
+						.equipmentCode(equipmentCode)
+						.equipmentName(equipmentName)
+						.equipmentId(equipmentId)
+						.weeklyPlans(new java.util.LinkedHashMap<>())
+						.build();
+				equipmentMap.put(equipmentCode, equipPlan);
+			}
+			
+			// 계획 데이터가 있는 경우만 추가
+			if (row.get("planNo") != null) {
+				String planDate = (String) row.get("planDate");
+				
+				// YYYYMMDD -> YYYY-MM-DD 변환
+				String formattedDate = planDate.substring(0, 4) + "-" + 
+									   planDate.substring(4, 6) + "-" + 
+									   planDate.substring(6, 8);
+				
+				// DailyPlan 생성
+				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan dailyPlan = 
+					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan.builder()
+						.planNo((String) row.get("planNo"))
+						.planSeq((Integer) row.get("planSeq"))
+						.planDate(planDate)
+						.itemCode((String) row.get("itemCode"))
+						.itemName((String) row.get("itemName"))
+						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
+						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
+						.shift((String) row.get("shift"))
+						.workerCode((String) row.get("workerCode"))
+						.workerName((String) row.get("workerName"))
+						.orderNo((String) row.get("orderNo"))
+						.orderSeqno((Integer) row.get("orderSeqno"))
+						.orderHistno((Integer) row.get("orderHistno"))
+						.customerCode((String) row.get("customerCode"))
+						.customerName((String) row.get("customerName"))
+						.remark((String) row.get("remark"))
+						.build();
+				
+				// 날짜별 계획 리스트에 추가
+				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan equipPlan = equipmentMap.get(equipmentCode);
+				equipPlan.getWeeklyPlans()
+					.computeIfAbsent(formattedDate, k -> new java.util.ArrayList<>())
+					.add(dailyPlan);
+			}
+		}
+		
+		// 3. 결과 반환
+		Map<String, Object> result = new HashMap<>();
+		result.put("equipmentPlans", new java.util.ArrayList<>(equipmentMap.values()));
+		
+		return result;
+	}
 }

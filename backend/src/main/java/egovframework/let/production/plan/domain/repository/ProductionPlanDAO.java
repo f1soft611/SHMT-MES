@@ -149,4 +149,15 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	public int deleteProductionPlanMaster(ProductionPlanMaster master) throws Exception {
 		return delete("ProductionPlanDAO.deleteProductionPlanMaster", master);
 	}
+
+	/**
+	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화용)
+	 * XML 매퍼의 'ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace' ID를 호출한다.
+	 * @param searchVO 검색 조건 (workplaceCode, startDate, endDate)
+	 * @return 설비 및 계획 정보 목록 (egovMap)
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public List<Object> selectWeeklyProductionPlansByWorkplace(ProductionPlanVO searchVO) throws Exception {
+		return (List<Object>) selectList("ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace", searchVO);
+	}
 }

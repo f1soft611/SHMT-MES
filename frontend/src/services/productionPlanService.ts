@@ -70,6 +70,16 @@ const productionPlanService = {
     const response = await api.delete(`/api/production-plans/${planNo}`);
     return response.data;
   },
+
+  // 주간 생산계획 조회 (설비별 그룹화)
+  getWeeklyProductionPlans: async (params: {
+    workplaceCode: string;
+    startDate: string;
+    endDate: string;
+  }) => {
+    const response = await api.get('/api/production-plans/weekly', { params });
+    return response.data;
+  },
 };
 
 export default productionPlanService;
