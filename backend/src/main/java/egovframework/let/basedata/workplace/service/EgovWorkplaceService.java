@@ -134,4 +134,12 @@ public interface EgovWorkplaceService {
 	 * @throws Exception
 	 */
 	boolean isWorkplaceCodeExistsForUpdate(String workplaceId, String workplaceCode) throws Exception;
+
+	/**
+	 * 작업장별 설비 목록을 조회한다.
+	 * @param workplaceCode 작업장 코드
+	 * @return 설비 목록
+	 * @throws Exception
+	 */
+	List<Map<String, Object>> selectWorkplaceEquipmentList(String workplaceCode) throws Exception;
 }

@@ -179,13 +179,13 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = requestBody.getMaster();
-		master.setPlanNo(planNo);
+		master.setProdPlanId(planNo);
 		master.setOpmanCode2(user.getUniqId());
 
 		// 상세 정보 설정
 		List<ProductionPlan> planList = requestBody.getDetails();
 		for (ProductionPlan plan : planList) {
-			plan.setPlanNo(planNo);
+			plan.setProdPlanId(planNo);
 			plan.setOpmanCode2(user.getUniqId());
 		}
 
@@ -224,7 +224,7 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = new ProductionPlanMaster();
-		master.setPlanNo(planNo);
+		master.setProdPlanId(planNo);
 		master.setOpmanCode2(user.getUniqId());
 
 		// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)

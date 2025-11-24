@@ -6,6 +6,7 @@ import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.production.plan.domain.model.ProductionPlanReference;
 import egovframework.let.production.plan.domain.repository.ProductionPlanDAO;
 import egovframework.let.production.plan.service.EgovProductionPlanService;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Transactional
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
 		String planNo = egovProdPlanIdgenService.getNextStringId();
-		master.setPlanNo(planNo);
+		master.setProdPlanId(planNo);
 		
 		// 총 계획수량 계산
 		BigDecimal totalQty = BigDecimal.ZERO;
@@ -65,9 +66,10 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		// 상세 등록
 		int seq = 1;
 		for (ProductionPlan plan : planList) {
-			plan.setPlanNo(planNo);
-			plan.setPlanSeq(seq++);
 			plan.setFactoryCode(master.getFactoryCode());
+			plan.setProdPlanId(planNo);
+			plan.setProdPlanDate(master.getProdPlanDate());
+			plan.setProdPlanSeq(master.getProdPlanSeq());
 			productionPlanDAO.insertProductionPlan(plan);
 		}
 		

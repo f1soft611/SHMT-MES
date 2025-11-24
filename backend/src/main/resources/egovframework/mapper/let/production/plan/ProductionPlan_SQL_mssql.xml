@@ -4,14 +4,8 @@
 
 	<resultMap id="productionPlanMasterResult" type="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		<result property="factoryCode" column="FACTORY_CODE"/>
-		<result property="planNo" column="PLAN_NO"/>
-		<result property="planDate" column="PLAN_DATE"/>
-		<result property="workplaceCode" column="WORKPLACE_CODE"/>
-		<result property="workplaceName" column="WORKPLACE_NAME"/>
-		<result property="planStatus" column="PLAN_STATUS"/>
-		<result property="totalPlanQty" column="TOTAL_PLAN_QTY"/>
-		<result property="remark" column="REMARK"/>
-		<result property="useYn" column="USE_YN"/>
+		<result property="prodPlanDate" column="PRODPLAN_NO"/>
+		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -20,9 +14,9 @@
 
 	<resultMap id="productionPlanResult" type="egovframework.let.production.plan.domain.model.ProductionPlan">
 		<result property="factoryCode" column="FACTORY_CODE"/>
-		<result property="planNo" column="PLAN_NO"/>
-		<result property="planSeq" column="PLAN_SEQ"/>
-		<result property="planDate" column="PLAN_DATE"/>
+		<result property="prodPlanDate" column="PRODPLAN_NO"/>
+		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
+		<result property="prodDate" column="PROD_DATE"/>
 		<result property="itemCode" column="ITEM_CODE"/>
 		<result property="itemName" column="ITEM_NAME"/>
 		<result property="plannedQty" column="PLANNED_QTY"/>
@@ -50,26 +44,14 @@
 	<insert id="ProductionPlanDAO.insertProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		INSERT INTO TPR301M (
 			FACTORY_CODE,
-			PLAN_NO,
-			PLAN_DATE,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			PLAN_STATUS,
-			TOTAL_PLAN_QTY,
-			REMARK,
-			USE_YN,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
 			#{factoryCode},
 			#{planNo},
 			#{planDate},
-			#{workplaceCode},
-			#{workplaceName},
-			ISNULL(#{planStatus}, 'PLANNED'),  -- Default matches ProductionPlanMaster.STATUS_PLANNED
-			ISNULL(#{totalPlanQty}, 0),
-			#{remark},
-			ISNULL(#{useYn}, 'Y'),
 			#{opmanCode},
 			GETDATE()
 		)
@@ -132,26 +114,19 @@
 	<select id="ProductionPlanDAO.selectProductionPlanMasterList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultMap="productionPlanMasterResult">
 		SELECT
 			FACTORY_CODE,
-			PLAN_NO,
-			PLAN_DATE,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			PLAN_STATUS,
-			TOTAL_PLAN_QTY,
-			REMARK,
-			USE_YN,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
 			OPMAN_CODE2,
 			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
 		FROM TPR301M
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND USE_YN = 'Y'
 		<if test="startDate != null and startDate != ''">
-			AND PLAN_DATE &gt;= #{startDate}
+			AND PRODPLAN_DATE &gt;= #{startDate}
 		</if>
 		<if test="endDate != null and endDate != ''">
-			AND PLAN_DATE &lt;= #{endDate}
+			AND PRODPLAN_DATE &lt;= #{endDate}
 		</if>
 		<if test="workplaceCode != null and workplaceCode != ''">
 			AND WORKPLACE_CODE = #{workplaceCode}
@@ -353,5 +328,30 @@
 		  AND PLAN_NO = #{planNo}
 		  AND PLAN_SEQ = #{planSeq}
 	</update>
+
+	<!-- 생산계획 참조(주문연결) 등록 -->
+	<insert id="ProductionPlanDAO.insertProductionPlanReference" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanReference">
+		INSERT INTO TPR301R (
+			FACTORY_CODE,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
+			ORDER_QTY,
+			WORKDT_QTY,
+			REPRESENT_ORDER
+		) VALUES (
+			#{factoryCode},
+			#{orderNo},
+			#{orderSeqno},
+			#{orderHistno},
+			#{prodplanDate},
+			#{prodplanSeq},
+			ISNULL(#{orderQty}, 0),
+			ISNULL(#{workdtQty}, 0),
+			ISNULL(#{representOrder}, 'N')
+		)
+	</insert>
 
 </mapper>

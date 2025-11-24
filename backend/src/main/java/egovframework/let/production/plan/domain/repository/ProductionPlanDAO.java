@@ -51,6 +51,17 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	}
 
 	/**
+	 * 생산계획 참조(주문연결)를 등록한다.
+	 * XML 매퍼의 'ProductionPlanDAO.insertProductionPlanReference' ID를 호출한다.
+	 * @param reference 생산계획 참조 정보
+	 * @return 등록(INSERT) 결과, 성공 시 1
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int insertProductionPlanReference(egovframework.let.production.plan.domain.model.ProductionPlanReference reference) throws Exception {
+		return insert("ProductionPlanDAO.insertProductionPlanReference", reference);
+	}
+
+	/**
 	 * 생산계획 마스터 목록을 조회한다.
 	 * XML 매퍼의 'ProductionPlanDAO.selectProductionPlanMasterList' ID를 호출한다.
 	 * @param searchVO 검색 조건 (페이징 정보 포함)
@@ -137,16 +148,5 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	 */
 	public int deleteProductionPlanMaster(ProductionPlanMaster master) throws Exception {
 		return delete("ProductionPlanDAO.deleteProductionPlanMaster", master);
-	}
-
-	/**
-	 * 생산계획 상세를 삭제한다.
-	 * XML 매퍼의 'ProductionPlanDAO.deleteProductionPlan' ID를 호출한다.
-	 * @param plan 생산계획 상세 정보
-	 * @return 삭제(DELETE) 결과, 성공 시 1
-	 * @throws Exception SQL 실행 중 오류 발생 시
-	 */
-	public int deleteProductionPlan(ProductionPlan plan) throws Exception {
-		return delete("ProductionPlanDAO.deleteProductionPlan", plan);
 	}
 }
