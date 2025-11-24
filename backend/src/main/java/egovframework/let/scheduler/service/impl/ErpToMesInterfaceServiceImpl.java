@@ -2,9 +2,11 @@ package egovframework.let.scheduler.service.impl;
 
 import egovframework.let.scheduler.domain.model.ErpCustomer;
 import egovframework.let.scheduler.domain.model.ErpEmployee;
+import egovframework.let.scheduler.domain.model.ErpItem;
 import egovframework.let.scheduler.domain.model.ErpProductionRequest;
 import egovframework.let.scheduler.domain.repository.MesCustInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesUserInterfaceDAO;
+import egovframework.let.scheduler.domain.repository.MesItemInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesProdReqInterfaceDAO;
 import egovframework.let.scheduler.service.ErpToMesInterfaceService;
 import egovframework.let.utl.sim.service.EgovFileScrty;
@@ -52,6 +54,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	private MesUserInterfaceDAO mesUserInterfaceDAO;
 	@Autowired
 	private MesCustInterfaceDAO mesCustInterfaceDAO;
+	@Autowired
+	private MesItemInterfaceDAO mesItemInterfaceDAO;
 	@Autowired
 	private MesProdReqInterfaceDAO mesProdReqInterfaceDAO;
 
@@ -542,6 +546,136 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	}
 
 	/**
+	 * ERP 시스템의 품목 정보를 MES 시스템으로 연동
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+//	@Transactional
+	public void syncItems(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 품목정보 연동 시작 (기간: {} ~ {}) ===", fromDate, toDate);
+
+		int insertCount = 0;
+		int updateCount = 0;
+		int errorCount = 0;
+		Exception lastError = null;
+
+		try {
+			// 1. ERP 시스템에서 품목 정보 조회
+			log.info("ERP 시스템(SHM_IF_VIEW_TDAItem)에서 품목 데이터 조회 시작");
+			List<ErpItem> erpItems = selectErpItems(fromDate, toDate);
+			log.info("ERP 품목 데이터 조회 완료: {}건", erpItems.size());
+
+			// 2. MES 시스템에 품목 정보 등록/업데이트
+			for (ErpItem item : erpItems) {
+				try {
+					// 2-1. MES에 해당 품목이 존재하는지 확인
+					int count = mesItemInterfaceDAO.selectMesItemCount(item.getItemSeq());
+
+					if (count == 0) {
+						// 2-2. 신규 품목인 경우 INSERT
+						mesItemInterfaceDAO.insertMesItem(item);
+						insertCount++;
+						log.debug("신규 품목 등록: {} ({})", item.getItemName(), item.getItemSeq());
+					} else {
+						// 2-3. 기존 품목인 경우 UPDATE
+						mesItemInterfaceDAO.updateMesItem(item);
+						updateCount++;
+						log.debug("기존 품목 업데이트: {} ({})", item.getItemName(), item.getItemSeq());
+					}
+				} catch (Exception e) {
+					errorCount++;
+					lastError = e;
+					log.error("품목 정보 처리 실패: {} ({})", item.getItemName(), item.getItemSeq(), e);
+				}
+			}
+
+			log.info("=== ERP 품목정보 연동 완료 ===");
+			log.info("총 처리: {}건, 신규등록: {}건, 업데이트: {}건, 오류: {}건",
+					erpItems.size(), insertCount, updateCount, errorCount);
+
+			// 오류가 하나라도 있으면 예외를 던져서 스케쥴러 히스토리에 실패로 기록
+			if (errorCount > 0 && lastError != null) {
+				throw new Exception(String.format("품목정보 연동 중 오류 발생 - 총 처리: %d건, 성공: %d건, 실패: %d건. 마지막 오류: %s",
+						erpItems.size(), insertCount + updateCount, errorCount, lastError.getMessage()), lastError);
+			}
+
+		} catch (Exception e) {
+			log.error("품목정보 연동 실패", e);
+			throw e;
+		}
+	}
+
+	/**
+	 * ERP에서 품목 정보 조회 (JdbcTemplate 사용)
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @return 품목 정보 리스트
+	 */
+	private List<ErpItem> selectErpItems(String fromDate, String toDate) {
+		String sql = "SELECT CompanySeq, ItemNo, ItemSeq, ItemName, Spec, " +
+				"UnitSeq, UnitName, LastUserSeq, LastDateTime " +
+				"FROM SHM_IF_VIEW_TDAItem " +
+				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
+				"ORDER BY ItemSeq";
+
+		return erpJdbcTemplate.query(sql, new ErpItemRowMapper(), fromDate, toDate);
+	}
+
+	/**
+	 * ERP 품목 데이터를 ErpItem 객체로 매핑하는 RowMapper
+	 */
+	private static class ErpItemRowMapper implements RowMapper<ErpItem> {
+		@Override
+		public ErpItem mapRow(ResultSet rs, int rowNum) throws SQLException {
+			ErpItem item = new ErpItem();
+			item.setCompanySeq(rs.getInt("CompanySeq"));
+			item.setItemNo(rs.getString("ItemNo"));
+			item.setItemSeq(rs.getInt("ItemSeq"));
+			item.setItemName(rs.getString("ItemName"));
+			item.setSpec(rs.getString("Spec"));
+			item.setUnitSeq(rs.getInt("UnitSeq"));
+			item.setUnitName(rs.getString("UnitName"));
+			item.setLastUserSeq(rs.getInt("LastUserSeq"));
+			item.setLastDateTime(rs.getTimestamp("LastDateTime"));
+			return item;
+		}
+	}
+
+	/**
+	 * 스케쥴러에서 호출되는 품목정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+	public void executeItemInterface(String fromDate, String toDate) throws Exception {
+		log.info("╔══════════════════════════════════════╗");
+		log.info("║  ERP-MES 품목 연동 시작              ║");
+		log.info("╚══════════════════════════════════════╝");
+
+		long startTime = System.currentTimeMillis();
+
+		try {
+			// 품목 정보 연동 실행
+			syncItems(fromDate, toDate);
+
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.info("╔══════════════════════════════════════╗");
+			log.info("║  ERP-MES 품목 연동 완료              ║");
+			log.info("║  실행 시간: {}ms                 ║", executionTime);
+			log.info("╚══════════════════════════════════════╝");
+
+		} catch (Exception e) {
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.error("╔══════════════════════════════════════╗");
+			log.error("║  ERP-MES 품목 연동 실패              ║");
+			log.error("║  실행 시간: {}ms                 ║", executionTime);
+			log.error("╚══════════════════════════════════════╝");
+			throw e;
+		}
+	}
+
+	/**
 	 * 스케쥴러에서 호출되는 전체 인터페이스 프로세스 실행
 	 * 품목, 사원, 거래처, 생산 의뢰 순서로 연동 수행
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
@@ -557,7 +691,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 		try {
 			// 품목 정보 연동 실행
-			syncMaterials();
+			syncItems(fromDate, toDate);
 
 			// 사원 정보 연동 실행
 			syncUsers(fromDate, toDate);
