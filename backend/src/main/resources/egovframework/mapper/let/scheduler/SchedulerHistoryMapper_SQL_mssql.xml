@@ -103,10 +103,11 @@
     </select>
 
     <!-- 스케쥴러 실행 이력 등록 -->
-    <insert id="SchedulerHistoryDAO.insertSchedulerHistory" parameterType="egovframework.let.scheduler.domain.model.SchedulerHistory">
-        <selectKey keyProperty="historyId" resultType="long" order="AFTER">
-            SELECT CAST(SCOPE_IDENTITY() AS BIGINT)
-        </selectKey>
+    <insert id="SchedulerHistoryDAO.insertSchedulerHistory" 
+            parameterType="egovframework.let.scheduler.domain.model.SchedulerHistory"
+            useGeneratedKeys="true" 
+            keyProperty="historyId" 
+            keyColumn="HISTORY_ID">
         INSERT INTO SCHEDULER_HISTORY (
             SCHEDULER_ID,
             SCHEDULER_NAME,
@@ -134,9 +135,9 @@
             SET END_TIME = #{endTime},
                 STATUS = #{status},
                 ERROR_MESSAGE = #{errorMessage},
-                ERROR_STACK_TRACE = #{errorStackTrace},  <!-- ✨ 추가 -->
+                ERROR_STACK_TRACE = #{errorStackTrace},
                 EXECUTION_TIME_MS = #{executionTimeMs},
-                RETRY_COUNT = #{retryCount}  <!-- ✨ 추가 -->
+                RETRY_COUNT = #{retryCount}
         WHERE HISTORY_ID = #{historyId}
     </update>
 

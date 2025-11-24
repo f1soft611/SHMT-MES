@@ -4,14 +4,9 @@
 
 	<resultMap id="productionPlanMasterResult" type="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		<result property="factoryCode" column="FACTORY_CODE"/>
-		<result property="planNo" column="PLAN_NO"/>
+		<result property="prodPlanDate" column="PRODPLAN_DATE"/>
+		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
 		<result property="planDate" column="PLAN_DATE"/>
-		<result property="workplaceCode" column="WORKPLACE_CODE"/>
-		<result property="workplaceName" column="WORKPLACE_NAME"/>
-		<result property="planStatus" column="PLAN_STATUS"/>
-		<result property="totalPlanQty" column="TOTAL_PLAN_QTY"/>
-		<result property="remark" column="REMARK"/>
-		<result property="useYn" column="USE_YN"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -20,8 +15,8 @@
 
 	<resultMap id="productionPlanResult" type="egovframework.let.production.plan.domain.model.ProductionPlan">
 		<result property="factoryCode" column="FACTORY_CODE"/>
-		<result property="planNo" column="PLAN_NO"/>
-		<result property="planSeq" column="PLAN_SEQ"/>
+		<result property="prodPlanDate" column="PRODPLAN_DATE"/>
+		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
 		<result property="planDate" column="PLAN_DATE"/>
 		<result property="itemCode" column="ITEM_CODE"/>
 		<result property="itemName" column="ITEM_NAME"/>
@@ -50,26 +45,14 @@
 	<insert id="ProductionPlanDAO.insertProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		INSERT INTO TPR301M (
 			FACTORY_CODE,
-			PLAN_NO,
-			PLAN_DATE,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			PLAN_STATUS,
-			TOTAL_PLAN_QTY,
-			REMARK,
-			USE_YN,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
 			#{factoryCode},
 			#{planNo},
 			#{planDate},
-			#{workplaceCode},
-			#{workplaceName},
-			ISNULL(#{planStatus}, 'PLANNED'),  -- Default matches ProductionPlanMaster.STATUS_PLANNED
-			ISNULL(#{totalPlanQty}, 0),
-			#{remark},
-			ISNULL(#{useYn}, 'Y'),
 			#{opmanCode},
 			GETDATE()
 		)
@@ -132,36 +115,22 @@
 	<select id="ProductionPlanDAO.selectProductionPlanMasterList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultMap="productionPlanMasterResult">
 		SELECT
 			FACTORY_CODE,
-			PLAN_NO,
-			PLAN_DATE,
-			WORKPLACE_CODE,
-			WORKPLACE_NAME,
-			PLAN_STATUS,
-			TOTAL_PLAN_QTY,
-			REMARK,
-			USE_YN,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
+			PRODPLAN_DATE AS PLAN_DATE,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
 			OPMAN_CODE2,
 			CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
 		FROM TPR301M
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND USE_YN = 'Y'
 		<if test="startDate != null and startDate != ''">
-			AND PLAN_DATE &gt;= #{startDate}
+			AND PRODPLAN_DATE &gt;= #{startDate}
 		</if>
 		<if test="endDate != null and endDate != ''">
-			AND PLAN_DATE &lt;= #{endDate}
+			AND PRODPLAN_DATE &lt;= #{endDate}
 		</if>
-		<if test="workplaceCode != null and workplaceCode != ''">
-			AND WORKPLACE_CODE = #{workplaceCode}
-		</if>
-		<if test="planStatus != null and planStatus != ''">
-			AND PLAN_STATUS = #{planStatus}
-		</if>
-		ORDER BY PLAN_DATE DESC, PLAN_NO DESC
-		OFFSET #{firstIndex} ROWS
-		FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		ORDER BY PRODPLAN_DATE DESC, PRODPLAN_SEQ ASC
 	</select>
 
 	<!-- 생산계획 상세 목록 조회 -->
@@ -252,18 +221,11 @@
 		SELECT COUNT(*) AS CNT
 		FROM TPR301M
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND USE_YN = 'Y'
 		<if test="startDate != null and startDate != ''">
-			AND PLAN_DATE &gt;= #{startDate}
+			AND PRODPLAN_DATE &gt;= #{startDate}
 		</if>
 		<if test="endDate != null and endDate != ''">
-			AND PLAN_DATE &lt;= #{endDate}
-		</if>
-		<if test="workplaceCode != null and workplaceCode != ''">
-			AND WORKPLACE_CODE = #{workplaceCode}
-		</if>
-		<if test="planStatus != null and planStatus != ''">
-			AND PLAN_STATUS = #{planStatus}
+			AND PRODPLAN_DATE &lt;= #{endDate}
 		</if>
 	</select>
 
@@ -353,5 +315,79 @@
 		  AND PLAN_NO = #{planNo}
 		  AND PLAN_SEQ = #{planSeq}
 	</update>
+
+	<!-- 생산계획 참조(주문연결) 등록 -->
+	<insert id="ProductionPlanDAO.insertProductionPlanReference" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanReference">
+		INSERT INTO TPR301R (
+			FACTORY_CODE,
+			ORDER_NO,
+			ORDER_SEQNO,
+			ORDER_HISTNO,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
+			ORDER_QTY,
+			WORKDT_QTY,
+			REPRESENT_ORDER
+		) VALUES (
+			#{factoryCode},
+			#{orderNo},
+			#{orderSeqno},
+			#{orderHistno},
+			#{prodplanDate},
+			#{prodplanSeq},
+			ISNULL(#{orderQty}, 0),
+			ISNULL(#{workdtQty}, 0),
+			ISNULL(#{representOrder}, 'N')
+		)
+	</insert>
+
+	<!-- 작업장별 주간 생산계획 조회 (설비별 그룹화) -->
+	<select id="ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultType="egovMap">
+		SELECT
+			E.EQUIP_SYS_CD AS EQUIPMENT_ID,
+			E.EQUIP_CD AS EQUIPMENT_CODE,
+			E.EQUIPMENT_NAME,
+			D.PLAN_NO,
+			D.PLAN_SEQ,
+			D.PLAN_DATE,
+			D.ITEM_CODE,
+			D.ITEM_NAME,
+			D.PLANNED_QTY,
+			D.ACTUAL_QTY,
+			D.SHIFT,
+			D.WORKER_CODE,
+			D.WORKER_NAME,
+			D.ORDER_NO,
+			D.ORDER_SEQNO,
+			D.ORDER_HISTNO,
+			D.CUSTOMER_CODE,
+			D.CUSTOMER_NAME,
+			D.REMARK
+		FROM (
+			-- 작업장의 설비연동 설비 목록 조회
+			SELECT DISTINCT
+				E.FACTORY_CODE,
+				E.EQUIP_SYS_CD,
+				E.EQUIP_CD,
+				E.EQUIPMENT_NAME
+			FROM TPR103 WP
+				INNER JOIN TPR102 P ON WP.FACTORY_CODE = P.FACTORY_CODE AND WP.WORK_CODE = P.WORK_CODE
+				INNER JOIN TPR104 PE ON P.FACTORY_CODE = PE.FACTORY_CODE AND P.WORK_CODE = PE.WORK_CODE
+				INNER JOIN TPR151 E ON PE.FACTORY_CODE = E.FACTORY_CODE AND PE.EQUIP_SYS_CD = E.EQUIP_SYS_CD
+			WHERE WP.WORKCENTER_CODE = #{workplaceCode}
+			  AND P.EQUIPMENT_INTEGRATION_YN = 'Y'
+			  AND E.USE_FLAG = 'Y'
+		) E
+		LEFT JOIN TPR301 D ON E.EQUIP_CD = D.EQUIPMENT_CODE
+			AND D.FACTORY_CODE = E.FACTORY_CODE
+			AND D.USE_YN = 'Y'
+			<if test="startDate != null and startDate != ''">
+				AND D.PLAN_DATE &gt;= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND D.PLAN_DATE &lt;= #{endDate}
+			</if>
+		ORDER BY E.EQUIPMENT_NAME, D.PLAN_DATE, D.PLAN_NO, D.PLAN_SEQ
+	</select>
 
 </mapper>

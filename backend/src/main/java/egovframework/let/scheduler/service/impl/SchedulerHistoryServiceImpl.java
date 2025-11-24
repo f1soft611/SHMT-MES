@@ -43,8 +43,13 @@ public class SchedulerHistoryServiceImpl implements SchedulerHistoryService {
 
     @Override
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
-    public void insertSchedulerHistory(SchedulerHistory history) throws Exception {
-        schedulerHistoryDAO.insertSchedulerHistory(history);
+    public Long insertSchedulerHistory(SchedulerHistory history) throws Exception {
+        Long historyId = schedulerHistoryDAO.insertSchedulerHistory(history);
+        // MyBatis selectKey가 제대로 동작하지 않을 경우를 대비하여 명시적으로 설정
+        if (history.getHistoryId() == null && historyId != null) {
+            history.setHistoryId(historyId);
+        }
+        return history.getHistoryId();
     }
 
     @Override

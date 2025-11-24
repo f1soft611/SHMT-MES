@@ -127,65 +127,82 @@ INSERT INTO scheduler_config (
 
 ### 3.1 서비스 개요
 
-`ErpToMesInterfaceService`는 ERP 시스템의 데이터를 MES 시스템으로 연동하는 샘플 서비스입니다.
+`ErpToMesInterfaceService`는 ERP 시스템의 데이터를 MES 시스템으로 연동하는 서비스입니다.
+현재 구현된 인터페이스:
+- **품목 정보 연동** (syncItems / executeItemInterface)
+- **사원 정보 연동** (syncUsers / executeUserInterface)
+- **거래처 정보 연동** (syncCusts / executeCustInterface)
+- **생산의뢰 정보 연동** (syncProductionRequests / executeProdReqInterface)
 
 ### 3.2 등록 예시
 
-**스케쥴러 등록 정보:**
-- **스케쥴러명**: ERP-MES 인터페이스
-- **스케쥴러 설명**: ERP 시스템의 작업지시, 자재, BOM 정보를 MES로 연동
+**전체 인터페이스 연동 (품목, 사원, 거래처, 생산의뢰 순서로 실행):**
+- **스케쥴러명**: ERP-MES 전체 인터페이스
+- **스케쥴러 설명**: ERP 시스템의 모든 데이터를 MES로 연동
 - **CRON 표현식**: `0 0 2 * * *` (매일 새벽 2시 실행)
-- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService`
+- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.executeInterface`
 - **활성화 여부**: Y
 
 ### 3.3 개별 메서드 실행 등록
 
-전체 연동이 아닌 개별 작업만 실행하려면:
+각 인터페이스를 개별적으로 실행하려면:
 
-**작업지시만 연동:**
-- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.syncWorkOrders`
-- **CRON 표현식**: `0 */30 * * * *` (30분마다)
-
-**자재만 연동:**
-- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.syncMaterials`
+**품목 정보만 연동:**
+- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.executeItemInterface`
 - **CRON 표현식**: `0 0 1 * * *` (매일 새벽 1시)
+- **설명**: ERP의 SHM_IF_VIEW_TDAItem에서 품목 정보를 조회하여 TCO403 테이블에 동기화
 
-**BOM만 연동:**
-- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.syncBom`
+**사원 정보만 연동:**
+- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.executeUserInterface`
+- **CRON 표현식**: `0 0 2 * * *` (매일 새벽 2시)
+- **설명**: ERP의 SHM_IF_VIEW_TDAEmp에서 사원 정보를 조회하여 MES_USER_INFO 테이블에 동기화
+
+**거래처 정보만 연동:**
+- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.executeCustInterface`
 - **CRON 표현식**: `0 0 3 * * *` (매일 새벽 3시)
+- **설명**: ERP의 SHM_IF_VIEW_TDACust에서 거래처 정보를 조회하여 TCO601 테이블에 동기화
 
-### 3.4 실제 구현 시 수정사항
+**생산의뢰 정보만 연동:**
+- **작업 클래스명**: `egovframework.let.scheduler.service.ErpToMesInterfaceService.executeProdReqInterface`
+- **CRON 표현식**: `0 */30 * * * *` (30분마다)
+- **설명**: ERP의 SHM_IF_VIEW_TPDMPSProdReqItem에서 생산의뢰 정보를 조회하여 TSA308 테이블에 동기화
 
-`ErpToMesInterfaceServiceImpl.java`는 샘플 구현이므로, 실제 사용 시 아래 부분을 수정해야 합니다:
+### 3.4 인터페이스 구현 상세
 
-1. **ERP 시스템 연동 부분**
+각 인터페이스는 다음과 같은 패턴으로 구현되어 있습니다:
+
+1. **ERP 시스템 연동**: JdbcTemplate을 이용하여 ERP DB의 인터페이스 뷰 조회
+2. **데이터 변환**: ERP 데이터를 MES 도메인 모델로 매핑
+3. **MES 시스템 저장**: MyBatis를 통해 MES DB에 INSERT/UPDATE
+4. **에러 처리**: 개별 레코드 처리 실패 시에도 계속 진행하며, 마지막에 오류 통계 기록
+
+**품목 인터페이스 예시:**
 ```java
-// TODO 주석 부분을 실제 ERP API 호출 또는 DB 연동으로 변경
-// List<WorkOrder> erpWorkOrders = erpApiClient.getWorkOrders();
-```
+// 1. ERP에서 품목 조회
+List<ErpItem> erpItems = selectErpItems(fromDate, toDate);
 
-2. **MES 시스템 저장 부분**
-```java
-// TODO 주석 부분을 실제 MES DAO 호출로 변경
-// for (WorkOrder workOrder : erpWorkOrders) {
-//     mesWorkOrderDAO.insertOrUpdate(workOrder);
-// }
-```
-
-3. **필요한 DAO, Service 의존성 주입**
-```java
-@RequiredArgsConstructor
-public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
-    
-    // 실제 필요한 의존성 추가
-    private final ErpApiClient erpApiClient;
-    private final MesWorkOrderDAO mesWorkOrderDAO;
-    private final MesMaterialDAO mesMaterialDAO;
-    private final MesBomDAO mesBomDAO;
-    
-    // ...
+// 2. 각 품목별 처리
+for (ErpItem item : erpItems) {
+    int count = mesItemInterfaceDAO.selectMesItemCount(item.getItemSeq());
+    if (count == 0) {
+        mesItemInterfaceDAO.insertMesItem(item);  // 신규 등록
+    } else {
+        mesItemInterfaceDAO.updateMesItem(item);  // 기존 업데이트
+    }
 }
 ```
+
+### 3.5 실제 구현 시 수정사항
+
+`ErpToMesInterfaceServiceImpl.java`의 샘플 메서드(`syncMaterials`, `executeMaterialInterface`)는 deprecated 되었습니다.
+새로운 구현을 추가할 때는 다음 패턴을 따르세요:
+
+1. **ERP 도메인 모델 생성** (예: `ErpItem.java`)
+2. **MES DAO 생성** (예: `MesItemInterfaceDAO.java`)
+3. **MyBatis Mapper 작성** (예: `MesItemInterface_SQL_mssql.xml`)
+4. **Service 메서드 구현**:
+   - `sync{Entity}(fromDate, toDate)` - 실제 동기화 로직
+   - `execute{Entity}Interface(fromDate, toDate)` - 스케쥴러 진입점 (로깅 포함)
 
 ## 4. CRON 표현식 가이드
 

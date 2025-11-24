@@ -118,7 +118,14 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
 
             // 히스토리 시작 기록
             try {
-                schedulerHistoryService.insertSchedulerHistory(history);
+                Long historyId = schedulerHistoryService.insertSchedulerHistory(history);
+                log.debug("스케쥴러 이력 등록 완료: historyId={}, schedulerName={}", historyId, config.getSchedulerName());
+                
+                // historyId가 null인 경우 에러 처리
+                if (historyId == null) {
+                    log.error("스케쥴러 이력 등록 후 historyId가 null입니다: {}", config.getSchedulerName());
+                    return; // 이력 ID가 없으면 실행 중단
+                }
             } catch (Exception e) {
                 log.error("스케쥴러 이력 등록 실패: {}", config.getSchedulerName(), e);
                 return; // 이력 등록 실패 시 실행 중단
@@ -157,8 +164,15 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
             } finally {
                 // 히스토리 업데이트
                 try {
-                    schedulerHistoryService.updateSchedulerHistory(history);
-                    log.debug("스케쥴러 이력 업데이트 완료: {}", history.getHistoryId());
+                    log.debug("스케쥴러 이력 업데이트 시작 - historyId={}, status={}, schedulerName={}", 
+                            history.getHistoryId(), history.getStatus(), config.getSchedulerName());
+                    
+                    if (history.getHistoryId() == null) {
+                        log.error("업데이트 시도 시 historyId가 null입니다 - schedulerName={}", config.getSchedulerName());
+                    } else {
+                        schedulerHistoryService.updateSchedulerHistory(history);
+                        log.debug("스케쥴러 이력 업데이트 완료: historyId={}", history.getHistoryId());
+                    }
                 } catch (Exception e) {
                     log.error("스케쥴러 이력 업데이트 실패 - History ID: {}, Scheduler: {}",
                             history.getHistoryId(), config.getSchedulerName(), e);

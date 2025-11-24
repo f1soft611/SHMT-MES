@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MesItemInterfaceDAO">
+
+    <!-- MES 품목 테이블에 품목 정보 존재 여부 확인 -->
+    <select id="selectMesItemCount" parameterType="string" resultType="int">
+        SELECT COUNT(1) AS cnt
+        FROM TCO403
+        WHERE MATERIAL_ID = #{itemSeq}
+    </select>
+
+    <!-- MES 품목 테이블에 품목 정보 삽입 -->
+    <insert id="insertMesItem" parameterType="egovframework.let.scheduler.domain.model.ErpItem">
+        INSERT INTO TCO403 (
+            FACTORY_CODE,
+            MATERIAL_ID,
+            MATERIAL_CODE,
+            MATERIAL_NAME,
+            MATERIAL_SPEC,
+            UNIT,
+            INTERFACE_YN,
+            DELETE_FLAG,
+            OPMAN_CODE,
+            OPTIME
+        ) VALUES (
+                     #{factoryCode},
+                     #{itemSeq},
+                     #{itemNo},
+                     #{itemName},
+                     #{spec},
+                     #{unitSeq},
+                     'Y',
+                     '0',
+                     'INTERFACE',
+                     GETDATE()
+                 )
+    </insert>
+
+    <!-- MES 품목 테이블의 품목 정보 업데이트 -->
+    <update id="updateMesItem" parameterType="egovframework.let.scheduler.domain.model.ErpItem">
+        UPDATE TCO403
+        SET
+            MATERIAL_CODE = #{itemNo},
+            MATERIAL_NAME = #{itemName},
+            MATERIAL_SPEC = #{spec},
+            UNIT = #{unitSeq},
+            OPMAN_CODE2 = 'INTERFACE',
+            OPTIME2 = GETDATE()
+        WHERE FACTORY_CODE = #{factoryCode}
+            AND MATERIAL_ID = #{itemSeq}
+    </update>
+
+</mapper>

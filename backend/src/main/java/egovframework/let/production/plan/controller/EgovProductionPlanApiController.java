@@ -179,13 +179,13 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = requestBody.getMaster();
-		master.setPlanNo(planNo);
+		master.setProdPlanId(planNo);
 		master.setOpmanCode2(user.getUniqId());
 
 		// 상세 정보 설정
 		List<ProductionPlan> planList = requestBody.getDetails();
 		for (ProductionPlan plan : planList) {
-			plan.setPlanNo(planNo);
+			plan.setProdPlanId(planNo);
 			plan.setOpmanCode2(user.getUniqId());
 		}
 
@@ -224,7 +224,7 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = new ProductionPlanMaster();
-		master.setPlanNo(planNo);
+		master.setProdPlanId(planNo);
 		master.setOpmanCode2(user.getUniqId());
 
 		// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)
@@ -232,6 +232,46 @@ public class EgovProductionPlanApiController {
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 삭제되었습니다.");
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화)
+	 *
+	 * @param workplaceCode 작업장 코드
+	 * @param startDate 시작일자 (YYYYMMDD)
+	 * @param endDate 종료일자 (YYYYMMDD)
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "주간 생산계획 조회 (설비별 그룹화)",
+			description = "작업장별 주간 생산계획을 설비별로 그룹화하여 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping(value = "/api/production-plans/weekly")
+	public ResultVO selectWeeklyProductionPlans(
+			@RequestParam("workplaceCode") String workplaceCode,
+			@RequestParam("startDate") String startDate,
+			@RequestParam("endDate") String endDate,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		// 검색 조건 설정
+		ProductionPlanVO searchVO = new ProductionPlanVO();
+		searchVO.setWorkplaceCode(workplaceCode);
+		searchVO.setStartDate(startDate);
+		searchVO.setEndDate(endDate);
+
+		// 주간 계획 조회
+		Map<String, Object> resultMap = productionPlanService.selectWeeklyProductionPlans(searchVO);
 		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
