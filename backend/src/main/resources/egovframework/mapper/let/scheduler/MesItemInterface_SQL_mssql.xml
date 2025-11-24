@@ -7,7 +7,7 @@
     <select id="selectMesItemCount" parameterType="int" resultType="int">
         SELECT COUNT(1) AS cnt
         FROM TCO403
-        WHERE MATERIAL_CODE = #{itemSeq}
+        WHERE MATERIAL_ID = #{itemSeq}
     </select>
 
     <!-- MES 품목 테이블에 품목 정보 삽입 -->
