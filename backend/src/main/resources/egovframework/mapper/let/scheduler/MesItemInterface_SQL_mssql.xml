@@ -4,7 +4,7 @@
 <mapper namespace="MesItemInterfaceDAO">
 
     <!-- MES 품목 테이블에 품목 정보 존재 여부 확인 -->
-    <select id="selectMesItemCount" parameterType="int" resultType="int">
+    <select id="selectMesItemCount" parameterType="string" resultType="int">
         SELECT COUNT(1) AS cnt
         FROM TCO403
         WHERE MATERIAL_ID = #{itemSeq}

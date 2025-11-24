@@ -34,7 +34,7 @@ public class ErpItem implements Serializable {
 	/**
 	 * 내부품목코드 (ItemSeq)
 	 */
-	private Integer itemSeq;
+	private String itemSeq;
 
 	/**
 	 * 품목명 (ItemName) - nvarchar(200)

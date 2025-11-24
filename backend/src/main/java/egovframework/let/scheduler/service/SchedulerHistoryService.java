@@ -32,9 +32,10 @@ public interface SchedulerHistoryService {
     /**
      * 스케쥴러 실행 이력을 등록한다.
      * @param history
+     * @return 생성된 이력 ID
      * @throws Exception
      */
-    void insertSchedulerHistory(SchedulerHistory history) throws Exception;
+    Long insertSchedulerHistory(SchedulerHistory history) throws Exception;
 
     /**
      * 스케쥴러 실행 이력을 수정한다.
