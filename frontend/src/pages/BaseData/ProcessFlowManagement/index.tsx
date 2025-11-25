@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React  from "react";
 import { useProcessFlow } from "./hooks/useProcessFlow";
 import Typography from "@mui/material/Typography";
 import {
@@ -8,12 +8,7 @@ import {
 import Grid from "@mui/material/Grid";
 import {
     Add as AddIcon,
-    Save as SaveIcon,
-    // Edit as EditIcon,
-    Delete as DeleteIcon,
-    // People as PeopleIcon,
     Search as SearchIcon,
-    // Build as BuildIcon,
 } from '@mui/icons-material';
 import {usePermissions} from "../../../contexts/PermissionContext";
 import {
@@ -106,19 +101,6 @@ const ProcessFlowManagement: React.FC = () => {
                         placeholder="검색어를 입력하세요"
                     />
 
-                    {/*<FormControl size="small" sx={{minWidth: 120}}>*/}
-                    {/*    <InputLabel>상태</InputLabel>*/}
-                    {/*    <Select*/}
-                    {/*        value={inputValues.status}*/}
-                    {/*        label="상태"*/}
-                    {/*        onChange={(e) => handleInputChange('status', e.target.value)}*/}
-                    {/*    >*/}
-                    {/*        <MenuItem value="">전체</MenuItem>*/}
-                    {/*        <MenuItem value="ACTIVE">활성</MenuItem>*/}
-                    {/*        <MenuItem value="INACTIVE">비활성</MenuItem>*/}
-                    {/*    </Select>*/}
-                    {/*</FormControl>*/}
-
                     <Button
                         variant="contained"
                         startIcon={<SearchIcon/>}
@@ -149,7 +131,6 @@ const ProcessFlowManagement: React.FC = () => {
                         setPaginationModel={setPaginationModel}
                         onEdit={handleOpenEditDialog}
                         onDelete={handleDelete}
-                        // onSelect={setSelectedFlow}
                         onDetailOpen={handleOpenDetailDialog}
                     />
                 </Grid>
