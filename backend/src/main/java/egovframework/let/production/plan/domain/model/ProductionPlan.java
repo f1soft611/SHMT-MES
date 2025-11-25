@@ -61,29 +61,35 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "실적수량")
 	private BigDecimal actualQty = BigDecimal.ZERO;
 
+	@Schema(description = "작업장 코드")
+	private String workplaceCode = "";
+
+	@Schema(description = "작업장명")
+	private String workplaceName = "";
+
+	@Schema(description = "공정 코드")
+	private String processCode = "";
+
+	@Schema(description = "공정명")
+	private String processName = "";
+
+	@Schema(description = "설비ID")
+	private String equipmentId = "";
+
 	@Schema(description = "설비코드")
 	private String equipmentCode = "";
 
 	@Schema(description = "설비명")
 	private String equipmentName = "";
 
-	@Schema(description = "근무구분 (DAY/NIGHT/SWING)")
-	private String shift = "";
+	@Schema(description = "근무구분 (A/B/C/D/N)")
+	private String workerType = "";
 
 	@Schema(description = "작업자 코드")
 	private String workerCode = "";
 
 	@Schema(description = "작업자명")
 	private String workerName = "";
-
-	@Schema(description = "생산의뢰번호")
-	private String orderNo = "";
-
-	@Schema(description = "생산의뢰순번")
-	private Integer orderSeqno = 0;
-
-	@Schema(description = "생산의뢰이력번호")
-	private Integer orderHistno = 0;
 
 	@Schema(description = "LOT번호")
 	private String lotNo = "";

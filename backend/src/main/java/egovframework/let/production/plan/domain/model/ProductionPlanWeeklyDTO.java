@@ -32,6 +32,16 @@ public class ProductionPlanWeeklyDTO {
     @Builder
     public static class EquipmentWeeklyPlan {
         /**
+         * 작업장 코드
+         */
+        private String workplaceCode;
+
+        /**
+         * 공정 코드
+         */
+        private String processCode;
+
+        /**
          * 설비 코드
          */
         private String equipmentCode;
@@ -65,7 +75,7 @@ public class ProductionPlanWeeklyDTO {
         /**
          * 계획번호
          */
-        private String planNo;
+        private String planId;
         
         /**
          * 계획순번

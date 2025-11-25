@@ -50,8 +50,11 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Override
 	@Transactional
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
-		String planNo = egovProdPlanIdgenService.getNextStringId();
-		master.setProdPlanId(planNo);
+		String planId = egovProdPlanIdgenService.getNextStringId();
+		master.setProdPlanId(planId);
+		
+		// prodPlanDate 설정 (planDate와 동일하게)
+		master.setProdPlanDate(master.getPlanDate());
 		
 		// 총 계획수량 계산
 		BigDecimal totalQty = BigDecimal.ZERO;
@@ -64,16 +67,15 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		productionPlanDAO.insertProductionPlanMaster(master);
 		
 		// 상세 등록
-		int seq = 1;
 		for (ProductionPlan plan : planList) {
 			plan.setFactoryCode(master.getFactoryCode());
-			plan.setProdPlanId(planNo);
+			plan.setProdPlanId(planId);
 			plan.setProdPlanDate(master.getProdPlanDate());
 			plan.setProdPlanSeq(master.getProdPlanSeq());
 			productionPlanDAO.insertProductionPlan(plan);
 		}
 		
-		return planNo;
+		return planId;
 	}
 
 	/**
@@ -163,7 +165,9 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		for (Object obj : rawData) {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> row = (Map<String, Object>) obj;
-			
+
+			String workplaceCode = (String) row.get("workplaceCode");
+			String processCode = (String) row.get("processCode");
 			String equipmentCode = (String) row.get("equipmentCode");
 			String equipmentName = (String) row.get("equipmentName");
 			String equipmentId = (String) row.get("equipmentId");
@@ -172,6 +176,8 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			if (!equipmentMap.containsKey(equipmentCode)) {
 				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan equipPlan = 
 					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan.builder()
+						.workplaceCode(workplaceCode)
+						.processCode(processCode)
 						.equipmentCode(equipmentCode)
 						.equipmentName(equipmentName)
 						.equipmentId(equipmentId)
@@ -181,7 +187,8 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			}
 			
 			// 계획 데이터가 있는 경우만 추가
-			if (row.get("planNo") != null) {
+			if (row.get("prodPlanId") != null) {
+				System.out.println("1111111111111111111111111111111111111111");
 				String planDate = (String) row.get("planDate");
 				
 				// YYYYMMDD -> YYYY-MM-DD 변환
@@ -192,22 +199,22 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 				// DailyPlan 생성
 				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan dailyPlan = 
 					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan.builder()
-						.planNo((String) row.get("planNo"))
+						.planId((String) row.get("prodPlanId"))
 						.planSeq((Integer) row.get("planSeq"))
 						.planDate(planDate)
 						.itemCode((String) row.get("itemCode"))
-						.itemName((String) row.get("itemName"))
-						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
-						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
-						.shift((String) row.get("shift"))
-						.workerCode((String) row.get("workerCode"))
-						.workerName((String) row.get("workerName"))
-						.orderNo((String) row.get("orderNo"))
-						.orderSeqno((Integer) row.get("orderSeqno"))
-						.orderHistno((Integer) row.get("orderHistno"))
-						.customerCode((String) row.get("customerCode"))
-						.customerName((String) row.get("customerName"))
-						.remark((String) row.get("remark"))
+//						.itemName((String) row.get("itemName"))
+//						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
+//						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
+//						.shift((String) row.get("shift"))
+//						.workerCode((String) row.get("workerCode"))
+//						.workerName((String) row.get("workerName"))
+//						.orderNo((String) row.get("orderNo"))
+//						.orderSeqno((Integer) row.get("orderSeqno"))
+//						.orderHistno((Integer) row.get("orderHistno"))
+//						.customerCode((String) row.get("customerCode"))
+//						.customerName((String) row.get("customerName"))
+//						.remark((String) row.get("remark"))
 						.build();
 				
 				// 날짜별 계획 리스트에 추가

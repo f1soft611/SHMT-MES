@@ -39,6 +39,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     ids: new Set<GridRowId>(),
   });
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [actualSearchKeyword, setActualSearchKeyword] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
@@ -50,8 +51,8 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
         setLoading(true);
         setError('');
         const response = await itemService.getItemList(page, pageSize, {
-          searchCnd: 'itemName',
-          searchWrd: searchKeyword,
+          searchCnd: '1', // 품목명 검색',
+          searchWrd: actualSearchKeyword,
           useYn: 'Y',
         });
 
@@ -75,11 +76,11 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     if (open) {
       loadItems();
     }
-  }, [open, page, pageSize, searchKeyword]);
+  }, [open, page, pageSize, actualSearchKeyword]);
 
   const handleSearch = () => {
     setPage(0);
-    // searchKeyword state change will trigger useEffect to reload items
+    setActualSearchKeyword(searchKeyword);
   };
 
   const handleSelect = () => {
@@ -104,6 +105,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
   const handleClose = () => {
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setSearchKeyword('');
+    setActualSearchKeyword('');
     setPage(0);
     setError('');
     onClose();
@@ -165,7 +167,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
               placeholder="품목명으로 검색"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleSearch();
                 }
@@ -224,9 +226,6 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       </DialogContent>
       <Divider />
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} variant="outlined" color="inherit">
-          취소
-        </Button>
         <Button
           onClick={handleSelect}
           variant="contained"
@@ -234,6 +233,9 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
           disabled={selectionModel.ids.size === 0}
         >
           선택
+        </Button>
+        <Button onClick={handleClose} variant="outlined" color="inherit">
+          취소
         </Button>
       </DialogActions>
     </Dialog>

@@ -133,20 +133,22 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = requestBody.getMaster();
+		master.setFactoryCode(user.getFactoryCode());
 		master.setOpmanCode(user.getUniqId());
 
 		// 상세 정보 설정
 		List<ProductionPlan> planList = requestBody.getDetails();
 		for (ProductionPlan plan : planList) {
+			plan.setFactoryCode(user.getFactoryCode());
 			plan.setOpmanCode(user.getUniqId());
 		}
 
 		// 생산계획 등록 (트랜잭션 처리)
-		String planNo = productionPlanService.insertProductionPlan(master, planList);
+		String planId = productionPlanService.insertProductionPlan(master, planList);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 등록되었습니다.");
-		resultMap.put("planNo", planNo);
+		resultMap.put("planId", planId);
 		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);

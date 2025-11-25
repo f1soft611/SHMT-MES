@@ -51,33 +51,16 @@ import productionPlanService, {
 } from '../../services/productionPlanService';
 import { Equipment } from '../../types/equipment';
 import { Workplace, WorkplaceWorker } from '../../types/workplace';
+import { ProductionPlanData } from '../../types/productionPlan';
+import {
+  mapWeeklyEquipmentPlans,
+  WeeklyEquipmentPlanResponse,
+} from '../../utils/productionPlanMapper';
 import PlanDialog from './components/PlanDialog';
 
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
 const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
-
-interface ProductionPlanData {
-  id?: string;
-  date: string;
-  itemCode: string;
-  itemName: string;
-  plannedQty: number;
-  equipmentCode: string;
-  equipmentName?: string;
-  shift?: string;
-  remark?: string;
-  orderNo?: string;
-  orderSeqno?: number;
-  orderHistno?: number;
-  workplaceCode?: string;
-  workplaceName?: string;
-  workerCode?: string;
-  workerName?: string;
-  customerCode?: string;
-  customerName?: string;
-  additionalCustomers?: string[]; // 추가 거래처 목록
-}
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -162,6 +145,10 @@ const ProductionPlan: React.FC = () => {
   const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>(
     []
   );
+  // const [workplaceProcesses, setWorkplaceProcesses] = useState<any[]>([]);
+  const [equipmentProcessMap, setEquipmentProcessMap] = useState<
+    Map<string, string>
+  >(new Map());
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set()
   );
@@ -318,7 +305,19 @@ const ProductionPlan: React.FC = () => {
             equipCd: eq.equipCd,
             equipmentName: eq.equipmentName,
             equipmentId: eq.equipmentId,
+            processCode: eq.processCode,
+            processName: eq.processName,
           }));
+
+          // 설비-공정 매핑 생성
+          const processMap = new Map<string, string>();
+          equipmentList.forEach((eq: any) => {
+            if (eq.equipCd && eq.processCode) {
+              processMap.set(eq.equipCd, eq.processCode);
+              processMap.set(eq.equipCd + 'NAME', eq.processName);
+            }
+          });
+          setEquipmentProcessMap(processMap);
 
           setEquipments(equipmentList);
           setExpandedEquipments(
@@ -348,6 +347,20 @@ const ProductionPlan: React.FC = () => {
     }
   }, []);
 
+  // const loadWorkplaceProcesses = useCallback(async (workplaceCode: string) => {
+  //   try {
+  //     const response = await workplaceService.getWorkplaceProcesses(
+  //       workplaceCode
+  //     );
+  //     if (response.resultCode === 200 && response.result?.resultList) {
+  //       setWorkplaceProcesses(response.result.resultList);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to load workplace processes:', error);
+  //     setWorkplaceProcesses([]);
+  //   }
+  // }, []);
+
   const loadWeeklyPlans = useCallback(async () => {
     if (!selectedWorkplace) return;
 
@@ -362,41 +375,11 @@ const ProductionPlan: React.FC = () => {
       });
 
       if (response.resultCode === 200 && response.result?.equipmentPlans) {
-        // 새로운 API 응답 구조: equipmentPlans 배열
-        // 각 equipmentPlan은 { equipmentCode, equipmentName, weeklyPlans: { "YYYY-MM-DD": [plans] } }
-
-        // 기존 plans 배열 형식으로 변환 (기존 UI 로직 유지)
-        const allPlans: ProductionPlanData[] = [];
-
-        response.result.equipmentPlans.forEach((equipPlan: any) => {
-          Object.entries(equipPlan.weeklyPlans || {}).forEach(
-            ([date, dailyPlans]: [string, any]) => {
-              (dailyPlans as any[]).forEach((plan: any) => {
-                allPlans.push({
-                  id: `${plan.planNo}-${plan.planSeq}`,
-                  date: date, // Already in YYYY-MM-DD format
-                  itemCode: plan.itemCode,
-                  itemName: plan.itemName,
-                  plannedQty: plan.plannedQty,
-                  equipmentCode: equipPlan.equipmentCode,
-                  equipmentName: equipPlan.equipmentName,
-                  shift: plan.shift,
-                  remark: plan.remark,
-                  orderNo: plan.orderNo,
-                  orderSeqno: plan.orderSeqno,
-                  orderHistno: plan.orderHistno,
-                  workplaceCode: selectedWorkplace,
-                  workerCode: plan.workerCode,
-                  workerName: plan.workerName,
-                  customerCode: plan.customerCode,
-                  customerName: plan.customerName,
-                });
-              });
-            }
-          );
-        });
-
-        setPlans(allPlans);
+        const mapped = mapWeeklyEquipmentPlans(
+          response.result as WeeklyEquipmentPlanResponse,
+          selectedWorkplace
+        );
+        setPlans(mapped);
       }
     } catch (error) {
       console.error('Failed to load production plans:', error);
@@ -413,12 +396,20 @@ const ProductionPlan: React.FC = () => {
     if (selectedWorkplace) {
       loadEquipmentsByWorkplace(selectedWorkplace);
       loadWorkplaceWorkers(selectedWorkplace);
+      // loadWorkplaceProcesses(selectedWorkplace);
     } else {
       setEquipments([]);
       setWorkplaceWorkers([]);
+      // setWorkplaceProcesses([]);
+      setEquipmentProcessMap(new Map());
       setPlans([]);
     }
-  }, [selectedWorkplace, loadEquipmentsByWorkplace, loadWorkplaceWorkers]);
+  }, [
+    selectedWorkplace,
+    loadEquipmentsByWorkplace,
+    loadWorkplaceWorkers,
+    // loadWorkplaceProcesses,
+  ]);
 
   // Reload plans when dependencies change (week or workplace)
   useEffect(() => {
@@ -484,6 +475,14 @@ const ProductionPlan: React.FC = () => {
       return;
     }
 
+    // 설비에 매핑된 공정코드 찾기
+    const processCode = equipmentCode
+      ? equipmentProcessMap.get(equipmentCode) || ''
+      : '';
+    const processName = equipmentCode
+      ? equipmentProcessMap.get(equipmentCode + 'NAME') || ''
+      : '';
+
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -491,16 +490,20 @@ const ProductionPlan: React.FC = () => {
       itemCode: '',
       itemName: '',
       plannedQty: 0,
+      equipmentId:
+        equipments.find((e) => e.equipCd === equipmentCode)?.equipmentId || '',
       equipmentCode: equipmentCode || '',
       equipmentName:
         equipments.find((e) => e.equipCd === equipmentCode)?.equipmentName ||
         '',
-      shift: 'DAY',
+      shift: '',
       remark: '',
       workplaceCode: selectedWorkplace,
       workplaceName:
         workplaces.find((w) => w.workplaceCode === selectedWorkplace)
           ?.workplaceName || '',
+      processCode: processCode,
+      processName: processName,
     });
     setOpenDialog(true);
   };
@@ -515,12 +518,19 @@ const ProductionPlan: React.FC = () => {
     setOpenDialog(false);
   };
 
-  const handleChange = (field: keyof ProductionPlanData, value: any) => {
-    setFormData({ ...formData, [field]: value });
+  // 넓은 시그니처 허용 (JSX 전달 시 string|number|symbol 형태 요구되는 경우 대응)
+  const handleChange = (
+    field: keyof ProductionPlanData | string | number | symbol,
+    value: any
+  ) => {
+    setFormData({
+      ...formData,
+      [field as keyof ProductionPlanData]: value,
+    });
   };
 
   const handleBatchChange = (updates: Partial<ProductionPlanData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+    setFormData((prev: ProductionPlanData) => ({ ...prev, ...updates }));
   };
 
   const handleSearchChange = (field: string, value: string) => {
@@ -549,9 +559,16 @@ const ProductionPlan: React.FC = () => {
               itemCode: data.itemCode,
               itemName: data.itemName,
               plannedQty: data.plannedQty,
+              workplaceCode: selectedWorkplace,
+              workplaceName: workplaces.find(
+                (w) => w.workplaceCode === selectedWorkplace
+              )?.workplaceName,
+              processCode: data.processCode,
+              processName: data.processName,
+              equipmentId: data.equipmentId,
               equipmentCode: data.equipmentCode,
               equipmentName: data.equipmentName,
-              shift: data.shift,
+              workerType: data.shift,
               remark: data.remark,
               orderNo: data.orderNo,
               orderSeqno: data.orderSeqno,
