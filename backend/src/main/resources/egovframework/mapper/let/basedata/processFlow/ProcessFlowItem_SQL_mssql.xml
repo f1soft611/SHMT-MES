@@ -10,6 +10,7 @@
         <result property="flowItemName" column="PROD_CODE_NAME"/>
         <result property="specification" column="MATERIAL_SPEC"/>
         <result property="unit" column="UNIT"/>
+        <result property="unitName" column="UNIT_NAME"/>
 
         <result property="regUserId" column="OPMAN_CODE"/>
         <result property="regDt" column="OPTIME"/>
@@ -30,6 +31,7 @@
             B.MATERIAL_NAME AS PROD_CODE_NAME,
             B.MATERIAL_SPEC,
             B.UNIT,
+            ISNULL(B1.CODE_NM, '') AS UNIT_NAME,
             A.OPTIME,
             A.OPMAN_CODE,
             A.OPTIME2,
@@ -37,6 +39,8 @@
         FROM TPR112 A
         LEFT JOIN TCO403 B
             ON A.PROD_CODE = B.MATERIAL_CODE
+            LEFT JOIN MES_CCMMNDETAIL_CODE B1
+            ON B.UNIT = B1.CODE
         WHERE 1=1
         AND WORK_ORDER_ID = #{processFlowId}
         ORDER BY FLOW_ITEM_ID

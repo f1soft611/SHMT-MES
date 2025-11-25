@@ -13,8 +13,10 @@ import {
     Extension as ExtensionIcon,
     Build as BuildIcon
 } from '@mui/icons-material';
-import {ProcessFlowItemTab, ProcessFlowProcessTab} from "./index";
-import { ProcessFlow, ProcessFlowProcess, DetailSavePayload } from '../../../../types/processFlow';
+// import {ProcessFlowItemTab, ProcessFlowProcessTab} from "./index";
+import ProcessFlowItemTab from "./ProcessFlowItemTab";
+import ProcessFlowProcessTab from "./ProcessFlowProcessTab";
+import { ProcessFlow, DetailSavePayload } from '../../../../types/processFlow';
 import {
     ProcessFlowDetailProvider,
     useProcessFlowDetailContext
