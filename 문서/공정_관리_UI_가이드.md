@@ -3,6 +3,7 @@
 ## Main Process List Page
 
 ### Layout
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  공정 관리                              [+ 공정 등록]         │
@@ -196,7 +197,7 @@ Icons Legend:
 7. **Tabs**: Organized detail management
 8. **Dropdown Selects**: Easy selection of related data
 9. **Snackbar Notifications**: User feedback for actions
-10. **Form Validation**: Required field indicators (*)
+10. **Form Validation**: Required field indicators (\*)
 
 ## Color Scheme:
 
@@ -213,3 +214,28 @@ Icons Legend:
 - Confirmation dialogs for destructive actions
 - Error messages displayed clearly
 - Keyboard navigation support through Material-UI
+
+---
+
+## 통합 히스토리 (History)
+
+이 문서는 공정 관리 UI 가이드와 구현/변경내역 문서를 통합한 대표 문서입니다.
+
+| 날짜    | 변경           | 주요 내용                                              | 출처        |
+| ------- | -------------- | ------------------------------------------------------ | ----------- |
+| 2025-10 | 초기 구현      | 목록/등록/수정/삭제 + 탭 기반 상세 (작업장/불량/검사)  | 구현 보고서 |
+| 2025-11 | 변경사항 정리  | 작업장 매핑 탭 분리 논의, 불량/검사 코드 드롭다운 도입 | UI 변경사항 |
+| 2025-11 | 코드 자동 채움 | 공통코드 DEFECT_CODE / INSPECTION_CODE 연동            | UI 변경사항 |
+| 2025-11 | 통합 문서화    | 보고서/변경사항 아카이브, 본 문서 대표화               | 통합 작업   |
+
+### 향후 개선 제안
+
+- 불량코드 계층 트리 표현
+- 검사항목 일괄(Excel) 등록
+- 공정 복사 기능
+- 공정 흐름도 시각화
+- 변경 이력 추적(Revision Log)
+
+### 아카이브 문서
+
+`archive/공정관리/공정_관리_구현_보고서.md`, `archive/공정관리/공정_관리_UI_변경사항.md`

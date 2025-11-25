@@ -3,6 +3,7 @@
 ## Main Equipment List Page
 
 ### Layout
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  설비 관리                              [+ 설비 등록]         │
@@ -37,13 +38,16 @@ Icons Legend:
 ```
 
 ### Features
+
 1. **Search Functionality**
+
    - Search by equipment code (설비코드)
    - Search by equipment name (설비명)
    - Search by location (위치)
    - Filter by status (정상/정지)
 
 2. **Status Indicators**
+
    - 정상 (Normal): Green chip
    - 정지 (Stopped): Gray chip
    - 사용 (In Use): Blue chip
@@ -90,19 +94,23 @@ Icons Legend:
 
 ### Form Fields
 
-#### Required Fields (*)
+#### Required Fields (\*)
+
 - **시스템 코드** (System Code): EQUIP_SYS_CD
+
   - Type: Text (max 6 chars)
   - Example: "SYS01"
   - Note: Cannot be changed after creation
 
 - **설비 코드** (Equipment Code): EQUIP_CD
+
   - Type: Text (max 6 chars)
   - Example: "EQ001"
   - Note: Cannot be changed after creation
   - Validation: Unique combination with System Code
 
 - **상태** (Status): STATUS_FLAG
+
   - Type: Select
   - Options:
     - 정상 (Normal): "1"
@@ -117,36 +125,45 @@ Icons Legend:
   - Default: "Y"
 
 #### Optional Fields
+
 - **설비명** (Equipment Name): EQUIPMENT_NAME
+
   - Type: Text (max 18 chars)
   - Example: "조립설비 A"
 
 - **설비 규격** (Specification): EQUIP_SPEC
+
   - Type: Text (max 99 chars)
   - Example: "Model-A 2023"
 
 - **설비 구조** (Structure): EQUIP_STRUCT
+
   - Type: Text (max 99 chars)
   - Example: "Type-1 구조"
 
 - **위치** (Location): LOCATION
+
   - Type: Text (max 1000 chars)
   - Example: "1공장 1라인"
 
 - **관리자 코드** (Manager Code): MANAGER_CODE
+
   - Type: Text (max 10 chars)
   - Example: "MGR001"
 
 - **작업자 코드** (Operator Code): OPMAN_CODE
+
   - Type: Text (max 10 chars)
   - Example: "OPR001"
 
 - **가동 시간** (Operation Time): OPTIME
+
   - Type: Text (max 12 chars)
   - Format: "HHMM-HHMM"
   - Example: "0800-1800"
 
 - **PLC 주소** (PLC Address): PLC_ADDRESS
+
   - Type: Text (max 18 chars)
   - Example: "192.168.1.100"
 
@@ -155,6 +172,7 @@ Icons Legend:
   - Example: "정기점검 필요"
 
 ### Validation Rules
+
 1. Required fields must be filled
 2. System Code + Equipment Code must be unique
 3. System Code and Equipment Code cannot be changed after creation
@@ -162,7 +180,9 @@ Icons Legend:
 5. Error messages displayed below each field
 
 ### Form Behavior
+
 - **Create Mode**:
+
   - All fields are empty
   - System Code and Equipment Code are editable
   - Default values: STATUS_FLAG="1", USE_FLAG="Y"
@@ -175,6 +195,7 @@ Icons Legend:
 ## User Interactions
 
 ### Search Flow
+
 ```
 1. User selects search condition (설비코드/설비명/위치)
 2. User enters search keyword
@@ -186,6 +207,7 @@ Icons Legend:
 ```
 
 ### Create Flow
+
 ```
 1. User clicks [+ 설비 등록] button
 2. Dialog opens in create mode
@@ -205,6 +227,7 @@ Icons Legend:
 ```
 
 ### Edit Flow
+
 ```
 1. User clicks ✏️ icon on a row
 2. Dialog opens in edit mode
@@ -224,6 +247,7 @@ Icons Legend:
 ```
 
 ### Delete Flow
+
 ```
 1. User clicks 🗑️ icon on a row
 2. Confirmation dialog appears
@@ -239,16 +263,19 @@ Icons Legend:
 ## Responsive Design
 
 ### Desktop (>960px)
+
 - Full DataGrid with all columns visible
 - Dialog width: 600px (md)
 - Comfortable spacing
 
 ### Tablet (600-960px)
+
 - Some columns may be hidden
 - Dialog width: 90% of screen
 - Adjusted padding
 
 ### Mobile (<600px)
+
 - Minimal columns visible
 - Dialog fullscreen
 - Stacked form fields
@@ -256,12 +283,14 @@ Icons Legend:
 ## Permission-Based Access Control
 
 ### Read-Only User
+
 - Can view equipment list
 - Can search and filter
 - Cannot see [+ 설비 등록] button
 - Edit (✏️) and Delete (🗑️) buttons are disabled
 
 ### Read-Write User
+
 - Can view equipment list
 - Can search and filter
 - Can click [+ 설비 등록] button
@@ -269,6 +298,7 @@ Icons Legend:
 - Can delete equipment (🗑️ enabled)
 
 ### Permission Check
+
 - Path: `/base/equipment`
 - Hook: `usePermissions()`
 - Function: `hasWritePermission('/base/equipment')`
@@ -276,6 +306,7 @@ Icons Legend:
 ## Error Handling
 
 ### Validation Errors
+
 - Displayed below respective fields
 - Red color with error icon
 - Examples:
@@ -284,6 +315,7 @@ Icons Legend:
   - "이미 존재하는 설비 코드입니다."
 
 ### API Errors
+
 - Displayed in Snackbar (top-center)
 - Auto-dismiss after 3 seconds
 - Examples:
@@ -292,6 +324,7 @@ Icons Legend:
   - Error: "설비 목록을 불러오는데 실패했습니다." (Red)
 
 ### Network Errors
+
 - Snackbar notification
 - User can retry the action
 - Error details logged to console
@@ -299,16 +332,19 @@ Icons Legend:
 ## Accessibility
 
 ### Keyboard Navigation
+
 - Tab through form fields
 - Enter to submit search
 - Escape to close dialog
 
 ### Screen Reader Support
+
 - Form labels properly associated
 - Error messages announced
 - Status indicators have aria-labels
 
 ### Color Contrast
+
 - WCAG AA compliant
 - Status chips have sufficient contrast
 - Error messages use red with icons
@@ -316,6 +352,7 @@ Icons Legend:
 ## Component State Management
 
 ### Local State (useState)
+
 ```typescript
 - equipments: Equipment[]
 - totalCount: number
@@ -328,6 +365,7 @@ Icons Legend:
 ```
 
 ### Form State (react-hook-form)
+
 ```typescript
 - control: equipmentControl
 - handleSubmit: handleEquipmentSubmit
@@ -336,21 +374,25 @@ Icons Legend:
 ```
 
 ### Side Effects (useEffect)
+
 - Fetch equipment list when searchParams or paginationModel changes
 - Prevents unnecessary API calls by separating inputValues and searchParams
 
 ## Performance Optimizations
 
 1. **Server-Side Pagination**
+
    - Only loads current page data
    - Reduces initial load time
    - Scalable for large datasets
 
 2. **Debounced Search**
+
    - Search only triggers on button click or Enter
    - Prevents excessive API calls
 
 3. **Memoized Callbacks**
+
    - useCallback for fetchEquipments
    - Prevents unnecessary re-renders
 
@@ -361,21 +403,25 @@ Icons Legend:
 ## Integration Points
 
 ### Backend API
+
 - Base URL: `/api/equipments`
 - Authentication: JWT token in header
 - Response format: Standard ResultVO structure
 
 ### Permission System
+
 - Context: PermissionContext
 - Hook: usePermissions()
 - Checks: hasWritePermission('/base/equipment')
 
 ### Routing
+
 - URL: `/base/equipment`
 - Constant: `URL.EQUIPMENT_MANAGEMENT`
 - Protected Route: Requires authentication
 
 ### Menu System
+
 - Dynamic menu from database
 - Parent: "기준정보" (Base Data)
 - Icon: Factory or Settings
@@ -384,6 +430,7 @@ Icons Legend:
 ## Testing Checklist
 
 ### UI Tests
+
 - [ ] Equipment list displays correctly
 - [ ] Search by code works
 - [ ] Search by name works
@@ -398,6 +445,31 @@ Icons Legend:
 - [ ] Success messages display
 
 ### Functional Tests
+
+---
+
+## 통합 히스토리 (History)
+
+본 문서는 설비 관리 UI 가이드와 구현 완료 보고서를 통합한 대표 문서입니다.
+
+| 날짜    | 변경           | 내용                                  | 출처        |
+| ------- | -------------- | ------------------------------------- | ----------- |
+| 2025-11 | 초기 구현      | CRUD + 검색/필터 + 페이징 + 권한 제어 | 구현 보고서 |
+| 2025-11 | 코드 중복 검사 | 등록/수정 시 조합 유니크 검증         | 구현 보고서 |
+| 2025-11 | 통합 문서화    | 보고서 아카이브, 본 문서 대표화       | 통합 작업   |
+
+### 향후 개선 제안
+
+- 설비 정비 이력 관리 추가
+- 가동/비가동 실시간 모니터링 (WebSocket)
+- 다중 관리자/작업자 연결 UI 개선
+- 설비 그룹/카테고리 필터링
+- Excel 업로드/다운로드
+
+### 아카이브 문서
+
+`archive/설비관리/설비_관리_구현_보고서.md`
+
 - [ ] Create equipment succeeds
 - [ ] Create with duplicate code fails
 - [ ] Edit equipment succeeds
@@ -407,12 +479,14 @@ Icons Legend:
 - [ ] Permission controls work
 
 ### Responsive Tests
+
 - [ ] Desktop layout correct
 - [ ] Tablet layout correct
 - [ ] Mobile layout correct
 - [ ] Dialog responsive
 
 ### Accessibility Tests
+
 - [ ] Keyboard navigation works
 - [ ] Screen reader compatible
 - [ ] Color contrast sufficient
@@ -421,6 +495,7 @@ Icons Legend:
 ## Code Examples
 
 ### Search Handler
+
 ```typescript
 const handleSearch = () => {
   setSearchParams({ ...inputValues });
@@ -429,6 +504,7 @@ const handleSearch = () => {
 ```
 
 ### Form Submit Handler
+
 ```typescript
 const handleSave = async (data: Equipment) => {
   try {
@@ -450,6 +526,7 @@ const handleSave = async (data: Equipment) => {
 ```
 
 ### DataGrid Column Definition
+
 ```typescript
 {
   field: 'equipCd',
@@ -463,19 +540,23 @@ const handleSave = async (data: Equipment) => {
 ## Best Practices Followed
 
 1. **Consistent Naming**
+
    - Follows existing conventions
    - Clear and descriptive names
 
 2. **Type Safety**
+
    - Full TypeScript coverage
    - Interface definitions
 
 3. **Error Handling**
+
    - Try-catch blocks
    - User-friendly messages
    - Console logging for debugging
 
 4. **Code Reusability**
+
    - Shared components (DataGrid, Dialog)
    - Utility functions
    - Service layer abstraction
@@ -487,19 +568,20 @@ const handleSave = async (data: Equipment) => {
 
 ## Comparison with Other Management Pages
 
-| Feature | Equipment | Process | Workplace |
-|---------|-----------|---------|-----------|
-| Main entity | Equipment | Process | Workplace |
-| Sub-entities | None | Defect, Inspection, Stop Item | Worker, Process |
-| Tabs | No | Yes (3 tabs) | Yes (2 tabs) |
-| Search conditions | 3 | 3 | 3 |
-| Status types | 2 | 2 | 2 |
-| Complexity | Simple | Complex | Medium |
-| Pattern | CRUD only | CRUD + Relations | CRUD + Relations |
+| Feature           | Equipment | Process                       | Workplace        |
+| ----------------- | --------- | ----------------------------- | ---------------- |
+| Main entity       | Equipment | Process                       | Workplace        |
+| Sub-entities      | None      | Defect, Inspection, Stop Item | Worker, Process  |
+| Tabs              | No        | Yes (3 tabs)                  | Yes (2 tabs)     |
+| Search conditions | 3         | 3                             | 3                |
+| Status types      | 2         | 2                             | 2                |
+| Complexity        | Simple    | Complex                       | Medium           |
+| Pattern           | CRUD only | CRUD + Relations              | CRUD + Relations |
 
 ## Future Enhancements
 
 ### Potential Features
+
 1. Equipment history tracking
 2. Maintenance schedule
 3. Equipment-Process mapping
@@ -512,6 +594,7 @@ const handleSave = async (data: Equipment) => {
 10. Export to Excel
 
 ### Technical Improvements
+
 1. Infinite scroll option
 2. Advanced search filters
 3. Bulk operations
