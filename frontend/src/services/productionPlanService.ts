@@ -9,9 +9,14 @@ export interface ProductionPlan {
   itemName: string;
   plannedQty: number;
   actualQty?: number;
+  workplaceCode: string;
+  workplaceName?: string;
+  processCode?: string;
+  processName?: string;
+  equipmentId?: string;
   equipmentCode: string;
   equipmentName?: string;
-  shift?: string;
+  workerType?: string;
   workerCode?: string;
   workerName?: string;
   orderNo?: string;

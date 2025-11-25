@@ -68,12 +68,6 @@ public class ProductionPlanMaster implements Serializable {
 	@Schema(description = "총 계획수량")
 	private BigDecimal totalPlanQty = BigDecimal.ZERO;
 
-	@Schema(description = "비고")
-	private String remark = "";
-
-	@Schema(description = "사용 여부 (Y/N)")
-	private String useYn = "Y";
-
 	@Schema(description = "등록자 ID")
 	private String opmanCode = "";
 

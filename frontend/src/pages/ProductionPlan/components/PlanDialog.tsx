@@ -29,6 +29,7 @@ import { ProductionRequest } from '../../../types/productionRequest';
 import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
 import { WorkplaceWorker } from '../../../types/workplace';
+import { ProductionPlanData } from '../../../types/productionPlan';
 
 /**
  * 근무구분(COM006) 코드를 한글 표시명으로 변환
@@ -58,32 +59,7 @@ const getShiftDisplayName = (code?: string): string => {
   }
 };
 
-interface ProductionPlanData {
-  id?: string;
-  date: string;
-  itemCode: string;
-  itemName: string;
-  plannedQty: number;
-  equipmentCode: string;
-  equipmentName?: string;
-  shift?: string;
-  remark?: string;
-  // 생산의뢰 연동 정보
-  orderNo?: string;
-  orderSeqno?: number;
-  orderHistno?: number;
-  // 작업장 및 작업자 정보
-  workplaceCode?: string;
-  workplaceName?: string;
-  workerCode?: string;
-  workerName?: string;
-  // 거래처 정보
-  customerCode?: string;
-  customerName?: string;
-  additionalCustomers?: string[]; // 추가 거래처 목록
-}
-
-// 생산계획 등록 유효성 검사 스키마
+// 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
 const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   id: yup.string(),
   date: yup.string().required('계획일자는 필수입니다.'),
@@ -94,6 +70,7 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
     .required('계획수량은 필수입니다.')
     .min(1, '계획수량은 1 이상이어야 합니다.')
     .typeError('계획수량은 숫자여야 합니다.'),
+  equipmentId: yup.string().required('설비ID는 필수입니다.'),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
   shift: yup.string(),
@@ -103,11 +80,20 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   orderHistno: yup.number(),
   workplaceCode: yup.string(),
   workplaceName: yup.string(),
-  workerCode: yup.string(),
+  workerCode: yup.string().required('작업자는 필수입니다.'),
   workerName: yup.string(),
   customerCode: yup.string(),
   customerName: yup.string(),
   additionalCustomers: yup.array().of(yup.string().required()),
+  // 선택적 확장/백엔드 매핑 필드
+  processCode: yup.string(),
+  processName: yup.string(),
+  planNo: yup.string(),
+  planSeq: yup.number(),
+  factoryCode: yup.string(),
+  actualQty: yup.number(),
+  lotNo: yup.string(),
+  useYn: yup.string(),
 });
 
 interface PlanDialogProps {
@@ -129,10 +115,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   dialogMode,
   selectedDate,
   formData,
-  equipments,
   workplaceWorkers = [],
   onSave,
-  onChange,
   onBatchChange,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
@@ -553,10 +537,25 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 {/* 작업장 */}
                 <TextField
                   fullWidth
+                  required
                   label="작업장"
                   value={
                     formData.workplaceName
                       ? `${formData.workplaceName} (${formData.workplaceCode})`
+                      : ''
+                  }
+                  disabled
+                  InputProps={{ readOnly: true }}
+                />
+
+                {/* 공정 */}
+                <TextField
+                  fullWidth
+                  required
+                  label="공정"
+                  value={
+                    formData.processCode
+                      ? `${formData.processName} (${formData.processCode})`
                       : ''
                   }
                   disabled
@@ -640,11 +639,12 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   name="workerCode"
                   control={control}
                   render={({ field }) => (
-                    <FormControl fullWidth>
+                    <FormControl fullWidth required error={!!errors.workerCode}>
                       <InputLabel>작업자 선택</InputLabel>
                       <Select
                         {...field}
                         label="작업자 선택"
+                        value={field.value || ''} // Ensure a valid value is passed
                         onChange={(e) => {
                           const selectedWorker = workplaceWorkers.find(
                             (w) => w.workerCode === e.target.value
@@ -672,6 +672,15 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           </MenuItem>
                         ))}
                       </Select>
+                      {errors.workerCode && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 0.5, ml: 1.75 }}
+                        >
+                          {errors.workerCode.message}
+                        </Typography>
+                      )}
                     </FormControl>
                   )}
                 />
