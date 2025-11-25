@@ -104,6 +104,64 @@ const ProductionPlan: React.FC = () => {
     return day === 0 || day === 6;
   };
 
+  // 근무구분 표시 헬퍼 함수
+  const getShiftLabel = (shift?: string): string => {
+    const shiftMap: { [key: string]: string } = {
+      A: '1교대',
+      B: '2교대',
+      C: '3교대',
+      D: '주간',
+      N: '야간',
+      DAY: '주간',
+      NIGHT: '야간',
+    };
+    return shift ? shiftMap[shift] || shift : '-';
+  };
+
+  const getShiftColor = (
+    shift?: string
+  ):
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning' => {
+    const colorMap: {
+      [key: string]:
+        | 'default'
+        | 'primary'
+        | 'secondary'
+        | 'error'
+        | 'info'
+        | 'success'
+        | 'warning';
+    } = {
+      A: 'primary', // 1교대 - 파랑
+      B: 'success', // 2교대 - 초록
+      C: 'info', // 3교대 - 하늘
+      D: 'warning', // 주간 - 주황
+      N: 'secondary', // 야간 - 보라
+      DAY: 'warning',
+      NIGHT: 'secondary',
+    };
+    return shift ? colorMap[shift] || 'default' : 'default';
+  };
+
+  const getShiftBorderColor = (shift?: string): string => {
+    const borderColorMap: { [key: string]: string } = {
+      A: 'primary.main', // 1교대
+      B: 'success.main', // 2교대
+      C: 'info.main', // 3교대
+      D: 'warning.main', // 주간
+      N: 'secondary.main', // 야간
+      DAY: 'warning.main',
+      NIGHT: 'secondary.main',
+    };
+    return shift ? borderColorMap[shift] || 'grey.400' : 'grey.400';
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
     getMonday(new Date())
   );
@@ -264,13 +322,6 @@ const ProductionPlan: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load equipments:', error);
-      const mockEquipments = [
-        { equipCd: 'EQ-001', equipmentName: '설비1' },
-        { equipCd: 'EQ-002', equipmentName: '설비2' },
-        { equipCd: 'EQ-003', equipmentName: '설비3' },
-      ];
-      setEquipments(mockEquipments as Equipment[]);
-      setExpandedEquipments(new Set(mockEquipments.map((eq) => eq.equipCd)));
     }
   }, []);
 
@@ -380,6 +431,8 @@ const ProductionPlan: React.FC = () => {
           selectedWorkplace
         );
         setPlans(mapped);
+      } else {
+        setPlans([]);
       }
     } catch (error) {
       console.error('Failed to load production plans:', error);
@@ -510,7 +563,18 @@ const ProductionPlan: React.FC = () => {
 
   const handleOpenEditDialog = (plan: ProductionPlanData) => {
     setDialogMode('edit');
-    setFormData(plan);
+    // 수정 모드에서는 작업장과 공정 정보를 포함하여 전달
+    setFormData({
+      ...plan,
+      workplaceCode: plan.workplaceCode || selectedWorkplace,
+      workplaceName:
+        plan.workplaceName ||
+        workplaces.find((w) => w.workplaceCode === selectedWorkplace)
+          ?.workplaceName ||
+        '',
+      processCode: plan.processCode || '',
+      processName: plan.processName || '',
+    });
     setOpenDialog(true);
   };
 
@@ -596,19 +660,91 @@ const ProductionPlan: React.FC = () => {
         showSnackbar('생산계획 등록 중 오류가 발생했습니다.', 'error');
       }
     } else {
-      // Edit logic (Not fully implemented in backend for single item update via this specific API structure yet,
-      // but assuming similar structure or separate update endpoint)
-      // For now, let's focus on Registration as per requirement.
-      // If edit is needed, we need planNo.
-      showSnackbar('수정 기능은 아직 구현되지 않았습니다.', 'error');
-      handleCloseDialog();
+      // Edit mode - 수정
+      try {
+        if (!formData.planNo) {
+          showSnackbar('수정할 계획 정보가 없습니다.', 'error');
+          return;
+        }
+
+        const requestData: ProductionPlanRequest = {
+          master: {
+            planNo: formData.planNo,
+            planDate: data.date.replace(/-/g, ''),
+            workplaceCode: formData.workplaceCode || selectedWorkplace,
+            workplaceName:
+              formData.workplaceName ||
+              workplaces.find((w) => w.workplaceCode === selectedWorkplace)
+                ?.workplaceName,
+            remark: data.remark,
+          },
+          details: [
+            {
+              planNo: formData.planNo,
+              planSeq: formData.planSeq,
+              planDate: data.date.replace(/-/g, ''),
+              itemCode: data.itemCode,
+              itemName: data.itemName,
+              plannedQty: data.plannedQty,
+              workplaceCode: formData.workplaceCode || selectedWorkplace,
+              workplaceName: formData.workplaceName,
+              processCode: data.processCode,
+              processName: data.processName,
+              equipmentId: data.equipmentId,
+              equipmentCode: data.equipmentCode,
+              equipmentName: data.equipmentName,
+              workerType: data.shift,
+              remark: data.remark,
+              orderNo: data.orderNo,
+              orderSeqno: data.orderSeqno,
+              orderHistno: data.orderHistno,
+              workerCode: data.workerCode,
+              workerName: data.workerName,
+              customerCode: data.customerCode,
+              customerName: data.customerName,
+            },
+          ],
+        };
+
+        const response = await productionPlanService.updateProductionPlan(
+          formData.planNo,
+          requestData
+        );
+        if (response.resultCode === 200) {
+          showSnackbar('생산계획이 수정되었습니다.', 'success');
+          loadWeeklyPlans();
+          handleCloseDialog();
+        } else {
+          showSnackbar('생산계획 수정 실패: ' + response.message, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to update plan:', error);
+        showSnackbar('생산계획 수정 중 오류가 발생했습니다.', 'error');
+      }
     }
   };
 
-  const handleDelete = (planId: string) => {
+  const handleDelete = async (plan: ProductionPlanData) => {
+    if (!plan.planNo) {
+      showSnackbar('삭제할 계획 정보가 없습니다.', 'error');
+      return;
+    }
+
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      setPlans(plans.filter((p) => p.id !== planId));
-      showSnackbar('생산계획이 삭제되었습니다.', 'success');
+      try {
+        const response = await productionPlanService.deleteProductionPlan(
+          plan.planNo
+        );
+        if (response.resultCode === 200) {
+          showSnackbar('생산계획이 삭제되었습니다.', 'success');
+          loadWeeklyPlans();
+        } else {
+          showSnackbar('생산계획 삭제 실패: ' + response.message, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to delete plan:', error);
+        showSnackbar('생산계획 삭제 중 오류가 발생했습니다.', 'error');
+      }
     }
   };
 
@@ -1038,7 +1174,7 @@ const ProductionPlan: React.FC = () => {
                           >
                             <Badge badgeContent={totalPlans} color="error">
                               <Chip
-                                label={`${totalQty.toLocaleString()}`}
+                                label={`${(totalQty ?? 0).toLocaleString()}`}
                                 size="small"
                                 sx={{
                                   bgcolor: 'rgba(255,255,255,0.9)',
@@ -1186,10 +1322,9 @@ const ProductionPlan: React.FC = () => {
                                           },
                                           transition: 'all 0.2s ease',
                                           borderLeft: '4px solid',
-                                          borderColor:
-                                            plan.shift === 'DAY'
-                                              ? 'primary.main'
-                                              : 'warning.main',
+                                          borderColor: getShiftBorderColor(
+                                            plan.shift
+                                          ),
                                         }}
                                       >
                                         <CardContent
@@ -1232,24 +1367,84 @@ const ProductionPlan: React.FC = () => {
                                                 }}
                                               >
                                                 <Chip
-                                                  label={`${plan.plannedQty.toLocaleString()} 개`}
+                                                  label={`${(
+                                                    plan.plannedQty ?? 0
+                                                  ).toLocaleString()} 개`}
                                                   size="small"
                                                   color="success"
                                                 />
                                                 <Chip
-                                                  label={
-                                                    plan.shift === 'DAY'
-                                                      ? '주간'
-                                                      : '야간'
-                                                  }
+                                                  label={getShiftLabel(
+                                                    plan.shift
+                                                  )}
                                                   size="small"
-                                                  color={
-                                                    plan.shift === 'DAY'
-                                                      ? 'primary'
-                                                      : 'warning'
-                                                  }
+                                                  color={getShiftColor(
+                                                    plan.shift
+                                                  )}
                                                 />
                                               </Box>
+                                              {/* 담당자 및 거래처 정보 표시 (같은 줄) */}
+                                              {(plan.workerName ||
+                                                plan.customerName) && (
+                                                <Box
+                                                  sx={{
+                                                    display: 'flex',
+                                                    gap: 1,
+                                                    mt: 0.5,
+                                                    flexWrap: 'wrap',
+                                                  }}
+                                                >
+                                                  {plan.workerName && (
+                                                    <Chip
+                                                      label={`담당: ${plan.workerName}`}
+                                                      size="small"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        borderColor:
+                                                          'primary.main',
+                                                        color: 'primary.main',
+                                                      }}
+                                                    />
+                                                  )}
+                                                  {plan.customerName && (
+                                                    <Chip
+                                                      label={
+                                                        plan.additionalCustomers &&
+                                                        plan.additionalCustomers
+                                                          .length > 0
+                                                          ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
+                                                          : plan.customerName
+                                                      }
+                                                      size="small"
+                                                      color="secondary"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        cursor: plan
+                                                          .additionalCustomers
+                                                          ?.length
+                                                          ? 'pointer'
+                                                          : 'default',
+                                                      }}
+                                                      onClick={() => {
+                                                        if (
+                                                          plan.additionalCustomers &&
+                                                          plan
+                                                            .additionalCustomers
+                                                            .length > 0
+                                                        ) {
+                                                          alert(
+                                                            `거래처 목록:\n- ${
+                                                              plan.customerName
+                                                            }\n- ${plan.additionalCustomers.join(
+                                                              '\n- '
+                                                            )}`
+                                                          );
+                                                        }
+                                                      }}
+                                                    />
+                                                  )}
+                                                </Box>
+                                              )}
                                               {plan.orderNo && (
                                                 <Chip
                                                   label={`의뢰: ${plan.orderNo}`}
@@ -1258,45 +1453,6 @@ const ProductionPlan: React.FC = () => {
                                                   color="info"
                                                   variant="outlined"
                                                 />
-                                              )}
-                                              {/* 거래처 정보 표시 */}
-                                              {plan.customerName && (
-                                                <Box sx={{ mt: 0.5 }}>
-                                                  <Chip
-                                                    label={
-                                                      plan.additionalCustomers &&
-                                                      plan.additionalCustomers
-                                                        .length > 0
-                                                        ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
-                                                        : plan.customerName
-                                                    }
-                                                    size="small"
-                                                    color="secondary"
-                                                    variant="outlined"
-                                                    sx={{
-                                                      cursor: plan
-                                                        .additionalCustomers
-                                                        ?.length
-                                                        ? 'pointer'
-                                                        : 'default',
-                                                    }}
-                                                    onClick={() => {
-                                                      if (
-                                                        plan.additionalCustomers &&
-                                                        plan.additionalCustomers
-                                                          .length > 0
-                                                      ) {
-                                                        alert(
-                                                          `거래처 목록:\n- ${
-                                                            plan.customerName
-                                                          }\n- ${plan.additionalCustomers.join(
-                                                            '\n- '
-                                                          )}`
-                                                        );
-                                                      }
-                                                    }}
-                                                  />
-                                                </Box>
                                               )}
                                             </Box>
                                             <Box
@@ -1327,8 +1483,7 @@ const ProductionPlan: React.FC = () => {
                                                 <IconButton
                                                   size="small"
                                                   onClick={() =>
-                                                    plan.id &&
-                                                    handleDelete(plan.id)
+                                                    handleDelete(plan)
                                                   }
                                                   sx={{
                                                     bgcolor: 'error.light',

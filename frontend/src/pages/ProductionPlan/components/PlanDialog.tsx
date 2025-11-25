@@ -590,8 +590,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       required
                       label="품목코드"
                       disabled={
-                        selectedRequests.length > 0 || selectedItem !== null
+                        dialogMode === 'edit' ||
+                        selectedRequests.length > 0 ||
+                        selectedItem !== null
                       }
+                      InputProps={{
+                        readOnly: dialogMode === 'edit',
+                      }}
                       error={!!errors.itemCode}
                       helperText={errors.itemCode?.message}
                     />
@@ -607,8 +612,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       required
                       label="품목명"
                       disabled={
-                        selectedRequests.length > 0 || selectedItem !== null
+                        dialogMode === 'edit' ||
+                        selectedRequests.length > 0 ||
+                        selectedItem !== null
                       }
+                      InputProps={{
+                        readOnly: dialogMode === 'edit',
+                      }}
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
                     />
@@ -627,6 +637,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     label="계획수량"
                     type="number"
                     inputProps={{ min: 1 }}
+                    disabled={dialogMode === 'edit'}
+                    InputProps={{
+                      readOnly: dialogMode === 'edit',
+                    }}
                     error={!!errors.plannedQty}
                     helperText={errors.plannedQty?.message}
                   />
