@@ -141,13 +141,18 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	}
 
 	/**
-	 * 생산계획을 삭제한다. (마스터 삭제 시 상세도 함께 논리적 삭제)
+	 * 생산계획을 삭제한다. (마스터 + 상세 트랜잭션 처리)
 	 */
 	@Override
 	@Transactional
 	public void deleteProductionPlan(ProductionPlanMaster master) throws Exception {
-		// 마스터 논리적 삭제 (USE_YN = 'N' 설정)
-		// 상세 데이터는 외래키 CASCADE 옵션에 의해 함께 논리적 삭제됨
+		// 1. 상세 데이터 먼저 삭제 (TPR301)
+		ProductionPlan detailForDelete = new ProductionPlan();
+		detailForDelete.setFactoryCode(master.getFactoryCode());
+		detailForDelete.setProdPlanId(master.getProdPlanId());
+		productionPlanDAO.deleteProductionPlan(detailForDelete);
+		
+		// 2. 마스터 데이터 삭제 (TPR301M)
 		productionPlanDAO.deleteProductionPlanMaster(master);
 	}
 
@@ -187,8 +192,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			}
 			
 			// 계획 데이터가 있는 경우만 추가
-			if (row.get("prodPlanId") != null) {
-				System.out.println("1111111111111111111111111111111111111111");
+			if (row.get("prodplanId") != null) {
 				String planDate = (String) row.get("planDate");
 				
 				// YYYYMMDD -> YYYY-MM-DD 변환
@@ -199,22 +203,19 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 				// DailyPlan 생성
 				egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan dailyPlan = 
 					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan.builder()
-						.planId((String) row.get("prodPlanId"))
-						.planSeq((Integer) row.get("planSeq"))
-						.planDate(planDate)
+						.prodplanId((String) row.get("prodplanId"))
+						.prodplanDate(planDate)
+						.prodplanSeq((Integer) row.get("planSeq"))
 						.itemCode((String) row.get("itemCode"))
-//						.itemName((String) row.get("itemName"))
-//						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
-//						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
-//						.shift((String) row.get("shift"))
-//						.workerCode((String) row.get("workerCode"))
-//						.workerName((String) row.get("workerName"))
-//						.orderNo((String) row.get("orderNo"))
-//						.orderSeqno((Integer) row.get("orderSeqno"))
-//						.orderHistno((Integer) row.get("orderHistno"))
-//						.customerCode((String) row.get("customerCode"))
-//						.customerName((String) row.get("customerName"))
-//						.remark((String) row.get("remark"))
+						.itemName((String) row.get("itemName"))
+						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
+						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
+						.shift((String) row.get("shift"))
+						.workerCode((String) row.get("workerCode"))
+						.workerName((String) row.get("workerName"))
+						.customerCode((String) row.get("customerCode"))
+						.customerName((String) row.get("customerName"))
+						.remark((String) row.get("remark"))
 						.build();
 				
 				// 날짜별 계획 리스트에 추가

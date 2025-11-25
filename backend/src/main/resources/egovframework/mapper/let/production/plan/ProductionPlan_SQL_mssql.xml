@@ -275,7 +275,7 @@
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND PLAN_NO = #{planNo}
+		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
 	<!-- 생산계획 상세 수정 -->
@@ -291,31 +291,21 @@
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND PLAN_NO = #{planNo}
-		  AND PLAN_SEQ = #{planSeq}
+		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
-	<!-- 생산계획 마스터 삭제 (논리적 삭제) -->
+	<!-- 생산계획 마스터 삭제 (물리적 삭제) -->
 	<update id="ProductionPlanDAO.deleteProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
-		UPDATE TPR301M
-		SET
-			USE_YN = 'N',
-			OPMAN_CODE2 = #{opmanCode2},
-			OPTIME2 = GETDATE()
+		DELETE FROM TPR301M
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND PLAN_NO = #{planNo}
+		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
-	<!-- 생산계획 상세 삭제 (논리적 삭제) -->
+	<!-- 생산계획 상세 삭제 (물리적 삭제) -->
 	<update id="ProductionPlanDAO.deleteProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
-		UPDATE TPR301
-		SET
-			USE_YN = 'N',
-			OPMAN_CODE2 = #{opmanCode2},
-			OPTIME2 = GETDATE()
+		DELETE FROM TPR301
 		WHERE FACTORY_CODE = #{factoryCode}
-		  AND PLAN_NO = #{planNo}
-		  AND PLAN_SEQ = #{planSeq}
+		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
 	<!-- 생산계획 참조(주문연결) 등록 -->
@@ -358,8 +348,15 @@
 			D.PRODWORK_SEQ,
 			D.PROD_DATE AS PLAN_DATE,
 			D.ITEM_CODE,
-
-			D.PRODPLAN_ID
+			D.ITEM_NAME,
+			D.PROD_QTY AS PLANNED_QTY,
+			0 AS ACTUAL_Qty,
+			D.WORKER_TYPE AS SHIFT,
+			D.WORKER_CODE,
+			D.WORKER_NAME,
+			'' AS CUSTOMER_CODE,
+			'테스트거래처 외 2건' AS CUSTOMER_NAME,
+			D.BIGO
 		FROM (
 			-- 작업장의 설비연동 설비 목록 조회
 			SELECT DISTINCT
