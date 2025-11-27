@@ -15,34 +15,51 @@ import {
   Box,
   Typography,
   Chip,
-  FormHelperText,
 } from '@mui/material';
-import { Link as LinkIcon, Info as InfoIcon } from '@mui/icons-material';
+import {
+  Link as LinkIcon,
+  Inventory as InventoryIcon,
+} from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import ProductionRequestDialog from './ProductionRequestDialog';
+import ItemSelectionDialog from './ItemSelectionDialog';
 import { ProductionRequest } from '../../../types/productionRequest';
+import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
+import { WorkplaceWorker } from '../../../types/workplace';
+import { ProductionPlanData } from '../../../types/productionPlan';
 
-interface ProductionPlanData {
-  id?: string;
-  date: string;
-  itemCode: string;
-  itemName: string;
-  plannedQty: number;
-  equipmentCode: string;
-  equipmentName?: string;
-  shift?: string;
-  remark?: string;
-  // 생산의뢰 연동 정보
-  orderNo?: string;
-  orderSeqno?: number;
-  orderHistno?: number;
-  lotNo?: string;
-}
+/**
+ * 근무구분(COM006) 코드를 한글 표시명으로 변환
+ * @param code 근무구분 코드 (D, N, A, B, C, DAY, NIGHT)
+ * @returns 한글 표시명
+ */
+const getShiftDisplayName = (code?: string): string => {
+  if (!code) return '';
 
-// 생산계획 등록 유효성 검사 스키마
+  switch (code) {
+    case 'D':
+      return 'D - 주간';
+    case 'N':
+      return 'N - 야간';
+    case 'A':
+      return 'A - 1교대';
+    case 'B':
+      return 'B - 2교대';
+    case 'C':
+      return 'C - 3교대';
+    case 'DAY':
+      return '주간';
+    case 'NIGHT':
+      return '야간';
+    default:
+      return '';
+  }
+};
+
+// 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
 const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   id: yup.string(),
   date: yup.string().required('계획일자는 필수입니다.'),
@@ -53,6 +70,7 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
     .required('계획수량은 필수입니다.')
     .min(1, '계획수량은 1 이상이어야 합니다.')
     .typeError('계획수량은 숫자여야 합니다.'),
+  equipmentId: yup.string().required('설비ID는 필수입니다.'),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
   shift: yup.string(),
@@ -60,7 +78,22 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   orderNo: yup.string(),
   orderSeqno: yup.number(),
   orderHistno: yup.number(),
+  workplaceCode: yup.string(),
+  workplaceName: yup.string(),
+  workerCode: yup.string().required('작업자는 필수입니다.'),
+  workerName: yup.string(),
+  customerCode: yup.string(),
+  customerName: yup.string(),
+  additionalCustomers: yup.array().of(yup.string().required()),
+  // 선택적 확장/백엔드 매핑 필드
+  processCode: yup.string(),
+  processName: yup.string(),
+  planNo: yup.string(),
+  planSeq: yup.number(),
+  factoryCode: yup.string(),
+  actualQty: yup.number(),
   lotNo: yup.string(),
+  useYn: yup.string(),
 });
 
 interface PlanDialogProps {
@@ -70,6 +103,7 @@ interface PlanDialogProps {
   selectedDate: string;
   formData: ProductionPlanData;
   equipments: Equipment[];
+  workplaceWorkers?: WorkplaceWorker[];
   onSave: (data: ProductionPlanData) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
@@ -81,14 +115,16 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   dialogMode,
   selectedDate,
   formData,
-  equipments,
+  workplaceWorkers = [],
   onSave,
-  onChange,
   onBatchChange,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
-  const [selectedRequest, setSelectedRequest] =
-    useState<ProductionRequest | null>(null);
+  const [openItemDialog, setOpenItemDialog] = useState(false);
+  const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>(
+    []
+  );
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   // react-hook-form 설정
   const {
@@ -115,25 +151,86 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setOpenRequestDialog(false);
   };
 
-  const handleSelectRequest = (request: ProductionRequest) => {
-    console.log(request);
+  const handleOpenItemDialog = () => {
+    setOpenItemDialog(true);
+  };
 
-    setSelectedRequest(request);
-    // 생산의뢰 정보를 폼 데이터에 한 번에 반영
+  const handleCloseItemDialog = () => {
+    setOpenItemDialog(false);
+  };
+
+  const handleSelectItem = (item: Item) => {
+    // 품목 선택 시 생산의뢰 선택 초기화
+    setSelectedRequests([]);
+    setSelectedItem(item);
+
     const updates = {
-      itemCode: request.itemCode || '',
-      itemName: request.itemName || '',
-      plannedQty: request.orderQty || 0,
-      orderNo: request.orderNo,
-      orderSeqno: request.orderSeqno,
-      orderHistno: request.orderHistno,
+      itemCode: item.itemCode || '',
+      itemName: item.itemName || '',
+      plannedQty: 1, // 기본값
+      // 생산의뢰 정보 초기화
+      orderNo: undefined,
+      orderSeqno: undefined,
+      orderHistno: undefined,
+      customerCode: undefined,
+      customerName: undefined,
+      additionalCustomers: undefined,
     };
-    
+
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
     Object.entries(updates).forEach(([key, value]) => {
       setValue(key as keyof ProductionPlanData, value);
     });
-    
+
+    // 부모 컴포넌트의 상태도 업데이트
+    onBatchChange(updates);
+    setOpenItemDialog(false);
+  };
+
+  const handleSelectRequest = (requests: ProductionRequest[]) => {
+    console.log('Selected requests:', requests);
+
+    if (requests.length === 0) return;
+
+    // 생산의뢰 선택 시 품목 선택 초기화
+    setSelectedItem(null);
+    setSelectedRequests(requests);
+
+    // 첫 번째 생산의뢰의 품목 정보를 기준으로 설정
+    const firstRequest = requests[0];
+
+    // 여러 생산의뢰의 수량 합계
+    const totalQty = requests.reduce(
+      (sum, req) => sum + (req.orderQty || 0),
+      0
+    );
+
+    // 거래처 정보 처리
+    const customerCodes = requests
+      .map((r) => r.customerCode)
+      .filter(Boolean) as string[];
+    const customerNames = requests
+      .map((r) => r.customerName)
+      .filter(Boolean) as string[];
+    const uniqueCustomers = Array.from(new Set(customerCodes));
+
+    const updates = {
+      itemCode: firstRequest.itemCode || '',
+      itemName: firstRequest.itemName || '',
+      plannedQty: totalQty,
+      orderNo: firstRequest.orderNo,
+      orderSeqno: firstRequest.orderSeqno,
+      orderHistno: firstRequest.orderHistno,
+      customerCode: uniqueCustomers[0],
+      customerName: customerNames[0],
+      additionalCustomers: uniqueCustomers.slice(1),
+    };
+
+    // react-hook-form의 setValue를 사용하여 각 필드 업데이트
+    Object.entries(updates).forEach(([key, value]) => {
+      setValue(key as keyof ProductionPlanData, value);
+    });
+
     // 부모 컴포넌트의 상태도 업데이트
     onBatchChange(updates);
     setOpenRequestDialog(false);
@@ -144,7 +241,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleDialogClose = () => {
-    setSelectedRequest(null);
+    setSelectedRequests([]);
+    setSelectedItem(null);
     onClose();
   };
 
@@ -165,57 +263,257 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogContent sx={{ mt: 2 }}>
             <Stack spacing={3}>
-              {/* 생산의뢰 연동 버튼 */}
+              {/* ================================
+                      연동된 생산의뢰 정보 (Callout)
+                  ================================ */}
+              {formData.orderNo && (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid #E5E5E5',
+                    bgcolor: '#FAFAFA',
+                    display: 'flex',
+                    gap: 2,
+                  }}
+                >
+                  {/* 좌측 컬러바 */}
+                  <Box
+                    sx={{
+                      width: 6,
+                      bgcolor: '#A8A8A8',
+                      borderRadius: 1,
+                      mt: 0.2,
+                    }}
+                  />
+
+                  {/* 내용 */}
+                  <Box sx={{ flex: 1 }}>
+                    {/* 헤더 */}
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, mb: 0.5 }}
+                    >
+                      연동된 생산의뢰 정보
+                    </Typography>
+
+                    {/* 선택 Chip 목록 */}
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      <Chip
+                        label={`의뢰번호: ${formData.orderNo}`}
+                        size="small"
+                        sx={{
+                          borderRadius: '5px',
+                          bgcolor: '#FFFFFF',
+                          border: '1px solid #E0E0E0',
+                          color: '#333',
+                        }}
+                      />
+
+                      {formData.customerName && (
+                        <Chip
+                          label={`거래처: ${formData.customerName}${
+                            formData.additionalCustomers?.length
+                              ? ` 외 ${formData.additionalCustomers.length}건`
+                              : ''
+                          }`}
+                          size="small"
+                          sx={{
+                            borderRadius: '5px',
+                            bgcolor: '#FFFFFF',
+                            border: '1px solid #E0E0E0',
+                            color: '#333',
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+                </Box>
+              )}
+
+              {/* ================================
+                      생산의뢰 연동 (Callout)
+                  ================================ */}
               {dialogMode === 'create' && (
                 <Box
                   sx={{
                     p: 2,
-                    bgcolor: 'info.light',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'info.main',
+                    borderRadius: 2,
+                    border: '1px solid #B2D4F8',
+                    bgcolor: '#F2F8FF',
+                    display: 'flex',
+                    gap: 2,
                   }}
                 >
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <InfoIcon color="info" />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        생산의뢰 연동
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        ERP 생산의뢰 정보를 불러와 계획을 생성할 수 있습니다.
-                      </Typography>
-                    </Box>
-                    <Button
-                      variant="contained"
-                      startIcon={<LinkIcon />}
-                      onClick={handleOpenRequestDialog}
-                      size="small"
-                    >
-                      생산의뢰 선택
-                    </Button>
-                  </Stack>
-                  {selectedRequest && (
+                  {/* 좌측 컬러바 */}
+                  <Box
+                    sx={{
+                      width: 6,
+                      bgcolor: '#4A90E2',
+                      borderRadius: 1,
+                      mt: 0.2,
+                    }}
+                  />
+
+                  {/* 내용 */}
+                  <Box sx={{ flex: 1 }}>
+                    {/* 헤더 + 버튼 */}
                     <Box
                       sx={{
-                        mt: 1.5,
-                        pt: 1.5,
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 0.5,
                       }}
                     >
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="caption" color="text.secondary">
-                          선택된 생산의뢰:
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                          생산의뢰 연동
                         </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          ERP 생산의뢰 정보를 불러와 계획을 생성할 수 있습니다.
+                          (멀티 선택 가능, 동일 품목만)
+                        </Typography>
+                      </Box>
+
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<LinkIcon />}
+                        onClick={handleOpenRequestDialog}
+                      >
+                        선택
+                      </Button>
+                    </Box>
+
+                    {/* 선택된 목록 */}
+                    {selectedRequests.length > 0 && (
+                      <Box
+                        sx={{
+                          mt: 1.5,
+                          pt: 1.5,
+                          borderTop: '1px solid #D0E3FF',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Typography variant="caption" color="text.secondary">
+                            선택된 생산의뢰: {selectedRequests.length}건
+                          </Typography>
+
+                          {selectedRequests.map((req) => (
+                            <Chip
+                              key={`${req.orderNo}-${req.orderSeqno}`}
+                              label={`${req.orderNo} (${
+                                req.customerName || '거래처 미상'
+                              })`}
+                              size="small"
+                              sx={{
+                                bgcolor: '#E9F2FF',
+                                color: '#1E5BB8',
+                                borderRadius: '5px',
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              )}
+
+              {/* ================================
+                      품목 직접 선택 (Callout)
+                  ================================ */}
+              {dialogMode === 'create' && (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid #E5E5E5',
+                    bgcolor: '#FAFAFA',
+                    display: 'flex',
+                    gap: 2,
+                  }}
+                >
+                  {/* 좌측 컬러바 */}
+                  <Box
+                    sx={{
+                      width: 6,
+                      bgcolor: '#5CB176',
+                      borderRadius: 1,
+                      mt: 0.2,
+                    }}
+                  />
+
+                  {/* 내용 */}
+                  <Box sx={{ flex: 1 }}>
+                    {/* 헤더 + 버튼 */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 0.5,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                          품목 직접 선택
+                        </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          품목 마스터에서 직접 품목을 선택하여 계획을 생성할 수
+                          있습니다.
+                        </Typography>
+                      </Box>
+
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<InventoryIcon />}
+                        onClick={handleOpenItemDialog}
+                        sx={{
+                          borderColor: '#C7C7C7',
+                          '&:hover': {
+                            bgcolor: '#F5F5F5',
+                            borderColor: '#B5B5B5',
+                          },
+                        }}
+                      >
+                        선택
+                      </Button>
+                    </Box>
+
+                    {/* 선택된 품목 */}
+                    {selectedItem && (
+                      <Stack
+                        spacing={1}
+                        sx={{
+                          mt: 1.5,
+                          p: 1.25,
+                          borderRadius: 1,
+                          border: '1px solid #E0E0E0',
+                          bgcolor: '#FFFFFF',
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          선택된 품목
+                        </Typography>
+
                         <Chip
-                          label={`${selectedRequest.orderNo} - ${selectedRequest.itemName}`}
+                          label={`${selectedItem.itemCode} - ${selectedItem.itemName}`}
                           size="small"
-                          color="primary"
+                          sx={{
+                            borderRadius: '5px',
+                            bgcolor: '#F7F7F7',
+                            border: '1px solid #E0E0E0',
+                            color: '#333',
+                          }}
                         />
                       </Stack>
-                    </Box>
-                  )}
+                    )}
+                  </Box>
                 </Box>
               )}
 
@@ -235,21 +533,51 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
-              {/* LOT 번호 */}
-              <Controller
-                name="lotNo"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label="LOT 번호"
-                    placeholder="LOT 번호를 입력하세요"
-                    error={!!errors.lotNo}
-                    helperText={errors.lotNo?.message}
-                  />
-                )}
-              />
+              <Stack direction="row" spacing={2}>
+                {/* 작업장 */}
+                <TextField
+                  fullWidth
+                  required
+                  label="작업장"
+                  value={
+                    formData.workplaceName
+                      ? `${formData.workplaceName} (${formData.workplaceCode})`
+                      : ''
+                  }
+                  disabled
+                  InputProps={{ readOnly: true }}
+                />
+
+                {/* 공정 */}
+                <TextField
+                  fullWidth
+                  required
+                  label="공정"
+                  value={
+                    formData.processCode
+                      ? `${formData.processName} (${formData.processCode})`
+                      : ''
+                  }
+                  disabled
+                  InputProps={{ readOnly: true }}
+                />
+
+                {/* 설비 */}
+                <TextField
+                  fullWidth
+                  required
+                  label="설비"
+                  value={
+                    formData.equipmentCode
+                      ? `${formData.equipmentName || ''} (${
+                          formData.equipmentCode
+                        })`
+                      : ''
+                  }
+                  disabled
+                  InputProps={{ readOnly: true }}
+                />
+              </Stack>
 
               <Stack direction="row" spacing={2}>
                 <Controller
@@ -261,7 +589,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목코드"
-                      disabled={!!selectedRequest}
+                      disabled={
+                        dialogMode === 'edit' ||
+                        selectedRequests.length > 0 ||
+                        selectedItem !== null
+                      }
+                      InputProps={{
+                        readOnly: dialogMode === 'edit',
+                      }}
                       error={!!errors.itemCode}
                       helperText={errors.itemCode?.message}
                     />
@@ -276,7 +611,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       fullWidth
                       required
                       label="품목명"
-                      disabled={!!selectedRequest}
+                      disabled={
+                        dialogMode === 'edit' ||
+                        selectedRequests.length > 0 ||
+                        selectedItem !== null
+                      }
+                      InputProps={{
+                        readOnly: dialogMode === 'edit',
+                      }}
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
                     />
@@ -295,6 +637,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     label="계획수량"
                     type="number"
                     inputProps={{ min: 1 }}
+                    disabled={dialogMode === 'edit'}
+                    InputProps={{
+                      readOnly: dialogMode === 'edit',
+                    }}
                     error={!!errors.plannedQty}
                     helperText={errors.plannedQty?.message}
                   />
@@ -302,48 +648,70 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
               />
 
               <Stack direction="row" spacing={2}>
+                {/* 작업자 */}
                 <Controller
-                  name="equipmentCode"
+                  name="workerCode"
                   control={control}
                   render={({ field }) => (
-                    <FormControl fullWidth required error={!!errors.equipmentCode}>
-                      <InputLabel>설비</InputLabel>
+                    <FormControl fullWidth required error={!!errors.workerCode}>
+                      <InputLabel>작업자 선택</InputLabel>
                       <Select
                         {...field}
-                        label="설비"
+                        label="작업자 선택"
+                        value={field.value || ''} // Ensure a valid value is passed
                         onChange={(e) => {
-                          const selectedEquipment = equipments.find(
-                            (eq) => eq.equipCd === e.target.value
+                          const selectedWorker = workplaceWorkers.find(
+                            (w) => w.workerCode === e.target.value
                           );
                           field.onChange(e.target.value);
-                          if (selectedEquipment) {
-                            setValue('equipmentName', selectedEquipment.equipmentName);
+                          if (selectedWorker) {
+                            setValue('workerName', selectedWorker.workerName);
+                            if (selectedWorker.position) {
+                              setValue('shift', selectedWorker.position);
+                            }
                           }
                         }}
                       >
-                        {equipments.map((eq) => (
-                          <MenuItem key={eq.equipCd} value={eq.equipCd}>
-                            {eq.equipmentName} ({eq.equipCd})
+                        <MenuItem value="">
+                          <em>작업자를 선택하세요</em>
+                        </MenuItem>
+                        {workplaceWorkers.map((worker) => (
+                          <MenuItem
+                            key={worker.workerCode}
+                            value={worker.workerCode}
+                          >
+                            {worker.workerName} ({worker.workerCode})
+                            {worker.position &&
+                              ` - ${getShiftDisplayName(worker.position)}`}
                           </MenuItem>
                         ))}
                       </Select>
-                      {errors.equipmentCode && (
-                        <FormHelperText>{errors.equipmentCode.message}</FormHelperText>
+                      {errors.workerCode && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{ mt: 0.5, ml: 1.75 }}
+                        >
+                          {errors.workerCode.message}
+                        </Typography>
                       )}
                     </FormControl>
                   )}
                 />
+
+                {/* 근무구분 */}
                 <Controller
                   name="shift"
                   control={control}
                   render={({ field }) => (
-                    <FormControl fullWidth>
-                      <InputLabel>교대</InputLabel>
-                      <Select {...field} label="교대">
-                        <MenuItem value="DAY">주간</MenuItem>
-                        <MenuItem value="NIGHT">야간</MenuItem>
-                      </Select>
-                    </FormControl>
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="근무구분"
+                      value={getShiftDisplayName(field.value)}
+                      disabled
+                      InputProps={{ readOnly: true }}
+                    />
                   )}
                 />
               </Stack>
@@ -361,33 +729,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   />
                 )}
               />
-
-              {/* 생산의뢰 정보 표시 (연동된 경우) */}
-              {formData.orderNo && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: 'success.light',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'success.main',
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', mb: 1 }}
-                  >
-                    연동된 생산의뢰 정보
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Chip
-                      label={`생산의뢰번호: ${formData.orderNo}`}
-                      size="small"
-                    />
-                  </Stack>
-                </Box>
-              )}
             </Stack>
           </DialogContent>
           <Divider />
@@ -405,6 +746,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         open={openRequestDialog}
         onClose={handleCloseRequestDialog}
         onSelect={handleSelectRequest}
+      />
+
+      {/* 품목 선택 다이얼로그 */}
+      <ItemSelectionDialog
+        open={openItemDialog}
+        onClose={handleCloseItemDialog}
+        onSelect={handleSelectItem}
       />
     </>
   );

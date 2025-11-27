@@ -13,11 +13,13 @@ import {
   BugReport as BugReportIcon,
   CheckCircle as CheckCircleIcon,
   PanTool as PanToolIcon,
+  PrecisionManufacturing as PrecisionManufacturingIcon,
 } from '@mui/icons-material';
 import { Process } from '../../../../types/process';
 import ProcessDefectTab from './ProcessDefectTab';
 import ProcessInspectionTab from './ProcessInspectionTab';
 import ProcessStopItemTab from './ProcessStopItemTab';
+import ProcessEquipmentTab from './ProcessEquipmentTab';
 
 interface ProcessDetailDialogProps {
   open: boolean;
@@ -60,6 +62,11 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
               icon={<PanToolIcon />}
               iconPosition="start"
             />
+            <Tab
+              label="설비 관리"
+              icon={<PrecisionManufacturingIcon />}
+              iconPosition="start"
+            />
           </Tabs>
         </Box>
         {detailTab === 0 && (
@@ -70,6 +77,9 @@ const ProcessDetailDialog: React.FC<ProcessDetailDialogProps> = ({
         )}
         {detailTab === 2 && (
           <ProcessStopItemTab process={process} showSnackbar={showSnackbar} />
+        )}
+        {detailTab === 3 && (
+          <ProcessEquipmentTab process={process} showSnackbar={showSnackbar} />
         )}
       </DialogContent>
       <DialogActions>

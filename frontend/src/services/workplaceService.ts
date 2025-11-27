@@ -147,6 +147,16 @@ export const workplaceService = {
     );
     return response.data;
   },
+
+  /**
+   * 작업장별 설비 목록 조회
+   */
+  getWorkplaceEquipments: async (workplaceCode: string) => {
+    const response = await apiClient.get(
+      `/api/workplaces/${workplaceCode}/equipments`
+    );
+    return response.data;
+  },
 };
 
 export default workplaceService;

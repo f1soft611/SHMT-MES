@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -24,6 +24,10 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -41,24 +45,22 @@ import {
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
+import workplaceService from '../../services/workplaceService';
+import productionPlanService, {
+  ProductionPlanRequest,
+} from '../../services/productionPlanService';
 import { Equipment } from '../../types/equipment';
+import { Workplace, WorkplaceWorker } from '../../types/workplace';
+import { ProductionPlanData } from '../../types/productionPlan';
+import {
+  mapWeeklyEquipmentPlans,
+  WeeklyEquipmentPlanResponse,
+} from '../../utils/productionPlanMapper';
 import PlanDialog from './components/PlanDialog';
 
-interface ProductionPlanData {
-  id?: string;
-  date: string;
-  itemCode: string;
-  itemName: string;
-  plannedQty: number;
-  equipmentCode: string;
-  equipmentName?: string;
-  shift?: string;
-  remark?: string;
-  orderNo?: string;
-  orderSeqno?: number;
-  orderHistno?: number;
-  lotNo?: string;
-}
+// localStorage 키 상수
+const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
+const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -102,6 +104,64 @@ const ProductionPlan: React.FC = () => {
     return day === 0 || day === 6;
   };
 
+  // 근무구분 표시 헬퍼 함수
+  const getShiftLabel = (shift?: string): string => {
+    const shiftMap: { [key: string]: string } = {
+      A: '1교대',
+      B: '2교대',
+      C: '3교대',
+      D: '주간',
+      N: '야간',
+      DAY: '주간',
+      NIGHT: '야간',
+    };
+    return shift ? shiftMap[shift] || shift : '-';
+  };
+
+  const getShiftColor = (
+    shift?: string
+  ):
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning' => {
+    const colorMap: {
+      [key: string]:
+        | 'default'
+        | 'primary'
+        | 'secondary'
+        | 'error'
+        | 'info'
+        | 'success'
+        | 'warning';
+    } = {
+      A: 'primary', // 1교대 - 파랑
+      B: 'success', // 2교대 - 초록
+      C: 'info', // 3교대 - 하늘
+      D: 'warning', // 주간 - 주황
+      N: 'secondary', // 야간 - 보라
+      DAY: 'warning',
+      NIGHT: 'secondary',
+    };
+    return shift ? colorMap[shift] || 'default' : 'default';
+  };
+
+  const getShiftBorderColor = (shift?: string): string => {
+    const borderColorMap: { [key: string]: string } = {
+      A: 'primary.main', // 1교대
+      B: 'success.main', // 2교대
+      C: 'info.main', // 3교대
+      D: 'warning.main', // 주간
+      N: 'secondary.main', // 야간
+      DAY: 'warning.main',
+      NIGHT: 'secondary.main',
+    };
+    return shift ? borderColorMap[shift] || 'grey.400' : 'grey.400';
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
     getMonday(new Date())
   );
@@ -128,7 +188,6 @@ const ProductionPlan: React.FC = () => {
     equipmentName: '',
     shift: 'DAY',
     remark: '',
-    lotNo: '',
   });
 
   const [searchValues, setSearchValues] = useState({
@@ -139,28 +198,115 @@ const ProductionPlan: React.FC = () => {
 
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string>('');
+  const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>(
+    []
+  );
+  // const [workplaceProcesses, setWorkplaceProcesses] = useState<any[]>([]);
+  const [equipmentProcessMap, setEquipmentProcessMap] = useState<
+    Map<string, string>
+  >(new Map());
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set()
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
 
-  // 요일별 표시 상태 (월~일)
-  const [visibleDays, setVisibleDays] = useState<boolean[]>([
-    true, // 월요일
-    true, // 화요일
-    true, // 수요일
-    true, // 목요일
-    true, // 금요일
-    false, // 토요일
-    false, // 일요일
-  ]);
+  // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
+  const getDefault3DaysFilter = (): boolean[] => {
+    const today = new Date();
+    const todayDayOfWeek = today.getDay(); // 0(일) ~ 6(토)
+    const mondayBasedDay = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // 0(월) ~ 6(일)
+
+    const filter = [false, false, false, false, false, false, false];
+
+    // 어제 (월요일일 때 일요일로 wrap)
+    const yesterday = mondayBasedDay - 1;
+    if (yesterday >= 0) {
+      filter[yesterday] = true;
+    } else {
+      filter[6] = true; // 일요일
+    }
+
+    // 오늘
+    filter[mondayBasedDay] = true;
+
+    // 내일 (일요일일 때 월요일로 wrap)
+    const tomorrow = mondayBasedDay + 1;
+    if (tomorrow < 7) {
+      filter[tomorrow] = true;
+    } else {
+      filter[0] = true; // 월요일
+    }
+
+    return filter;
+  };
+
+  // localStorage에 필터 저장하는 헬퍼 함수
+  const saveFilterToStorage = (filter: boolean[]) => {
+    try {
+      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
+      localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
+    } catch (error) {
+      console.error('Failed to save day filter to localStorage:', error);
+    }
+  };
+
+  // 날짜가 변경되었는지 확인하고 필터 초기화하는 함수
+  const checkAndResetIfDateChanged = (): boolean[] | null => {
+    try {
+      const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
+      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+
+      // 날짜가 변경되었으면 기본 3일로 초기화
+      if (lastAccessDate && lastAccessDate !== currentDate) {
+        const default3Days = getDefault3DaysFilter();
+        saveFilterToStorage(default3Days);
+        return default3Days;
+      }
+    } catch (error) {
+      console.error('Failed to check date change:', error);
+    }
+    return null;
+  };
+
+  // localStorage에서 저장된 필터 로드 또는 기본값 사용
+  const loadVisibleDaysFromStorage = (): boolean[] => {
+    try {
+      // 날짜 변경 확인
+      const resetFilter = checkAndResetIfDateChanged();
+      if (resetFilter) {
+        return resetFilter;
+      }
+
+      // 저장된 필터 로드
+      const saved = localStorage.getItem(STORAGE_KEY_DAY_FILTER);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === 7) {
+          return parsed;
+        }
+      }
+
+      // 첫 방문이거나 데이터가 없으면 기본 3일로 초기화
+      const default3Days = getDefault3DaysFilter();
+      saveFilterToStorage(default3Days);
+      return default3Days;
+    } catch (error) {
+      console.error('Failed to load day filter from localStorage:', error);
+      // 오류 시 기본 3일 표시
+      return getDefault3DaysFilter();
+    }
+  };
+
+  // 요일별 표시 상태 (월~일) - lazy initialization
+  const [visibleDays, setVisibleDays] = useState<boolean[]>(() =>
+    loadVisibleDaysFromStorage()
+  );
   const [showDayFilter, setShowDayFilter] = useState(false);
 
-  useEffect(() => {
-    loadEquipments();
-  }, []);
-
-  const loadEquipments = async () => {
+  const loadEquipments = useCallback(async () => {
     try {
       const response = await equipmentService.getEquipmentList(0, 100);
       if (response.resultCode === 200 && response.result?.resultList) {
@@ -176,15 +322,152 @@ const ProductionPlan: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load equipments:', error);
-      const mockEquipments = [
-        { equipCd: 'EQ-001', equipmentName: '설비1' },
-        { equipCd: 'EQ-002', equipmentName: '설비2' },
-        { equipCd: 'EQ-003', equipmentName: '설비3' },
-      ];
-      setEquipments(mockEquipments as Equipment[]);
-      setExpandedEquipments(new Set(mockEquipments.map((eq) => eq.equipCd)));
     }
-  };
+  }, []);
+
+  const loadWorkplaces = useCallback(async () => {
+    try {
+      const response = await workplaceService.getWorkplaceList(0, 100);
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaces(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplaces:', error);
+      // Mock data for development
+      const mockWorkplaces = [
+        { workplaceCode: 'WP001', workplaceName: '작업장1' },
+        { workplaceCode: 'WP002', workplaceName: '작업장2' },
+      ];
+      setWorkplaces(mockWorkplaces as Workplace[]);
+      loadEquipments();
+    }
+  }, [loadEquipments]);
+
+  const loadEquipmentsByWorkplace = useCallback(
+    async (workplaceCode: string) => {
+      try {
+        // 작업장별 설비 조회 (설비연동된 공정의 설비들)
+        const response = await workplaceService.getWorkplaceEquipments(
+          workplaceCode
+        );
+
+        if (response.resultCode === 200 && response.result?.resultList) {
+          const equipmentList = response.result.resultList.map((eq: any) => ({
+            equipCd: eq.equipCd,
+            equipmentName: eq.equipmentName,
+            equipmentId: eq.equipmentId,
+            processCode: eq.processCode,
+            processName: eq.processName,
+          }));
+
+          // 설비-공정 매핑 생성
+          const processMap = new Map<string, string>();
+          equipmentList.forEach((eq: any) => {
+            if (eq.equipCd && eq.processCode) {
+              processMap.set(eq.equipCd, eq.processCode);
+              processMap.set(eq.equipCd + 'NAME', eq.processName);
+            }
+          });
+          setEquipmentProcessMap(processMap);
+
+          setEquipments(equipmentList);
+          setExpandedEquipments(
+            new Set(equipmentList.map((eq: Equipment) => eq.equipCd))
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load equipments:', error);
+        // Fallback to loading all equipments if workplace-specific loading fails
+        loadEquipments();
+      }
+    },
+    [loadEquipments]
+  );
+
+  const loadWorkplaceWorkers = useCallback(async (workplaceCode: string) => {
+    try {
+      const response = await workplaceService.getWorkplaceWorkers(
+        workplaceCode
+      );
+      if (response.resultCode === 200 && response.result?.resultList) {
+        setWorkplaceWorkers(response.result.resultList);
+      }
+    } catch (error) {
+      console.error('Failed to load workplace workers:', error);
+      setWorkplaceWorkers([]);
+    }
+  }, []);
+
+  // const loadWorkplaceProcesses = useCallback(async (workplaceCode: string) => {
+  //   try {
+  //     const response = await workplaceService.getWorkplaceProcesses(
+  //       workplaceCode
+  //     );
+  //     if (response.resultCode === 200 && response.result?.resultList) {
+  //       setWorkplaceProcesses(response.result.resultList);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to load workplace processes:', error);
+  //     setWorkplaceProcesses([]);
+  //   }
+  // }, []);
+
+  const loadWeeklyPlans = useCallback(async () => {
+    if (!selectedWorkplace) return;
+
+    const weekStart = currentWeekStart;
+    const weekEnd = addDays(currentWeekStart, 6);
+
+    try {
+      const response = await productionPlanService.getWeeklyProductionPlans({
+        workplaceCode: selectedWorkplace,
+        startDate: formatDate(weekStart, 'YYYYMMDD'),
+        endDate: formatDate(weekEnd, 'YYYYMMDD'),
+      });
+
+      if (response.resultCode === 200 && response.result?.equipmentPlans) {
+        const mapped = mapWeeklyEquipmentPlans(
+          response.result as WeeklyEquipmentPlanResponse,
+          selectedWorkplace
+        );
+        setPlans(mapped);
+      } else {
+        setPlans([]);
+      }
+    } catch (error) {
+      console.error('Failed to load production plans:', error);
+      showSnackbar('생산계획 조회에 실패했습니다.', 'error');
+    }
+  }, [currentWeekStart, selectedWorkplace]);
+
+  useEffect(() => {
+    loadWorkplaces();
+    // 날짜 변경 체크는 컴포넌트 마운트 시 loadVisibleDaysFromStorage()에서 자동으로 수행됨
+  }, [loadWorkplaces]);
+
+  useEffect(() => {
+    if (selectedWorkplace) {
+      loadEquipmentsByWorkplace(selectedWorkplace);
+      loadWorkplaceWorkers(selectedWorkplace);
+      // loadWorkplaceProcesses(selectedWorkplace);
+    } else {
+      setEquipments([]);
+      setWorkplaceWorkers([]);
+      // setWorkplaceProcesses([]);
+      setEquipmentProcessMap(new Map());
+      setPlans([]);
+    }
+  }, [
+    selectedWorkplace,
+    loadEquipmentsByWorkplace,
+    loadWorkplaceWorkers,
+    // loadWorkplaceProcesses,
+  ]);
+
+  // Reload plans when dependencies change (week or workplace)
+  useEffect(() => {
+    loadWeeklyPlans();
+  }, [loadWeeklyPlans]);
 
   const toggleEquipment = (equipmentCode: string) => {
     const newExpanded = new Set(expandedEquipments);
@@ -200,10 +483,13 @@ const ProductionPlan: React.FC = () => {
     const newVisibleDays = [...visibleDays];
     newVisibleDays[dayIndex] = !newVisibleDays[dayIndex];
     setVisibleDays(newVisibleDays);
+    saveFilterToStorage(newVisibleDays);
   };
 
   const toggleAllDays = (visible: boolean) => {
-    setVisibleDays(visibleDays.map(() => visible));
+    const newVisibleDays = visibleDays.map(() => visible);
+    setVisibleDays(newVisibleDays);
+    saveFilterToStorage(newVisibleDays);
   };
 
   const getWeekDays = (): Date[] => {
@@ -237,6 +523,19 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
+    if (!selectedWorkplace) {
+      showSnackbar('먼저 작업장을 선택해주세요.', 'error');
+      return;
+    }
+
+    // 설비에 매핑된 공정코드 찾기
+    const processCode = equipmentCode
+      ? equipmentProcessMap.get(equipmentCode) || ''
+      : '';
+    const processName = equipmentCode
+      ? equipmentProcessMap.get(equipmentCode + 'NAME') || ''
+      : '';
+
     setDialogMode('create');
     setSelectedDate(date);
     setFormData({
@@ -244,18 +543,38 @@ const ProductionPlan: React.FC = () => {
       itemCode: '',
       itemName: '',
       plannedQty: 0,
+      equipmentId:
+        equipments.find((e) => e.equipCd === equipmentCode)?.equipmentId || '',
       equipmentCode: equipmentCode || '',
-      equipmentName: '',
-      shift: 'DAY',
+      equipmentName:
+        equipments.find((e) => e.equipCd === equipmentCode)?.equipmentName ||
+        '',
+      shift: '',
       remark: '',
-      lotNo: '',
+      workplaceCode: selectedWorkplace,
+      workplaceName:
+        workplaces.find((w) => w.workplaceCode === selectedWorkplace)
+          ?.workplaceName || '',
+      processCode: processCode,
+      processName: processName,
     });
     setOpenDialog(true);
   };
 
   const handleOpenEditDialog = (plan: ProductionPlanData) => {
     setDialogMode('edit');
-    setFormData(plan);
+    // 수정 모드에서는 작업장과 공정 정보를 포함하여 전달
+    setFormData({
+      ...plan,
+      workplaceCode: plan.workplaceCode || selectedWorkplace,
+      workplaceName:
+        plan.workplaceName ||
+        workplaces.find((w) => w.workplaceCode === selectedWorkplace)
+          ?.workplaceName ||
+        '',
+      processCode: plan.processCode || '',
+      processName: plan.processName || '',
+    });
     setOpenDialog(true);
   };
 
@@ -263,12 +582,19 @@ const ProductionPlan: React.FC = () => {
     setOpenDialog(false);
   };
 
-  const handleChange = (field: keyof ProductionPlanData, value: any) => {
-    setFormData({ ...formData, [field]: value });
+  // 넓은 시그니처 허용 (JSX 전달 시 string|number|symbol 형태 요구되는 경우 대응)
+  const handleChange = (
+    field: keyof ProductionPlanData | string | number | symbol,
+    value: any
+  ) => {
+    setFormData({
+      ...formData,
+      [field as keyof ProductionPlanData]: value,
+    });
   };
 
   const handleBatchChange = (updates: Partial<ProductionPlanData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
+    setFormData((prev: ProductionPlanData) => ({ ...prev, ...updates }));
   };
 
   const handleSearchChange = (field: string, value: string) => {
@@ -279,26 +605,146 @@ const ProductionPlan: React.FC = () => {
     showSnackbar('검색 기능은 백엔드 연동 후 구현됩니다.', 'success');
   };
 
-  const handleSave = (data: ProductionPlanData) => {
+  const handleSave = async (data: ProductionPlanData) => {
     if (dialogMode === 'create') {
-      const newPlan: ProductionPlanData = {
-        ...data,
-        id: Date.now().toString(),
-      };
-      setPlans([...plans, newPlan]);
-      showSnackbar('생산계획이 등록되었습니다.', 'success');
-    } else {
-      setPlans(plans.map((p) => (p.id === formData.id ? data : p)));
-      showSnackbar('생산계획이 수정되었습니다.', 'success');
-    }
+      try {
+        const requestData: ProductionPlanRequest = {
+          master: {
+            planDate: data.date.replace(/-/g, ''), // Ensure YYYYMMDD
+            workplaceCode: selectedWorkplace,
+            workplaceName: workplaces.find(
+              (w) => w.workplaceCode === selectedWorkplace
+            )?.workplaceName,
+            remark: data.remark,
+          },
+          details: [
+            {
+              planDate: data.date.replace(/-/g, ''),
+              itemCode: data.itemCode,
+              itemName: data.itemName,
+              plannedQty: data.plannedQty,
+              workplaceCode: selectedWorkplace,
+              workplaceName: workplaces.find(
+                (w) => w.workplaceCode === selectedWorkplace
+              )?.workplaceName,
+              processCode: data.processCode,
+              processName: data.processName,
+              equipmentId: data.equipmentId,
+              equipmentCode: data.equipmentCode,
+              equipmentName: data.equipmentName,
+              workerType: data.shift,
+              remark: data.remark,
+              orderNo: data.orderNo,
+              orderSeqno: data.orderSeqno,
+              orderHistno: data.orderHistno,
+              workerCode: data.workerCode,
+              workerName: data.workerName,
+              customerCode: data.customerCode,
+              customerName: data.customerName,
+            },
+          ],
+        };
 
-    handleCloseDialog();
+        const response = await productionPlanService.createProductionPlan(
+          requestData
+        );
+        if (response.resultCode === 200) {
+          showSnackbar('생산계획이 등록되었습니다.', 'success');
+          loadWeeklyPlans(); // Reload plans
+          handleCloseDialog();
+        } else {
+          showSnackbar('생산계획 등록 실패: ' + response.message, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to save plan:', error);
+        showSnackbar('생산계획 등록 중 오류가 발생했습니다.', 'error');
+      }
+    } else {
+      // Edit mode - 수정
+      try {
+        if (!formData.planNo) {
+          showSnackbar('수정할 계획 정보가 없습니다.', 'error');
+          return;
+        }
+
+        const requestData: ProductionPlanRequest = {
+          master: {
+            planNo: formData.planNo,
+            planDate: data.date.replace(/-/g, ''),
+            workplaceCode: formData.workplaceCode || selectedWorkplace,
+            workplaceName:
+              formData.workplaceName ||
+              workplaces.find((w) => w.workplaceCode === selectedWorkplace)
+                ?.workplaceName,
+            remark: data.remark,
+          },
+          details: [
+            {
+              planNo: formData.planNo,
+              planSeq: formData.planSeq,
+              planDate: data.date.replace(/-/g, ''),
+              itemCode: data.itemCode,
+              itemName: data.itemName,
+              plannedQty: data.plannedQty,
+              workplaceCode: formData.workplaceCode || selectedWorkplace,
+              workplaceName: formData.workplaceName,
+              processCode: data.processCode,
+              processName: data.processName,
+              equipmentId: data.equipmentId,
+              equipmentCode: data.equipmentCode,
+              equipmentName: data.equipmentName,
+              workerType: data.shift,
+              remark: data.remark,
+              orderNo: data.orderNo,
+              orderSeqno: data.orderSeqno,
+              orderHistno: data.orderHistno,
+              workerCode: data.workerCode,
+              workerName: data.workerName,
+              customerCode: data.customerCode,
+              customerName: data.customerName,
+            },
+          ],
+        };
+
+        const response = await productionPlanService.updateProductionPlan(
+          formData.planNo,
+          requestData
+        );
+        if (response.resultCode === 200) {
+          showSnackbar('생산계획이 수정되었습니다.', 'success');
+          loadWeeklyPlans();
+          handleCloseDialog();
+        } else {
+          showSnackbar('생산계획 수정 실패: ' + response.message, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to update plan:', error);
+        showSnackbar('생산계획 수정 중 오류가 발생했습니다.', 'error');
+      }
+    }
   };
 
-  const handleDelete = (planId: string) => {
+  const handleDelete = async (plan: ProductionPlanData) => {
+    if (!plan.planNo) {
+      showSnackbar('삭제할 계획 정보가 없습니다.', 'error');
+      return;
+    }
+
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      setPlans(plans.filter((p) => p.id !== planId));
-      showSnackbar('생산계획이 삭제되었습니다.', 'success');
+      try {
+        const response = await productionPlanService.deleteProductionPlan(
+          plan.planNo
+        );
+        if (response.resultCode === 200) {
+          showSnackbar('생산계획이 삭제되었습니다.', 'success');
+          loadWeeklyPlans();
+        } else {
+          showSnackbar('생산계획 삭제 실패: ' + response.message, 'error');
+        }
+      } catch (error) {
+        console.error('Failed to delete plan:', error);
+        showSnackbar('생산계획 삭제 중 오류가 발생했습니다.', 'error');
+      }
     }
   };
 
@@ -343,6 +789,7 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            mb: 2,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -404,7 +851,12 @@ const ProductionPlan: React.FC = () => {
             </Tooltip>
             <Tooltip title="새로고침">
               <IconButton
-                onClick={loadEquipments}
+                onClick={() => {
+                  loadWorkplaces();
+                  if (selectedWorkplace) {
+                    loadEquipmentsByWorkplace(selectedWorkplace);
+                  }
+                }}
                 sx={{
                   bgcolor: 'grey.100',
                   color: 'text.secondary',
@@ -415,6 +867,40 @@ const ProductionPlan: React.FC = () => {
               </IconButton>
             </Tooltip>
           </Box>
+        </Box>
+
+        {/* 작업장 선택 영역 */}
+        <Box sx={{ mt: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>작업장 선택 *</InputLabel>
+            <Select
+              value={selectedWorkplace}
+              onChange={(e) => setSelectedWorkplace(e.target.value)}
+              label="작업장 선택 *"
+              required
+            >
+              <MenuItem value="">
+                <em>작업장을 선택하세요</em>
+              </MenuItem>
+              {workplaces.map((workplace) => (
+                <MenuItem
+                  key={workplace.workplaceCode}
+                  value={workplace.workplaceCode}
+                >
+                  {workplace.workplaceName} ({workplace.workplaceCode})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {!selectedWorkplace && (
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ mt: 0.5, display: 'block' }}
+            >
+              생산계획을 등록하려면 먼저 작업장을 선택해주세요.
+            </Typography>
+          )}
         </Box>
       </Paper>
 
@@ -462,6 +948,18 @@ const ProductionPlan: React.FC = () => {
                 <Button
                   size="small"
                   variant="outlined"
+                  onClick={() => {
+                    const default3Days = getDefault3DaysFilter();
+                    setVisibleDays(default3Days);
+                    saveFilterToStorage(default3Days);
+                  }}
+                  color="info"
+                >
+                  기본 3일
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
                   onClick={() => toggleAllDays(true)}
                 >
                   전체 표시
@@ -475,6 +973,14 @@ const ProductionPlan: React.FC = () => {
                 </Button>
               </Box>
             </Stack>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1.5, display: 'block' }}
+            >
+              💡 선택한 요일 설정은 자동으로 저장되며, 다음날이 되면 기본
+              3일(어제, 오늘, 내일)로 자동 초기화됩니다.
+            </Typography>
           </CardContent>
         </Card>
       </Collapse>
@@ -668,7 +1174,7 @@ const ProductionPlan: React.FC = () => {
                           >
                             <Badge badgeContent={totalPlans} color="error">
                               <Chip
-                                label={`${totalQty.toLocaleString()}`}
+                                label={`${(totalQty ?? 0).toLocaleString()}`}
                                 size="small"
                                 sx={{
                                   bgcolor: 'rgba(255,255,255,0.9)',
@@ -816,10 +1322,9 @@ const ProductionPlan: React.FC = () => {
                                           },
                                           transition: 'all 0.2s ease',
                                           borderLeft: '4px solid',
-                                          borderColor:
-                                            plan.shift === 'DAY'
-                                              ? 'primary.main'
-                                              : 'warning.main',
+                                          borderColor: getShiftBorderColor(
+                                            plan.shift
+                                          ),
                                         }}
                                       >
                                         <CardContent
@@ -853,17 +1358,6 @@ const ProductionPlan: React.FC = () => {
                                               >
                                                 {plan.itemName}
                                               </Typography>
-                                              {plan.lotNo && (
-                                                <Typography
-                                                  variant="caption"
-                                                  sx={{
-                                                    display: 'block',
-                                                    color: 'text.secondary',
-                                                  }}
-                                                >
-                                                  LOT: {plan.lotNo}
-                                                </Typography>
-                                              )}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
@@ -873,24 +1367,84 @@ const ProductionPlan: React.FC = () => {
                                                 }}
                                               >
                                                 <Chip
-                                                  label={`${plan.plannedQty.toLocaleString()} 개`}
+                                                  label={`${(
+                                                    plan.plannedQty ?? 0
+                                                  ).toLocaleString()} 개`}
                                                   size="small"
                                                   color="success"
                                                 />
                                                 <Chip
-                                                  label={
-                                                    plan.shift === 'DAY'
-                                                      ? '주간'
-                                                      : '야간'
-                                                  }
+                                                  label={getShiftLabel(
+                                                    plan.shift
+                                                  )}
                                                   size="small"
-                                                  color={
-                                                    plan.shift === 'DAY'
-                                                      ? 'primary'
-                                                      : 'warning'
-                                                  }
+                                                  color={getShiftColor(
+                                                    plan.shift
+                                                  )}
                                                 />
                                               </Box>
+                                              {/* 담당자 및 거래처 정보 표시 (같은 줄) */}
+                                              {(plan.workerName ||
+                                                plan.customerName) && (
+                                                <Box
+                                                  sx={{
+                                                    display: 'flex',
+                                                    gap: 1,
+                                                    mt: 0.5,
+                                                    flexWrap: 'wrap',
+                                                  }}
+                                                >
+                                                  {plan.workerName && (
+                                                    <Chip
+                                                      label={`담당: ${plan.workerName}`}
+                                                      size="small"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        borderColor:
+                                                          'primary.main',
+                                                        color: 'primary.main',
+                                                      }}
+                                                    />
+                                                  )}
+                                                  {plan.customerName && (
+                                                    <Chip
+                                                      label={
+                                                        plan.additionalCustomers &&
+                                                        plan.additionalCustomers
+                                                          .length > 0
+                                                          ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
+                                                          : plan.customerName
+                                                      }
+                                                      size="small"
+                                                      color="secondary"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        cursor: plan
+                                                          .additionalCustomers
+                                                          ?.length
+                                                          ? 'pointer'
+                                                          : 'default',
+                                                      }}
+                                                      onClick={() => {
+                                                        if (
+                                                          plan.additionalCustomers &&
+                                                          plan
+                                                            .additionalCustomers
+                                                            .length > 0
+                                                        ) {
+                                                          alert(
+                                                            `거래처 목록:\n- ${
+                                                              plan.customerName
+                                                            }\n- ${plan.additionalCustomers.join(
+                                                              '\n- '
+                                                            )}`
+                                                          );
+                                                        }
+                                                      }}
+                                                    />
+                                                  )}
+                                                </Box>
+                                              )}
                                               {plan.orderNo && (
                                                 <Chip
                                                   label={`의뢰: ${plan.orderNo}`}
@@ -929,8 +1483,7 @@ const ProductionPlan: React.FC = () => {
                                                 <IconButton
                                                   size="small"
                                                   onClick={() =>
-                                                    plan.id &&
-                                                    handleDelete(plan.id)
+                                                    handleDelete(plan)
                                                   }
                                                   sx={{
                                                     bgcolor: 'error.light',
@@ -979,6 +1532,7 @@ const ProductionPlan: React.FC = () => {
         selectedDate={selectedDate}
         formData={formData}
         equipments={equipments}
+        workplaceWorkers={workplaceWorkers}
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}

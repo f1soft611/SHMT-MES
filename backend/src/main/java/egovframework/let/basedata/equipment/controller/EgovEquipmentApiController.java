@@ -172,16 +172,6 @@ public class EgovEquipmentApiController {
             @RequestBody Equipment equipment,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        // 설비 코드 중복 체크 (수정 시)
-        if (equipmentService.isEquipmentCodeExistsForUpdate(equipCd, equipment.getEquipSysCd(), equipment.getEquipCd())) {
-            Map<String, Object> errorMap = new HashMap<>();
-            errorMap.put("message", "이미 존재하는 설비 코드입니다.");
-            errorMap.put("duplicateField", "equipCd");
-            errorMap.put("duplicateValue", equipment.getEquipCd());
-
-            return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
-        }
-
         equipment.setEquipCd(equipCd);
         equipment.setUpdUserId(user.getUniqId());
         equipmentService.updateEquipment(equipment);

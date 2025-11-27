@@ -103,4 +103,11 @@ public class WorkplaceDAO extends EgovAbstractMapper {
     public int selectWorkplaceCodeCheckForUpdate(Map<String, String> params) {
         return selectOne("WorkplaceDAO.selectWorkplaceCodeCheckForUpdate", params);
     }
+
+    /**
+     * 작업장별 설비 목록 조회
+     */
+    public List<Map<String, Object>> selectWorkplaceEquipmentList(String workplaceCode) {
+        return selectList("WorkplaceDAO.selectWorkplaceEquipmentList", workplaceCode);
+    }
 }

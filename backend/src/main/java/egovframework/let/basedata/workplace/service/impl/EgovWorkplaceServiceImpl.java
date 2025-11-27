@@ -183,4 +183,13 @@ public class EgovWorkplaceServiceImpl extends EgovAbstractServiceImpl implements
 	public void deleteWorkplaceProcess(WorkplaceProcess workplaceProcess) throws Exception {
 		workplaceProcessDAO.deleteWorkplaceProcess(workplaceProcess);
 	}
+
+
+	/**
+	 * 작업장별 설비 목록을 가져온다.
+	 */
+	@Override
+	public List<Map<String, Object>> selectWorkplaceEquipmentList(String workplaceCode) throws Exception {
+		return workplaceDAO.selectWorkplaceEquipmentList(workplaceCode);
+	}
 }

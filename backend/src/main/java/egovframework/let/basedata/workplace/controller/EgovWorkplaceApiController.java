@@ -418,4 +418,30 @@ public class EgovWorkplaceApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+    /**
+     * 작업장별 설비 목록을 조회한다.
+     */
+    @Operation(
+            summary = "작업장별 설비 목록 조회",
+            description = "작업장별 설비 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovWorkplaceApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/workplaces/{workplaceCode}/equipments")
+    public ResultVO selectWorkplaceEquipmentList(
+            @PathVariable String workplaceCode,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        List<Map<String, Object>> resultList = workplaceService.selectWorkplaceEquipmentList(workplaceCode);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", resultList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
 }

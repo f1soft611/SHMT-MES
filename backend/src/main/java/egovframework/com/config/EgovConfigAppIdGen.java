@@ -11,6 +11,9 @@ import egovframework.com.cmm.util.EgovIdGnrBuilder;
 import org.egovframe.rte.fdl.idgnr.impl.EgovTableIdGnrServiceImpl;
 import org.egovframe.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * @ClassName : EgovConfigAppIdGen.java
  * @Description : IdGeneration 설정
@@ -30,6 +33,10 @@ import org.egovframe.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl;
  */
 @Configuration
 public class EgovConfigAppIdGen {
+
+	private static final String DATE_FORMAT = "yyyyMMdd";
+	private static final int SEQUENCE_LENGTH = 4;
+
 	@Autowired
 	@Qualifier("dataSource")
 	DataSource dataSource;
@@ -1946,6 +1953,22 @@ public class EgovConfigAppIdGen {
 			.build();
 	}
 
+	/** 공정 설비 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProcessEquipmentIdGnrService() {
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+			.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+			.setBlockSize(1)
+			.setTable("IDS")
+			.setTableName("TPR104")
+			.setPreFix("PRE")
+			.setCipers(3)
+			.setFillChar('0')
+			.build();
+	}
+
 	/** 설비 ID Generation  Config
 	 * @return
 	 */
@@ -2005,6 +2028,26 @@ public class EgovConfigAppIdGen {
 				.setTable("IDS")
 				.setTableName("TPR112")
 				.setPreFix("PFI")
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
+	/** 생산계획 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProdPlanIdGnrService() {
+		// 계획번호 생성 (날짜 + 시퀀스)
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		String dateStr = sdf.format(new Date());
+
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR301M")
+				.setPreFix("PL" + dateStr)
 				.setCipers(4)
 				.setFillChar('0')
 				.build();

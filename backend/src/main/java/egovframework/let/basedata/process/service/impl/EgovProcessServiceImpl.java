@@ -39,6 +39,7 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	private final ProcessDefectDAO processDefectDAO;
 	private final ProcessInspectionDAO processInspectionDAO;
 	private final ProcessStopItemDAO processStopItemDAO;
+	private final ProcessEquipmentDAO processEquipmentDAO;
 
 	@Resource(name = "egovProcessIdGnrService")
 	private EgovIdGnrService egovProcessIdGnrService;
@@ -51,6 +52,9 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 
 	@Resource(name = "egovProcessStopItemIdGnrService")
 	private EgovIdGnrService egovProcessStopItemIdGnrService;
+
+	@Resource(name = "egovProcessEquipmentIdGnrService")
+	private EgovIdGnrService egovProcessEquipmentIdGnrService;
 
 	/**
 	 * 공정 목록을 조회한다.
@@ -230,5 +234,58 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 
 		int count = processDAO.selectProcessCodeCheckForUpdate(params);
 		return count > 0;
+	}
+
+	/**
+	 * 공정별 설비 목록을 조회한다.
+	 */
+	@Override
+	public List<ProcessEquipmentVO> selectProcessEquipmentList(ProcessEquipmentVO processEquipmentVO) throws Exception {
+		return processEquipmentDAO.selectProcessEquipmentList(processEquipmentVO);
+	}
+
+	/**
+	 * 공정별 설비를 등록한다.
+	 */
+	@Override
+	@Transactional
+	public void insertProcessEquipment(ProcessEquipment processEquipment) throws Exception {
+		// 중복 체크
+		int duplicateCount = processEquipmentDAO.checkProcessEquipmentDuplicate(processEquipment);
+		if (duplicateCount > 0) {
+			throw new Exception("이미 등록된 설비입니다. (회사코드: " + processEquipment.getFactoryCode() +
+					", 공정코드: " + processEquipment.getProcessCode() + 
+					", 설비시스템코드: " + processEquipment.getEquipSysCd() + ")");
+		}
+
+		String processEquipmentId = egovProcessEquipmentIdGnrService.getNextStringId();
+		processEquipment.setProcessEquipmentId(processEquipmentId);
+		processEquipmentDAO.insertProcessEquipment(processEquipment);
+	}
+
+	/**
+	 * 공정별 설비를 수정한다.
+	 */
+	@Override
+	@Transactional
+	public void updateProcessEquipment(ProcessEquipment processEquipment) throws Exception {
+		// 중복 체크 (자기 자신 제외)
+		int duplicateCount = processEquipmentDAO.checkProcessEquipmentDuplicate(processEquipment);
+		if (duplicateCount > 0) {
+			throw new Exception("이미 등록된 설비입니다. (회사코드: " + processEquipment.getFactoryCode() +
+					", 공정코드: " + processEquipment.getProcessCode() + 
+					", 설비시스템코드: " + processEquipment.getEquipSysCd() + ")");
+		}
+
+		processEquipmentDAO.updateProcessEquipment(processEquipment);
+	}
+
+	/**
+	 * 공정별 설비를 삭제한다.
+	 */
+	@Override
+	@Transactional
+	public void deleteProcessEquipment(String processEquipmentId) throws Exception {
+		processEquipmentDAO.deleteProcessEquipment(processEquipmentId);
 	}
 }

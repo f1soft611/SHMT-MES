@@ -49,10 +49,12 @@ public class SchedulerHistoryDAO extends EgovAbstractMapper {
     /**
      * 스케쥴러 실행 이력을 등록한다.
      * @param history
+     * @return 생성된 이력 ID
      * @throws Exception
      */
-    public void insertSchedulerHistory(SchedulerHistory history) throws Exception {
+    public Long insertSchedulerHistory(SchedulerHistory history) throws Exception {
         insert("SchedulerHistoryDAO.insertSchedulerHistory", history);
+        return history.getHistoryId();
     }
 
     /**

@@ -5,6 +5,7 @@ import {
   ProcessDefect, 
   ProcessInspection, 
   ProcessStopItem,
+  ProcessEquipment,
   ProcessSearchParams 
 } from '../types/process';
 
@@ -179,6 +180,38 @@ export const processService = {
    */
   removeProcessStopItem: async (processId: string, processStopItemId: string) => {
     const response = await apiClient.delete(`/api/processes/${processId}/stopitems/${processStopItemId}`);
+    return response.data;
+  },
+
+  /**
+   * 공정별 설비 목록 조회
+   */
+  getProcessEquipments: async (processId: string) => {
+    const response = await apiClient.get(`/api/processes/${processId}/equipments`);
+    return response.data;
+  },
+
+  /**
+   * 공정별 설비 등록
+   */
+  addProcessEquipment: async (processId: string, equipment: ProcessEquipment) => {
+    const response = await apiClient.post(`/api/processes/${processId}/equipments`, equipment);
+    return response.data;
+  },
+
+  /**
+   * 공정별 설비 수정
+   */
+  updateProcessEquipment: async (processId: string, processEquipmentId: string, equipment: ProcessEquipment) => {
+    const response = await apiClient.put(`/api/processes/${processId}/equipments/${processEquipmentId}`, equipment);
+    return response.data;
+  },
+
+  /**
+   * 공정별 설비 삭제
+   */
+  removeProcessEquipment: async (processId: string, processEquipmentId: string) => {
+    const response = await apiClient.delete(`/api/processes/${processId}/equipments/${processEquipmentId}`);
     return response.data;
   },
 };
