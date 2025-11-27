@@ -1,4 +1,4 @@
-import {DataGrid, GridColDef, GridRowId} from "@mui/x-data-grid";
+import {DataGrid, GridColDef, GridRowId, GridRowModel } from "@mui/x-data-grid";
 import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio, Chip} from "@mui/material";
 import {
     Search as SearchIcon,
@@ -80,22 +80,24 @@ export default function ProcessFlowProcessTab() {
             headerName: '순서',
             width: 80,
             headerAlign: 'center',
-            renderCell: (params) => (
-                <TextField
-                    size="small"
-                    value={params.row.seq ?? ""}
-                    onChange={(e) => {
-                        const value = e.target.value;
-                        const rid = params.row.flowProcessId ?? params.row.flowRowId;
-
-                        setFlowProcessRows(prev =>
-                            prev.map(p =>
-                                (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
-                            )
-                        );
-                    }}
-                />
-            ),
+            align: 'center',
+            editable: true,
+            // renderCell: (params) => (
+            //     <TextField
+            //         size="small"
+            //         value={params.row.seq ?? ""}
+            //         onChange={(e) => {
+            //             const value = e.target.value;
+            //             const rid = params.row.flowProcessId ?? params.row.flowRowId;
+            //
+            //             setFlowProcessRows(prev =>
+            //                 prev.map(p =>
+            //                     (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
+            //                 )
+            //             );
+            //         }}
+            //     />
+            // ),
         },
         {
             field: 'lastFlag',
@@ -185,6 +187,20 @@ export default function ProcessFlowProcessTab() {
         setLeftSelected([]);
         setRightSelected([]);
     }, [flowProcessRows]);
+
+    const handleRowUpdate = (newRow: GridRowModel, oldRow: GridRowModel): GridRowModel => {
+        setFlowProcessRows(prev => {
+            const updated = prev.map(p =>
+                (p.flowProcessId ?? p.flowRowId) === (newRow.flowProcessId ?? newRow.flowRowId)
+                    ? { ...p, seq: newRow.seq }
+                    : p
+            );
+
+            return [...updated].sort((a, b) => (Number(a.seq) || 0) - (Number(b.seq) || 0));
+        });
+
+        return newRow; // 반드시 return 필요
+    };
 
 
     return(
@@ -283,6 +299,8 @@ export default function ProcessFlowProcessTab() {
                         rows={flowProcessRows}
                         columns={rightColumns}
                         getRowId={(row) => row.flowProcessId ?? row.flowRowId}
+                        editMode="cell"
+                        processRowUpdate={handleRowUpdate}
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableRowSelectionExcludeModel
