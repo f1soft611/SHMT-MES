@@ -4,9 +4,7 @@ import egovframework.com.cmm.LoginVO;
 import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
-import egovframework.let.production.plan.domain.model.ProductionPlan;
-import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
-import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.production.plan.domain.model.*;
 import egovframework.let.production.plan.service.EgovProductionPlanService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,11 +42,13 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Tag(name="EgovProductionPlanApiController", description = "생산계획 관리")
 public class EgovProductionPlanApiController {
 
 	private final ResultVoHelper resultVoHelper;
 	private final EgovProductionPlanService productionPlanService;
+	private final EgovPropertyService propertyService;
 
 	/**
 	 * 생산계획 목록을 조회한다.
@@ -66,7 +68,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@GetMapping(value = "/api/production-plans")
+	@GetMapping(value = "/production-plans")
 	public ResultVO selectProductionPlanList(
 			@ModelAttribute ProductionPlanVO searchVO,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
@@ -94,7 +96,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@GetMapping(value = "/api/production-plans/{planNo}")
+	@GetMapping(value = "/production-plans/{planNo}")
 	public ResultVO selectProductionPlanByPlanNo(
 			@PathVariable("planNo") String planNo,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
@@ -126,7 +128,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "등록 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@PostMapping(value = "/api/production-plans")
+	@PostMapping(value = "/production-plans")
 	public ResultVO insertProductionPlan(
 			@RequestBody ProductionPlanRequest requestBody,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
@@ -143,8 +145,11 @@ public class EgovProductionPlanApiController {
 			plan.setOpmanCode(user.getUniqId());
 		}
 
+		// 참조 정보 가져오기
+		List<ProductionPlanReference> references = requestBody.getReferences();
+
 		// 생산계획 등록 (트랜잭션 처리)
-		String planId = productionPlanService.insertProductionPlan(master, planList);
+		String planId = productionPlanService.insertProductionPlan(master, planList, references);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 등록되었습니다.");
@@ -173,7 +178,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "수정 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@PutMapping(value = "/api/production-plans/{planNo}")
+	@PutMapping(value = "/production-plans/{planNo}")
 	public ResultVO updateProductionPlan(
 			@PathVariable("planNo") String planNo,
 			@RequestBody ProductionPlanRequest requestBody,
@@ -219,7 +224,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "삭제 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@DeleteMapping(value = "/api/production-plans/{planNo}")
+	@DeleteMapping(value = "/production-plans/{planNo}")
 	public ResultVO deleteProductionPlan(
 			@PathVariable("planNo") String planNo,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
@@ -259,7 +264,7 @@ public class EgovProductionPlanApiController {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@GetMapping(value = "/api/production-plans/weekly")
+	@GetMapping(value = "/production-plans/weekly")
 	public ResultVO selectWeeklyProductionPlans(
 			@RequestParam("workplaceCode") String workplaceCode,
 			@RequestParam("startDate") String startDate,
@@ -280,6 +285,52 @@ public class EgovProductionPlanApiController {
 	}
 
 	/**
+	 * 생산의뢰(TSA308) 목록을 조회한다.
+	 *
+	 * @param searchVO 검색 조건
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산의뢰 목록 조회",
+			description = "TSA308 테이블에서 생산의뢰 목록을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping(value = "/production-requests")
+	public ResultVO selectProductionRequestList(
+			@ModelAttribute ProductionRequestVO searchVO,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(searchVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(
+				searchVO.getPageUnit() > 0 ? searchVO.getPageUnit() : propertyService.getInt("Globals.pageUnit")
+		);
+		paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
+
+		searchVO.setFactoryCode(user.getFactoryCode());
+		searchVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		searchVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		searchVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		Map<String, Object> resultMap = productionPlanService.selectProductionRequestList(searchVO, user);
+		int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		resultMap.put("productionRequestVO", searchVO);
+		resultMap.put("paginationInfo", paginationInfo);
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
 	 * 생산계획 등록/수정 요청 클래스
 	 */
 	@Getter
@@ -287,5 +338,6 @@ public class EgovProductionPlanApiController {
 	public static class ProductionPlanRequest {
 		private ProductionPlanMaster master;
 		private List<ProductionPlan> details;
+		private List<ProductionPlanReference> references;
 	}
 }

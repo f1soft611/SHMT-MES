@@ -12,12 +12,25 @@ import {
   Typography,
   IconButton,
   Chip,
+  Paper,
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridRowId,
+  GridRowSelectionModel,
+} from '@mui/x-data-grid';
 import {
   Search as SearchIcon,
   Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
+  FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import { productionRequestService } from '../../../services/productionRequestService';
 import { ProductionRequest } from '../../../types/productionRequest';
@@ -25,41 +38,49 @@ import { ProductionRequest } from '../../../types/productionRequest';
 interface ProductionRequestDialogProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (requests: ProductionRequest[]) => void; // Changed to array for multi-selection
-  multiSelect?: boolean; // Enable multi-selection mode
+  onSelect: (requests: ProductionRequest[]) => void;
+  multiSelect?: boolean;
 }
 
 const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   open,
   onClose,
   onSelect,
-  multiSelect = true, // Default to multi-select mode
+  multiSelect = true,
 }) => {
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>([]);
-  
-  // 검색 조건
+  // 선택모델 (현재 프로젝트의 커스텀 형태 사용)
+  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
+    type: 'include',
+    ids: new Set<GridRowId>(),
+  } as any);
+  const [error, setError] = useState<string>('');
+
+  // 검색 조건 (실제 조회에 사용)
   const [searchParams, setSearchParams] = useState({
-    itemCode: '',
-    itemName: '',
-    orderNo: '',
+    searchCnd: '1',
+    searchWrd: '',
+    dateFrom: '',
+    dateTo: '',
   });
 
-  // 페이지네이션 - DataGrid 형식으로 변경
+  // 입력 필드용 상태 (화면 입력용)
+  const [inputValues, setInputValues] = useState({
+    searchCnd: '1',
+    searchWrd: '',
+    dateFrom: '',
+    dateTo: '',
+  });
+
+  // 페이지네이션
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
   });
   const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    if (open) {
-      loadProductionRequests();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, paginationModel.page, paginationModel.pageSize]);
-
+  // 데이터 로드
   const loadProductionRequests = useCallback(async () => {
     setLoading(true);
     try {
@@ -68,152 +89,138 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         paginationModel.pageSize,
         searchParams
       );
-      
+
       if (response.resultCode === 200 && response.result?.resultList) {
         setRequests(response.result.resultList);
         setTotalCount(response.result.paginationInfo.totalRecordCount);
       } else {
-        // Mock data for development
-        const mockRequests: ProductionRequest[] = [
-          {
-            factoryCode: 'F001',
-            orderNo: 'ORD2024001',
-            orderHistno: 1,
-            orderSeqno: 1,
-            itemCode: 'ITEM001',
-            itemName: '제품A',
-            specification: '100x200mm',
-            unit: 'EA',
-            orderQty: 1000,
-            deliveryDate: '20241231',
-            registrant: '홍길동',
-            registDate: '20241101',
-            registTime: '09:00:00',
-          },
-          {
-            factoryCode: 'F001',
-            orderNo: 'ORD2024002',
-            orderHistno: 1,
-            orderSeqno: 1,
-            itemCode: 'ITEM002',
-            itemName: '제품B',
-            specification: '150x250mm',
-            unit: 'EA',
-            orderQty: 500,
-            deliveryDate: '20241230',
-            registrant: '김철수',
-            registDate: '20241102',
-            registTime: '10:30:00',
-          },
-        ];
-        setRequests(mockRequests);
-        setTotalCount(mockRequests.length);
+        setRequests([]);
+        setTotalCount(0);
       }
     } catch (error) {
       console.error('Failed to load production requests:', error);
-      // Use mock data on error
-      const mockRequests: ProductionRequest[] = [
-        {
-          factoryCode: 'F001',
-          orderNo: 'ORD2024001',
-          orderHistno: 1,
-          orderSeqno: 1,
-          itemCode: 'ITEM001',
-          itemName: '제품A',
-          specification: '100x200mm',
-          unit: 'EA',
-          orderQty: 1000,
-          deliveryDate: '20241231',
-          registrant: '홍길동',
-          registDate: '20241101',
-          registTime: '09:00:00',
-        },
-      ];
-      setRequests(mockRequests);
-      setTotalCount(mockRequests.length);
+      setRequests([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
   }, [paginationModel.page, paginationModel.pageSize, searchParams]);
 
+  useEffect(() => {
+    if (open) {
+      loadProductionRequests();
+    }
+  }, [open, loadProductionRequests]);
+
+  // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
+    setSearchParams({ ...inputValues });
     setPaginationModel({ ...paginationModel, page: 0 });
-    loadProductionRequests();
   };
 
-  const handleSearchParamChange = (field: string, value: string) => {
-    setSearchParams({ ...searchParams, [field]: value });
+  const handleInputChange = (field: string, value: string) => {
+    setInputValues({
+      ...inputValues,
+      [field]: value,
+    });
   };
 
   const handleConfirmSelection = () => {
-    if (selectedRequests.length > 0) {
-      onSelect(selectedRequests);
-      onClose();
-      setSelectedRequests([]);
-    }
-  };
-
-  const handleRowClick = (request: ProductionRequest) => {
-    if (!multiSelect) {
-      // Single selection mode
-      setSelectedRequests([request]);
+    if (!selectionModel || (selectionModel as any).ids?.size === 0) {
+      setError('생산의뢰를 선택해주세요.');
       return;
     }
 
-    // Multi-selection mode with same item code restriction
-    const isAlreadySelected = selectedRequests.some(
-      (r) => r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno
+    const selectedKeys = Array.from((selectionModel as any).ids).map(String);
+    const selectedItems = requests.filter((req) =>
+      selectedKeys.includes(
+        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}`
+      )
     );
 
-    if (isAlreadySelected) {
-      // Deselect
-      setSelectedRequests(
-        selectedRequests.filter(
-          (r) => !(r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno)
-        )
-      );
-    } else {
-      // Check if same item code
-      if (selectedRequests.length > 0) {
-        const firstItemCode = selectedRequests[0].itemCode;
-        if (request.itemCode !== firstItemCode) {
-          alert(`같은 품목코드(${firstItemCode})만 선택할 수 있습니다.`);
-          return;
-        }
-      }
-      setSelectedRequests([...selectedRequests, request]);
+    if (selectedItems.length === 0) {
+      setError('선택한 생산의뢰를 찾을 수 없습니다.');
+      return;
     }
+
+    // 멀티 선택 시 같은 품목코드만 선택되었는지 확인
+    if (multiSelect && selectedItems.length > 1) {
+      const firstItemCode = selectedItems[0].itemCode;
+      const allSameItem = selectedItems.every(
+        (item) => item.itemCode === firstItemCode
+      );
+      if (!allSameItem) {
+        setError('같은 품목코드만 선택할 수 있습니다.');
+        return;
+      }
+
+      // 수량 합계 계산
+      const totalQuantity = selectedItems.reduce(
+        (sum, item) => sum + (item.orderQty || 0),
+        0
+      );
+
+      // 마스터 데이터에 수량 합계 반영
+      const masterData = {
+        totalQuantity: totalQuantity,
+      };
+
+      // references 데이터 구성 (TPR301R에 저장될 개별 생산의뢰 정보)
+      const references = selectedItems.map((item) => ({
+        orderNo: item.orderNo,
+        orderSeqno: item.orderSeqno || 0,
+        orderHistno: item.orderHistno || 0,
+        orderQty: item.orderQty,
+        workdtQty: 0,
+        representOrder: 'N',
+        customerCode: item.customerCode || '',
+      }));
+
+      // 선택된 데이터와 마스터 데이터, references 처리
+      onSelect({
+        masterData,
+        selectedItems,
+        references,
+      } as any);
+    } else {
+      onSelect(selectedItems);
+    }
+
+    handleClose();
   };
 
-  const isRowSelected = (request: ProductionRequest) => {
-    return selectedRequests.some(
-      (r) => r.orderNo === request.orderNo && r.orderSeqno === request.orderSeqno
-    );
+  const handleClose = () => {
+    onClose();
+    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() } as any);
+    setError('');
+    setInputValues({
+      searchCnd: '1',
+      searchWrd: '',
+      dateFrom: '',
+      dateTo: '',
+    });
+    setSearchParams({
+      searchCnd: '1',
+      searchWrd: '',
+      dateFrom: '',
+      dateTo: '',
+    });
+    setPaginationModel({ page: 0, pageSize: 10 });
   };
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
     if (dateStr.length === 8) {
-      return `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      return `${dateStr.substring(0, 4)}-${dateStr.substring(
+        4,
+        6
+      )}-${dateStr.substring(6, 8)}`;
     }
     return dateStr;
   };
 
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = [
-    {
-      field: 'selected',
-      headerName: '선택',
-      width: 80,
-      align: 'center',
-      headerAlign: 'center',
-      sortable: false,
-      renderCell: (params) => (
-        isRowSelected(params.row) ? (
-          <CheckCircleIcon color="primary" />
-        ) : null
-      ),
-    },
     {
       field: 'orderNo',
       headerName: '생산의뢰번호',
@@ -233,7 +240,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       field: 'customerName',
       headerName: '거래처',
       width: 150,
-      align: 'center',
       headerAlign: 'center',
       valueFormatter: (value) => value || '-',
     },
@@ -244,7 +250,12 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
-        <Chip label={params.value} size="small" color="primary" variant="outlined" />
+        <Chip
+          label={params.value}
+          size="small"
+          color="primary"
+          variant="outlined"
+        />
       ),
     },
     {
@@ -257,8 +268,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     {
       field: 'specification',
       headerName: '규격',
-      width: 120,
-      align: 'center',
+      flex: 1,
+      minWidth: 150,
       headerAlign: 'center',
       valueFormatter: (value) => value || '-',
     },
@@ -277,9 +288,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       align: 'right',
       headerAlign: 'center',
       renderCell: (params) => (
-        <Chip 
-          label={params.value?.toLocaleString()} 
-          size="small" 
+        <Chip
+          label={params.value?.toLocaleString()}
+          size="small"
           color="success"
         />
       ),
@@ -292,32 +303,32 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       headerAlign: 'center',
       valueFormatter: (value) => formatDate(value),
     },
-    {
-      field: 'registrant',
-      headerName: '등록자',
-      width: 100,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => value || '-',
-    },
-    {
-      field: 'registTime',
-      headerName: '등록시간',
-      width: 100,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => value || '-',
-    },
+    // {
+    //   field: 'registrant',
+    //   headerName: '등록자',
+    //   width: 100,
+    //   align: 'center',
+    //   headerAlign: 'center',
+    //   valueFormatter: (value) => value || '-',
+    // },
+    // {
+    //   field: 'registTime',
+    //   headerName: '등록시간',
+    //   width: 100,
+    //   align: 'center',
+    //   headerAlign: 'center',
+    //   valueFormatter: (value) => value || '-',
+    // },
   ];
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="xl" 
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="xl"
       fullWidth
       PaperProps={{
-        sx: { height: '85vh' }
+        sx: { height: '85vh' },
       }}
     >
       <DialogTitle
@@ -334,116 +345,179 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Typography variant="h6" component="span">
           생산의뢰 연동
         </Typography>
-        <IconButton
-          onClick={onClose}
-          sx={{ color: 'white' }}
-          size="small"
-        >
+        <IconButton onClick={handleClose} sx={{ color: 'white' }} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <Divider />
-      
+
       {/* 검색 영역 */}
-      <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
-        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-          상세검색
+      <Paper sx={{ p: 2, m: 2, bgcolor: 'grey.50' }} elevation={0}>
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1rem',
+          }}
+        >
+          <FilterListIcon color="primary" />
+          검색 필터
         </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>검색 조건</InputLabel>
+            <Select
+              value={inputValues.searchCnd}
+              label="검색 조건"
+              onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+            >
+              <MenuItem value="1">품목코드</MenuItem>
+              <MenuItem value="2">품목명</MenuItem>
+              <MenuItem value="3">생산의뢰번호</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             size="small"
-            label="품목코드"
-            value={searchParams.itemCode}
-            onChange={(e) => handleSearchParamChange('itemCode', e.target.value)}
+            placeholder="검색어를 입력하세요"
+            value={inputValues.searchWrd}
+            onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             sx={{ flex: 1 }}
           />
           <TextField
             size="small"
-            label="품목명"
-            value={searchParams.itemName}
-            onChange={(e) => handleSearchParamChange('itemName', e.target.value)}
-            sx={{ flex: 1 }}
+            label="납기일 From"
+            type="date"
+            value={inputValues.dateFrom}
+            onChange={(e) => handleInputChange('dateFrom', e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 180 }}
           />
+          <Typography sx={{ color: 'text.secondary' }}>~</Typography>
           <TextField
             size="small"
-            label="생산의뢰번호"
-            value={searchParams.orderNo}
-            onChange={(e) => handleSearchParamChange('orderNo', e.target.value)}
-            sx={{ flex: 1 }}
+            label="납기일 To"
+            type="date"
+            value={inputValues.dateTo}
+            onChange={(e) => handleInputChange('dateTo', e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 180 }}
           />
           <Button
             variant="contained"
             startIcon={<SearchIcon />}
             onClick={handleSearch}
-            sx={{ px: 3 }}
+            sx={{ px: 4 }}
           >
             검색
           </Button>
         </Stack>
-      </Box>
-      
-      <Divider />
+      </Paper>
+
+      {error && (
+        <Box sx={{ px: 2 }}>
+          <Alert severity="warning" onClose={() => setError('')}>
+            {error}
+          </Alert>
+        </Box>
+      )}
 
       {/* DataGrid 영역 */}
-      <DialogContent sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+      <DialogContent
+        sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}
+      >
         <Box sx={{ flexGrow: 1, width: '100%' }}>
           <DataGrid
             rows={requests}
             columns={columns}
-            getRowId={(row) => `${row.orderNo}-${row.orderSeqno}`}
+            getRowId={(row) =>
+              `${row.orderNo}-${row.orderSeqno}-${row.orderHistno}`
+            }
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 25, 50]}
             rowCount={totalCount}
             paginationMode="server"
             loading={loading}
-            onRowClick={(params) => handleRowClick(params.row)}
-            disableRowSelectionOnClick
-            autoHeight
+            checkboxSelection
+            disableMultipleRowSelection={!multiSelect}
+            rowSelectionModel={selectionModel as any}
+            onRowSelectionModelChange={(newSelection: any) => {
+              // 기본적으로 DataGrid가 다중선택을 처리함
+              // 멀티선택시 같은 품목코드만 허용
+              if (multiSelect && newSelection?.ids?.size > 1) {
+                const selectedKeys = Array.from(newSelection.ids).map(String);
+                const items = requests.filter((req) =>
+                  selectedKeys.includes(
+                    `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}`
+                  )
+                );
+                if (items.length > 1) {
+                  const firstItemCode = items[0].itemCode;
+                  const allSame = items.every(
+                    (it) => it.itemCode === firstItemCode
+                  );
+                  if (!allSame) {
+                    // 다른 품목코드가 섞였으면 마지막 선택만 남긴다
+                    const prev = Array.from((selectionModel as any).ids).map(
+                      String
+                    );
+                    const newlyAdded = selectedKeys.find(
+                      (k: string) => !prev.includes(k)
+                    );
+                    setSelectionModel(
+                      newlyAdded
+                        ? ({
+                            type: 'include',
+                            ids: new Set<GridRowId>([newlyAdded]),
+                          } as any)
+                        : ({
+                            type: 'include',
+                            ids: new Set<GridRowId>(),
+                          } as any)
+                    );
+                    setError(
+                      '같은 품목코드만 다중 선택할 수 있습니다. 마지막 선택만 유지했습니다.'
+                    );
+                    return;
+                  }
+                }
+              }
+              setSelectionModel(newSelection);
+              setError('');
+            }}
+            disableRowSelectionOnClick={false}
             sx={{
               border: 'none',
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
-              '& .MuiDataGrid-row': {
-                cursor: 'pointer',
-              },
               '& .MuiDataGrid-row:hover': {
                 backgroundColor: 'action.hover',
+                cursor: 'pointer',
               },
-              '& .MuiDataGrid-row.Mui-selected': {
-                backgroundColor: 'primary.light',
-                '&:hover': {
-                  backgroundColor: 'primary.light',
-                },
-              },
-            }}
-            localeText={{
-              noRowsLabel: '생산의뢰 데이터가 없습니다.',
             }}
           />
         </Box>
       </DialogContent>
-      
+
       <Divider />
       <DialogActions sx={{ p: 2.5 }}>
-        {multiSelect && selectedRequests.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 'auto' }}>
-            선택된 항목: {selectedRequests.length}건
-            {selectedRequests.length > 0 && ` (품목: ${selectedRequests[0].itemName})`}
-          </Typography>
-        )}
-        <Button 
-          onClick={handleConfirmSelection} 
-          variant="contained" 
-          size="large" 
+        <Button
+          onClick={handleConfirmSelection}
+          variant="contained"
+          size="large"
           sx={{ px: 4 }}
-          disabled={selectedRequests.length === 0}
+          disabled={selectionModel.ids.size === 0}
           startIcon={<CheckCircleIcon />}
         >
           선택
         </Button>
-        <Button onClick={onClose} variant="outlined" size="large">
+        <Button onClick={handleClose} variant="outlined" size="large">
           취소
         </Button>
       </DialogActions>

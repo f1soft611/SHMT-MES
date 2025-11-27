@@ -605,7 +605,7 @@ const ProductionPlan: React.FC = () => {
     showSnackbar('검색 기능은 백엔드 연동 후 구현됩니다.', 'success');
   };
 
-  const handleSave = async (data: ProductionPlanData) => {
+  const handleSave = async (data: ProductionPlanData, references?: any[]) => {
     if (dialogMode === 'create') {
       try {
         const requestData: ProductionPlanRequest = {
@@ -643,6 +643,7 @@ const ProductionPlan: React.FC = () => {
               customerName: data.customerName,
             },
           ],
+          references: references || [],
         };
 
         const response = await productionPlanService.createProductionPlan(

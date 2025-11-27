@@ -7,6 +7,8 @@ import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
 import egovframework.let.production.plan.domain.model.ProductionPlanReference;
+import egovframework.let.production.plan.domain.model.ProductionRequestDTO;
+import egovframework.let.production.plan.domain.model.ProductionRequestVO;
 import egovframework.let.production.plan.domain.repository.ProductionPlanDAO;
 import egovframework.let.production.plan.service.EgovProductionPlanService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +51,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	 */
 	@Override
 	@Transactional
-	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
+	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception {
 		String planId = egovProdPlanIdgenService.getNextStringId();
 		master.setProdPlanId(planId);
 		
@@ -73,6 +75,16 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			plan.setProdPlanDate(master.getProdPlanDate());
 			plan.setProdPlanSeq(master.getProdPlanSeq());
 			productionPlanDAO.insertProductionPlan(plan);
+		}
+		
+		// 주문연결(TPR301R) 저장 - references가 있는 경우
+		if (references != null && !references.isEmpty()) {
+			for (ProductionPlanReference ref : references) {
+				ref.setFactoryCode(master.getFactoryCode());
+				ref.setProdplanDate(master.getProdPlanDate());
+				ref.setProdplanSeq(master.getProdPlanSeq());
+				productionPlanDAO.insertProductionPlanReference(ref);
+			}
 		}
 		
 		return planId;
@@ -231,5 +243,22 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		result.put("equipmentPlans", new java.util.ArrayList<>(equipmentMap.values()));
 		
 		return result;
+	}
+
+	/**
+	 * 생산의뢰(TSA308) 목록을 조회한다.
+	 */
+	@Override
+	public Map<String, Object> selectProductionRequestList(ProductionRequestVO searchVO, LoginVO user) throws Exception {
+		// 목록 조회
+		List<ProductionRequestDTO> resultList = productionPlanDAO.selectProductionRequestList(searchVO);
+		int totCnt = productionPlanDAO.selectProductionRequestListCnt(searchVO);
+
+		// 결과 맵 생성
+		Map<String, Object> map = new HashMap<>();
+		map.put("resultList", resultList);
+		map.put("resultCnt", String.valueOf(totCnt));
+
+		return map;
 	}
 }

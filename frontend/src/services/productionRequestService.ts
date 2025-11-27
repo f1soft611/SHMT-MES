@@ -1,5 +1,8 @@
 import api from './api';
-import { ProductionRequest, ProductionRequestSearchParams } from '../types/productionRequest';
+import {
+  ProductionRequest,
+  ProductionRequestSearchParams,
+} from '../types/productionRequest';
 
 export interface ProductionRequestListResponse {
   result: {
@@ -39,12 +42,19 @@ class ProductionRequestService {
     };
 
     if (searchParams) {
-      if (searchParams.factoryCode) params.factoryCode = searchParams.factoryCode;
+      // 백엔드 VO 기준 파라미터 매핑
+      if (searchParams.searchCnd) params.searchCnd = searchParams.searchCnd;
+      if (searchParams.searchWrd) params.searchWrd = searchParams.searchWrd;
+      if (searchParams.factoryCode)
+        params.factoryCode = searchParams.factoryCode;
       if (searchParams.orderNo) params.orderNo = searchParams.orderNo;
       if (searchParams.itemCode) params.itemCode = searchParams.itemCode;
       if (searchParams.itemName) params.itemName = searchParams.itemName;
-      if (searchParams.dateFrom) params.dateFrom = searchParams.dateFrom;
-      if (searchParams.dateTo) params.dateTo = searchParams.dateTo;
+      // 날짜는 YYYY-MM-DD 입력 가능 -> YYYYMMDD로 변환
+      if (searchParams.dateFrom)
+        params.dateFrom = searchParams.dateFrom.replace(/-/g, '');
+      if (searchParams.dateTo)
+        params.dateTo = searchParams.dateTo.replace(/-/g, '');
     }
 
     const response = await api.get('/api/production-requests', { params });
@@ -72,7 +82,10 @@ class ProductionRequestService {
   async searchProductionRequests(
     searchParams: ProductionRequestSearchParams
   ): Promise<ProductionRequestListResponse> {
-    const response = await api.post('/api/production-requests/search', searchParams);
+    const response = await api.post(
+      '/api/production-requests/search',
+      searchParams
+    );
     return response.data;
   }
 }

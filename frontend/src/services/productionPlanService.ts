@@ -48,6 +48,7 @@ export interface ProductionPlanMaster {
 export interface ProductionPlanRequest {
   master: ProductionPlanMaster;
   details: ProductionPlan[];
+  references?: any[];
 }
 
 const productionPlanService = {
