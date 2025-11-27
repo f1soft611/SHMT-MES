@@ -57,6 +57,9 @@ public class ProcessFlowProcess implements Serializable {
 	@Schema(description = "공정 순서") // WORK_SEQ
 	private String processSeq = "";
 
+	@Schema(description = "공정 순서") // EQUIPMENT_FLAG
+	private String equipmentFlag = "";
+
 	@Schema(description = "최종 공정") // LAST_FLAG
 	private String lastFlag = "";
 

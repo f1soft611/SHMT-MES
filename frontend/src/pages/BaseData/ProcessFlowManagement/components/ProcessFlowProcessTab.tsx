@@ -1,5 +1,5 @@
-import {DataGrid, GridColDef, GridRowId} from "@mui/x-data-grid";
-import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio} from "@mui/material";
+import {DataGrid, GridColDef, GridRowId, GridRowModel } from "@mui/x-data-grid";
+import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio, Chip} from "@mui/material";
 import {
     Search as SearchIcon,
 } from '@mui/icons-material';
@@ -9,8 +9,11 @@ import {Process} from "../../../../types/process";
 import { useProcessFlowDetailContext } from "../hooks/useProcessFlowDetailContext";
 import {ProcessFlowProcess} from "../../../../types/processFlow";
 import {useProcessFlowDetail} from "../hooks/useProcessFlowDetail"
+import {useSnackbarContext} from "../SnackbarContext";
+
 
 export default function ProcessFlowProcessTab() {
+    const { showSnackbar } = useSnackbarContext();
 
     const {
         processFlow,
@@ -39,33 +42,62 @@ export default function ProcessFlowProcessTab() {
     const columns: GridColDef[] = [
         { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
         { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
-        { field: 'equipmentIntegrationYn', headerName: '설비연동', width: 80, headerAlign: 'center', align:'center' },
+        {
+            field: 'equipmentIntegrationYn',
+            headerName: '설비연동',
+            width: 80,
+            headerAlign: 'center',
+            align:'center',
+            renderCell:(params) => (
+                <Chip
+                    label={params.value === 'Y' ? '연동' : '미연동'}
+                    color={params.value === 'Y' ? 'primary' : 'default'}
+                    size="small"
+                />
+            ),
+        },
     ];
 
     const rightColumns: GridColDef[] = [
         { field: 'flowProcessCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
         { field: 'flowProcessName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
         {
+            field: 'equipmentFlag',
+            headerName: '설비연동',
+            width: 80,
+            headerAlign: 'center',
+            align:'center',
+            renderCell:(params) => (
+                <Chip
+                    label={params.value === 'Y' ? '연동' : '미연동'}
+                    color={params.value === 'Y' ? 'primary' : 'default'}
+                    size="small"
+                />
+            ),
+        },
+        {
             field: 'seq',
             headerName: '순서',
             width: 80,
             headerAlign: 'center',
-            renderCell: (params) => (
-                <TextField
-                    size="small"
-                    value={params.row.seq ?? ""}
-                    onChange={(e) => {
-                        const value = e.target.value;
-                        const rid = params.row.flowProcessId ?? params.row.flowRowId;
-
-                        setFlowProcessRows(prev =>
-                            prev.map(p =>
-                                (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
-                            )
-                        );
-                    }}
-                />
-            ),
+            align: 'center',
+            editable: true,
+            // renderCell: (params) => (
+            //     <TextField
+            //         size="small"
+            //         value={params.row.seq ?? ""}
+            //         onChange={(e) => {
+            //             const value = e.target.value;
+            //             const rid = params.row.flowProcessId ?? params.row.flowRowId;
+            //
+            //             setFlowProcessRows(prev =>
+            //                 prev.map(p =>
+            //                     (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
+            //                 )
+            //             );
+            //         }}
+            //     />
+            // ),
         },
         {
             field: 'lastFlag',
@@ -100,6 +132,20 @@ export default function ProcessFlowProcessTab() {
     const handleMoveRight = () => {
         if (leftSelected.length === 0 || !processFlow) return;
 
+        // 현재 우측에 Y가 몇 개인지 체크
+        const currentLinkedCount = flowProcessRows.filter(p => p.equipmentFlag === "Y").length;
+
+        // 왼쪽에서 선택된 공정 중 Y 몇개인지 체크
+        const selectedLinkedCount = processRows
+        .filter(p => leftSelected.includes(p.processCode))
+        .filter(p => p.equipmentIntegrationYn === "Y").length;
+
+        // 둘 합쳐서 1개 초과면 막기
+        if (currentLinkedCount + selectedLinkedCount > 1) {
+            showSnackbar("설비 연동 공정은 하나만 추가할 수 있습니다.", "error");
+            return;
+        }
+
         const newRows: ProcessFlowProcess[] = processRows
         .filter(p => leftSelected.includes(p.processCode)) // processCode 기준 선택
         .map(p => ({
@@ -109,6 +155,7 @@ export default function ProcessFlowProcessTab() {
             seq: "",
             processFlowCode: processFlow.processFlowCode ?? "",
             processFlowId: processFlow.processFlowId ?? "",
+            equipmentFlag: p.equipmentIntegrationYn ?? "N",
             lastFlag: "N",
 
             flowProcessCode: p.processCode,
@@ -140,6 +187,29 @@ export default function ProcessFlowProcessTab() {
         setLeftSelected([]);
         setRightSelected([]);
     }, [flowProcessRows]);
+
+    const handleRowUpdate = (newRow: GridRowModel, oldRow: GridRowModel): GridRowModel => {
+        setFlowProcessRows(prev => {
+            const updated = prev.map(p =>
+                (p.flowProcessId ?? p.flowRowId) === (newRow.flowProcessId ?? newRow.flowRowId)
+                    ? { ...p, seq: newRow.seq }
+                    : p
+            );
+
+            return [...updated].sort((a, b) => {
+                const sa = a.seq === "" || a.seq == null ? null : Number(a.seq);
+                const sb = b.seq === "" || b.seq == null ? null : Number(b.seq);
+
+                if (sa === null && sb === null) return 0;
+                if (sa === null) return 1;
+                if (sb === null) return -1;
+
+                return sa - sb;
+            });
+        });
+
+        return newRow;
+    };
 
 
     return(
@@ -179,7 +249,7 @@ export default function ProcessFlowProcessTab() {
             </Box>
 
             <Grid container spacing={1} direction="row">
-                <Grid size={{ xs:5.5  }}>
+                <Grid size={{ xs:5.0  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
                         rows={filteredProcessRows}
                         columns={columns}
@@ -233,11 +303,13 @@ export default function ProcessFlowProcessTab() {
                         </Button>
                     </Box>
                 </Grid>
-                <Grid size={{ xs:5.5  }}>
+                <Grid size={{ xs:6  }}>
                     <DataGrid
                         rows={flowProcessRows}
                         columns={rightColumns}
                         getRowId={(row) => row.flowProcessId ?? row.flowRowId}
+                        editMode="cell"
+                        processRowUpdate={handleRowUpdate}
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableRowSelectionExcludeModel

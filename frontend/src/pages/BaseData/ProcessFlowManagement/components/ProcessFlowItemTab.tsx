@@ -41,6 +41,7 @@ export default function ProcessFlowItemTab() {
         { field: 'itemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
         { field: 'unitName', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
+        { field: 'unit', headerName: '단위코드', },
     ];
 
     const rightColumns: GridColDef[] = [
@@ -48,6 +49,7 @@ export default function ProcessFlowItemTab() {
         { field: 'flowItemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
         { field: 'unitName', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
+        { field: 'unit', headerName: '단위코드', },
     ];
 
 
@@ -71,7 +73,7 @@ export default function ProcessFlowItemTab() {
             flowItemName: i.itemName,
             specification: i.specification ?? "",
             unit: i.unit ?? "",
-            unitName: i.unit ?? "",
+            unitName: i.unitName ?? "",
             processFlowCode: processFlow.processFlowCode ?? "",
             processFlowId: processFlow.processFlowId ?? "",
         }));
@@ -126,11 +128,12 @@ export default function ProcessFlowItemTab() {
             </Box>
 
             <Grid container spacing={1} direction="row">
-                <Grid size={{ xs:5.5  }}>
+                <Grid size={{ xs:5.5  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
                         rows={filteredItemRows}
                         columns={columns}
                         getRowId={(row:Item) => row.itemCode}
+                        columnVisibilityModel={{ unit: false }}   // 화면에서만 숨김
                         checkboxSelection
                         disableRowSelectionExcludeModel
                         // ★ selectionModel은 include 방식으로만 설정 가능
@@ -184,11 +187,12 @@ export default function ProcessFlowItemTab() {
                         </Button>
                     </Box>
                 </Grid>
-                <Grid size={{ xs:5.5  }}>
+                <Grid size={{ xs:5.5  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
                         rows={flowItemRows}
                         columns={rightColumns}
                         getRowId={(row) => row.flowItemId ?? row.flowRowId}
+                        columnVisibilityModel={{ unit: false }}   // 화면에서만 숨김
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableRowSelectionExcludeModel
