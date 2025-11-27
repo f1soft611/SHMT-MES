@@ -3,7 +3,9 @@ package egovframework.let.production.plan.service;
 import egovframework.com.cmm.LoginVO;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
+import egovframework.let.production.plan.domain.model.ProductionPlanReference;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.production.plan.domain.model.ProductionRequestVO;
 
 import java.util.List;
 import java.util.Map;
@@ -30,10 +32,11 @@ public interface EgovProductionPlanService {
 	 * 생산계획을 등록한다. (마스터 + 상세 트랜잭션 처리)
 	 * @param master 생산계획 마스터 정보
 	 * @param planList 생산계획 상세 목록
+	 * @param references 생산계획 참조 목록 (생산의뢰 연동 정보)
 	 * @return 등록된 계획번호
 	 * @throws Exception
 	 */
-	String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception;
+	String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception;
 
 	/**
 	 * 생산계획 마스터 목록을 조회한다.
@@ -91,4 +94,13 @@ public interface EgovProductionPlanService {
 	 * @throws Exception
 	 */
 	Map<String, Object> selectWeeklyProductionPlans(ProductionPlanVO searchVO) throws Exception;
+
+	/**
+	 * 생산의뢰(TSA308) 목록을 조회한다.
+	 * @param searchVO 검색 조건
+	 * @param user 사용자 VO
+	 * @return 생산의뢰 목록과 페이징 정보
+	 * @throws Exception
+	 */
+	Map<String, Object> selectProductionRequestList(ProductionRequestVO searchVO, LoginVO user) throws Exception;
 }

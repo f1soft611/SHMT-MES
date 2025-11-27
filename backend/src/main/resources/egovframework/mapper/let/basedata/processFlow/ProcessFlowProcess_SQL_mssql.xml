@@ -10,6 +10,7 @@
         <result property="flowProcessName" column="WORK_CODE_NAME"/>
         <result property="seq" column="SEQ"/>
         <result property="processSeq" column="WORK_SEQ"/>
+        <result property="equipmentFlag" column="EQUIPMENT_FLAG"/>
         <result property="lastFlag" column="LAST_FLAG"/>
 
         <result property="regUserId" column="OPMAN_CODE"/>
@@ -20,19 +21,19 @@
 
     <select id="selectProcessFlowProcessList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcessVO" resultMap="processFlowProcessResult">
         SELECT
-        FACTORY_CODE,
-        WORK_ORDER_ID,
-        WORK_ORDER,
-        FLOW_PROCESS_ID,
-        WORK_CODE,
-        SEQ,
-        WORK_SEQ,
-        LAST_FLAG,
-        OPTIME,
-        OPMAN_CODE,
-        OPTIME2,
-        OPMAN_CODE2
-        FROM TPR110D
+        A.FACTORY_CODE,
+        A.WORK_ORDER_ID,
+        A.WORK_ORDER,
+        A.FLOW_PROCESS_ID,
+        A.WORK_CODE,
+        A.SEQ,
+        A.WORK_SEQ,
+        A.LAST_FLAG,
+        A.OPTIME,
+        A.OPMAN_CODE,
+        A.OPTIME2,
+        A.OPMAN_CODE2
+        FROM TPR110D A
         WHERE 1=1
         AND FACTORY_CODE = #{factoryCode}
         AND WORK_ORDER_ID = #{processFlowId}
@@ -51,6 +52,7 @@
             ISNULL(B.WORK_NAME, '') AS WORK_CODE_NAME,
             A.SEQ,
             A.WORK_SEQ,
+            ISNULL(B.EQUIPMENT_INTEGRATION_YN, '') AS EQUIPMENT_FLAG,
             A.LAST_FLAG,
             A.OPTIME,
             A.OPMAN_CODE,
@@ -60,6 +62,7 @@
         LEFT JOIN TPR102 B
             ON A.FACTORY_CODE = B.FACTORY_CODE
             AND A.WORK_CODE = B.WORK_CODE
+            AND B.USE_YN = 'Y'
         WHERE WORK_ORDER_ID = #{value}
         ORDER BY SEQ
     </select>

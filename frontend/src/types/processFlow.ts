@@ -20,6 +20,7 @@ export interface ProcessFlowProcess {
     seq: string;                     // 정렬 순서 (UI에서 입력)
     processFlowCode: string;         // 상위 공정흐름 코드
     processFlowId: string;           // 상위 공정흐름 ID
+    equipmentFlag: string;          // 장비연동 여부(Y/N)
     lastFlag: string;                // 마지막 공정 여부(Y/N)
     flowProcessCode: string;             // 공정 코드
     flowProcessName: string;            // 공정 명
@@ -36,11 +37,12 @@ export interface ProcessFlowItem {
     flowItemCode: string;           // 제품 코드
     flowItemName: string;           // 제품 이름
     specification: string;
-    unit: string;
-    unitName: string;
+    unit: string;               // 단위 코드
+    unitName: string;               // 단위 이름
     processFlowCode: string;        // 상위 공정흐름 코드
     processFlowId: string;          // 상위 공정흐름 ID
 }
+
 
 
 export interface DetailSavePayload {
@@ -58,4 +60,11 @@ export interface ProcessFlowSearchParams {
     pageIndex?: number;
 }
 
+/**
+ *
+ */
+export type DetailSaveResult = {
+    ok: boolean;
+    reason?: string;
+};
 

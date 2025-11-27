@@ -59,6 +59,7 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
   itemType: yup.string().optional(),
   specification: yup.string().optional(),
   unit: yup.string().optional(),
+  unitName: yup.string().optional(),
   stockQty: yup.string().optional(),
   safetyStock: yup.string().optional(),
   remark: yup.string().optional(),

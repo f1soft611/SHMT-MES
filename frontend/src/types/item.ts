@@ -9,6 +9,7 @@ export interface Item {
   itemType?: string;
   specification?: string;
   unit?: string;
+  unitName?: string;
   stockQty?: string;
   safetyStock?: string;
   remark?: string;

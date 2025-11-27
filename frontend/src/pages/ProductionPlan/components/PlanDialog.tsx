@@ -104,7 +104,7 @@ interface PlanDialogProps {
   formData: ProductionPlanData;
   equipments: Equipment[];
   workplaceWorkers?: WorkplaceWorker[];
-  onSave: (data: ProductionPlanData) => void;
+  onSave: (data: ProductionPlanData, references?: any[]) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
 }
@@ -125,6 +125,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     []
   );
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [productionReferences, setProductionReferences] = useState<any[]>([]);
 
   // react-hook-form 설정
   const {
@@ -187,8 +188,21 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setOpenItemDialog(false);
   };
 
-  const handleSelectRequest = (requests: ProductionRequest[]) => {
-    console.log('Selected requests:', requests);
+  const handleSelectRequest = (requestsOrData: ProductionRequest[] | any) => {
+    console.log('Selected requests:', requestsOrData);
+
+    // 다중 선택 시 references가 포함된 객체가 전달됨
+    let requests: ProductionRequest[] = [];
+    let references: any[] = [];
+
+    if (Array.isArray(requestsOrData)) {
+      requests = requestsOrData;
+    } else if (requestsOrData.selectedItems) {
+      // 다중 선택 시
+      requests = requestsOrData.selectedItems;
+      references = requestsOrData.references || [];
+      setProductionReferences(references);
+    }
 
     if (requests.length === 0) return;
 
@@ -237,12 +251,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
-    onSave(data);
+    onSave(data, productionReferences);
   };
 
   const handleDialogClose = () => {
     setSelectedRequests([]);
     setSelectedItem(null);
+    setProductionReferences([]);
     onClose();
   };
 

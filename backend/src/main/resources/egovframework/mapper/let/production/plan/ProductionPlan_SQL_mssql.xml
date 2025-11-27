@@ -315,6 +315,7 @@
 			ORDER_NO,
 			ORDER_SEQNO,
 			ORDER_HISTNO,
+			CUSTOMER_CODE,
 			PRODPLAN_DATE,
 			PRODPLAN_SEQ,
 			ORDER_QTY,
@@ -325,6 +326,7 @@
 			#{orderNo},
 			#{orderSeqno},
 			#{orderHistno},
+			#{customerCode},
 			#{prodplanDate},
 			#{prodplanSeq},
 			ISNULL(#{orderQty}, 0),
@@ -354,8 +356,12 @@
 			D.WORKER_TYPE AS SHIFT,
 			D.WORKER_CODE,
 			D.WORKER_NAME,
-			'' AS CUSTOMER_CODE,
-			'테스트거래처 외 2건' AS CUSTOMER_NAME,
+			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
+			CASE 
+				WHEN C.CUSTOMER_COUNT > 1 THEN C.FIRST_CUSTOMER_NAME + ' 외 ' + CAST(C.CUSTOMER_COUNT - 1 AS VARCHAR) + '건'
+				WHEN C.CUSTOMER_COUNT = 1 THEN C.FIRST_CUSTOMER_NAME
+				ELSE ''
+			END AS CUSTOMER_NAME,
 			D.BIGO
 		FROM (
 			-- 작업장의 설비연동 설비 목록 조회
@@ -385,7 +391,133 @@
 			<if test="endDate != null and endDate != ''">
 				AND D.PROD_DATE &lt;= #{endDate}
 			</if>
+			LEFT JOIN (
+				-- TPR301R에서 거래처 정보 집계
+				SELECT
+					R.FACTORY_CODE,
+					R.PRODPLAN_DATE,
+					R.PRODPLAN_SEQ,
+					COUNT(DISTINCT R.CUSTOMER_CODE) AS CUSTOMER_COUNT,
+					MIN(R.CUSTOMER_CODE) AS FIRST_CUSTOMER_CODE,
+					T1.FIRST_CUSTOMER_NAME -- CROSS APPLY로 가져온 고객 이름
+				FROM TPR301R R
+				CROSS APPLY (
+					-- 이 테이블은 R.CUSTOMER_CODE 중 MIN(R.CUSTOMER_CODE) 값에 해당하는
+					-- TCO601의 고객 이름을 가져옵니다.
+					SELECT TOP 1 T2.CUSTOMER_NAME AS FIRST_CUSTOMER_NAME
+						FROM TPR301R R_INNER -- R 테이블의 현재 그룹 내 데이터를 다시 참조
+							INNER JOIN TCO601 T2
+							ON T2.CUSTOMER_CODE = R_INNER.CUSTOMER_CODE
+							AND T2.FACTORY_CODE = R_INNER.FACTORY_CODE
+					WHERE R_INNER.FACTORY_CODE = R.FACTORY_CODE
+					AND R_INNER.PRODPLAN_DATE = R.PRODPLAN_DATE
+					AND R_INNER.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+					AND R_INNER.CUSTOMER_CODE = (SELECT MIN(CUSTOMER_CODE) FROM TPR301R WHERE FACTORY_CODE = R.FACTORY_CODE AND PRODPLAN_DATE = R.PRODPLAN_DATE AND PRODPLAN_SEQ = R.PRODPLAN_SEQ)
+					AND R_INNER.CUSTOMER_CODE IS NOT NULL AND R_INNER.CUSTOMER_CODE != ''
+				) AS T1
+				WHERE R.CUSTOMER_CODE IS NOT NULL AND R.CUSTOMER_CODE != ''
+				GROUP BY R.FACTORY_CODE, R.PRODPLAN_DATE, R.PRODPLAN_SEQ, T1.FIRST_CUSTOMER_NAME -- 집계되지 않은 컬럼은 GROUP BY에 포함
+			) C
+			ON C.FACTORY_CODE = D.FACTORY_CODE
+			AND C.PRODPLAN_DATE = D.PRODPLAN_DATE
+			AND C.PRODPLAN_SEQ = D.PRODPLAN_SEQ
 		ORDER BY E.EQUIPMENT_NAME, D.PROD_DATE, D.PRODPLAN_DATE, D.PRODPLAN_SEQ
+	</select>
+
+	<!-- 생산의뢰(TSA308) 목록 조회 -->
+	<select id="ProductionPlanDAO.selectProductionRequestList" parameterType="egovframework.let.production.plan.domain.model.ProductionRequestVO" resultType="egovframework.let.production.plan.domain.model.ProductionRequestDTO">
+		SELECT
+			T.FACTORY_CODE,
+			T.ORDER_NO,
+			T.ORDER_HISTNO,
+			T.ORDER_SEQNO,
+			T.ITEM_FLAG,
+			T.ORDER_QTY,
+			T.ORDER_PRICE,
+			T.ORDER_AMOUNT,
+			T.SHIP_ORDER_QTY,
+			T.CLOSING_FLAG,
+			T.DELIVERY_DATE,
+			T.OPMAN_CODE,
+			T.OPTIME,
+			T.ITEM_CODE,
+			T.ITEM_NO,
+			T.ITEM_NAME,
+			T.ITEM_SPEC AS SPECIFICATION,
+			T.UNIT_CODE AS UNIT_CODE,
+			ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
+			T.CUSTOMER_CODE,
+			C.CUSTOMER_NAME,
+			T.EMPLYR_ID AS REGISTRANT,
+			CONVERT(VARCHAR(10), T.OPTIME, 108) AS REGIST_TIME,
+			CONVERT(VARCHAR(8), T.OPTIME, 112) AS REGIST_DATE,
+			T.PROD_PLAN_DATE,
+			T.END_DATE
+		FROM TSA308 T
+			LEFT JOIN TCO601 C ON T.FACTORY_CODE = C.FACTORY_CODE AND T.CUSTOMER_CODE = C.CUSTOMER_CODE
+			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1 ON CODE1.CODE_ID = 'COM007' AND CODE1.CODE = T.UNIT_CODE
+		WHERE 1=1
+		AND T.FACTORY_CODE = #{factoryCode}
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '1' or searchCnd == 1">
+					<!-- 품목코드 -->
+					AND (T.ITEM_CODE LIKE '%' + #{searchWrd} + '%' OR T.ITEM_NO LIKE '%' + #{searchWrd} + '%')
+				</when>
+				<when test="searchCnd == '2' or searchCnd == 2">
+					<!-- 품목명 -->
+					AND T.ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '3' or searchCnd == 3">
+					<!-- 생산의뢰번호 -->
+					AND T.ORDER_NO LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<!-- 납기일 기간 검색 (dateFrom/dateTo) -->
+		<if test="dateFrom != null and dateFrom != ''">
+			AND T.DELIVERY_DATE &gt;= #{dateFrom}
+		</if>
+		<if test="dateTo != null and dateTo != ''">
+			AND T.DELIVERY_DATE &lt;= #{dateTo}
+		</if>
+		ORDER BY T.DELIVERY_DATE DESC, T.ORDER_NO DESC, T.ORDER_SEQNO
+		OFFSET #{firstIndex} ROWS
+		FETCH NEXT #{recordCountPerPage} ROWS ONLY
+	</select>
+
+	<!-- 생산의뢰(TSA308) 총 개수 조회 -->
+	<select id="ProductionPlanDAO.selectProductionRequestListCnt" parameterType="egovframework.let.production.plan.domain.model.ProductionRequestVO" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TSA308 T
+		LEFT JOIN TCO601 C ON T.FACTORY_CODE = C.FACTORY_CODE AND T.CUSTOMER_CODE = C.CUSTOMER_CODE
+		WHERE 1=1
+		<if test="factoryCode != null and factoryCode != ''">
+			AND T.FACTORY_CODE = #{factoryCode}
+		</if>
+		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+			<choose>
+				<when test="searchCnd == '1' or searchCnd == 1">
+					<!-- 품목코드 -->
+					AND (T.ITEM_CODE LIKE '%' + #{searchWrd} + '%' OR T.ITEM_NO LIKE '%' + #{searchWrd} + '%')
+				</when>
+				<when test="searchCnd == '2' or searchCnd == 2">
+					<!-- 품목명 -->
+					AND T.ITEM_NAME LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '3' or searchCnd == 3">
+					<!-- 생산의뢰번호 -->
+					AND T.ORDER_NO LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<!-- 납기일 기간 검색 (dateFrom/dateTo) -->
+		<if test="dateFrom != null and dateFrom != ''">
+			AND T.DELIVERY_DATE &gt;= #{dateFrom}
+		</if>
+		<if test="dateTo != null and dateTo != ''">
+			AND T.DELIVERY_DATE &lt;= #{dateTo}
+		</if>
 	</select>
 
 </mapper>

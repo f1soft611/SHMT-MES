@@ -3,6 +3,8 @@ package egovframework.let.production.plan.domain.repository;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.production.plan.domain.model.ProductionRequestDTO;
+import egovframework.let.production.plan.domain.model.ProductionRequestVO;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -171,4 +173,27 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	public List<Object> selectWeeklyProductionPlansByWorkplace(ProductionPlanVO searchVO) throws Exception {
 		return (List<Object>) selectList("ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace", searchVO);
 	}
+
+	/**
+	 * 생산의뢰(TSA308) 목록을 조회한다.
+	 * XML 매퍼의 'ProductionPlanDAO.selectProductionRequestList' ID를 호출한다.
+	 * @param searchVO 검색 조건
+	 * @return 생산의뢰 목록
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public List<ProductionRequestDTO> selectProductionRequestList(ProductionRequestVO searchVO) throws Exception {
+		return selectList("ProductionPlanDAO.selectProductionRequestList", searchVO);
+	}
+
+	/**
+	 * 생산의뢰(TSA308) 총 개수를 조회한다.
+	 * XML 매퍼의 'ProductionPlanDAO.selectProductionRequestListCnt' ID를 호출한다.
+	 * @param searchVO 검색 조건
+	 * @return 생산의뢰 총 개수
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int selectProductionRequestListCnt(ProductionRequestVO searchVO) throws Exception {
+		return selectOne("ProductionPlanDAO.selectProductionRequestListCnt", searchVO);
+	}
+
 }
