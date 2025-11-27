@@ -57,7 +57,7 @@ export function ProcessFlowDetailProvider({
     // 전체 품목 조회
     useEffect(() => {
         (async () => {
-            const res = await itemService.getItemList(0, 9999);
+            const res = await itemService.getItemList(0, 9999, {useYn:'Y'});
             setItemRows(res?.result?.resultList ?? []);
         })();
     }, []);

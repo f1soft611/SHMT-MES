@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from "react";
 import {GridPaginationModel} from "@mui/x-data-grid";
-import {ProcessFlow, ProcessFlowItem, ProcessFlowProcess, DetailSavePayload } from "../../../../types/processFlow";
+import {ProcessFlow, ProcessFlowItem, ProcessFlowProcess, DetailSavePayload, DetailSaveResult } from "../../../../types/processFlow";
 import processFlowService from "../../../../services/processFlowService";
 
 export function useProcessFlow() {
@@ -68,7 +68,7 @@ export function useProcessFlow() {
             }
         } catch (error) {
             console.error(error);
-            showSnackbar("조회 실패", "error");
+            return false;
         }
     }, [searchParams, paginationModel]);
 
@@ -115,17 +115,17 @@ export function useProcessFlow() {
         try {
             if (dialogMode === "create") {
                 const result = await processFlowService.createProcessFlow(data);
-                showSnackbar("공정흐름이 등록되었습니다.", "success");
+                return true;
             } else {
                 await processFlowService.updateProcessFlow(data.processFlowId!, data);
-                showSnackbar("공정흐름이 수정되었습니다.", "success");
+                return false;
             }
 
             handleCloseDialog();
             fetchProcessFlows();  // 목록 새로고침
         } catch (error) {
             console.error(error);
-            showSnackbar("저장 실패", "error");
+            return false;
         }
     };
 
@@ -143,17 +143,29 @@ export function useProcessFlow() {
 
 
     // 공정 흐름별 공정/제품 저장 및 수정
-    const handleDetailSave = async ({ processes, items }: DetailSavePayload): Promise<boolean> => {
+    const handleDetailSave = async ({ processes, items }: DetailSavePayload): Promise<DetailSaveResult> => {
 
         // selectedFlow가 반드시 있어야 저장 가능
         if (!selectedFlow?.processFlowId) {
-            showSnackbar("선택된 공정흐름이 없습니다.", "error");
-            return false;
+            return { ok: false, reason: "선택한 공정흐름이 없음" };
         }
 
         try {
             // 공정 저장 요청일 때
             if (processes !== undefined) {
+
+                // seq 검사
+                const hasEmptySeq = processes.some(p => !p.seq || p.seq.trim() === "");
+                if (hasEmptySeq) {
+                    return { ok: false, reason: "공정 순서를 입력해주세요" };
+                }
+
+                // 설비연동 중복 검사
+                const linkedCnt = processes.filter(p => p.equipmentFlag === "Y").length;
+                if (linkedCnt > 1) {
+                    return { ok: false, reason: "연동된 공정은 한 개만 등록 가능합니다" };
+                }
+
                 // UI 전용 flowRowId 제거 + DTO 변환
                 const processList = processes.map((p: ProcessFlowProcess) => ({
                     flowProcessId: p.flowProcessId ?? null,
@@ -188,38 +200,14 @@ export function useProcessFlow() {
                     itemList
                 );
             }
-
-            showSnackbar("등록되었습니다.", "success");
-            return true;
+            return { ok: true, reason: "저장 성공" };
         } catch (e) {
-            showSnackbar("저장 실패", "error");
-            return false;
+            return { ok: false, reason: "저장 실패" };
         }
     };
 
 
-    // Snackbar 상태
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error";
-    }>({
-        open: false,
-        message: "",
-        severity: "success",
-    });
 
-    const showSnackbar = (message: string, severity: "success" | "error") => {
-        setSnackbar({
-            open: true,
-            message,
-            severity,
-        });
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
 
     return {
         // 목록
@@ -255,11 +243,6 @@ export function useProcessFlow() {
         handleDelete,
 
         handleDetailSave,
-
-        // Snackbar
-        snackbar,
-        showSnackbar,
-        handleCloseSnackbar,
     };
 }
 

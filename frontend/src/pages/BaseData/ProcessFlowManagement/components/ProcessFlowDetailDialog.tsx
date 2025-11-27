@@ -13,21 +13,21 @@ import {
     Extension as ExtensionIcon,
     Build as BuildIcon
 } from '@mui/icons-material';
-// import {ProcessFlowItemTab, ProcessFlowProcessTab} from "./index";
 import ProcessFlowItemTab from "./ProcessFlowItemTab";
 import ProcessFlowProcessTab from "./ProcessFlowProcessTab";
-import { ProcessFlow, DetailSavePayload } from '../../../../types/processFlow';
+import { ProcessFlow, DetailSavePayload, DetailSaveResult } from '../../../../types/processFlow';
 import {
     ProcessFlowDetailProvider,
     useProcessFlowDetailContext
 } from "../hooks/useProcessFlowDetailContext";
+import {useSnackbarContext} from "../SnackbarContext";
 
 
 interface Props {
     open: boolean;
     onClose: () => void;
     selectedFlow: ProcessFlow | null;
-    onSave: (data: DetailSavePayload) => Promise<boolean>;
+    onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
     initialTab: number;
 }
 
@@ -66,6 +66,7 @@ function DetailDialogActions({
 }) {
     const { flowProcessRows, flowItemRows, fetchDetail, processFlow  } = useProcessFlowDetailContext();
 
+    const { showSnackbar } = useSnackbarContext();
 
     return (
         <DialogActions>
@@ -77,11 +78,18 @@ function DetailDialogActions({
                             ? { processes: flowProcessRows }
                             : { items: flowItemRows };
 
-                    const result = await onSave(payload);
+                    const result: DetailSaveResult = await onSave(payload);
 
-                    if (result) {
-                        await fetchDetail(processFlow?.processFlowId ?? ""); // 성공 시 최신 데이터 다시 반영
+                    if (!result.ok) {
+                        showSnackbar(result.reason ?? "저장 실패", "error");
+                        return;
                     }
+
+                    // 성공
+                    showSnackbar("등록되었습니다.", "success");
+
+                    // 성공 시 상세정보 다시 조회
+                    await fetchDetail(processFlow?.processFlowId ?? "");
                 }}
             >
                 저장
