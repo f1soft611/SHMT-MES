@@ -143,48 +143,48 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       return;
     }
 
-    // 멀티 선택 시 같은 품목코드만 선택되었는지 확인
-    if (multiSelect && selectedItems.length > 1) {
+    // 선택된 항목에 다른 품목코드가 섞여 있으면 저장 불가
+    if (selectedItems.length > 1) {
       const firstItemCode = selectedItems[0].itemCode;
       const allSameItem = selectedItems.every(
         (item) => item.itemCode === firstItemCode
       );
       if (!allSameItem) {
-        setError('같은 품목코드만 선택할 수 있습니다.');
+        setError(
+          '다른 품목코드가 섞여 있습니다. 같은 품목만 선택해서 저장할 수 있습니다.'
+        );
         return;
       }
-
-      // 수량 합계 계산
-      const totalQuantity = selectedItems.reduce(
-        (sum, item) => sum + (item.orderQty || 0),
-        0
-      );
-
-      // 마스터 데이터에 수량 합계 반영
-      const masterData = {
-        totalQuantity: totalQuantity,
-      };
-
-      // references 데이터 구성 (TPR301R에 저장될 개별 생산의뢰 정보)
-      const references = selectedItems.map((item) => ({
-        orderNo: item.orderNo,
-        orderSeqno: item.orderSeqno || 0,
-        orderHistno: item.orderHistno || 0,
-        orderQty: item.orderQty,
-        workdtQty: 0,
-        representOrder: 'N',
-        customerCode: item.customerCode || '',
-      }));
-
-      // 선택된 데이터와 마스터 데이터, references 처리
-      onSelect({
-        masterData,
-        selectedItems,
-        references,
-      } as any);
-    } else {
-      onSelect(selectedItems);
     }
+
+    // 수량 합계 계산
+    const totalQuantity = selectedItems.reduce(
+      (sum, item) => sum + (item.orderQty || 0),
+      0
+    );
+
+    // 마스터 데이터에 수량 합계 반영
+    const masterData = {
+      totalQuantity: totalQuantity,
+    };
+
+    // references 데이터 구성 (TPR301R에 저장될 개별 생산의뢰 정보)
+    const references = selectedItems.map((item) => ({
+      orderNo: item.orderNo,
+      orderSeqno: item.orderSeqno || 0,
+      orderHistno: item.orderHistno || 0,
+      orderQty: item.orderQty,
+      workdtQty: 0,
+      representOrder: selectedItems.length === 1 ? 'Y' : 'N',
+      customerCode: item.customerCode || '',
+    }));
+
+    // 선택된 데이터와 마스터 데이터, references 처리
+    onSelect({
+      masterData,
+      selectedItems,
+      references,
+    } as any);
 
     handleClose();
   };
@@ -443,52 +443,43 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             rowCount={totalCount}
             paginationMode="server"
             loading={loading}
-            checkboxSelection
+            checkboxSelection={true}
             disableMultipleRowSelection={!multiSelect}
             rowSelectionModel={selectionModel as any}
-            onRowSelectionModelChange={(newSelection: any) => {
-              // 기본적으로 DataGrid가 다중선택을 처리함
-              // 멀티선택시 같은 품목코드만 허용
-              if (multiSelect && newSelection?.ids?.size > 1) {
-                const selectedKeys = Array.from(newSelection.ids).map(String);
-                const items = requests.filter((req) =>
-                  selectedKeys.includes(
-                    `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}`
+            onRowSelectionModelChange={(newSelection: any, details?: any) => {
+              // 헤더 체크박스 클릭 시 현재 페이지 데이터만 모두 선택
+              const isHeaderCheck =
+                details && details.reason === 'selectAllRows';
+              if (isHeaderCheck) {
+                const pageRequests = requests;
+                const firstItemCode = pageRequests[0]?.itemCode;
+                const allSame = pageRequests.every(
+                  (it) => it.itemCode === firstItemCode
+                );
+
+                if (!allSame) {
+                  setError('전체 선택은 같은 품목코드일 때만 가능합니다.');
+                  setSelectionModel({ type: 'include', ids: new Set() } as any);
+                  return;
+                }
+
+                // 전체 선택 대상 구성
+                const ids = new Set(
+                  pageRequests.map(
+                    (item) =>
+                      `${item.orderNo}-${item.orderSeqno}-${item.orderHistno}`
                   )
                 );
-                if (items.length > 1) {
-                  const firstItemCode = items[0].itemCode;
-                  const allSame = items.every(
-                    (it) => it.itemCode === firstItemCode
-                  );
-                  if (!allSame) {
-                    // 다른 품목코드가 섞였으면 마지막 선택만 남긴다
-                    const prev = Array.from((selectionModel as any).ids).map(
-                      String
-                    );
-                    const newlyAdded = selectedKeys.find(
-                      (k: string) => !prev.includes(k)
-                    );
-                    setSelectionModel(
-                      newlyAdded
-                        ? ({
-                            type: 'include',
-                            ids: new Set<GridRowId>([newlyAdded]),
-                          } as any)
-                        : ({
-                            type: 'include',
-                            ids: new Set<GridRowId>(),
-                          } as any)
-                    );
-                    setError(
-                      '같은 품목코드만 다중 선택할 수 있습니다. 마지막 선택만 유지했습니다.'
-                    );
-                    return;
-                  }
-                }
+
+                newSelection = { type: 'include', ids };
+                setError('');
+
+                // ⭐⭐ 강제 트리거 → 선택 버튼 즉시 활성화됨
+                setSelectionModel({ type: 'include', ids: new Set(ids) });
+                return; // 아래 기본 로직 실행 방지
               }
+
               setSelectionModel(newSelection);
-              setError('');
             }}
             disableRowSelectionOnClick={false}
             sx={{
@@ -499,6 +490,10 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               '& .MuiDataGrid-row:hover': {
                 backgroundColor: 'action.hover',
                 cursor: 'pointer',
+              },
+              '& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root': {
+                pointerEvents: 'none',
+                opacity: 0.4,
               },
             }}
           />
@@ -512,7 +507,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           variant="contained"
           size="large"
           sx={{ px: 4 }}
-          disabled={selectionModel.ids.size === 0}
+          disabled={
+            !selectionModel?.ids || (selectionModel as any).ids.size === 0
+          }
           startIcon={<CheckCircleIcon />}
         >
           선택
