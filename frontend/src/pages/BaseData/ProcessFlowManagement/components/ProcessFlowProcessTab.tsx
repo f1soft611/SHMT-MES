@@ -196,10 +196,19 @@ export default function ProcessFlowProcessTab() {
                     : p
             );
 
-            return [...updated].sort((a, b) => (Number(a.seq) || 0) - (Number(b.seq) || 0));
+            return [...updated].sort((a, b) => {
+                const sa = a.seq === "" || a.seq == null ? null : Number(a.seq);
+                const sb = b.seq === "" || b.seq == null ? null : Number(b.seq);
+
+                if (sa === null && sb === null) return 0;
+                if (sa === null) return 1;
+                if (sb === null) return -1;
+
+                return sa - sb;
+            });
         });
 
-        return newRow; // 반드시 return 필요
+        return newRow;
     };
 
 
@@ -240,7 +249,7 @@ export default function ProcessFlowProcessTab() {
             </Box>
 
             <Grid container spacing={1} direction="row">
-                <Grid size={{ xs:5.0  }}>
+                <Grid size={{ xs:5.0  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
                         rows={filteredProcessRows}
                         columns={columns}
