@@ -48,13 +48,13 @@
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '1'">
+				<when test="searchCnd == '1' or searchCnd == 1">
 					AND EQUIP_CD LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
+				<when test="searchCnd == '2' or searchCnd == 2">
 					AND EQUIPMENT_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '3'">
+				<when test="searchCnd == '3' or searchCnd == 3">
 					AND LOCATION LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>

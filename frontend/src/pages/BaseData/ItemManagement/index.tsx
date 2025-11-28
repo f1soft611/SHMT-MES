@@ -12,10 +12,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Snackbar,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -30,6 +28,10 @@ import * as yup from 'yup';
 import { Item } from '../../../types/item';
 import itemService from '../../../services/itemService';
 import ItemDetailDialog from './components/ItemDetailDialog';
+import DataTable from '../../../components/common/DataTable/DataTable';
+import PageHeader from '../../../components/common/PageHeader/PageHeader';
+import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
@@ -80,15 +82,11 @@ const ItemManagement: React.FC = () => {
     page: 0,
     pageSize: 10,
   });
-  const [snackbar, setSnackbar] = useState<{
+  const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+    itemCode?: string;
+  }>({ open: false });
+  const { showToast } = useToast();
 
   // react-hook-form 설정
   const {
@@ -142,22 +140,17 @@ const ItemManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch items:', error);
-      showSnackbar('품목 목록을 불러오는데 실패했습니다.', 'error');
+      showToast({
+        message: '품목 목록을 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [searchParams, paginationModel]);
+  }, [searchParams, paginationModel, showToast]);
 
   // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
-
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
@@ -212,35 +205,37 @@ const ItemManagement: React.FC = () => {
       if (dialogMode === 'create') {
         const result = await itemService.createItem(saveData);
         if (result.resultCode === 200) {
-          showSnackbar('품목이 등록되었습니다.', 'success');
+          showToast({ message: '품목이 등록되었습니다.', severity: 'success' });
         } else {
-          showSnackbar(result.result.message, 'error');
+          showToast({ message: result.result.message, severity: 'error' });
         }
       } else {
         await itemService.updateItem(saveData.itemCode!, saveData);
-        showSnackbar('품목이 수정되었습니다.', 'success');
+        showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
       }
       handleCloseDialog();
       // 저장 후 현재 검색 조건으로 다시 조회
       fetchItems();
     } catch (error) {
       console.error('Failed to save item:', error);
-      showSnackbar('저장에 실패했습니다.', 'error');
+      showToast({ message: '저장에 실패했습니다.', severity: 'error' });
     }
   };
 
-  const handleDelete = async (itemCode: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await itemService.deleteItem(itemCode);
-        showSnackbar('품목이 삭제되었습니다.', 'success');
-        // 삭제 후 현재 검색 조건으로 다시 조회
-        fetchItems();
-      } catch (error) {
-        console.error('Failed to delete item:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
+  const handleDeleteConfirm = async (itemCode: string) => {
+    try {
+      await itemService.deleteItem(itemCode);
+      showToast({ message: '품목이 삭제되었습니다.', severity: 'success' });
+      // 삭제 후 현재 검색 조건으로 다시 조회
+      fetchItems();
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
     }
+  };
+
+  const handleDelete = (itemCode: string) => {
+    setConfirmDelete({ open: true, itemCode });
   };
 
   const getItemTypeLabel = (itemType: string) => {
@@ -367,19 +362,10 @@ const ItemManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">품목 관리</Typography>
-        </Box>
-
-        <Box>
+      <PageHeader
+        title=""
+        crumbs={[{ label: '기준정보' }, { label: '품목 관리' }]}
+        actionsRight={
           <Button
             variant="contained"
             color="info"
@@ -389,8 +375,8 @@ const ItemManagement: React.FC = () => {
           >
             ERP 연동
           </Button>
-        </Box>
-      </Box>
+        }
+      />
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography
@@ -471,30 +457,16 @@ const ItemManagement: React.FC = () => {
         </Stack>
       </Paper>
 
-      <Paper
-        elevation={2}
-        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
-      >
-        <DataGrid
+      <Paper elevation={2}>
+        <DataTable
           rows={items}
           columns={columns}
           rowCount={totalCount}
           loading={false}
-          pageSizeOptions={[10, 25, 50]}
           paginationModel={paginationModel}
-          paginationMode="server"
           onPaginationModelChange={setPaginationModel}
           getRowId={(row) => row.itemCode}
-          disableRowSelectionOnClick
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell:focus': {
-              outline: 'none',
-            },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'action.hover',
-            },
-          }}
+          emptyMessage="데이터가 없습니다."
         />
       </Paper>
 
@@ -508,21 +480,20 @@ const ItemManagement: React.FC = () => {
         errors={itemErrors}
       />
 
-      {/* 스낵바 */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="품목 삭제"
+        message="정말 삭제하시겠습니까?"
+        confirmText="삭제"
+        onConfirm={async () => {
+          if (confirmDelete.itemCode) {
+            await handleDeleteConfirm(confirmDelete.itemCode);
+          }
+          setConfirmDelete({ open: false });
+        }}
+      />
     </Box>
   );
 };

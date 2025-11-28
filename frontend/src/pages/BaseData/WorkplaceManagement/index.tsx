@@ -19,7 +19,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -35,6 +35,10 @@ import { Workplace } from '../../../types/workplace';
 import workplaceService from '../../../services/workplaceService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 import WorkplaceDetailDialog from './components/WorkplaceDetailDialog';
+import DataTable from '../../../components/common/DataTable/DataTable';
+import PageHeader from '../../../components/common/PageHeader/PageHeader';
+import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 // 작업장 등록 유효성 검사 스키마
 const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
@@ -66,15 +70,11 @@ const WorkplaceManagement: React.FC = () => {
     page: 0,
     pageSize: 10,
   });
-  const [snackbar, setSnackbar] = useState<{
+  const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+    workplaceId?: string;
+  }>({ open: false });
+  const { showToast } = useToast();
 
   // react-hook-form 설정 - 작업장
   const {
@@ -123,9 +123,12 @@ const WorkplaceManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch workplaces:', error);
-      showSnackbar('작업장 목록을 불러오는데 실패했습니다.', 'error');
+      showToast({
+        message: '작업장 목록을 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [searchParams, paginationModel]);
+  }, [searchParams, paginationModel, showToast]);
 
   // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
@@ -133,11 +136,7 @@ const WorkplaceManagement: React.FC = () => {
   }, [fetchWorkplaces]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    showToast({ message, severity });
   };
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
@@ -183,21 +182,39 @@ const WorkplaceManagement: React.FC = () => {
       if (dialogMode === 'create') {
         const result = await workplaceService.createWorkplace(data);
         if (result.resultCode === 200) {
-          showSnackbar('작업장이 등록되었습니다.', 'success');
+          showToast({
+            message: '작업장이 등록되었습니다.',
+            severity: 'success',
+          });
         } else {
-          showSnackbar(result.result.message, 'error');
+          showToast({ message: result.result.message, severity: 'error' });
         }
       } else {
         await workplaceService.updateWorkplace(data.workplaceId!, data);
-        showSnackbar('작업장이 수정되었습니다.', 'success');
+        showToast({ message: '작업장이 수정되었습니다.', severity: 'success' });
       }
       handleCloseDialog();
       // 저장 후 현재 검색 조건으로 다시 조회
       fetchWorkplaces();
     } catch (error) {
       console.error('Failed to save workplace:', error);
-      showSnackbar('저장에 실패했습니다.', 'error');
+      showToast({ message: '저장에 실패했습니다.', severity: 'error' });
     }
+  };
+
+  const handleDeleteConfirm = async (workplaceId: string) => {
+    try {
+      await workplaceService.deleteWorkplace(workplaceId);
+      showToast({ message: '작업장이 삭제되었습니다.', severity: 'success' });
+      fetchWorkplaces();
+    } catch (error) {
+      console.error('Failed to delete workplace:', error);
+      showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
+    }
+  };
+
+  const handleDelete = (workplaceId: string) => {
+    setConfirmDelete({ open: true, workplaceId });
   };
 
   const handleOpenDetailDialog = (workplace: Workplace) => {
@@ -343,18 +360,10 @@ const WorkplaceManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">작업장 관리</Typography>
-        </Box>
-      </Box>
+      <PageHeader
+        title=""
+        crumbs={[{ label: '기준정보' }, { label: '작업장 관리' }]}
+      />
 
       {/* 검색 영역 */}
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -429,27 +438,15 @@ const WorkplaceManagement: React.FC = () => {
       </Paper>
 
       {/* 작업장 목록 */}
-      <Paper sx={{ width: '100%' }}>
-        <DataGrid
+      <Paper>
+        <DataTable
           rows={workplaces}
           columns={columns}
           getRowId={(row) => row.workplaceId || ''}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 50]}
           rowCount={totalCount}
-          paginationMode="server"
-          disableRowSelectionOnClick
-          autoHeight
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell:focus': {
-              outline: 'none',
-            },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'action.hover',
-            },
-          }}
+          loading={false}
         />
       </Paper>
 
@@ -621,21 +618,19 @@ const WorkplaceManagement: React.FC = () => {
         />
       )}
 
-      {/* 스낵바 */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="작업장 삭제"
+        message="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        onConfirm={async () => {
+          if (confirmDelete.workplaceId) {
+            await handleDeleteConfirm(confirmDelete.workplaceId);
+          }
+          setConfirmDelete({ open: false });
+        }}
+      />
     </Box>
   );
 };
