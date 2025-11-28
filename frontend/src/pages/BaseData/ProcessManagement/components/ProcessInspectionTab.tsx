@@ -250,7 +250,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
               }}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -258,7 +258,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
               onClick={() => handleDelete(params.row.processInspectionId!)}
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

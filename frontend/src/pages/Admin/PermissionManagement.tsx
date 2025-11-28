@@ -181,7 +181,7 @@ const PermissionManagement: React.FC = () => {
       <Box>
         <PageHeader
           title=""
-          crumbs={[{ label: '관리' }, { label: '권한 관리' }]}
+          crumbs={[{ label: '시스템 관리' }, { label: '권한 관리' }]}
         />
 
         {error && (
@@ -272,11 +272,21 @@ const PermissionManagement: React.FC = () => {
                 {selectedRole && rolePermissions.length > 0 ? (
                   <TableContainer sx={{ maxHeight: 350, overflow: 'auto' }}>
                     <Table size="small" stickyHeader>
-                      <TableHead>
+                      <TableHead
+                        sx={{
+                          '& .MuiTableCell-head': {
+                            bgcolor: '#fff',
+                            fontWeight: 600,
+                            py: 2,
+                            // borderBottom: '2px solid',
+                            borderBottomColor: 'divider',
+                          },
+                        }}
+                      >
                         <TableRow>
-                          <TableCell>메뉴</TableCell>
-                          <TableCell>권한</TableCell>
-                          <TableCell>권한 레벨</TableCell>
+                          <TableCell align="center">메뉴</TableCell>
+                          <TableCell align="center">권한</TableCell>
+                          <TableCell align="center">권한 레벨</TableCell>
                           <TableCell align="center">작업</TableCell>
                         </TableRow>
                       </TableHead>
@@ -284,8 +294,10 @@ const PermissionManagement: React.FC = () => {
                         {rolePermissions.map((rp) => (
                           <TableRow key={rp.roleMenuId}>
                             <TableCell>{rp.menuNm}</TableCell>
-                            <TableCell>{rp.permissionNm}</TableCell>
-                            <TableCell>
+                            <TableCell align="center">
+                              {rp.permissionNm}
+                            </TableCell>
+                            <TableCell align="center">
                               <Chip
                                 label={rp.permissionLevel}
                                 color={
@@ -306,7 +318,7 @@ const PermissionManagement: React.FC = () => {
                                 }
                                 disabled={loading}
                               >
-                                <DeleteIcon />
+                                <DeleteIcon fontSize="small" />
                               </IconButton>
                             </TableCell>
                           </TableRow>
@@ -363,9 +375,19 @@ const PermissionManagement: React.FC = () => {
                     sx={{ flex: 1, maxHeight: 630, overflow: 'auto' }}
                   >
                     <Table size="small" stickyHeader>
-                      <TableHead>
+                      <TableHead
+                        sx={{
+                          '& .MuiTableCell-head': {
+                            bgcolor: '#fff',
+                            fontWeight: 600,
+                            py: 2,
+                            // borderBottom: '2px solid',
+                            borderBottomColor: 'divider',
+                          },
+                        }}
+                      >
                         <TableRow>
-                          <TableCell>메뉴</TableCell>
+                          <TableCell align="center">메뉴</TableCell>
                           {permissions.map((pm) => (
                             <TableCell key={pm.permissionId} align="center">
                               {pm.permissionNm}

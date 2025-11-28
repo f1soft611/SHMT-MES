@@ -211,8 +211,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
     {
       field: 'actions',
       headerName: '작업',
-      flex: 0.8,
-      minWidth: 120,
+      width: 150,
       sortable: false,
       align: 'center',
       headerAlign: 'center',
@@ -232,7 +231,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
               onClick={() => handleOpenEditDetailDialog(params.row)}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -245,7 +244,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
               }
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

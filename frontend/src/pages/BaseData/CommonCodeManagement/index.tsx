@@ -258,8 +258,7 @@ const CommonCodeManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '작업',
-      flex: 1,
-      minWidth: 200,
+      width: 150,
       sortable: false,
       align: 'center',
       headerAlign: 'center',
@@ -278,7 +277,7 @@ const CommonCodeManagement: React.FC = () => {
               color="primary"
               onClick={() => handleViewDetails(params.row)}
             >
-              <SearchIcon />
+              <SearchIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -286,7 +285,7 @@ const CommonCodeManagement: React.FC = () => {
               onClick={() => handleOpenEditDialog(params.row)}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -294,7 +293,7 @@ const CommonCodeManagement: React.FC = () => {
               onClick={() => handleDelete(params.row.codeId)}
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

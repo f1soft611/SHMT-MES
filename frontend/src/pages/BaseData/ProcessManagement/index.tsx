@@ -332,7 +332,7 @@ const ProcessManagement: React.FC = () => {
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             {/* <IconButton
               size="small"

@@ -250,7 +250,7 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
               }}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -258,7 +258,7 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
               onClick={() => handleDelete(params.row.processEquipmentId!)}
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>
