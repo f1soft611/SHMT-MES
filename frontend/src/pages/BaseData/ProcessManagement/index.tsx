@@ -16,12 +16,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Snackbar,
   Checkbox,
   FormControlLabel,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -39,6 +37,9 @@ import { Process } from '../../../types/process';
 import processService from '../../../services/processService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 import ProcessDetailDialog from './components/ProcessDetailDialog';
+import DataTable from '../../../components/common/DataTable/DataTable';
+import PageHeader from '../../../components/common/PageHeader/PageHeader';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 // 공정 등록 유효성 검사 스키마
 const processSchema: yup.ObjectSchema<Process> = yup.object({
@@ -72,15 +73,7 @@ const ProcessManagement: React.FC = () => {
     page: 0,
     pageSize: 25,
   });
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+  const { showToast } = useToast();
 
   // react-hook-form 설정 - 공정
   const {
@@ -129,21 +122,16 @@ const ProcessManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch processes:', error);
-      showSnackbar('공정 목록을 불러오는데 실패했습니다.', 'error');
+      showToast({
+        message: '공정 목록을 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [searchParams, paginationModel]);
+  }, [searchParams, paginationModel, showToast]);
 
   useEffect(() => {
     fetchProcesses();
   }, [fetchProcesses]);
-
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
 
   const handleSearch = () => {
     setSearchParams({ ...inputValues });
@@ -185,19 +173,19 @@ const ProcessManagement: React.FC = () => {
       if (dialogMode === 'create') {
         const result = await processService.createProcess(data);
         if (result.resultCode === 200) {
-          showSnackbar('공정이 등록되었습니다.', 'success');
+          showToast({ message: '공정이 등록되었습니다.', severity: 'success' });
         } else {
-          showSnackbar(result.result.message, 'error');
+          showToast({ message: result.result.message, severity: 'error' });
         }
       } else {
         await processService.updateProcess(data.processId!, data);
-        showSnackbar('공정이 수정되었습니다.', 'success');
+        showToast({ message: '공정이 수정되었습니다.', severity: 'success' });
       }
       handleCloseDialog();
       fetchProcesses();
     } catch (error) {
       console.error('Failed to save process:', error);
-      showSnackbar('저장에 실패했습니다.', 'error');
+      showToast({ message: '저장에 실패했습니다.', severity: 'error' });
     }
   };
 
@@ -222,6 +210,7 @@ const ProcessManagement: React.FC = () => {
       field: 'processCode',
       headerName: '공정 코드',
       flex: 1,
+      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -362,18 +351,10 @@ const ProcessManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">공정 관리</Typography>
-        </Box>
-      </Box>
+      <PageHeader
+        title=""
+        crumbs={[{ label: '기준정보' }, { label: '공정 관리' }]}
+      />
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography
@@ -461,23 +442,15 @@ const ProcessManagement: React.FC = () => {
         </Stack>
       </Paper>
 
-      <Paper sx={{ width: '100%' }}>
-        <DataGrid
+      <Paper>
+        <DataTable
           rows={processes}
           columns={columns}
           getRowId={(row) => row.processId || ''}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 50]}
           rowCount={totalCount}
-          paginationMode="server"
-          disableRowSelectionOnClick
-          autoHeight
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell:focus': { outline: 'none' },
-            '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' },
-          }}
+          loading={false}
         />
       </Paper>
 
@@ -648,24 +621,9 @@ const ProcessManagement: React.FC = () => {
           onClose={handleCloseDetailDialog}
           detailTab={detailTab}
           setDetailTab={setDetailTab}
-          showSnackbar={showSnackbar}
+          showSnackbar={(message, severity) => showToast({ message, severity })}
         />
       )}
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

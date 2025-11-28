@@ -17,7 +17,10 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { GridColDef } from '@mui/x-data-grid';
+import DataTable from '../../../../components/common/DataTable/DataTable';
+import ConfirmDialog from '../../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../../components/common/Feedback/ToastProvider';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -54,8 +57,13 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
   // 권한 체크
   const { hasWritePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/common-code');
+  const { showToast } = useToast();
 
   const [detailCodes, setDetailCodes] = useState<CommonDetailCode[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    open: boolean;
+    target?: { codeId: string; code: string };
+  }>({ open: false });
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [detailDialogMode, setDetailDialogMode] = useState<'create' | 'edit'>(
     'create'
@@ -149,15 +157,16 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
   };
 
   const handleDeleteDetail = async (codeId: string, code: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await commonCodeService.deleteCommonDetailCode(codeId, code);
-        showSnackbar('상세 코드가 삭제되었습니다.', 'success');
-        fetchDetailCodes();
-      } catch (error) {
-        console.error('Failed to delete detail code:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
+    try {
+      await commonCodeService.deleteCommonDetailCode(codeId, code);
+      showToast({
+        message: '상세 코드가 삭제되었습니다.',
+        severity: 'success',
+      });
+      fetchDetailCodes();
+    } catch (error) {
+      console.error('Failed to delete detail code:', error);
+      showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
     }
   };
 
@@ -229,7 +238,10 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
               size="small"
               color="error"
               onClick={() =>
-                handleDeleteDetail(params.row.codeId, params.row.code)
+                setConfirmDelete({
+                  open: true,
+                  target: { codeId: params.row.codeId, code: params.row.code },
+                })
               }
               disabled={!canWrite}
             >
@@ -266,20 +278,10 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
       </Paper>
 
       <Paper>
-        <DataGrid
+        <DataTable
           rows={detailCodes}
           columns={detailColumns}
           getRowId={(row) => `${row.codeId}-${row.code}`}
-          disableRowSelectionOnClick
-          autoHeight
-          sx={{
-            '& .MuiDataGrid-cell:focus': {
-              outline: 'none',
-            },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'action.hover',
-            },
-          }}
         />
       </Paper>
 
@@ -372,6 +374,23 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
           <Button onClick={handleCloseDetailDialog}>취소</Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="삭제 확인"
+        message="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        onConfirm={async () => {
+          if (confirmDelete.target) {
+            await handleDeleteDetail(
+              confirmDelete.target.codeId,
+              confirmDelete.target.code
+            );
+          }
+          setConfirmDelete({ open: false });
+        }}
+      />
     </>
   );
 };

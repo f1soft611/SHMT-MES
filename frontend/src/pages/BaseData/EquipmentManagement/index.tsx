@@ -12,10 +12,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Snackbar,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -30,6 +28,10 @@ import { Equipment } from '../../../types/equipment';
 import equipmentService from '../../../services/equipmentService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 import EquipmentDetailDialog from './components/EquipmentDetailDialog';
+import DataTable from '../../../components/common/DataTable/DataTable';
+import PageHeader from '../../../components/common/PageHeader/PageHeader';
+import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 // 설비 등록 유효성 검사 스키마
 const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
@@ -98,15 +100,11 @@ const EquipmentManagement: React.FC = () => {
     page: 0,
     pageSize: 25,
   });
-  const [snackbar, setSnackbar] = useState<{
+  const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+    equipmentId?: string;
+  }>({ open: false });
+  const { showToast } = useToast();
 
   // react-hook-form 설정 - 설비
   const {
@@ -165,21 +163,16 @@ const EquipmentManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch equipments:', error);
-      showSnackbar('설비 목록을 불러오는데 실패했습니다.', 'error');
+      showToast({
+        message: '설비 목록을 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [searchParams, paginationModel]);
+  }, [searchParams, paginationModel, showToast]);
 
   useEffect(() => {
     fetchEquipments();
   }, [fetchEquipments]);
-
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
 
   // 검색 실행
   const handleSearch = () => {
@@ -234,37 +227,38 @@ const EquipmentManagement: React.FC = () => {
       if (dialogMode === 'create') {
         const result = await equipmentService.createEquipment(data);
         if (result.resultCode === 200) {
-          showSnackbar('설비가 등록되었습니다.', 'success');
+          showToast({ message: '설비가 등록되었습니다.', severity: 'success' });
         } else {
-          showSnackbar(
-            result.result?.message || '등록에 실패했습니다.',
-            'error'
-          );
+          showToast({
+            message: result.result?.message || '등록에 실패했습니다.',
+            severity: 'error',
+          });
         }
       } else {
         await equipmentService.updateEquipment(data.equipCd!, data);
-        showSnackbar('설비가 수정되었습니다.', 'success');
+        showToast({ message: '설비가 수정되었습니다.', severity: 'success' });
       }
       handleCloseDialog();
       fetchEquipments();
     } catch (error) {
       console.error('Failed to save equipment:', error);
-      showSnackbar('저장에 실패했습니다.', 'error');
+      showToast({ message: '저장에 실패했습니다.', severity: 'error' });
     }
   };
 
-  const handleDelete = async (equipmentId: string) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) {
-      return;
-    }
+  const handleDeleteConfirm = async (equipmentId: string) => {
     try {
       await equipmentService.deleteEquipment(equipmentId);
-      showSnackbar('설비가 삭제되었습니다.', 'success');
+      showToast({ message: '설비가 삭제되었습니다.', severity: 'success' });
       fetchEquipments();
     } catch (error) {
       console.error('Failed to delete equipment:', error);
-      showSnackbar('삭제에 실패했습니다.', 'error');
+      showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
     }
+  };
+
+  const handleDelete = (equipmentId: string) => {
+    setConfirmDelete({ open: true, equipmentId });
   };
 
   const getStatusColor = (statusFlag: string) => {
@@ -379,18 +373,10 @@ const EquipmentManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">설비 관리</Typography>
-        </Box>
-      </Box>
+      <PageHeader
+        title=""
+        crumbs={[{ label: '기준정보' }, { label: '설비 관리' }]}
+      />
 
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography
@@ -463,23 +449,15 @@ const EquipmentManagement: React.FC = () => {
         </Stack>
       </Paper>
 
-      <Paper sx={{ width: '100%' }}>
-        <DataGrid
+      <Paper>
+        <DataTable
           rows={equipments}
           columns={columns}
           getRowId={(row) => row.equipmentId || ''}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[5, 10, 25, 50]}
           rowCount={totalCount}
-          paginationMode="server"
-          disableRowSelectionOnClick
-          autoHeight
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell:focus': { outline: 'none' },
-            '& .MuiDataGrid-row:hover': { backgroundColor: 'action.hover' },
-          }}
+          loading={false}
         />
       </Paper>
 
@@ -493,20 +471,20 @@ const EquipmentManagement: React.FC = () => {
         errors={equipmentErrors}
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="설비 삭제"
+        message="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        onConfirm={async () => {
+          if (confirmDelete.equipmentId) {
+            await handleDeleteConfirm(confirmDelete.equipmentId);
+          }
+          setConfirmDelete({ open: false });
+        }}
+      />
     </Box>
   );
 };

@@ -135,6 +135,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
       field: 'processCode',
       headerName: '공정 코드',
       flex: 1,
+      align: 'center',
       headerAlign: 'center',
     },
     {

@@ -16,12 +16,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Snackbar,
   Tabs,
   Tab,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import PageHeader from '../../../components/common/PageHeader/PageHeader';
+import DataTable from '../../../components/common/DataTable/DataTable';
+import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -66,15 +68,11 @@ const CommonCodeManagement: React.FC = () => {
     page: 0,
     pageSize: 10,
   });
-  const [snackbar, setSnackbar] = useState<{
+  const { showToast } = useToast();
+  const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+    codeId?: string;
+  }>({ open: false });
 
   // react-hook-form 설정 - 공통코드
   const {
@@ -130,11 +128,7 @@ const CommonCodeManagement: React.FC = () => {
   }, [fetchCommonCodes]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    showToast({ message, severity });
   };
 
   const handleSearch = () => {
@@ -190,17 +184,19 @@ const CommonCodeManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (codeId: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await commonCodeService.deleteCommonCode(codeId);
-        showSnackbar('공통코드가 삭제되었습니다.', 'success');
-        fetchCommonCodes();
-      } catch (error) {
-        console.error('Failed to delete common code:', error);
-        showSnackbar('삭제에 실패했습니다.', 'error');
-      }
+  const handleDeleteConfirm = async (codeId: string) => {
+    try {
+      await commonCodeService.deleteCommonCode(codeId);
+      showSnackbar('공통코드가 삭제되었습니다.', 'success');
+      fetchCommonCodes();
+    } catch (error) {
+      console.error('Failed to delete common code:', error);
+      showSnackbar('삭제에 실패했습니다.', 'error');
     }
+  };
+
+  const handleDelete = (codeId: string) => {
+    setConfirmDelete({ open: true, codeId });
   };
 
   // 상세 코드 관련 핸들러
@@ -239,9 +235,9 @@ const CommonCodeManagement: React.FC = () => {
     {
       field: 'clCode',
       headerName: '분류코드',
+      align: 'center',
       flex: 1,
       minWidth: 100,
-      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -308,18 +304,10 @@ const CommonCodeManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">공통코드 관리</Typography>
-        </Box>
-      </Box>
+      <PageHeader
+        title=""
+        crumbs={[{ label: '기준정보' }, { label: '공통코드 관리' }]}
+      />
 
       {/* 공통코드 탭 */}
       {currentTab === 0 && (
@@ -409,7 +397,7 @@ const CommonCodeManagement: React.FC = () => {
           </Paper>
 
           <Paper>
-            <DataGrid
+            <DataTable
               rows={commonCodes}
               columns={columns}
               getRowId={(row) => row.codeId}
@@ -417,17 +405,7 @@ const CommonCodeManagement: React.FC = () => {
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[10, 20, 50]}
               rowCount={totalCount}
-              paginationMode="server"
-              disableRowSelectionOnClick
-              autoHeight
-              sx={{
-                '& .MuiDataGrid-cell:focus': {
-                  outline: 'none',
-                },
-                '& .MuiDataGrid-row:hover': {
-                  backgroundColor: 'action.hover',
-                },
-              }}
+              onRefresh={fetchCommonCodes}
             />
           </Paper>
         </>
@@ -560,20 +538,19 @@ const CommonCodeManagement: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="삭제 확인"
+        message="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        onConfirm={async () => {
+          if (confirmDelete.codeId) {
+            await handleDeleteConfirm(confirmDelete.codeId);
+          }
+          setConfirmDelete({ open: false });
+        }}
+      />
     </Box>
   );
 };
