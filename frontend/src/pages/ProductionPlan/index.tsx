@@ -510,6 +510,9 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleToday = () => {
+    const default3Days = getDefault3DaysFilter();
+    setVisibleDays(default3Days);
+    saveFilterToStorage(default3Days);
     setCurrentWeekStart(getMonday(new Date()));
   };
 
