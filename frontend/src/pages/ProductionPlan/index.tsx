@@ -6,8 +6,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Alert,
-  Snackbar,
   IconButton,
   Table,
   TableBody,
@@ -57,6 +55,8 @@ import {
   WeeklyEquipmentPlanResponse,
 } from '../../utils/productionPlanMapper';
 import PlanDialog from './components/PlanDialog';
+import { useToast } from '../../components/common/Feedback/ToastProvider';
+import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
@@ -169,15 +169,11 @@ const ProductionPlan: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [snackbar, setSnackbar] = useState<{
+  const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
-    message: string;
-    severity: 'success' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+    plan?: ProductionPlanData;
+  }>({ open: false });
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState<ProductionPlanData>({
     date: '',
@@ -436,9 +432,12 @@ const ProductionPlan: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load production plans:', error);
-      showSnackbar('생산계획 조회에 실패했습니다.', 'error');
+      showToast({
+        message: '생산계획 조회에 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [currentWeekStart, selectedWorkplace]);
+  }, [currentWeekStart, selectedWorkplace, showToast]);
 
   useEffect(() => {
     loadWorkplaces();
@@ -514,17 +513,12 @@ const ProductionPlan: React.FC = () => {
     setCurrentWeekStart(getMonday(new Date()));
   };
 
-  const showSnackbar = (message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
     if (!selectedWorkplace) {
-      showSnackbar('먼저 작업장을 선택해주세요.', 'error');
+      showToast({
+        message: '먼저 작업장을 선택해주세요.',
+        severity: 'error',
+      });
       return;
     }
 
@@ -562,6 +556,15 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleOpenEditDialog = (plan: ProductionPlanData) => {
+    // 공정 정보가 없으면 설비 코드로부터 찾기
+    let processCode = plan.processCode || '';
+    let processName = plan.processName || '';
+
+    if (!processCode && plan.equipmentCode) {
+      processCode = equipmentProcessMap.get(plan.equipmentCode) || '';
+      processName = equipmentProcessMap.get(plan.equipmentCode + 'NAME') || '';
+    }
+
     setDialogMode('edit');
     // 수정 모드에서는 작업장과 공정 정보를 포함하여 전달
     setFormData({
@@ -572,8 +575,8 @@ const ProductionPlan: React.FC = () => {
         workplaces.find((w) => w.workplaceCode === selectedWorkplace)
           ?.workplaceName ||
         '',
-      processCode: plan.processCode || '',
-      processName: plan.processName || '',
+      processCode: processCode,
+      processName: processName,
     });
     setOpenDialog(true);
   };
@@ -602,10 +605,18 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSearch = () => {
-    showSnackbar('검색 기능은 백엔드 연동 후 구현됩니다.', 'success');
+    showToast({
+      message: '검색 기능은 백엔드 연동 후 구현됩니다.',
+      severity: 'success',
+    });
   };
 
   const handleSave = async (data: ProductionPlanData, references?: any[]) => {
+    console.log('handleSave called');
+    console.log('dialogMode:', dialogMode);
+    console.log('data:', data);
+    console.log('formData:', formData);
+
     if (dialogMode === 'create') {
       try {
         const requestData: ProductionPlanRequest = {
@@ -650,21 +661,33 @@ const ProductionPlan: React.FC = () => {
           requestData
         );
         if (response.resultCode === 200) {
-          showSnackbar('생산계획이 등록되었습니다.', 'success');
+          showToast({
+            message: '생산계획이 등록되었습니다.',
+            severity: 'success',
+          });
           loadWeeklyPlans(); // Reload plans
           handleCloseDialog();
         } else {
-          showSnackbar('생산계획 등록 실패: ' + response.message, 'error');
+          showToast({
+            message: '생산계획 등록 실패: ' + response.message,
+            severity: 'error',
+          });
         }
       } catch (error) {
         console.error('Failed to save plan:', error);
-        showSnackbar('생산계획 등록 중 오류가 발생했습니다.', 'error');
+        showToast({
+          message: '생산계획 등록 중 오류가 발생했습니다.',
+          severity: 'error',
+        });
       }
     } else {
       // Edit mode - 수정
       try {
         if (!formData.planNo) {
-          showSnackbar('수정할 계획 정보가 없습니다.', 'error');
+          showToast({
+            message: '수정할 계획 정보가 없습니다.',
+            severity: 'error',
+          });
           return;
         }
 
@@ -712,40 +735,67 @@ const ProductionPlan: React.FC = () => {
           requestData
         );
         if (response.resultCode === 200) {
-          showSnackbar('생산계획이 수정되었습니다.', 'success');
+          showToast({
+            message: '생산계획이 수정되었습니다.',
+            severity: 'success',
+          });
           loadWeeklyPlans();
           handleCloseDialog();
         } else {
-          showSnackbar('생산계획 수정 실패: ' + response.message, 'error');
+          showToast({
+            message: '생산계획 수정 실패: ' + response.message,
+            severity: 'error',
+          });
         }
       } catch (error) {
         console.error('Failed to update plan:', error);
-        showSnackbar('생산계획 수정 중 오류가 발생했습니다.', 'error');
+        showToast({
+          message: '생산계획 수정 중 오류가 발생했습니다.',
+          severity: 'error',
+        });
       }
     }
   };
 
   const handleDelete = async (plan: ProductionPlanData) => {
     if (!plan.planNo) {
-      showSnackbar('삭제할 계획 정보가 없습니다.', 'error');
+      showToast({
+        message: '삭제할 계획 정보가 없습니다.',
+        severity: 'error',
+      });
       return;
     }
 
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        const response = await productionPlanService.deleteProductionPlan(
-          plan.planNo
-        );
-        if (response.resultCode === 200) {
-          showSnackbar('생산계획이 삭제되었습니다.', 'success');
-          loadWeeklyPlans();
-        } else {
-          showSnackbar('생산계획 삭제 실패: ' + response.message, 'error');
-        }
-      } catch (error) {
-        console.error('Failed to delete plan:', error);
-        showSnackbar('생산계획 삭제 중 오류가 발생했습니다.', 'error');
+    setConfirmDelete({ open: true, plan });
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDelete.plan || !confirmDelete.plan.planNo) return;
+
+    try {
+      const response = await productionPlanService.deleteProductionPlan(
+        confirmDelete.plan.planNo
+      );
+      if (response.resultCode === 200) {
+        showToast({
+          message: '생산계획이 삭제되었습니다.',
+          severity: 'success',
+        });
+        loadWeeklyPlans();
+      } else {
+        showToast({
+          message: '생산계획 삭제 실패: ' + response.message,
+          severity: 'error',
+        });
       }
+    } catch (error) {
+      console.error('Failed to delete plan:', error);
+      showToast({
+        message: '생산계획 삭제 중 오류가 발생했습니다.',
+        severity: 'error',
+      });
+    } finally {
+      setConfirmDelete({ open: false });
     }
   };
 
@@ -1539,21 +1589,15 @@ const ProductionPlan: React.FC = () => {
         onBatchChange={handleBatchChange}
       />
 
-      {/* 스낵바 */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="생산계획 삭제"
+        message="선택한 생산계획을 삭제하시겠습니까?"
+        confirmText="삭제"
+        onConfirm={executeDelete}
+      />
     </Box>
   );
 };

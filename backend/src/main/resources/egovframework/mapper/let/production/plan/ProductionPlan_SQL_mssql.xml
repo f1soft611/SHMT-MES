@@ -8,6 +8,7 @@
 		<result property="prodPlanDate" column="PRODPLAN_DATE"/>
 		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
 		<result property="planDate" column="PLAN_DATE"/>
+		<result property="remark" column="BIGO"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -30,6 +31,7 @@
 		<result property="workerType" column="WORKER_TYPE"/>
 		<result property="workerCode" column="WORKER_CODE"/>
 		<result property="workerName" column="WORKER_NAME"/>
+		<result property="remark" column="BIGO"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -157,7 +159,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
-			REMARK,
+			BIGO,
 			USE_YN,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
@@ -206,7 +208,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
-			REMARK,
+			BIGO,
 			USE_YN,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
@@ -253,7 +255,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
-			REMARK,
+			BIGO,
 			USE_YN,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
@@ -269,9 +271,6 @@
 	<update id="ProductionPlanDAO.updateProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		UPDATE TPR301M
 		SET
-			PLAN_STATUS = #{planStatus},
-			TOTAL_PLAN_QTY = #{totalPlanQty},
-			REMARK = #{remark},
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
@@ -282,12 +281,10 @@
 	<update id="ProductionPlanDAO.updateProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
 		UPDATE TPR301
 		SET
-			PLANNED_QTY = #{plannedQty},
-			ACTUAL_QTY = #{actualQty},
-			SHIFT = #{shift},
+			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
-			REMARK = #{remark},
+			BIGO = #{remark},
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
@@ -362,7 +359,7 @@
 				WHEN C.CUSTOMER_COUNT = 1 THEN C.FIRST_CUSTOMER_NAME
 				ELSE ''
 			END AS CUSTOMER_NAME,
-			D.BIGO
+			D.BIGO as REMARK
 		FROM (
 			-- 작업장의 설비연동 설비 목록 조회
 			SELECT DISTINCT

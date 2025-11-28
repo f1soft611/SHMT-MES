@@ -60,7 +60,7 @@ const getShiftDisplayName = (code?: string): string => {
 };
 
 // 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
-const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
+const productionPlanSchema = yup.object({
   id: yup.string(),
   date: yup.string().required('계획일자는 필수입니다.'),
   itemCode: yup.string().required('품목코드는 필수입니다.'),
@@ -70,11 +70,11 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
     .required('계획수량은 필수입니다.')
     .min(1, '계획수량은 1 이상이어야 합니다.')
     .typeError('계획수량은 숫자여야 합니다.'),
-  equipmentId: yup.string().required('설비ID는 필수입니다.'),
+  equipmentId: yup.string().notRequired(),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
   shift: yup.string(),
-  remark: yup.string(),
+  remark: yup.string().notRequired().default(''),
   orderNo: yup.string(),
   orderSeqno: yup.number(),
   orderHistno: yup.number(),
@@ -89,7 +89,7 @@ const productionPlanSchema: yup.ObjectSchema<ProductionPlanData> = yup.object({
   processCode: yup.string(),
   processName: yup.string(),
   planNo: yup.string(),
-  planSeq: yup.number(),
+  planSeq: yup.number().notRequired(),
   factoryCode: yup.string(),
   actualQty: yup.number(),
   lotNo: yup.string(),
@@ -135,7 +135,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setValue,
     formState: { errors },
   } = useForm<ProductionPlanData>({
-    resolver: yupResolver(productionPlanSchema),
+    resolver: yupResolver(productionPlanSchema) as any,
     defaultValues: formData,
   });
 
@@ -251,6 +251,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
+    console.log('handleFormSubmit called in PlanDialog');
+    console.log('data from form:', data);
+    console.log('productionReferences:', productionReferences);
     onSave(data, productionReferences);
   };
 
@@ -275,7 +278,11 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
         </DialogTitle>
         <Divider />
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, (errors) => {
+            console.log('Form validation errors:', errors);
+          })}
+        >
           <DialogContent sx={{ mt: 2 }}>
             <Stack spacing={3}>
               {/* ================================
