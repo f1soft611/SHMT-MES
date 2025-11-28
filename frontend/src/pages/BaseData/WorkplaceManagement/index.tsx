@@ -16,8 +16,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert,
-  Snackbar,
 } from '@mui/material';
 import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
@@ -211,10 +209,6 @@ const WorkplaceManagement: React.FC = () => {
       console.error('Failed to delete workplace:', error);
       showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
     }
-  };
-
-  const handleDelete = (workplaceId: string) => {
-    setConfirmDelete({ open: true, workplaceId });
   };
 
   const handleOpenDetailDialog = (workplace: Workplace) => {

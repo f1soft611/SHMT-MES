@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -16,6 +16,7 @@ import {
   Chip,
   Card,
   CardContent,
+  TextField,
   Checkbox,
 } from '@mui/material';
 import {
@@ -31,6 +32,9 @@ import {
   permissionService,
 } from '../../services/admin/permissionService';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
+import PageHeader from '../../components/common/PageHeader/PageHeader';
+import { useToast } from '../../components/common/Feedback/ToastProvider';
+import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
 const PermissionManagement: React.FC = () => {
   const [menus, setMenus] = useState<MenuInfo[]>([]);
@@ -41,17 +45,17 @@ const PermissionManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState('');
+  const [menuFilter, setMenuFilter] = useState('');
+  const [confirmRevoke, setConfirmRevoke] = useState<{
+    open: boolean;
+    rp?: RoleMenuPermission;
+  }>({ open: false });
+  const { showToast } = useToast();
 
   // 기본 역할 그룹
   const roles = [
     { id: 1, name: 'ROLE_ADMIN (관리자)' },
     { id: 2, name: 'ROLE_USER (일반사용자)' },
-    // {
-    //   id: 3,
-    //   name: 'ROLE_PRODUCTION_MANAGER (생산관리자)',
-    // },
-    // { id: 4, name: 'ROLE_PRODUCTION_USER (생산사용자)' },
-    // { id: 5, name: 'ROLE_VIEWER (조회전용)' },
   ];
 
   const loadData = useCallback(async () => {
@@ -63,7 +67,6 @@ const PermissionManagement: React.FC = () => {
         permissionService.getMenus(),
         permissionService.getPermissionTypes(),
       ]);
-
       setMenus(menusResult);
       setPermissions(permissionsResult);
 
@@ -72,17 +75,23 @@ const PermissionManagement: React.FC = () => {
           selectedRole
         );
         setRolePermissions(rolePermsResult);
+      } else {
+        setRolePermissions([]);
       }
     } catch (err: any) {
       setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      showToast({
+        message: '데이터를 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     } finally {
       setLoading(false);
     }
-  }, [selectedRole]);
+  }, [selectedRole, showToast]);
 
   useEffect(() => {
     loadData();
-  }, [selectedRole, loadData]);
+  }, [loadData]);
 
   const handleRoleChange = (roleId: string) => {
     setSelectedRole(roleId);
@@ -99,7 +108,6 @@ const PermissionManagement: React.FC = () => {
       setLoading(true);
 
       if (granted) {
-        // 권한 부여
         await permissionService.createRoleMenuPermission({
           groupId: selectedRole,
           menuId,
@@ -108,58 +116,73 @@ const PermissionManagement: React.FC = () => {
           frstRegisterId: 'ADMIN',
           lastUpdusrId: 'ADMIN',
         });
+        showToast({ message: '권한이 부여되었습니다.', severity: 'success' });
       } else {
-        // 권한 제거
         await permissionService.deleteRoleMenuPermission(
           selectedRole,
           menuId,
           permissionId
         );
+        showToast({ message: '권한이 해제되었습니다.', severity: 'success' });
       }
 
-      // 권한 목록 재로드
       const rolePermsResult = await permissionService.getRoleMenuPermissions(
         selectedRole
       );
       setRolePermissions(rolePermsResult);
     } catch (err: any) {
       setError(err.message || '권한 설정에 실패했습니다.');
+      showToast({ message: '권한 설정에 실패했습니다.', severity: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  const hasPermission = (menuId: string, permissionId: string): boolean => {
-    return rolePermissions.some(
+  const hasPermission = (menuId: string, permissionId: string): boolean =>
+    rolePermissions.some(
       (rp) => rp.menuId === menuId && rp.permissionId === permissionId
     );
-  };
 
-  const getMenuHierarchy = () => {
-    const parentMenus = menus.filter((menu) => !menu.parentMenuId);
-    return parentMenus.map((parent) => ({
-      ...parent,
-      children: menus.filter((child) => child.parentMenuId === parent.menuId),
-    }));
-  };
+  const menuHierarchy = useMemo(() => {
+    const parents = menus.filter((m) => !m.parentMenuId);
+    const byParent = new Map(
+      parents.map((p) => [
+        p.menuId,
+        menus.filter((c) => c.parentMenuId === p.menuId),
+      ])
+    );
 
-  const menuHierarchy = getMenuHierarchy();
+    const q = menuFilter.trim().toLowerCase();
+    if (!q)
+      return parents.map((p) => ({
+        ...p,
+        children: byParent.get(p.menuId) || [],
+      }));
+
+    const match = (s?: string) => (s || '').toLowerCase().includes(q);
+    return parents
+      .map((p) => {
+        const children = byParent.get(p.menuId) || [];
+        const filteredChildren = children.filter((c) => match(c.menuNm));
+        const parentOk = match(p.menuNm);
+        if (parentOk || filteredChildren.length) {
+          return {
+            ...p,
+            children: parentOk ? children : filteredChildren,
+          } as MenuInfo & { children: MenuInfo[] };
+        }
+        return null;
+      })
+      .filter(Boolean) as Array<MenuInfo & { children: MenuInfo[] }>;
+  }, [menus, menuFilter]);
 
   return (
     <ProtectedRoute requiredPermission="write">
       <Box>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h5">권한 관리</Typography>
-          </Box>
-        </Box>
+        <PageHeader
+          title=""
+          crumbs={[{ label: '관리' }, { label: '권한 관리' }]}
+        />
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -169,26 +192,33 @@ const PermissionManagement: React.FC = () => {
 
         <Box
           sx={{
-            display: 'flex',
-            gap: 3,
-            flexDirection: { xs: 'column', md: 'row' },
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 2fr' },
+            gap: 2,
+            alignItems: 'stretch',
           }}
         >
           {/* 역할 선택 */}
-          <Box sx={{ width: { xs: '100%', md: '33%' } }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              minHeight: 0,
+            }}
+          >
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   역할 선택
                 </Typography>
                 <FormControl fullWidth>
-                  {/* <InputLabel>역할</InputLabel> */}
                   <Select
                     value={selectedRole}
-                    onChange={(e) => handleRoleChange(e.target.value)}
+                    onChange={(e) => handleRoleChange(String(e.target.value))}
                   >
                     {roles.map((role) => (
-                      <MenuItem key={role.id} value={role.id}>
+                      <MenuItem key={role.id} value={String(role.id)}>
                         {role.name}
                       </MenuItem>
                     ))}
@@ -196,9 +226,8 @@ const PermissionManagement: React.FC = () => {
                 </FormControl>
               </CardContent>
             </Card>
-
-            {/* 권한 유형 정보 */}
-            <Card sx={{ mt: 2 }}>
+            {/* 권한 유형 */}
+            <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   권한 유형
@@ -210,9 +239,9 @@ const PermissionManagement: React.FC = () => {
                         permission.permissionLevel === 'write' ? (
                           <SecurityIcon />
                         ) : permission.permissionLevel === 'excel' ? (
-                          <DescriptionIcon /> // 또는 <TableChartIcon />
+                          <DescriptionIcon />
                         ) : (
-                          <VisibilityIcon /> // 또는 <RemoveRedEyeIcon />
+                          <VisibilityIcon />
                         )
                       }
                       label={`${permission.permissionNm} (${permission.permissionLevel})`}
@@ -220,7 +249,7 @@ const PermissionManagement: React.FC = () => {
                         permission.permissionLevel === 'write'
                           ? 'primary'
                           : permission.permissionLevel === 'excel'
-                          ? 'success' // 또는 'secondary', 'info'
+                          ? 'success'
                           : 'default'
                       }
                       size="small"
@@ -230,28 +259,116 @@ const PermissionManagement: React.FC = () => {
                 ))}
               </CardContent>
             </Card>
-          </Box>
-
-          {/* 메뉴별 권한 설정 */}
-          <Box sx={{ width: { xs: '100%', md: '67%' } }}>
-            {selectedRole ? (
-              <Card>
-                <CardContent>
+            {/* 현재 설정된 권한 */}
+            <Card sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <CardContent
+                sx={{ p: 0, display: 'flex', flexDirection: 'column', flex: 1 }}
+              >
+                <Box sx={{ px: 2, pt: 2 }}>
                   <Typography variant="h6" gutterBottom>
-                    메뉴별 권한 설정
+                    현재 설정된 권한
                   </Typography>
-
-                  <TableContainer>
-                    <Table size="small">
+                </Box>
+                {selectedRole && rolePermissions.length > 0 ? (
+                  <TableContainer sx={{ maxHeight: 350, overflow: 'auto' }}>
+                    <Table size="small" stickyHeader>
                       <TableHead>
                         <TableRow>
                           <TableCell>메뉴</TableCell>
-                          {permissions.map((permission) => (
-                            <TableCell
-                              key={permission.permissionId}
-                              align="center"
-                            >
-                              {permission.permissionNm}
+                          <TableCell>권한</TableCell>
+                          <TableCell>권한 레벨</TableCell>
+                          <TableCell align="center">작업</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rolePermissions.map((rp) => (
+                          <TableRow key={rp.roleMenuId}>
+                            <TableCell>{rp.menuNm}</TableCell>
+                            <TableCell>{rp.permissionNm}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={rp.permissionLevel}
+                                color={
+                                  rp.permissionLevel === 'write'
+                                    ? 'primary'
+                                    : rp.permissionLevel === 'excel'
+                                    ? 'success'
+                                    : 'default'
+                                }
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  setConfirmRevoke({ open: true, rp })
+                                }
+                                disabled={loading}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                ) : (
+                  <Box sx={{ px: 2, pb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      표시할 권한이 없습니다.
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* 오른쪽: 메뉴별 권한 부여 */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              minHeight: 0,
+            }}
+          >
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  메뉴별 권한 부여
+                </Typography>
+                <TextField
+                  size="small"
+                  fullWidth
+                  placeholder="메뉴 검색 (부모/자식)"
+                  value={menuFilter}
+                  onChange={(e) => setMenuFilter(e.target.value)}
+                />
+              </CardContent>
+            </Card>
+
+            {selectedRole ? (
+              <Card sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <CardContent
+                  sx={{
+                    p: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                  }}
+                >
+                  <TableContainer
+                    sx={{ flex: 1, maxHeight: 630, overflow: 'auto' }}
+                  >
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>메뉴</TableCell>
+                          {permissions.map((pm) => (
+                            <TableCell key={pm.permissionId} align="center">
+                              {pm.permissionNm}
                             </TableCell>
                           ))}
                         </TableRow>
@@ -268,20 +385,17 @@ const PermissionManagement: React.FC = () => {
                                   {parent.menuNm}
                                 </Typography>
                               </TableCell>
-                              {permissions.map((permission) => (
-                                <TableCell
-                                  key={permission.permissionId}
-                                  align="center"
-                                >
+                              {permissions.map((pm) => (
+                                <TableCell key={pm.permissionId} align="center">
                                   <Checkbox
                                     checked={hasPermission(
                                       parent.menuId,
-                                      permission.permissionId
+                                      pm.permissionId
                                     )}
                                     onChange={(e) =>
                                       handlePermissionChange(
                                         parent.menuId,
-                                        permission.permissionId,
+                                        pm.permissionId,
                                         e.target.checked
                                       )
                                     }
@@ -291,7 +405,6 @@ const PermissionManagement: React.FC = () => {
                                 </TableCell>
                               ))}
                             </TableRow>
-
                             {parent.children?.map((child) => (
                               <TableRow key={child.menuId}>
                                 <TableCell>
@@ -299,20 +412,20 @@ const PermissionManagement: React.FC = () => {
                                     ├─ {child.menuNm}
                                   </Typography>
                                 </TableCell>
-                                {permissions.map((permission) => (
+                                {permissions.map((pm) => (
                                   <TableCell
-                                    key={permission.permissionId}
+                                    key={pm.permissionId}
                                     align="center"
                                   >
                                     <Checkbox
                                       checked={hasPermission(
                                         child.menuId,
-                                        permission.permissionId
+                                        pm.permissionId
                                       )}
                                       onChange={(e) =>
                                         handlePermissionChange(
                                           child.menuId,
-                                          permission.permissionId,
+                                          pm.permissionId,
                                           e.target.checked
                                         )
                                       }
@@ -338,7 +451,7 @@ const PermissionManagement: React.FC = () => {
                     color="text.secondary"
                     align="center"
                   >
-                    권한을 설정할 역할을 선택해주세요.
+                    권한을 설정할 역할을 먼저 선택해주세요.
                   </Typography>
                 </CardContent>
               </Card>
@@ -346,64 +459,24 @@ const PermissionManagement: React.FC = () => {
           </Box>
         </Box>
 
-        {/* 현재 설정된 권한 목록 */}
-        {selectedRole && rolePermissions.length > 0 && (
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                현재 설정된 권한
-              </Typography>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>메뉴</TableCell>
-                      <TableCell>권한</TableCell>
-                      <TableCell>권한 레벨</TableCell>
-                      <TableCell align="center">작업</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rolePermissions.map((rp) => (
-                      <TableRow key={rp.roleMenuId}>
-                        <TableCell>{rp.menuNm}</TableCell>
-                        <TableCell>{rp.permissionNm}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={rp.permissionLevel}
-                            color={
-                              rp.permissionLevel === 'write'
-                                ? 'primary'
-                                : rp.permissionLevel === 'excel'
-                                ? 'success'
-                                : 'default'
-                            }
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              handlePermissionChange(
-                                rp.menuId,
-                                rp.permissionId,
-                                false
-                              )
-                            }
-                            disabled={loading}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        )}
+        {/* 권한 해제 확인 */}
+        <ConfirmDialog
+          open={confirmRevoke.open}
+          onClose={() => setConfirmRevoke({ open: false })}
+          title="권한 해제"
+          message="선택한 권한을 해제하시겠습니까?"
+          confirmText="해제"
+          onConfirm={async () => {
+            if (confirmRevoke.rp) {
+              await handlePermissionChange(
+                confirmRevoke.rp.menuId,
+                confirmRevoke.rp.permissionId,
+                false
+              );
+            }
+            setConfirmRevoke({ open: false });
+          }}
+        />
       </Box>
     </ProtectedRoute>
   );
