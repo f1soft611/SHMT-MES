@@ -218,7 +218,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
               }}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -226,7 +226,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
               onClick={() => handleDelete(params.row.processStopItemId!)}
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

@@ -213,7 +213,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -222,7 +222,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               title="삭제"
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

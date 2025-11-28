@@ -218,7 +218,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
               }}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -226,7 +226,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
               onClick={() => handleDelete(params.row.processDefectId!)}
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

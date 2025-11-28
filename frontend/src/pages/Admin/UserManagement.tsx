@@ -15,12 +15,12 @@ import {
   FormControl,
   InputLabel,
   IconButton,
-  Alert,
   Chip,
   InputAdornment,
+  Tooltip,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -37,6 +37,10 @@ import {
   userService,
 } from '../../services/admin/userService';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
+import PageHeader from '../../components/common/PageHeader/PageHeader';
+import DataTable from '../../components/common/DataTable/DataTable';
+import { useToast } from '../../components/common/Feedback/ToastProvider';
+import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -46,10 +50,17 @@ const UserManagement: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    open: boolean;
+    targetId?: string;
+  }>({ open: false });
+  const { showToast } = useToast();
 
-  // 검색 조건 (UI 입력용)
-  const [searchCnd, setSearchCnd] = useState('2');
-  const [searchWrd, setSearchWrd] = useState('');
+  // 검색 상태 (입력값과 실제 적용값 분리)
+  const [inputValues, setInputValues] = useState({
+    searchCnd: '2',
+    searchWrd: '',
+  });
 
   // 실제 API 호출에 사용되는 검색 파라미터
   const [searchParams, setSearchParams] = useState<UserSearchParams>({
@@ -129,7 +140,9 @@ const UserManagement: React.FC = () => {
         });
       }
     } catch (err: any) {
-      setError(err.message || '사용자 목록을 불러오는데 실패했습니다.');
+      const message = err.message || '사용자 목록을 불러오는데 실패했습니다.';
+      setError(message);
+      showToast({ message, severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -153,13 +166,20 @@ const UserManagement: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleInputChange = (
+    field: keyof typeof inputValues,
+    value: string
+  ) => {
+    setInputValues((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSearch = () => {
     // 검색 버튼 클릭 시에만 실제 검색 수행
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
     const newSearchParams = {
       pageIndex: 1,
-      searchCnd: searchCnd,
-      searchWrd: searchWrd,
+      searchCnd: inputValues.searchCnd,
+      searchWrd: inputValues.searchWrd,
     };
     setSearchParams(newSearchParams);
 
@@ -315,31 +335,36 @@ const UserManagement: React.FC = () => {
           ...formData,
           uniqId: editingUser.uniqId,
         });
+        showToast({ message: '사용자가 수정되었습니다.', severity: 'success' });
       } else {
         // 등록
         await userService.createUser(formData);
+        showToast({ message: '사용자가 추가되었습니다.', severity: 'success' });
       }
 
       setOpen(false);
       // 저장 후 현재 검색 조건으로 다시 조회
       await loadUsers();
     } catch (err: any) {
-      setError(err.message || '사용자 저장에 실패했습니다.');
+      const message = err.message || '사용자 저장에 실패했습니다.';
+      setError(message);
+      showToast({ message, severity: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (uniqId: string) => {
-    if (!window.confirm('정말로 삭제하시겠습니까?')) return;
-
     try {
       setLoading(true);
       await userService.deleteUser(uniqId);
+      showToast({ message: '사용자가 삭제되었습니다.', severity: 'success' });
       // 삭제 후 현재 검색 조건으로 다시 조회
       await loadUsers();
     } catch (err: any) {
-      setError(err.message || '사용자 삭제에 실패했습니다.');
+      const message = err.message || '사용자 삭제에 실패했습니다.';
+      setError(message);
+      showToast({ message, severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -410,7 +435,7 @@ const UserManagement: React.FC = () => {
     {
       field: 'actions',
       headerName: '작업',
-      width: 100,
+      width: 150,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -424,22 +449,35 @@ const UserManagement: React.FC = () => {
           }}
         >
           <Stack direction="row" spacing={1} justifyContent="center">
-            <IconButton
-              size="small"
-              onClick={() => handleEdit(params.row)}
-              disabled={loading}
-              color="primary"
-            >
-              <EditIcon />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => handleDelete(params.row.uniqId)}
-              disabled={loading}
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
+            <Tooltip title="수정">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => handleEdit(params.row)}
+                  disabled={loading}
+                  color="primary"
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="삭제">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    setConfirmDelete({
+                      open: true,
+                      targetId: params.row.uniqId,
+                    })
+                  }
+                  disabled={loading}
+                  color="error"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Stack>
         </Box>
       ),
@@ -449,24 +487,10 @@ const UserManagement: React.FC = () => {
   return (
     <ProtectedRoute requiredPermission="write">
       <Box>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h5">사용자 관리</Typography>
-          </Box>
-        </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        <PageHeader
+          title=""
+          crumbs={[{ label: '시스템 관리' }, { label: '사용자 관리' }]}
+        />
 
         {/* 검색 영역 */}
         <Paper sx={{ p: 2, mb: 2 }}>
@@ -485,12 +509,14 @@ const UserManagement: React.FC = () => {
             검색 필터
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>검색조건</InputLabel>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>검색 조건</InputLabel>
               <Select
-                value={searchCnd}
+                value={inputValues.searchCnd}
                 label="검색 조건"
-                onChange={(e) => setSearchCnd(e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('searchCnd', String(e.target.value))
+                }
               >
                 {searchConditions.map((condition) => (
                   <MenuItem key={condition.value} value={condition.value}>
@@ -503,10 +529,10 @@ const UserManagement: React.FC = () => {
             <TextField
               size="small"
               placeholder="검색어를 입력하세요"
-              value={searchWrd}
-              sx={{ flex: 1 }}
-              onChange={(e) => setSearchWrd(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              value={inputValues.searchWrd}
+              sx={{ flex: 1, minWidth: 240 }}
+              onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
 
             <Button
@@ -530,28 +556,33 @@ const UserManagement: React.FC = () => {
         </Paper>
 
         {/* 사용자 목록 */}
-        <Paper sx={{ width: '100%' }}>
-          <DataGrid
-            rows={users}
-            columns={columns}
-            getRowId={(row) => row.uniqId}
-            loading={loading}
-            paginationMode="server"
-            paginationModel={paginationModel}
-            onPaginationModelChange={handlePageChange}
-            rowCount={pagination.totalRecordCount}
-            pageSizeOptions={[5, 10, 25, 50]}
-            disableRowSelectionOnClick
-            sx={{
-              '& .MuiDataGrid-cell:focus': {
-                outline: 'none',
-              },
-              '& .MuiDataGrid-row:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          />
-        </Paper>
+        <DataTable
+          rows={users}
+          columns={columns}
+          getRowId={(row) => row.uniqId}
+          loading={loading}
+          error={error}
+          rowCount={pagination.totalRecordCount}
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePageChange}
+          pageSizeOptions={[5, 10, 25, 50]}
+          onRefresh={loadUsers}
+        />
+
+        {/* 삭제 확인 다이얼로그 */}
+        <ConfirmDialog
+          open={confirmDelete.open}
+          onClose={() => setConfirmDelete({ open: false })}
+          title="사용자 삭제"
+          message="선택한 사용자를 삭제하시겠습니까?"
+          confirmText="삭제"
+          onConfirm={async () => {
+            if (confirmDelete.targetId) {
+              await handleDelete(confirmDelete.targetId);
+            }
+            setConfirmDelete({ open: false });
+          }}
+        />
 
         {/* 사용자 추가/수정 다이얼로그 */}
         <Dialog

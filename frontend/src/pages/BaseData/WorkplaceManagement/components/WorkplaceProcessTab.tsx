@@ -172,7 +172,7 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
             onClick={() => handleDelete(params.row.processCode!)}
             disabled={!canWrite}
           >
-            <DeleteIcon />
+            <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
       ),

@@ -306,7 +306,7 @@ const PermissionManagement: React.FC = () => {
                                 }
                                 disabled={loading}
                               >
-                                <DeleteIcon />
+                                <DeleteIcon fontSize="small" />
                               </IconButton>
                             </TableCell>
                           </TableRow>

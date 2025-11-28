@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Tabs,
-  Tab,
-  Alert,
-} from '@mui/material';
+import { Box, Paper, Button, Tabs, Tab } from '@mui/material';
 import {
   Add as AddIcon,
   History as HistoryIcon,
@@ -19,6 +11,9 @@ import { schedulerService } from '../../services/schedulerService';
 import SchedulerList from './components/SchedulerList';
 import SchedulerForm from './components/SchedulerForm';
 import SchedulerHistoryList from './components/SchedulerHistoryList';
+import PageHeader from '../../components/common/PageHeader/PageHeader';
+import { useToast } from '../../components/common/Feedback/ToastProvider';
+import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,10 +43,8 @@ const SchedulerManagement: React.FC = () => {
   const [selectedSchedulerId, setSelectedSchedulerId] = useState<number | null>(
     null
   );
-  const [alertMessage, setAlertMessage] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const { showToast } = useToast();
 
   const queryClient = useQueryClient();
 
@@ -78,81 +71,58 @@ const SchedulerManagement: React.FC = () => {
     setFormOpen(false);
     setSelectedSchedulerId(null);
     queryClient.invalidateQueries({ queryKey: ['schedulers'] });
-    setAlertMessage({
-      type: 'success',
+    showToast({
       message: '스케쥴러가 성공적으로 저장되었습니다.',
+      severity: 'success',
     });
-    setTimeout(() => setAlertMessage(null), 3000);
   };
 
   const restartMutation = useMutation({
     mutationFn: () => schedulerService.restartSchedulers(),
     onSuccess: () => {
-      setAlertMessage({
-        type: 'success',
+      showToast({
         message: '스케쥴러가 재시작되었습니다.',
+        severity: 'success',
       });
-      setTimeout(() => setAlertMessage(null), 3000);
     },
     onError: (error: any) => {
-      setAlertMessage({
-        type: 'error',
+      showToast({
         message: `재시작 실패: ${error.message}`,
+        severity: 'error',
       });
-      setTimeout(() => setAlertMessage(null), 5000);
     },
   });
 
   const handleRestartClick = () => {
-    if (
-      window.confirm(
-        '모든 스케쥴러를 재시작하시겠습니까? 진행 중인 작업이 있다면 중단됩니다.'
-      )
-    ) {
-      restartMutation.mutate();
-    }
+    setConfirmRestart(true);
   };
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">스케쥴러 관리</Typography>
-        </Box>
-
-        <Box>
-          <Button
-            variant="contained"
-            color="info"
-            startIcon={<RefreshIcon />}
-            onClick={handleRestartClick}
-            disabled={restartMutation.isPending}
-            sx={{ mr: 2 }}
-          >
-            스케쥴러 재시작
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddClick}
-          >
-            스케쥴러 등록
-          </Button>
-        </Box>
-      </Box>
-
-      {alertMessage && (
-        <Alert severity={alertMessage.type} sx={{ mb: 2 }}>
-          {alertMessage.message}
-        </Alert>
-      )}
+      <PageHeader
+        title=""
+        crumbs={[{ label: '시스템 관리' }, { label: '스케쥴러 관리' }]}
+        actionsRight={
+          <>
+            <Button
+              variant="contained"
+              color="info"
+              startIcon={<RefreshIcon />}
+              onClick={handleRestartClick}
+              disabled={restartMutation.isPending}
+            >
+              스케쥴러 재시작
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddClick}
+            >
+              스케쥴러 등록
+            </Button>
+          </>
+        }
+      />
 
       <Paper sx={{ width: '100%' }}>
         <Tabs
@@ -188,6 +158,18 @@ const SchedulerManagement: React.FC = () => {
           onSuccess={handleFormSuccess}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmRestart}
+        onClose={() => setConfirmRestart(false)}
+        title="스케쥴러 재시작"
+        message="모든 스케쥴러를 재시작하시겠습니까? 진행 중인 작업이 있다면 중단됩니다."
+        confirmText="재시작"
+        onConfirm={() => {
+          restartMutation.mutate();
+          setConfirmRestart(false);
+        }}
+      />
     </Box>
   );
 };
