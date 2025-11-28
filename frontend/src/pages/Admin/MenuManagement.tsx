@@ -306,7 +306,7 @@ const MenuManagement: React.FC = () => {
           component={Paper}
           elevation={0}
           sx={{
-            maxHeight: 600,
+            // maxHeight: 600,
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 1,
