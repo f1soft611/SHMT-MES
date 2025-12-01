@@ -317,7 +317,9 @@
 			PRODPLAN_SEQ,
 			ORDER_QTY,
 			WORKDT_QTY,
-			REPRESENT_ORDER
+			REPRESENT_ORDER,
+			OPMAN_CODE,
+			OPTIME
 		) VALUES (
 			#{factoryCode},
 			#{orderNo},
@@ -328,7 +330,9 @@
 			#{prodplanSeq},
 			ISNULL(#{orderQty}, 0),
 			ISNULL(#{workdtQty}, 0),
-			ISNULL(#{representOrder}, 'N')
+			ISNULL(#{representOrder}, 'N'),
+			#{opmanCode},
+			GETDATE()
 		)
 	</insert>
 

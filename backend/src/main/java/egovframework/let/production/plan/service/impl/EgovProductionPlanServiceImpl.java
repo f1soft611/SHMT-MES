@@ -74,6 +74,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			plan.setProdPlanId(planId);
 			plan.setProdPlanDate(master.getProdPlanDate());
 			plan.setProdPlanSeq(master.getProdPlanSeq());
+			plan.setOpmanCode(master.getOpmanCode());
 			productionPlanDAO.insertProductionPlan(plan);
 		}
 		
@@ -83,6 +84,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 				ref.setFactoryCode(master.getFactoryCode());
 				ref.setProdplanDate(master.getProdPlanDate());
 				ref.setProdplanSeq(master.getProdPlanSeq());
+				ref.setOpmanCode(master.getOpmanCode());
 				productionPlanDAO.insertProductionPlanReference(ref);
 			}
 		}

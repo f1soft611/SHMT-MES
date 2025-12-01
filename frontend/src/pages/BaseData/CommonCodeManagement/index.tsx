@@ -108,6 +108,11 @@ const CommonCodeManagement: React.FC = () => {
   // 공통코드 목록 조회
   const fetchCommonCodes = useCallback(async () => {
     try {
+      // console.log('Fetching common codes with params:', {
+      //   page: paginationModel.page,
+      //   pageSize: paginationModel.pageSize,
+      //   searchParams,
+      // });
       const response = await commonCodeService.getCommonCodeList(
         paginationModel.page,
         paginationModel.pageSize,
@@ -119,9 +124,12 @@ const CommonCodeManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch common codes:', error);
-      showSnackbar('공통코드 목록을 불러오는데 실패했습니다.', 'error');
+      showToast({
+        message: '공통코드 목록을 불러오는데 실패했습니다.',
+        severity: 'error',
+      });
     }
-  }, [searchParams, paginationModel]);
+  }, [paginationModel.page, paginationModel.pageSize, searchParams, showToast]);
 
   useEffect(() => {
     fetchCommonCodes();
