@@ -229,7 +229,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       headerAlign: 'center',
     },
     {
-      field: 'registDate',
+      field: 'prodPlanDate',
       headerName: '생산의뢰일',
       width: 130,
       align: 'center',
