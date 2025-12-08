@@ -261,7 +261,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
           hideFooterPagination
           disableRowSelectionOnClick
           sx={{
-            border: 'none',
+            // border: 'none',
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },

@@ -134,7 +134,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     const selectedKeys = Array.from((selectionModel as any).ids).map(String);
     const selectedItems = requests.filter((req) =>
       selectedKeys.includes(
-        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}`
+        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
       )
     );
 
@@ -259,6 +259,20 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       ),
     },
     {
+      field: 'itemFlag',
+      headerName: '품목구분',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => {
+        const flag = params.value;
+        const label = flag === '2' ? '제품' : flag === '4' ? '반제품' : '-';
+        const color =
+          flag === '2' ? 'success' : flag === '4' ? 'warning' : 'default';
+        return <Chip label={label} size="small" color={color} />;
+      },
+    },
+    {
       field: 'itemName',
       headerName: '품목명',
       flex: 1,
@@ -327,9 +341,11 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       onClose={handleClose}
       maxWidth="xl"
       fullWidth
-      PaperProps={{
-        sx: { height: '85vh' },
-      }}
+      PaperProps={
+        {
+          // sx: { height: '85vh' },
+        }
+      }
     >
       <DialogTitle
         sx={{
@@ -435,7 +451,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             rows={requests}
             columns={columns}
             getRowId={(row) =>
-              `${row.orderNo}-${row.orderSeqno}-${row.orderHistno}`
+              `${row.orderNo}-${row.orderSeqno}-${row.orderHistno}-${row.itemCode}`
             }
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
@@ -467,7 +483,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
                 const ids = new Set(
                   pageRequests.map(
                     (item) =>
-                      `${item.orderNo}-${item.orderSeqno}-${item.orderHistno}`
+                      `${item.orderNo}-${item.orderSeqno}-${item.orderHistno}-${item.itemCode}`
                   )
                 );
 
@@ -483,7 +499,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             }}
             disableRowSelectionOnClick={false}
             sx={{
-              border: 'none',
+              // border: 'none',
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
@@ -501,12 +517,10 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       </DialogContent>
 
       <Divider />
-      <DialogActions sx={{ p: 2.5 }}>
+      <DialogActions sx={{ p: 2 }}>
         <Button
           onClick={handleConfirmSelection}
           variant="contained"
-          size="large"
-          sx={{ px: 4 }}
           disabled={
             !selectionModel?.ids || (selectionModel as any).ids.size === 0
           }
@@ -514,9 +528,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         >
           선택
         </Button>
-        <Button onClick={handleClose} variant="outlined" size="large">
-          취소
-        </Button>
+        <Button onClick={handleClose}>취소</Button>
       </DialogActions>
     </Dialog>
   );

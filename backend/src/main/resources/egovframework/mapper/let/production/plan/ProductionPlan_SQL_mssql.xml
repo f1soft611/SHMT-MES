@@ -482,7 +482,7 @@
 		<if test="dateTo != null and dateTo != ''">
 			AND T.DELIVERY_DATE &lt;= #{dateTo}
 		</if>
-		ORDER BY T.DELIVERY_DATE DESC, T.ORDER_NO DESC, T.ORDER_SEQNO
+		ORDER BY T.ORDER_NO DESC, T.ORDER_SEQNO, T.ORDER_HISTNO, T.ITEM_FLAG ASC
 		OFFSET #{firstIndex} ROWS
 		FETCH NEXT #{recordCountPerPage} ROWS ONLY
 	</select>
