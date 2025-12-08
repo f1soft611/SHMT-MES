@@ -9,6 +9,7 @@
 		<result property="processName" column="WORK_NAME"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="processType" column="WORK_TYPE"/>
+		<result property="erpProcessMapping" column="ERP_PROCESS_MAPPING"/>
 		<result property="equipmentIntegrationYn" column="EQUIPMENT_INTEGRATION_YN"/>
 		<result property="status" column="STATUS"/>
 		<result property="useYn" column="USE_YN"/>
@@ -27,6 +28,7 @@
 		WORK_NAME,
 		DESCRIPTION,
 		WORK_TYPE,
+		ERP_PROCESS_MAPPING,
 		EQUIPMENT_INTEGRATION_YN,
 		STATUS,
 		USE_YN,
@@ -102,6 +104,7 @@
 			WORK_NAME,
 			DESCRIPTION,
 			WORK_TYPE,
+			ERP_PROCESS_MAPPING,
 			EQUIPMENT_INTEGRATION_YN,
 			STATUS,
 			USE_YN,
@@ -123,6 +126,7 @@
 			WORK_NAME,
 			DESCRIPTION,
 			WORK_TYPE,
+			ERP_PROCESS_MAPPING,
 			EQUIPMENT_INTEGRATION_YN,
 			STATUS,
 			USE_YN,
@@ -136,6 +140,7 @@
 					 #{processName},
 					 #{description},
 					 #{processType},
+					 #{erpProcessMapping},
 					 ISNULL(#{equipmentIntegrationYn}, 'N'),
 					 ISNULL(#{status}, 'ACTIVE'),
 					 ISNULL(#{useYn}, 'Y'),
@@ -152,6 +157,7 @@
 			WORK_NAME = #{processName},
 			DESCRIPTION = #{description},
 			WORK_TYPE = #{processType},
+			ERP_PROCESS_MAPPING = #{erpProcessMapping},
 			EQUIPMENT_INTEGRATION_YN = #{equipmentIntegrationYn},
 			STATUS = #{status},
 			USE_YN = #{useYn},
