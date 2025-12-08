@@ -11,6 +11,7 @@
           AND ORDER_NO = #{prodReqSeq}
           AND ORDER_SEQNO = #{prodReqSeq}
           AND ORDER_HISTNO = #{prodReqSeq}
+          AND ITEM_CODE = #{itemSeq}
     </select>
 
     <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 삽입 -->
@@ -44,11 +45,46 @@
             #{prodReqNo},
             #{prodReqSeq},
             #{serl},
-            #{itemSeq},
-            #{itemNo},
-            #{itemName},
-            #{spec},
-            '0',
+            <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemSeq},
+                </when>
+                <otherwise>
+                    #{itemSeq},
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemNo},
+                </when>
+                <otherwise>
+                    #{itemNo},
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemName},
+                </when>
+                <otherwise>
+                    #{itemName},
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiSpec},
+                </when>
+                <otherwise>
+                    #{spec},
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="itemFlag != null">
+                    #{itemFlag},
+                </when>
+                <otherwise>
+                    '0',
+                </otherwise>
+            </choose>
             #{custSeq},
             #{empSeq},
             #{qty},
@@ -72,10 +108,46 @@
         SET
             ORDER_NO = #{prodReqNo},
             ORDER_HISTNO = #{serl},
-            ITEM_CODE = #{itemSeq},
-            ITEM_NO = #{itemNo},
-            ITEM_NAME = #{itemName},
-            ITEM_SPEC = #{spec},
+            ITEM_CODE = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemSeq},
+                </when>
+                <otherwise>
+                    #{itemSeq},
+                </otherwise>
+            </choose>
+            ITEM_NO = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemNo},
+                </when>
+                <otherwise>
+                    #{itemNo},
+                </otherwise>
+            </choose>
+            ITEM_NAME = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemName},
+                </when>
+                <otherwise>
+                    #{itemName},
+                </otherwise>
+            </choose>
+            ITEM_SPEC = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiSpec},
+                </when>
+                <otherwise>
+                    #{spec},
+                </otherwise>
+            </choose>
+            ITEM_FLAG = <choose>
+                <when test="itemFlag != null">
+                    #{itemFlag},
+                </when>
+                <otherwise>
+                    '0',
+                </otherwise>
+            </choose>
             CUSTOMER_CODE = #{custSeq},
             EMPLYR_ID = #{empSeq},
             ORDER_QTY = #{qty},

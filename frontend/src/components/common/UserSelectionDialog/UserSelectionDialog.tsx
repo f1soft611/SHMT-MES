@@ -147,7 +147,7 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers={true}>
         {/* 검색 영역 */}
-        <Box sx={{ mt: 1 }}>
+        <Box sx={{ mt: 1, mb: 1 }}>
           <Stack direction="row" spacing={2} alignItems="flex-start">
             <FormControl size="small" sx={{ minWidth: 120 }}>
               <InputLabel>검색 조건</InputLabel>
@@ -198,7 +198,7 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
             paginationMode="server"
             onRowClick={(params) => setSelectedUser(params.row)}
             sx={{
-              border: 'none',
+              // border: 'none',
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
@@ -212,9 +212,6 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
                   backgroundColor: 'primary.light',
                 },
               },
-            }}
-            localeText={{
-              noRowsLabel: '등록된 사용자가 없습니다',
             }}
           />
         </Box>

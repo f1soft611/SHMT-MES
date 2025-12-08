@@ -191,7 +191,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
           )}
 
           {/* 품목 목록 DataGrid */}
-          <Box sx={{ height: 400, width: '100%' }}>
+          <Box sx={{ width: '100%' }}>
             <DataGrid
               rows={items}
               columns={columns}
@@ -212,6 +212,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
                 setSelectionModel(newSelection);
               }}
               sx={{
+                // border: 'none',
                 '& .MuiDataGrid-cell:focus': {
                   outline: 'none',
                 },
@@ -234,9 +235,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
         >
           선택
         </Button>
-        <Button onClick={handleClose} variant="outlined" color="inherit">
-          취소
-        </Button>
+        <Button onClick={handleClose}>취소</Button>
       </DialogActions>
     </Dialog>
   );

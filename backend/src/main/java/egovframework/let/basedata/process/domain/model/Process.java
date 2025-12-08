@@ -51,6 +51,9 @@ public class Process implements Serializable {
 	@Schema(description = "공정 타입")
 	private String processType = "";
 
+	@Schema(description = "ERP 공정 매핑")
+	private String erpProcessMapping = "";
+
 	@Schema(description = "설비연동공정 여부 (Y/N)")
 	private String equipmentIntegrationYn = "";
 
