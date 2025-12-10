@@ -59,6 +59,10 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	@Autowired
 	private MesProdReqInterfaceDAO mesProdReqInterfaceDAO;
 
+		// MES 제품별공정별소요자재(TCO501) 인터페이스 DAO
+		@Autowired
+		private egovframework.let.scheduler.domain.repository.MesTPDROUItemProcMatInterfaceDAO mesTPDROUItemProcMatInterfaceDAO;
+
 	/**
 	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
@@ -530,14 +534,14 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			prodReq.setDelvDate(rs.getString("DelvDate"));
 			prodReq.setLastUserSeq(rs.getInt("LastUserSeq"));
 			prodReq.setLastDateTime(rs.getTimestamp("LastDateTime"));
-			
+
 			// 반제품 정보 매핑
 			prodReq.setSemiItemSeq(rs.getObject("SemiItemSeq") != null ? rs.getInt("SemiItemSeq") : null);
 			prodReq.setSemiItemNo(rs.getString("SemiItemNo"));
 			prodReq.setSemiItemName(rs.getString("SemiItemName"));
 			prodReq.setSemiSpec(rs.getString("SemiSpec"));
 			prodReq.setItemFlag(rs.getInt("ItemFlag"));
-			
+
 			return prodReq;
 		}
 	}
@@ -600,7 +604,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			for (ErpItem item : erpItems) {
 				try {
 					// 2-1. MES에 해당 품목이 존재하는지 확인
-					int count = mesItemInterfaceDAO.selectMesItemCount(item.getItemSeq());
+					int count = mesItemInterfaceDAO.selectMesItemCount(item);
 
 					if (count == 0) {
 						// 2-2. 신규 품목인 경우 INSERT
@@ -643,8 +647,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @return 품목 정보 리스트
 	 */
 	private List<ErpItem> selectErpItems(String fromDate, String toDate) {
-		String sql = "SELECT TOP 100 CompanySeq, ItemNo, ItemSeq, ItemName, Spec, " +
-				"UnitSeq, UnitName, LastUserSeq, LastDateTime " +
+		String sql = "SELECT CompanySeq, ItemNo, ItemSeq, ItemName, Spec, " +
+				"UnitSeq, UnitName, AssetSeq, AssetName, LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_TDAItem " +
 				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY ItemSeq";
@@ -745,6 +749,157 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			log.error("║  실행 시간: {}ms                 ║", executionTime);
 			log.error("╚══════════════════════════════════════╝");
 			throw e;
+		}
+	}
+
+	/**
+	 * ERP 시스템의 제품별공정별소요자재 정보를 MES 시스템으로 연동
+	 * ERP의 SHM_IF_VIEW_TPDROUItemProcMat 뷰에서 정보를 조회하여 TCO501 테이블에 동기화
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+	public void syncTPDROUItemProcMat(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 제품별공정별소요자재 연동 시작 ===");
+
+		int insertCount = 0;
+		int updateCount = 0;
+		int errorCount = 0;
+		Exception lastError = null;
+
+		try {
+			// 1. ERP 시스템에서 제품별공정별소요자재 정보 조회
+			log.info("ERP 시스템(SHM_IF_VIEW_TPDROUItemProcMat)에서 제품별공정별소요자재 데이터 조회 시작");
+			String sql = "SELECT CompanySeq, ItemSeq, BOMRev, ProcRev, ProcSeq, Serl, " +
+					"MatItemSeq, UnitSeq, NeedQtyNumerator, NeedQtyDenominator, " +
+					"SMDelvType, UpperItemSeq, UpperBOMRev, BOMItemSerl, " +
+					"LastUserSeq, LastDateTime " +
+					"FROM SHM_IF_VIEW_TPDROUItemProcMat " +
+					"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +
+					"ORDER BY CompanySeq, ItemSeq, ProcSeq, Serl";
+
+			List<egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat> erpList =
+					erpJdbcTemplate.query(sql, new ErpTPDROUItemProcMatRowMapper(), fromDate, toDate);
+			log.info("ERP 제품별공정별소요자재 데이터 조회 완료: {}건", erpList.size());
+
+			// 2. MES 시스템에 제품별공정별소요자재 정보 등록/업데이트
+			for (egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat item : erpList) {
+				try {
+					// 2-1. 파라미터 Map 생성
+					java.util.Map<String, Object> param = new java.util.HashMap<>();
+					param.put("CompanySeq", item.getCompanySeq());
+					param.put("ItemSeq", item.getItemSeq());
+					param.put("BOMRev", item.getBOMRev());
+					param.put("ProcRev", item.getProcRev());
+					param.put("ProcSeq", item.getProcSeq());
+					param.put("Serl", item.getSerl());
+					param.put("MatItemSeq", item.getMatItemSeq());
+					param.put("UnitSeq", item.getUnitSeq());
+					param.put("NeedQtyNumerator", item.getNeedQtyNumerator());
+					param.put("NeedQtyDenominator", item.getNeedQtyDenominator());
+					param.put("SMDelvType", item.getSMDelvType());
+					param.put("UpperItemSeq", item.getUpperItemSeq());
+					param.put("UpperBOMRev", item.getUpperBOMRev());
+					param.put("BOMItemSerl", item.getBOMItemSerl());
+					param.put("LastUserSeq", item.getLastUserSeq());
+					param.put("LastDateTime", item.getLastDateTime());
+
+					// 2-2. MES에 해당 제품별공정별소요자재가 존재하는지 확인
+					int count = mesTPDROUItemProcMatInterfaceDAO.selectMesTPDROUItemProcMatCount(param);
+
+					if (count == 0) {
+						// 2-3. 신규인 경우 INSERT
+						mesTPDROUItemProcMatInterfaceDAO.insertMesTPDROUItemProcMat(param);
+						insertCount++;
+						log.debug("신규 제품별공정별소요자재 등록: 품목코드={}, 공정코드={}, 순번={}",
+								item.getItemSeq(), item.getProcSeq(), item.getSerl());
+					} else {
+						// 2-4. 기존인 경우 UPDATE
+						mesTPDROUItemProcMatInterfaceDAO.updateMesTPDROUItemProcMat(param);
+						updateCount++;
+						log.debug("기존 제품별공정별소요자재 업데이트: 품목코드={}, 공정코드={}, 순번={}",
+								item.getItemSeq(), item.getProcSeq(), item.getSerl());
+					}
+				} catch (Exception e) {
+					errorCount++;
+					lastError = e;
+					log.error("제품별공정별소요자재 정보 처리 실패: 품목코드={}, 공정코드={}, 순번={}",
+							item.getItemSeq(), item.getProcSeq(), item.getSerl(), e);
+				}
+			}
+
+			log.info("=== ERP 제품별공정별소요자재 연동 완료 ===");
+			log.info("총 처리: {}건, 신규등록: {}건, 업데이트: {}건, 오류: {}건",
+					erpList.size(), insertCount, updateCount, errorCount);
+
+			// 오류가 하나라도 있으면 예외를 던져서 스케쥴러 히스토리에 실패로 기록
+			if (errorCount > 0 && lastError != null) {
+				throw new Exception(String.format("제품별공정별소요자재 연동 중 오류 발생 - 총 처리: %d건, 성공: %d건, 실패: %d건. 마지막 오류: %s",
+						erpList.size(), insertCount + updateCount, errorCount, lastError.getMessage()), lastError);
+			}
+
+		} catch (Exception e) {
+			log.error("제품별공정별소요자재 연동 실패", e);
+			throw e;
+		}
+	}
+
+	/**
+	 * 스케쥴러에서 호출되는 제품별공정별소요자재 정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+	public void executeTPDROUItemProcMatInterface(String fromDate, String toDate) throws Exception {
+		log.info("╔══════════════════════════════════════╗");
+		log.info("║  ERP-MES 제품별공정별소요자재 연동 시작 ║");
+		log.info("╚══════════════════════════════════════╝");
+		long startTime = System.currentTimeMillis();
+
+		try {
+			syncTPDROUItemProcMat(fromDate, toDate);
+
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.info("╔══════════════════════════════════════╗");
+			log.info("║  ERP-MES 제품별공정별소요자재 연동 완료 ║");
+			log.info("║  실행 시간: {}ms                 ║", executionTime);
+			log.info("╚══════════════════════════════════════╝");
+
+		} catch (Exception e) {
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.error("╔══════════════════════════════════════╗");
+			log.error("║  ERP-MES 제품별공정별소요자재 연동 실패 ║");
+			log.error("║  실행 시간: {}ms                 ║", executionTime);
+			log.error("╚══════════════════════════════════════╝");
+			throw e;
+		}
+	}
+
+	/**
+	 * ERP 제품별공정별소요자재 RowMapper
+	 */
+	private static class ErpTPDROUItemProcMatRowMapper implements RowMapper<egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat> {
+		@Override
+		public egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat mapRow(ResultSet rs, int rowNum) throws SQLException {
+			egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat item =
+					new egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat();
+			item.setCompanySeq(rs.getInt("CompanySeq"));
+			item.setItemSeq(rs.getInt("ItemSeq"));
+			item.setBOMRev(rs.getString("BOMRev"));
+			item.setProcRev(rs.getString("ProcRev"));
+			item.setProcSeq(rs.getInt("ProcSeq"));
+			item.setSerl(rs.getInt("Serl"));
+			item.setMatItemSeq(rs.getInt("MatItemSeq"));
+			item.setUnitSeq(rs.getInt("UnitSeq"));
+			item.setNeedQtyNumerator(rs.getBigDecimal("NeedQtyNumerator"));
+			item.setNeedQtyDenominator(rs.getBigDecimal("NeedQtyDenominator"));
+			item.setSMDelvType(rs.getInt("SMDelvType"));
+			item.setUpperItemSeq(rs.getInt("UpperItemSeq"));
+			item.setUpperBOMRev(rs.getString("UpperBOMRev"));
+			item.setBOMItemSerl(rs.getInt("BOMItemSerl"));
+			item.setLastUserSeq(rs.getInt("LastUserSeq"));
+			item.setLastDateTime(rs.getTimestamp("LastDateTime"));
+			return item;
 		}
 	}
 }
