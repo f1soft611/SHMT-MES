@@ -30,8 +30,8 @@ public class MesItemInterfaceDAO extends EgovAbstractMapper {
 	 * @return 존재 개수
 	 * @throws Exception
 	 */
-	public int selectMesItemCount(String itemSeq) throws Exception {
-		return (Integer) selectOne("MesItemInterfaceDAO.selectMesItemCount", itemSeq);
+	public int selectMesItemCount(ErpItem item) throws Exception {
+		return (Integer) selectOne("MesItemInterfaceDAO.selectMesItemCount", item);
 	}
 
 	/**

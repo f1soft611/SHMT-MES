@@ -57,6 +57,16 @@ public class ErpItem implements Serializable {
 	private String unitName;
 
 	/**
+	 * 품목자산분류코드 (AssetSeq)
+	 */
+	private Integer assetSeq;
+
+	/**
+	 * 품목자산분류코드명 (AssetName) - nvarchar(100)
+	 */
+	private String assetName;
+
+	/**
 	 * 최종수정자내부코드 (LastUserSeq)
 	 */
 	private Integer lastUserSeq;

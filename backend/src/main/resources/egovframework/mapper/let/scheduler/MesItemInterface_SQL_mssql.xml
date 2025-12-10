@@ -4,10 +4,11 @@
 <mapper namespace="MesItemInterfaceDAO">
 
     <!-- MES 품목 테이블에 품목 정보 존재 여부 확인 -->
-    <select id="selectMesItemCount" parameterType="string" resultType="int">
+    <select id="selectMesItemCount" parameterType="egovframework.let.scheduler.domain.model.ErpItem" resultType="int">
         SELECT COUNT(1) AS cnt
         FROM TCO403
         WHERE MATERIAL_ID = #{itemSeq}
+        AND MATERIAL_CODE = #{itemNo}
     </select>
 
     <!-- MES 품목 테이블에 품목 정보 삽입 -->
@@ -20,6 +21,7 @@
             MATERIAL_SPEC,
             UNIT,
             MATERIAL_FLAG,
+            MATERIAL_FLAG_NAME,
             INTERFACE_YN,
             DELETE_FLAG,
             OPMAN_CODE,
@@ -31,7 +33,8 @@
                      #{itemName},
                      #{spec},
                      #{unitSeq},
-                     'PRODUCT',
+                     CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE 'MATERIAL' END,
+                     #{assetName},
                      'Y',
                      '0',
                      'INTERFACE',
@@ -47,10 +50,13 @@
             MATERIAL_NAME = #{itemName},
             MATERIAL_SPEC = #{spec},
             UNIT = #{unitSeq},
+            MATERIAL_FLAG = CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE 'MATERIAL' END,
+            MATERIAL_FLAG_NAME = #{assetName},
             OPMAN_CODE2 = 'INTERFACE',
             OPTIME2 = GETDATE()
         WHERE FACTORY_CODE = #{factoryCode}
             AND MATERIAL_ID = #{itemSeq}
+            AND MATERIAL_CODE = #{itemNo}
     </update>
 
 </mapper>
