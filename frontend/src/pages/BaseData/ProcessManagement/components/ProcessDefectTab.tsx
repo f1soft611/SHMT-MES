@@ -55,8 +55,9 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
+  const canDelete = hasDeletePermission('/base/process');
 
   const [defects, setDefects] = useState<ProcessDefect[]>([]);
   const [defectCodes, setDefectCodes] = useState<CommonDetailCode[]>([]);
@@ -128,6 +129,10 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
   };
 
   const handleSave = async (data: ProcessDefect) => {
+    if (!canWrite) {
+      showSnackbar('저장 권한이 없습니다.', 'error');
+      return;
+    }
     try {
       if (dialogMode === 'create') {
         await processService.addProcessDefect(process.processId!, data);
@@ -150,6 +155,10 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
   };
 
   const handleDelete = async (processDefectId: string) => {
+    if (!canDelete) {
+      showSnackbar('삭제 권한이 없습니다.', 'error');
+      return;
+    }
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await processService.removeProcessDefect(
@@ -224,7 +233,7 @@ const ProcessDefectTab: React.FC<ProcessDefectTabProps> = ({
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processDefectId!)}
-              disabled={!canWrite}
+              disabled={!canDelete}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>

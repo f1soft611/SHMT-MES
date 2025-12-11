@@ -35,8 +35,16 @@ const WorkplaceProcessTab: React.FC<WorkplaceProcessTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base/workplace');
+  const { hasWritePermission, refreshPermissions } = usePermissions();
+  const workplaceMenuUrls = ['/base/workplace', '/base-data/workplace'];
+  const canWrite = workplaceMenuUrls.some((url) => hasWritePermission(url));
+
+  useEffect(() => {
+    const refresh = async () => {
+      await refreshPermissions();
+    };
+    refresh();
+  }, [refreshPermissions]);
 
   const [processes, setProcesses] = useState<WorkplaceProcess[]>([]);
   const [availableProcesses, setAvailableProcesses] = useState<any[]>([]);

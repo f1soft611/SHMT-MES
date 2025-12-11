@@ -59,8 +59,9 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
+  const canDelete = hasDeletePermission('/base/process');
 
   const [inspections, setInspections] = useState<ProcessInspection[]>([]);
   const [inspectionCodes, setInspectionCodes] = useState<CommonDetailCode[]>(
@@ -138,6 +139,10 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   };
 
   const handleSave = async (data: ProcessInspection) => {
+    if (!canWrite) {
+      showSnackbar('저장 권한이 없습니다.', 'error');
+      return;
+    }
     try {
       if (dialogMode === 'create') {
         await processService.addProcessInspection(process.processId!, data);
@@ -160,6 +165,10 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
   };
 
   const handleDelete = async (processInspectionId: string) => {
+    if (!canDelete) {
+      showSnackbar('삭제 권한이 없습니다.', 'error');
+      return;
+    }
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await processService.removeProcessInspection(
@@ -256,7 +265,7 @@ const ProcessInspectionTab: React.FC<ProcessInspectionTabProps> = ({
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processInspectionId!)}
-              disabled={!canWrite}
+              disabled={!canDelete}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>

@@ -234,7 +234,7 @@ const PermissionManagement: React.FC = () => {
   }, [menus, menuFilter]);
 
   return (
-    <ProtectedRoute requiredPermission="write">
+    <ProtectedRoute requiredPermission="read" matchMode="prefix">
       <Box>
         <PageHeader
           title=""

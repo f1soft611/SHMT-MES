@@ -41,8 +41,16 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base/workplace');
+  const { hasWritePermission, refreshPermissions } = usePermissions();
+  const workplaceMenuUrls = ['/base/workplace', '/base-data/workplace'];
+  const canWrite = workplaceMenuUrls.some((url) => hasWritePermission(url));
+
+  useEffect(() => {
+    const refresh = async () => {
+      await refreshPermissions();
+    };
+    refresh();
+  }, [refreshPermissions]);
 
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);

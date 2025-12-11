@@ -64,6 +64,14 @@ const ProcessManagement: React.FC = () => {
   const { hasWritePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
 
+  // 페이지 로드 시 권한 새로고침
+  // useEffect(() => {
+  //   const refreshPerms = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refreshPerms();
+  // }, [refreshPermissions]);
+
   const [processes, setProcesses] = useState<Process[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
@@ -345,7 +353,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="불량코드 관리"
             >
-              <BugReportIcon />
+              <BugReportIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -356,7 +364,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="검사항목 관리"
             >
-              <CheckCircleIcon />
+              <CheckCircleIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -367,7 +375,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="중지항목 관리"
             >
-              <PanToolIcon />
+              <PanToolIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -378,7 +386,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="설비 관리"
             >
-              <PrecisionManufacturingIcon />
+              <PrecisionManufacturingIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"

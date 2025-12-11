@@ -55,8 +55,9 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
+  const canDelete = hasDeletePermission('/base/process');
 
   const [stopItems, setStopItems] = useState<ProcessStopItem[]>([]);
   const [stopItemCodes, setStopItemCodes] = useState<CommonDetailCode[]>([]);
@@ -128,6 +129,10 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
   };
 
   const handleSave = async (data: ProcessStopItem) => {
+    if (!canWrite) {
+      showSnackbar('저장 권한이 없습니다.', 'error');
+      return;
+    }
     try {
       if (dialogMode === 'create') {
         await processService.addProcessStopItem(process.processId!, data);
@@ -150,6 +155,10 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
   };
 
   const handleDelete = async (processStopItemId: string) => {
+    if (!canDelete) {
+      showSnackbar('삭제 권한이 없습니다.', 'error');
+      return;
+    }
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await processService.removeProcessStopItem(
@@ -224,7 +233,7 @@ const ProcessStopItemTab: React.FC<ProcessStopItemTabProps> = ({
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processStopItemId!)}
-              disabled={!canWrite}
+              disabled={!canDelete}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>

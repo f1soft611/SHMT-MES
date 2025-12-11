@@ -55,18 +55,18 @@ const commonCodeSchema: yup.ObjectSchema<CommonCode> = yup.object({
 
 const CommonCodeManagement: React.FC = () => {
   // 권한 체크
-  const { hasWritePermission, hasDeletePermission, refreshPermissions } =
-    usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/common-code');
   const canDelete = hasDeletePermission('/base/common-code');
 
   // 페이지 로드 시 권한 새로고침
-  useEffect(() => {
-    const refreshPerms = async () => {
-      await refreshPermissions();
-    };
-    refreshPerms();
-  }, [refreshPermissions]);
+  // useEffect(() => {
+  //   const refreshPerms = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refreshPerms();
+  // }, [refreshPermissions]);
+
   const [commonCodes, setCommonCodes] = useState<CommonCode[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedCommonCode, setSelectedCommonCode] =
