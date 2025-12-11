@@ -53,6 +53,7 @@ apiClient.interceptors.response.use(
     if (token) {
       sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
     }
+
     return response;
   },
   async (error) => {

@@ -15,7 +15,7 @@ public class HtmlCharacterEscapes extends CharacterEscapes {
     public HtmlCharacterEscapes() {
         this.asciiEscapes = CharacterEscapes.standardAsciiEscapesForJSON();
         this.asciiEscapes['<'] = CharacterEscapes.ESCAPE_CUSTOM;
-        // this.asciiEscapes['>'] = CharacterEscapes.ESCAPE_CUSTOM; // -> 같은 일반적인 사용을 위해 제거
+        this.asciiEscapes['>'] = CharacterEscapes.ESCAPE_CUSTOM;
         this.asciiEscapes['\"'] = CharacterEscapes.ESCAPE_CUSTOM;
         this.asciiEscapes['('] = CharacterEscapes.ESCAPE_CUSTOM;
         this.asciiEscapes[')'] = CharacterEscapes.ESCAPE_CUSTOM;
