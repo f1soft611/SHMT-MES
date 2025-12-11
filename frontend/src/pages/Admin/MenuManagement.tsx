@@ -215,7 +215,7 @@ const MenuManagement: React.FC = () => {
   }, [filteredMenus]);
 
   return (
-    <ProtectedRoute requiredPermission="write">
+    <ProtectedRoute requiredPermission="read" matchMode="prefix">
       <Box>
         <PageHeader
           title=""

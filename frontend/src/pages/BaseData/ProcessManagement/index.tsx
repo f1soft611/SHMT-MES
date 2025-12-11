@@ -76,7 +76,7 @@ const ProcessManagement: React.FC = () => {
   >([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 25,
+    pageSize: 10,
   });
   const { showToast } = useToast();
 

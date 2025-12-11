@@ -15,13 +15,14 @@ import { useAuth } from './AuthContext';
 /**
  * 권한 레벨 타입
  */
-type PermissionLevel = 'read' | 'write' | 'none';
+type PermissionLevel = 'read' | 'write' | 'delete' | 'none';
 
 interface PermissionContextType {
   userMenus: MenuInfo[];
   checkPermission: (menuUrl: string) => PermissionLevel;
   hasReadPermission: (menuUrl: string) => boolean;
   hasWritePermission: (menuUrl: string) => boolean;
+  hasDeletePermission: (menuUrl: string) => boolean;
   refreshPermissions: () => Promise<void>;
   loading: boolean; // 현재 재로딩 중 여부
   ready: boolean; // 최소 1회 로딩 시도 완료 여부 (redirect 전에 이 값 확인)
@@ -81,11 +82,10 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
 
   /**
    * 메뉴/권한 정보 로딩
+   * 병렬로 두 API 호출, 각각 실패해도 진행
    */
   const loadUserPermissions = useCallback(async () => {
     if (!user?.groupId) {
-      if (debug)
-        console.warn('[Permissions] user.groupId 없음 → 빈 메뉴로 설정');
       setUserMenus([]);
       setLoadedOnce(true);
       return;
@@ -93,33 +93,76 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
 
     try {
       setLoading(true);
-      if (debug)
-        console.log('[Permissions] Fetch menus for groupId=', user.groupId);
-      const menus = await permissionService.getUserAccessibleMenus(
-        user.groupId
-      );
 
-      // 방어: 배열 보장 + accessible 정규화
-      const normalized = Array.isArray(menus)
-        ? menus.map((m) => {
-            const acc = (m as any).accessible;
-            const accessible =
-              acc === true || acc === 1 || acc === '1' || acc === 'Y';
-            return { ...m, accessible };
-          })
+      let rolePermissions: any[] = [];
+      let allMenus: any[] = [];
+
+      // rolePermissions 조회 (실패해도 진행)
+      try {
+        rolePermissions = await permissionService.getRoleMenuPermissions(
+          user.groupId
+        );
+      } catch (err) {
+        console.warn('[Permissions] getRoleMenuPermissions failed:', err);
+        rolePermissions = [];
+      }
+
+      // allMenus 조회 (실패해도 진행)
+      try {
+        allMenus = await permissionService.getMenus();
+      } catch (err) {
+        console.warn('[Permissions] getMenus failed:', err);
+        allMenus = [];
+      }
+
+      // 둘 다 실패하면 에러
+      if (rolePermissions.length === 0 && allMenus.length === 0) {
+        throw new Error('메뉴와 권한 정보를 모두 조회할 수 없습니다.');
+      }
+
+      // 메뉴 데이터 구성
+      const menusWithPermissions =
+        allMenus.length > 0
+          ? allMenus
+              .filter((menu) => (menu as any).useAt === 'Y')
+              .map((menu) => {
+                const rolePerms = rolePermissions.filter(
+                  (rp) => rp.menuId === menu.menuId
+                );
+
+                const permissionLevels = rolePerms
+                  .map((rp) => (rp as any).permissionLevel)
+                  .filter(Boolean);
+
+                return {
+                  ...menu,
+                  accessible: rolePerms.length > 0 ? true : false,
+                  permissionLevel: permissionLevels[0] || 'read',
+                  permissionLevels,
+                };
+              })
+          : rolePermissions.map((rp) => ({
+              menuId: rp.menuId,
+              menuNm: rp.menuNm,
+              menuUrl: rp.menuUrl,
+              accessible: true,
+              permissionLevel: (rp as any).permissionLevel || 'read',
+              permissionLevels: [(rp as any).permissionLevel || 'read'],
+            }));
+
+      // 방어: 배열 보장 + accessible 정규화 + 미사용 메뉴 제거
+      const normalized = Array.isArray(menusWithPermissions)
+        ? menusWithPermissions
+            .map((m) => {
+              const acc = (m as any).accessible;
+              const accessible =
+                acc === true || acc === 1 || acc === '1' || acc === 'Y';
+              return { ...m, accessible };
+            })
+            .filter((m) => (m as any).accessible)
         : [];
 
       setUserMenus(normalized);
-      if (debug) {
-        console.log(
-          '[Permissions] Loaded menus:',
-          normalized.map((m) => ({
-            url: m.menuUrl,
-            perm: (m as any).permissionLevel,
-            acc: (m as any).accessible,
-          }))
-        );
-      }
     } catch (error) {
       console.error('[Permissions] Failed to load user permissions:', error);
       setUserMenus([]);
@@ -148,12 +191,12 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
 
   /**
    * 빠른 권한 조회를 위한 맵 구성
-   * - exactMap: 정규화된 path -> 메뉴
+   * - permissionMap: 정규화된 path -> 권한 레벨 집합
    * - prefixCandidates: prefix 매칭 시 길이 기준 정렬된 path 목록
-   * - 동일 path 중 write 가 있다면 write 우선
+   * - permissionLevels 배열에서 모든 권한을 수집
    */
-  const { exactMap, prefixCandidates } = useMemo(() => {
-    const map = new Map<string, MenuInfo>();
+  const { permissionMap, prefixCandidates } = useMemo(() => {
+    const map = new Map<string, Set<PermissionLevel>>();
     const candidates: string[] = [];
 
     for (const m of userMenus) {
@@ -164,37 +207,38 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
       const nurl = normalizePath((m as any).menuUrl);
       if (!nurl) continue;
 
-      const existing = map.get(nurl);
-      if (!existing) {
-        map.set(nurl, m);
-      } else {
-        const prevLevel = (existing as any).permissionLevel || 'read';
-        const newLevel = (m as any).permissionLevel || 'read';
-        if (newLevel === 'write' && prevLevel !== 'write') {
-          map.set(nurl, m);
+      // permissionLevels 배열이 있으면 사용, 없으면 permissionLevel 사용
+      const levels: PermissionLevel[] = (m as any).permissionLevels || [
+        ((m as any).permissionLevel || 'read') as PermissionLevel,
+      ];
+
+      // 같은 경로에 여러 권한을 Set으로 저장
+      if (!map.has(nurl)) {
+        map.set(nurl, new Set<PermissionLevel>());
+        candidates.push(nurl);
+      }
+
+      // 모든 권한 레벨 추가
+      const permSet = map.get(nurl)!;
+      for (const level of levels) {
+        if (level) {
+          permSet.add(level);
         }
       }
-      candidates.push(nurl);
     }
 
     // 긴 경로 우선 (prefix 매칭 시 가장 구체적인 경로)
     candidates.sort((a, b) => b.length - a.length);
 
-    if (debug) {
-      console.log('[Permissions] exactMap keys:', Array.from(map.keys()));
-      if (prefixMatch) {
-        console.log('[Permissions] prefix order:', candidates);
-      }
-    }
-
-    return { exactMap: map, prefixCandidates: candidates };
+    return { permissionMap: map, prefixCandidates: candidates };
   }, [userMenus, debug, prefixMatch]);
 
   const ready = loadedOnce && !loading;
 
   /**
    * 권한 조회
-   * - ready 이전에는 'none' 반환 (ProtectedRoute 등에서 ready 확인 후 redirect)
+   * - ready 이전에는 'none' 반환
+   * - 경로에 해당하는 권한 레벨들을 반환
    * - exact match -> prefix fallback (prefixMatch=true)
    */
   const checkPermission = useCallback(
@@ -202,51 +246,71 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
       const norm = normalizePath(rawUrl);
       if (!norm) return 'none';
 
-      // 아직 데이터 확정 전이면 곧바로 'none' 반환 (호출 측에서 ready 확인)
+      // 아직 데이터 확정 전이면 곧바로 'none' 반환
       if (!ready) {
-        if (debug)
-          console.log('[Permissions] checkPermission before ready:', norm);
         return 'none';
       }
 
-      let menu = exactMap.get(norm);
+      let permissions = permissionMap.get(norm);
 
-      if (!menu && prefixMatch) {
-        // prefix fallback
+      if (!permissions && prefixMatch) {
+        // prefix fallback: 더 긴 경로를 먼저 확인
         for (const base of prefixCandidates) {
           if (norm === base || norm.startsWith(base + '/')) {
-            menu = exactMap.get(base);
-            if (menu) break;
+            permissions = permissionMap.get(base);
+            if (permissions && permissions.size > 0) break;
           }
         }
       }
 
-      if (!menu) {
-        if (debug) console.log('[Permissions] no menu for', norm);
+      if (!permissions || permissions.size === 0) {
         return 'none';
       }
 
-      const level = ((menu as any).permissionLevel ||
-        'read') as PermissionLevel;
-      if (debug) {
-        console.log('[Permissions] matched', norm, '=>', level, menu);
-      }
+      // 첫 번째 권한 반환 (실제로는 모든 권한을 가짐)
+      const level = Array.from(permissions)[0];
       return level;
     },
-    [exactMap, prefixCandidates, prefixMatch, ready, debug]
+    [permissionMap, prefixCandidates, prefixMatch, ready, debug]
+  );
+
+  /**
+   * 특정 권한이 있는지 확인하는 헬퍼 함수
+   */
+  const hasSpecificPermission = useCallback(
+    (url: string, requiredLevel: PermissionLevel): boolean => {
+      const norm = normalizePath(url);
+      if (!norm || !ready) return false;
+
+      let permissions = permissionMap.get(norm);
+
+      if (!permissions && prefixMatch) {
+        for (const base of prefixCandidates) {
+          if (norm === base || norm.startsWith(base + '/')) {
+            permissions = permissionMap.get(base);
+            if (permissions && permissions.size > 0) break;
+          }
+        }
+      }
+
+      return permissions ? permissions.has(requiredLevel) : false;
+    },
+    [permissionMap, prefixCandidates, prefixMatch, ready]
   );
 
   const hasReadPermission = useCallback(
-    (url: string) => {
-      const p = checkPermission(url);
-      return p === 'read' || p === 'write';
-    },
-    [checkPermission]
+    (url: string) => hasSpecificPermission(url, 'read'),
+    [hasSpecificPermission]
   );
 
   const hasWritePermission = useCallback(
-    (url: string) => checkPermission(url) === 'write',
-    [checkPermission]
+    (url: string) => hasSpecificPermission(url, 'write'),
+    [hasSpecificPermission]
+  );
+
+  const hasDeletePermission = useCallback(
+    (url: string) => hasSpecificPermission(url, 'delete'),
+    [hasSpecificPermission]
   );
 
   const value: PermissionContextType = {
@@ -254,6 +318,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
     checkPermission,
     hasReadPermission,
     hasWritePermission,
+    hasDeletePermission,
     refreshPermissions,
     loading,
     ready,
