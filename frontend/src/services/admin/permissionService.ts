@@ -23,7 +23,7 @@ export interface PermissionType {
   permissionId: string;
   permissionNm: string;
   permissionDc?: string;
-  permissionLevel: 'read' | 'write' | 'excel';
+  permissionLevel: 'read' | 'write' | 'excel' | 'delete';
   useAt: string;
   frstRegistPnttm?: Date;
   frstRegisterId?: string;
@@ -117,7 +117,37 @@ class PermissionService {
   async createRoleMenuPermission(
     roleMenuPermission: Partial<RoleMenuPermission>
   ): Promise<void> {
-    await apiClient.post('/api/admin/role-permissions', roleMenuPermission);
+    if (!roleMenuPermission.groupId || !roleMenuPermission.menuId) {
+      throw new Error('groupId와 menuId는 필수입니다.');
+    }
+
+    try {
+      await apiClient.post('/api/admin/role-permissions', roleMenuPermission);
+    } catch (error: any) {
+      // 상세 에러 메시지 추출
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || error?.message;
+
+      if (status === 400) {
+        throw new Error(
+          `요청 형식이 잘못되었습니다. ${message ? `: ${message}` : ''}`
+        );
+      } else if (status === 403) {
+        throw new Error('권한이 없어 작업을 수행할 수 없습니다.');
+      } else if (status === 409) {
+        throw new Error('이미 부여된 권한입니다.');
+      } else if (status >= 500) {
+        throw new Error(
+          `서버 오류가 발생했습니다. (${status}) ${
+            message ? `: ${message}` : ''
+          }`
+        );
+      } else {
+        throw new Error(
+          message || '권한 부여에 실패했습니다. 다시 시도해주세요.'
+        );
+      }
+    }
   }
 
   async deleteRoleMenuPermission(
@@ -125,12 +155,42 @@ class PermissionService {
     menuId: string,
     permissionId?: string
   ): Promise<void> {
-    const params = new URLSearchParams();
-    params.append('groupId', groupId);
-    params.append('menuId', menuId);
-    if (permissionId) params.append('permissionId', permissionId);
+    if (!groupId || !menuId) {
+      throw new Error('groupId와 menuId는 필수입니다.');
+    }
 
-    await apiClient.delete(`/api/admin/role-permissions?${params.toString()}`);
+    try {
+      const params = new URLSearchParams();
+      params.append('groupId', groupId);
+      params.append('menuId', menuId);
+      if (permissionId) params.append('permissionId', permissionId);
+
+      await apiClient.delete(
+        `/api/admin/role-permissions?${params.toString()}`
+      );
+    } catch (error: any) {
+      // 상세 에러 메시지 추출
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || error?.message;
+
+      if (status === 403) {
+        throw new Error('권한이 없어 작업을 수행할 수 없습니다.');
+      } else if (status === 404) {
+        throw new Error('삭제할 권한이 존재하지 않습니다.');
+      } else if (status === 409) {
+        throw new Error('권한 삭제 중 충돌이 발생했습니다. 다시 시도해주세요.');
+      } else if (status >= 500) {
+        throw new Error(
+          `서버 오류가 발생했습니다. (${status}) ${
+            message ? `: ${message}` : ''
+          }`
+        );
+      } else {
+        throw new Error(
+          message || '권한 삭제에 실패했습니다. 다시 시도해주세요.'
+        );
+      }
+    }
   }
 
   // 사용자 메뉴 접근 권한

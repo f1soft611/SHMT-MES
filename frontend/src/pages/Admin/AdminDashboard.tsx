@@ -74,7 +74,7 @@ const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <ProtectedRoute requiredPermission="write">
+    <ProtectedRoute requiredPermission="read" matchMode="prefix">
       <Box>
         <Box
           sx={{

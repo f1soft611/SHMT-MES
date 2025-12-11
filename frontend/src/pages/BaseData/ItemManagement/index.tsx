@@ -32,6 +32,7 @@ import DataTable from '../../../components/common/DataTable/DataTable';
 import PageHeader from '../../../components/common/PageHeader/PageHeader';
 import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
+import { usePermissions } from '../../../contexts/PermissionContext';
 
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
@@ -74,6 +75,19 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
 });
 
 const ItemManagement: React.FC = () => {
+  // 권한 체크
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
+  const canWrite = hasWritePermission('/base/item');
+  const canDelete = hasDeletePermission('/base/item');
+
+  // 페이지 로드 시 권한 새로고침
+  // useEffect(() => {
+  //   const refreshPerms = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refreshPerms();
+  // }, [refreshPermissions]);
+
   const [items, setItems] = useState<Item[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
@@ -342,6 +356,7 @@ const ItemManagement: React.FC = () => {
               size="small"
               color="primary"
               onClick={() => handleOpenEditDialog(params.row)}
+              disabled={!canWrite}
               title="수정"
             >
               <EditIcon fontSize="small" />
@@ -350,6 +365,7 @@ const ItemManagement: React.FC = () => {
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.itemCode)}
+              disabled={!canDelete}
               title="삭제"
             >
               <DeleteIcon fontSize="small" />
@@ -451,6 +467,7 @@ const ItemManagement: React.FC = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleOpenCreateDialog}
+            disabled={!canWrite}
           >
             품목 등록
           </Button>

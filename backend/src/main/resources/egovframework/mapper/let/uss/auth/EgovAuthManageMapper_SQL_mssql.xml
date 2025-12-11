@@ -127,7 +127,7 @@
         <if test="permissionLevel != null and permissionLevel != ''">
             AND PERMISSION_LEVEL = #{permissionLevel}
         </if>
-        ORDER BY PERMISSION_ID
+        ORDER BY SORT_ORDR
     </select>
 
     <!-- 권한 유형 등록 -->
