@@ -4,10 +4,6 @@ import {
     Paper, Stack, Typography
 } from "@mui/material";
 import {
-    // Add as AddIcon,
-    // Edit as EditIcon,
-    // Delete as DeleteIcon,
-    // Refresh as RefreshIcon,
     Search as SearchIcon,
     FilterList as FilterListIcon,
 } from '@mui/icons-material';

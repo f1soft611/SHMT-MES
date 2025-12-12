@@ -2,6 +2,7 @@ import React from 'react';
 import {Box, Typography, Grid} from '@mui/material';
 import ProdOrderList from './components/ProdOrderList';
 import ProdResurlList from "./components/ProdResultList";
+import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
 
 const ProductionResult: React.FC = () => {
 
@@ -19,6 +20,17 @@ const ProductionResult: React.FC = () => {
                     <Typography variant="h5">생산실적 관리</Typography>
                 </Box>
             </Box>
+
+            {/* 검색 영역 */}
+            <ProdResultSearchFilter
+                search={{
+                    workCenter: "",
+                    dateFrom: "",
+                    dateTo: ""
+                }}                     // 빈 객체 전달
+                onChange={() => {}}             // 빈 함수 전달
+                onSearch={() => {}}             // 빈 함수 전달
+            />
 
             {/* 위 DataGrid -> 생산지시 관리*/}
             <Grid size={{xs: 12}}>
