@@ -4,7 +4,7 @@
 
 export interface ProcessFlow {
     workplaceCode: string; // 작업장
-    workplaceName: string;
+    workplaceName?: string | null;
     processFlowId?: string | null;
     processFlowCode: string;
     processFlowName: string;
@@ -35,6 +35,7 @@ export interface ProcessFlowItem {
     flowRowId: string;              // UI 전용 고유 ID
     flowItemId?: string | null;     // PK (신규면 null)
     flowItemCode: string;           // 제품 코드
+    flowItemCodeId: string;           // 제품 코드 Id
     flowItemName: string;           // 제품 이름
     specification: string;
     unit: string;               // 단위 코드

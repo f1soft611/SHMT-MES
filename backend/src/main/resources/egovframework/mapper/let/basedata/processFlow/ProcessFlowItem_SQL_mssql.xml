@@ -7,6 +7,7 @@
         <result property="processFlowCode" column="WORK_ORDER"/>
         <result property="flowItemId" column="FLOW_ITEM_ID"/>
         <result property="flowItemCode" column="PROD_CODE"/>
+        <result property="flowItemCodeId" column="PROD_CODE_ID"/>
         <result property="flowItemName" column="PROD_CODE_NAME"/>
         <result property="specification" column="MATERIAL_SPEC"/>
         <result property="unit" column="UNIT"/>
@@ -65,6 +66,7 @@
             WORK_ORDER,
             FLOW_ITEM_ID,
             PROD_CODE,
+            PROD_CODE_ID,
             OPTIME,
             OPMAN_CODE
         ) VALUES (
@@ -73,6 +75,7 @@
             #{processFlowCode},
             #{flowItemId},
             #{flowItemCode},
+            #{flowItemCodeId},
             GETDATE(),
             'test'
         )

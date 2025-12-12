@@ -1,13 +1,8 @@
 import React, {useEffect} from 'react';
 import {
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Tab,
-    Tabs,
+    Box,  Button,
+    Dialog, DialogActions, DialogContent, DialogTitle,
+    Tab, Tabs,
 } from '@mui/material';
 import {
     Extension as ExtensionIcon,
@@ -19,8 +14,8 @@ import { ProcessFlow, DetailSavePayload, DetailSaveResult } from '../../../../ty
 import {
     ProcessFlowDetailProvider,
     useProcessFlowDetailContext
-} from "../hooks/useProcessFlowDetailContext";
-import {useSnackbarContext} from "../SnackbarContext";
+} from "../hooks/detail/useProcessFlowDetailContext";
+import {useToast} from "../../../../components/common/Feedback/ToastProvider";
 
 
 interface Props {
@@ -66,7 +61,7 @@ function DetailDialogActions({
 }) {
     const { flowProcessRows, flowItemRows, fetchDetail, processFlow  } = useProcessFlowDetailContext();
 
-    const { showSnackbar } = useSnackbarContext();
+    const { showToast } = useToast();
 
     return (
         <DialogActions>
@@ -81,12 +76,22 @@ function DetailDialogActions({
                     const result: DetailSaveResult = await onSave(payload);
 
                     if (!result.ok) {
-                        showSnackbar(result.reason ?? "저장 실패", "error");
+                        showToast({
+                            message: result.reason ?? "저장 실패",
+                            severity: 'error',
+                            durationMs: 2500,
+                        });
+                        // showToast(result.reason ?? "저장 실패", "error");
                         return;
                     }
 
                     // 성공
-                    showSnackbar("등록되었습니다.", "success");
+                    // showToast("등록되었습니다.", "success");
+                    showToast({
+                        message: "등록되었습니다.",
+                        severity: 'success',
+                        durationMs: 2500,
+                    });
 
                     // 성공 시 상세정보 다시 조회
                     await fetchDetail(processFlow?.processFlowId ?? "");
