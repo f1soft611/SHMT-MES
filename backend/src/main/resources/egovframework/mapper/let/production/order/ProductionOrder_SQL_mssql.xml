@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProductionOrderDAO">
+
+	<!-- 생산계획 조회	-->
+	<select id="selectProdPlan"
+			parameterType="map"
+			resultType="map">
+		SELECT B.ORDER_FLAG,
+			   A.FACTORY_CODE,
+			   A.PRODPLAN_DATE,
+			   A.PRODPLAN_SEQ,
+			   A.PRODWORK_SEQ,
+			   A.PRODPLAN_ID,
+			   A.PROD_DATE,
+			   A.ITEM_CODE,
+			   A.ITEM_NAME,
+			   A.WORKCENTER_CODE,
+			   A.WORK_CODE,
+			   A.EQUIP_SYS_CD,
+			   A.WORKER_TYPE,
+			   A.WORKER_CODE,
+			   A.WORKER_NAME,
+			   A.LOT_NO,
+			   A.PROD_QTY,
+			   A.WORKORDER_SEQ,
+			   A.BIGO,
+			   A.SEL_CUSTOMER_NAMES,
+			   A.OPMAN_CODE,
+			   A.OPTIME,
+			   A.OPMAN_CODE2,
+			   A.OPTIME2
+		FROM TPR301 A
+		INNER JOIN TPR301M B
+		ON A.FACTORY_CODE = B.FACTORY_CODE
+		AND A.PRODPLAN_DATE = B.PRODPLAN_DATE
+		AND A.PRODPLAN_SEQ = B.PRODPLAN_SEQ
+		WHERE A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+		ORDER BY PROD_DATE DESC
+	</select>
+
+	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
+	<select id="selectFlowProcess"
+			parameterType="string"
+			resultType="map">
+		SELECT	A.PRODPLAN_ID,
+		        A.PRODPLAN_DATE,
+		        A.PRODPLAN_SEQ,
+				A1.ORDER_FLAG,
+				A.ITEM_CODE ,
+				B.PROD_CODE,
+				C.WORK_ORDER,
+				C.WORK_ORDER_NM,
+				D.SEQ AS PRODWORK_SEQ,
+				D.LAST_FLAG,
+				D.WORK_CODE,
+				D.WORK_SEQ,
+				E.WORK_NAME,
+				F.MAT_ITEM_SEQ AS MATERIAL_CODE,
+				F1.MATERIAL_NAME,
+				F1.MATERIAL_SPEC,
+				F2.CODE_NM AS MATERIAL_UNIT,
+				A.PROD_QTY AS ORDER_QTY,
+				CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
+				ISNULL(A.BIGO, '') AS BIGO,
+				ISNULL(A.OPMAN_CODE2, A.OPMAN_CODE) AS OPMAN_CODE2,
+				ISNULL(A.OPTIME2, A.OPTIME) AS OPTIME2
+		FROM TPR301 A
+		    LEFT JOIN TPR301M A1
+			ON A.FACTORY_CODE = A1.FACTORY_CODE
+			AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
+			AND A.PRODPLAN_SEQ = A1.PRODPLAN_SEQ
+
+			LEFT JOIN TPR112 B
+			ON A.ITEM_CODE = B.PROD_CODE_ID
+			LEFT JOIN TPR110 C
+			ON B.FACTORY_CODE = C.FACTORY_CODE
+			AND B.WORK_ORDER = C.WORK_ORDER
+
+			LEFT JOIN TPR110D D
+			ON C.FACTORY_CODE = D.FACTORY_CODE
+			AND C.WORK_ORDER = D.WORK_ORDER
+
+			LEFT JOIN TPR102 E
+			ON D.WORK_CODE = E.WORK_CODE
+
+			LEFT JOIN TCO501 F
+			ON F.ITEM_SEQ = A.ITEM_CODE
+			AND F.PROC_SEQ = D.WORK_CODE
+				LEFT JOIN TCO403 F1
+				ON CAST(F.MAT_ITEM_SEQ AS NVARCHAR) = CAST(F1.MATERIAL_ID AS NVARCHAR)
+				LEFT JOIN MES_CCMMNDETAIL_CODE F2
+				ON F2.CODE_ID = 'COM007'
+				AND F1.UNIT = F2.CODE
+		WHERE A.PRODPLAN_ID = #{value}
+	</select>
+
+
+	<!--	작업지시 조회 by planId-->
+	<select id="selectProdOrders"
+			parameterType="string"
+			resultType="map">
+		SELECT
+			A.FACTORY_CODE,
+			A.PRODPLAN_DATE,
+			A.PRODPLAN_SEQ,
+			A.PRODWORK_SEQ,
+			A.WORK_SEQ,
+			A.PRODPLAN_ID,
+			A.PRODORDER_ID,
+			A.WORKORDER_SEQ,
+			A.WORK_CODE,
+			B.WORK_NAME,
+			A.WORKDT_DATE,
+			A.ITEM_CODE AS MATERIAL_CODE,
+			C.MATERIAL_NAME,
+			C.MATERIAL_SPEC,
+			C1.CODE_NM AS MATERIAL_UNIT,
+			A.ORDER_FLAG,
+			A.LOT_NO,
+			A.PROD_QTY AS ORDER_QTY,
+			A.START_DATE,
+			A.END_DATE,
+			A.OPMAN_CODE,
+			A.OPTIME,
+			A.OPMAN_CODE2
+		FROM TPR504 A
+			LEFT JOIN TPR102 B
+			ON A.WORK_CODE = B.WORK_CODE
+			LEFT JOIN TCO403 C
+			ON A.ITEM_CODE = C.MATERIAL_ID
+				LEFT JOIN MES_CCMMNDETAIL_CODE C1
+				ON C1.CODE_ID = 'COM007'
+				AND C.UNIT = C1.CODE
+		WHERE A.PRODPLAN_ID = #{value};
+	</select>
+
+	<!-- 생산지시 INSERT	-->
+	<insert id="insertProductionOrder"
+			parameterType="map">
+		INSERT INTO TPR504(
+			FACTORY_CODE,
+			PRODPLAN_DATE,
+			PRODPLAN_SEQ,
+			PRODWORK_SEQ,
+			WORK_SEQ,
+			PRODPLAN_ID,
+			PRODORDER_ID,
+			WORKORDER_SEQ,
+			WORK_CODE,
+			WORKDT_DATE,
+			ITEM_CODE,
+			ORDER_FLAG,
+			LOT_NO,
+			PROD_QTY,
+			START_DATE,
+			END_DATE,
+			OPMAN_CODE,
+			OPTIME
+		)
+		VALUES (
+			'000001',
+			#{PRODPLAN_DATE},
+			#{PRODPLAN_SEQ},
+			#{PRODWORK_SEQ},
+			#{WORK_SEQ},
+			#{PRODPLAN_ID},
+			#{PRODORDER_ID},
+			'',
+			#{WORK_CODE},
+			#{WORKDT_DATE},
+			#{MATERIAL_CODE},
+			'O',
+			#{LOT_NO},
+			#{ORDER_QTY},
+			#{START_DATE},
+		    #{END_DATE},
+			#{OPMAN_CODE},
+			GETDATE()
+		);
+	</insert>
+
+	<!-- 생산지시 저장 후 생산계획 TPR301M ORDER_FLAG UPDATE	-->
+	<update id="updateProdPlanOrderFlag" parameterType="map">
+		UPDATE TPR301M SET ORDER_FLAG = #{ORDER_FLAG}
+		WHERE FACTORY_CODE = '000001'
+		AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+		AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+	</update>
+
+</mapper>
