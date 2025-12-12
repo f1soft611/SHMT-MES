@@ -1,6 +1,6 @@
 import React from 'react';
 import {DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import {Box, Card, CardContent, CardHeader} from '@mui/material';
 
 const ProdResurlList = () => {
 
@@ -126,7 +126,16 @@ const ProdResurlList = () => {
         },
     ];
     return(
-        <Box sx={{ height: 400 }}>
+        <Card sx={{boxShadow: 2 }}>
+            <CardHeader
+                sx={{ p: 1, }}
+                title="생산실적 관리"
+                titleTypographyProps={{
+                    fontSize: 16,
+                }}
+            />
+            <CardContent sx={{ p: 0 }}>
+                <Box sx={{ height: 400 }}>
             <DataGrid
                 rows={[]}
                 columns={columns}
@@ -149,6 +158,8 @@ const ProdResurlList = () => {
                 }}
             />
         </Box>
+            </CardContent>
+        </Card>
     );
 
 }
