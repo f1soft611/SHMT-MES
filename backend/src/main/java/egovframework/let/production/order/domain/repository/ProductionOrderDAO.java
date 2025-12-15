@@ -1,5 +1,6 @@
 package egovframework.let.production.order.domain.repository;
 
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
 import egovframework.let.cop.bbs.domain.model.Board;
 import egovframework.let.cop.bbs.domain.model.BoardVO;
 import egovframework.let.production.order.domain.model.ProductionOrder;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 생산 지시 관리를 위한 데이터 접근 클래스
@@ -50,4 +52,31 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     public int selectProductionOrderListCnt(ProductionOrderVO productionOrderVO) throws Exception {
         return (Integer)selectOne("ProductionOrderDAO.selectProductionOrderListCnt", productionOrderVO);
     }
+
+    public List<Map<String, Object>> selectProdPlans(Map<String, Object> prodPlanSearchFilter) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdPlan", prodPlanSearchFilter);
+    }
+
+    // 생산지시] 생산지시 등록되기 전 제품의 공정 가져오기
+    public List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception {
+        return selectList("ProductionOrderDAO.selectFlowProcess", prodPlanId);
+    }
+
+    // 생산지시] 생산지시 등록된 후 생산계획에 연결된 생산지시 조회
+    public List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdOrders", prodPlanId);
+    }
+
+    // 생산지시] 생산지시 저장
+    public void insertProductionOrder(Map<String, Object> prodOrder) throws Exception {
+        insert("ProductionOrderDAO.insertProductionOrder", prodOrder);
+    }
+
+    // 생산지시] 생산지시 저장 -> 생산계획TPR301M ORDER FLAG UPDATE
+    public void updateProdPlanOrderFlag(Map<String, Object> prodOrder) throws Exception {
+        update("ProductionOrderDAO.updateProdPlanOrderFlag", prodOrder);
+    }
+
+
+
 }

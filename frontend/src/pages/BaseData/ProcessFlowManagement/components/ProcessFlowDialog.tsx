@@ -1,49 +1,34 @@
 import React from "react";
 import {
-    Stack,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    MenuItem,
-    FormControl,
-    FormHelperText,
+    Stack, Select, InputLabel,
+    Dialog, DialogTitle, DialogContent, DialogActions,
+    TextField, Button, MenuItem, FormControl, FormHelperText,
 } from "@mui/material";
-import { Controller } from "react-hook-form";
+import {Controller, UseFormReturn} from "react-hook-form";
 import { ProcessFlow } from "../../../../types/processFlow";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import { useProcessFlowDialog } from "../hooks/useProcessFlowDialog";
-
 
 interface Props {
     open: boolean;
     dialogMode: "create" | "edit";
-    initialData: ProcessFlow | null;
+    methods: UseFormReturn<ProcessFlow>;
+    workplaces: any[];
     onClose: () => void;
-    onSubmit: (data: ProcessFlow) => void;
+    onSubmit: () => void;
 }
 
 export default function ProcessFlowDialog({
-                                            open,
-                                            dialogMode,
-                                            initialData,
-                                            onClose,
-                                            onSubmit
-                                        }: Props) {
+                                              open,
+                                              dialogMode,
+                                              methods,
+                                              workplaces,
+                                              onClose,
+                                              onSubmit
+                                          }: Props) {
 
-    const {
-        control,
-        errors,
-        submitForm,
-        workplaces
-    } = useProcessFlowDialog({
-        mode: dialogMode,
-        initialData,
-        onSubmit
-    });
+    const { control, formState: { errors } } = methods;
+
+
+    // console.log("[Dialog Render] errors:", errors);
 
     return (
         <Dialog open={open} maxWidth="md" fullWidth>
@@ -61,7 +46,9 @@ export default function ProcessFlowDialog({
                             render={({ field }) => (
                                 <FormControl fullWidth size="small" error={!!errors.workplaceCode}>
                                     <InputLabel>작업장</InputLabel>
-                                    <Select {...field} label="작업장">
+                                    <Select
+                                        {...field}
+                                        label="작업장"                                    >
                                         {workplaces.map((wp) => (
                                             <MenuItem key={wp.workplaceId} value={wp.workplaceCode}>
                                                 {wp.workplaceName}
@@ -113,7 +100,7 @@ export default function ProcessFlowDialog({
 
             <DialogActions>
                 <Button
-                    onClick={submitForm}
+                    onClick={onSubmit}
                     variant="contained"
                     color="primary"
                 >
@@ -123,4 +110,5 @@ export default function ProcessFlowDialog({
             </DialogActions>
         </Dialog>
     );
+
 }

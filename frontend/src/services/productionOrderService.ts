@@ -12,6 +12,35 @@ export interface ProductionOrderSearchParams {
 }
 
 export const productionOrderService = {
+  // 생산계획 목록 조회
+  getProdPlans: async (params?: any) => {
+    const response = await apiClient.get('/api/production-orders/plans', {
+      params: params,   // ← 검색 조건을 쿼리 파라미터로 전달
+    });
+    return response.data;
+  },
+
+  // 생산계획 품목별 공정 조회
+  getFlowProcessByPlanId: async(params?: any) => {
+    const response = await apiClient.get('/api/production-orders/process', {
+      params: {
+        prodPlanId: params.PRODPLAN_ID
+      },
+    });
+    return response.data;
+  },
+
+  // 생산계획별 생산지시 조회
+  getProdOrdersByPlanId: async (params?: any) => {
+    const response = await apiClient.get('/api/production-orders/orders', {
+      // params: params,   // ← 검색 조건을 쿼리 파라미터로 전달
+      params: {
+        prodPlanId: params.PRODPLAN_ID
+      },
+    });
+    return response.data;
+  },
+
   // 생산지시 목록 조회
   getProductionOrders: async (
     page: number = 0,
@@ -90,4 +119,9 @@ export const productionOrderService = {
   syncProductionOrders: async (): Promise<void> => {
     await apiClient.post('/production-orders/sync');
   },
+
+  // getProductionOrdersByPlan:
+
+  // 생산지시 저장
+  createProductionOrder: (data: any[]) => apiClient.post('/api/production-orders', data),
 };

@@ -19,9 +19,9 @@ import ProcessManagement from './pages/BaseData/ProcessManagement';
 import EquipmentManagement from './pages/BaseData/EquipmentManagement';
 import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
-import ProductionOrderList from './pages/ProductionOrder/ProductionOrderList';
-import ProductionResultList from './pages/ProductionResult/ProductionResultList';
-import ProductionResultForm from './pages/ProductionResult/ProductionResultForm';
+import ProductionOrder from './pages/ProductionOrder';
+import ProductionResult from './pages/ProductionResult';
+import ProductionResultForm from './pages/ProductionResult/components/ProductionResultForm';
 import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
@@ -89,11 +89,11 @@ function App() {
                           />
                           <Route
                             path={URL.PRODUCTION_ORDERS}
-                            element={<ProductionOrderList />}
+                            element={<ProductionOrder />}
                           />
                           <Route
                             path={URL.PRODUCTION_RESULTS}
-                            element={<ProductionResultList />}
+                            element={<ProductionResult />}
                           />
                           <Route
                             path={`${URL.PRODUCTION_RESULTS}/new`}
@@ -126,6 +126,10 @@ function App() {
                           <Route
                             path={URL.ADMIN_USERS}
                             element={<UserManagement />}
+                          />
+                          <Route
+                              path={URL.ADMIN_USERS}
+                              element={<UserManagement />}
                           />
                         </Routes>
                       </Layout>

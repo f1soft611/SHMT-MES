@@ -14,6 +14,7 @@ interface Props {
     rows: ProcessFlow[];
     paginationModel: GridPaginationModel;
     setPaginationModel: (model: GridPaginationModel) => void;
+    onSelect?: (row: ProcessFlow) => void;
     onEdit: (row: ProcessFlow) => void;
     onDelete: (id: string) => void;
     onDetailOpen: (row: ProcessFlow, tabIndex: number) => void;
@@ -23,9 +24,9 @@ export default function ProcessFlowList({
                                             rows,
                                             paginationModel,
                                             setPaginationModel,
+                                            onSelect,
                                             onEdit,
                                             onDelete,
-                                   // onSelect,
                                             onDetailOpen
                                         }: Props) {
 
@@ -113,9 +114,11 @@ export default function ProcessFlowList({
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[5, 10, 25, 50]}
                 // paginationMode="server"
-                // onRowClick={(params) => onSelect(params.row)}
+                onRowClick={(params) => onSelect?.(params.row)}
                 disableRowSelectionOnClick
                 autoHeight
+                rowHeight={40}
+                columnHeaderHeight={50}
                 sx={{
                     border: 'none',
                     '& .MuiDataGrid-cell:focus': {

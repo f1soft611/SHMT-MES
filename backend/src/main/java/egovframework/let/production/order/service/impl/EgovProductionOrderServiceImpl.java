@@ -14,8 +14,13 @@ import egovframework.let.production.order.service.EgovProductionOrderService;
 import egovframework.let.utl.fcc.service.EgovDateUtil;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -40,6 +45,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	private final ProductionOrderDAO productionOrderDAO;
 
+	@Resource(name = "egovProdOrderIdGnrService")
+	private EgovIdGnrService egovProdOrderIdGnrService;
+
 	/**
 	 * 조건에 맞는 게시물 목록을 조회 한다.
 	 *
@@ -62,4 +70,62 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		return map;
 	}
+
+
+	/**
+	 * 생산지시관리에서 생산계획 조회시 사용
+	 *
+	 */
+	@Override
+	public List<Map<String, Object>> selectProdPlans(String workCenter, String dateFrom, String dateTo) throws Exception{
+
+		Map<String, Object> param = new HashMap<>();
+		param.put("workCenter", workCenter);
+		param.put("dateFrom", dateFrom);
+		param.put("dateTo", dateTo);
+
+		return productionOrderDAO.selectProdPlans(param);
+	}
+
+	/**
+	 * 생산지시관리에서 품목별 공정 조회시
+	 *
+	 */
+	@Override
+	public List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception{
+		return productionOrderDAO.selectFlowProcessByPlanId(prodPlanId);
+	}
+
+	/**
+	 * 생산지시관리에서 생산id별 생산지시 조회
+	 *
+	 */
+	@Override
+	public List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception{
+		return productionOrderDAO.selectProdOrdersByPlanId(prodPlanId);
+	}
+
+
+	/**
+	 * 생산지시 저장
+	 */
+	@Override
+	@Transactional
+	public void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
+		for(Map<String, Object> prodOrder : prodOrderList){
+			String newId = egovProdOrderIdGnrService.getNextStringId();
+			prodOrder.put("PRODORDER_ID", newId);
+			prodOrder.put("WORKDT_DATE", LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)); // yyyyMMdd
+
+			// DB insert
+			productionOrderDAO.insertProductionOrder(prodOrder);
+
+			// 생산계획TPR301M ORDER_FLAG UPDATE
+			prodOrder.put("ORDER_FLAG", "ORDERED");
+			productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+		}
+	}
+
+
+
 }

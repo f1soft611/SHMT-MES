@@ -4,8 +4,8 @@ import * as yup from 'yup';
 
 export const processFlowSchema: yup.ObjectSchema<ProcessFlow> = yup.object({
     processFlowId: yup.string().nullable(),
-    workplaceCode: yup.string().required('작업장은 필수입니다.'),
-    workplaceName: yup.string().required('작업장은 필수입니다.'),
+    workplaceCode: yup.string().required('작업장 선택은 필수입니다.'),
+    workplaceName: yup.string().nullable(),
     processFlowCode: yup.string().required('코드는 필수입니다.'),
     processFlowName: yup.string().required('이름은 필수입니다.')
 });
