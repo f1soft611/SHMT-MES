@@ -1,47 +1,52 @@
-import {DataGrid, GridColDef, GridRowId, GridRowModel } from "@mui/x-data-grid";
-import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField, Grid, Radio, Chip} from "@mui/material";
+import {DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
+import {
+    Button, Stack, Box,
+    FormControl, InputLabel,
+    Select, MenuItem,
+    TextField, Grid, Radio, Chip
+} from "@mui/material";
 import {
     Search as SearchIcon,
 } from '@mui/icons-material';
-import React, {useEffect, useState} from "react";
 import {Process} from "../../../../types/process";
-
-import { useProcessFlowDetailContext } from "../hooks/useProcessFlowDetailContext";
-import {ProcessFlowProcess} from "../../../../types/processFlow";
-import {useProcessFlowDetail} from "../hooks/useProcessFlowDetail"
-import {useSnackbarContext} from "../SnackbarContext";
+import { useProcessFlowDetailContext } from "../hooks/detail/useProcessFlowDetailContext";
+import {useDetailProcessTab} from "../hooks/detail/useDetailProcessTab";
 
 
 export default function ProcessFlowProcessTab() {
-    const { showSnackbar } = useSnackbarContext();
 
     const {
         processFlow,
         processRows,        // 전체 공정 목록
         flowProcessRows,    // 흐름에 속한 공정 목록
         setFlowProcessRows, // 흐름 공정 setter
+        processPage, setProcessPage,
+        processPageSize, setProcessPageSize
     } = useProcessFlowDetailContext();
 
     const {
+        filteredRows,
         inputValues,
         handleInputChange,
         handleSearch,
-        filteredRows: filteredProcessRows,
-    } = useProcessFlowDetail(processRows, {
-        fields: {
-            "0": (row) => row.processCode,
-            "1": (row) => row.processName,
-        }
-    });
 
-    const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
-    const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
+        leftSelected, setLeftSelected,
+        rightSelected, setRightSelected,
 
-    const [lastProcessId, setLastProcessId] = useState<string | null>(null);
+        lastProcessId,
+        setLastProcessId,
+
+        addProcess,
+        removeProcess,
+
+        updateProcessRow,
+        selectLastProcess,
+
+    } = useDetailProcessTab(processFlow, processRows, flowProcessRows, setFlowProcessRows);
 
     const columns: GridColDef[] = [
-        { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
-        { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
+        { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center', align: 'center', },
+        { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center', align: 'center', },
         {
             field: 'equipmentIntegrationYn',
             headerName: '설비연동',
@@ -59,8 +64,8 @@ export default function ProcessFlowProcessTab() {
     ];
 
     const rightColumns: GridColDef[] = [
-        { field: 'flowProcessCode', headerName: '공정 코드', flex: 1, headerAlign: 'center' },
-        { field: 'flowProcessName', headerName: '공정 이름', flex: 1, headerAlign: 'center' },
+        { field: 'flowProcessCode', headerName: '공정 코드', flex: 1, headerAlign: 'center', align: 'center', },
+        { field: 'flowProcessName', headerName: '공정 이름', flex: 1, headerAlign: 'center', align: 'center', },
         {
             field: 'equipmentFlag',
             headerName: '설비연동',
@@ -82,31 +87,31 @@ export default function ProcessFlowProcessTab() {
             headerAlign: 'center',
             align: 'center',
             editable: true,
-            // renderCell: (params) => (
-            //     <TextField
-            //         size="small"
-            //         value={params.row.seq ?? ""}
-            //         onChange={(e) => {
-            //             const value = e.target.value;
-            //             const rid = params.row.flowProcessId ?? params.row.flowRowId;
-            //
-            //             setFlowProcessRows(prev =>
-            //                 prev.map(p =>
-            //                     (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
-            //                 )
-            //             );
-            //         }}
-            //     />
-            // ),
+            renderCell: (params) => (
+                <TextField
+                    size="small"
+                    value={params.row.seq ?? ""}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        const rid = params.row.flowProcessId ?? params.row.flowRowId;
+
+                        setFlowProcessRows(prev =>
+                            prev.map(p =>
+                                (p.flowProcessId ?? p.flowRowId) === rid ? { ...p, seq: value } : p
+                            )
+                        );
+                    }}
+                />
+            ),
         },
         {
             field: 'lastFlag',
             headerName: '마지막',
             width: 80,
             headerAlign: 'center',
+            align: 'center',
             renderCell: (params) => {
                 const rid = params.row.flowProcessId ?? params.row.flowRowId;
-
                 return (
                     <Radio
                         name="lastProcess"
@@ -128,88 +133,6 @@ export default function ProcessFlowProcessTab() {
         }
     ];
 
-
-    const handleMoveRight = () => {
-        if (leftSelected.length === 0 || !processFlow) return;
-
-        // 현재 우측에 Y가 몇 개인지 체크
-        const currentLinkedCount = flowProcessRows.filter(p => p.equipmentFlag === "Y").length;
-
-        // 왼쪽에서 선택된 공정 중 Y 몇개인지 체크
-        const selectedLinkedCount = processRows
-        .filter(p => leftSelected.includes(p.processCode))
-        .filter(p => p.equipmentIntegrationYn === "Y").length;
-
-        // 둘 합쳐서 1개 초과면 막기
-        if (currentLinkedCount + selectedLinkedCount > 1) {
-            showSnackbar("설비 연동 공정은 하나만 추가할 수 있습니다.", "error");
-            return;
-        }
-
-        const newRows: ProcessFlowProcess[] = processRows
-        .filter(p => leftSelected.includes(p.processCode)) // processCode 기준 선택
-        .map(p => ({
-            flowRowId: crypto.randomUUID(),        // ★ 유일키 (중복 허용)
-            flowProcessId: null,
-
-            seq: "",
-            processFlowCode: processFlow.processFlowCode ?? "",
-            processFlowId: processFlow.processFlowId ?? "",
-            equipmentFlag: p.equipmentIntegrationYn ?? "N",
-            lastFlag: "N",
-
-            flowProcessCode: p.processCode,
-            flowProcessName: p.processName,
-            processSeq: String(p.sortOrder ?? ""),
-        }));
-
-        setFlowProcessRows(prev => [...prev, ...newRows]);
-        setLeftSelected([]);
-    };
-
-
-    const handleRemoveRight  = () => {
-        if (rightSelected.length === 0) return;
-        setFlowProcessRows(prev =>
-            prev.filter(p => !rightSelected.includes(p.flowProcessId ?? p.flowRowId))
-        );
-    }
-
-    // ★ flowProcessRows가 변경될 때 lastFlag=Y 인 행을 찾아 lastProcessId로 세팅
-    useEffect(() => {
-        const target = flowProcessRows.find(p => p.lastFlag === "Y");
-        if (target) {
-            setLastProcessId(target.flowProcessId ?? null);
-        }
-    }, [flowProcessRows]);
-
-    useEffect(() => {
-        setLeftSelected([]);
-        setRightSelected([]);
-    }, [flowProcessRows]);
-
-    const handleRowUpdate = (newRow: GridRowModel, oldRow: GridRowModel): GridRowModel => {
-        setFlowProcessRows(prev => {
-            const updated = prev.map(p =>
-                (p.flowProcessId ?? p.flowRowId) === (newRow.flowProcessId ?? newRow.flowRowId)
-                    ? { ...p, seq: newRow.seq }
-                    : p
-            );
-
-            return [...updated].sort((a, b) => {
-                const sa = a.seq === "" || a.seq == null ? null : Number(a.seq);
-                const sb = b.seq === "" || b.seq == null ? null : Number(b.seq);
-
-                if (sa === null && sb === null) return 0;
-                if (sa === null) return 1;
-                if (sb === null) return -1;
-
-                return sa - sb;
-            });
-        });
-
-        return newRow;
-    };
 
 
     return(
@@ -251,9 +174,23 @@ export default function ProcessFlowProcessTab() {
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.0  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
-                        rows={filteredProcessRows}
+                        rows={filteredRows}
                         columns={columns}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         getRowId={(row:Process) => row.processCode}
+
+                        pagination
+                        paginationModel={{
+                            page: processPage,
+                            pageSize: processPageSize,
+                        }}
+                        onPaginationModelChange={(model) => {
+                            setProcessPage(model.page);
+                            setProcessPageSize(model.pageSize);
+                        }}
+                        pageSizeOptions={[10, 20, 50]}
+
                         checkboxSelection
                         disableRowSelectionExcludeModel
                         // ★ selectionModel은 include 방식으로만 설정 가능
@@ -267,6 +204,9 @@ export default function ProcessFlowProcessTab() {
                         autoHeight={false}
                         sx={{
                             height: 450,
+                            "& .MuiDataGrid-cell": {
+                                padding: "0 2px",     // 셀 패딩 축소
+                            },
                         }}
                     />
                 </Grid>
@@ -285,7 +225,7 @@ export default function ProcessFlowProcessTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={handleMoveRight}
+                            onClick={addProcess}
                             disabled={leftSelected.length === 0}
                             aria-label="move selected right"
                         >
@@ -295,7 +235,7 @@ export default function ProcessFlowProcessTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={handleRemoveRight}
+                            onClick={removeProcess}
                             disabled={rightSelected.length === 0}
                             aria-label="move selected left"
                         >
@@ -307,9 +247,11 @@ export default function ProcessFlowProcessTab() {
                     <DataGrid
                         rows={flowProcessRows}
                         columns={rightColumns}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         getRowId={(row) => row.flowProcessId ?? row.flowRowId}
                         editMode="cell"
-                        processRowUpdate={handleRowUpdate}
+                        processRowUpdate={updateProcessRow}
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableRowSelectionExcludeModel
@@ -320,6 +262,9 @@ export default function ProcessFlowProcessTab() {
                         autoHeight={false}
                         sx={{
                             height: 450,
+                            "& .MuiDataGrid-cell": {
+                                padding: "0 2px",     // 셀 패딩 축소
+                            },
                         }}
                     />
                 </Grid>

@@ -3,12 +3,9 @@ import {Button, Stack, Box, FormControl, InputLabel, Select, MenuItem, TextField
 import {
     Search as SearchIcon,
 } from '@mui/icons-material';
-import React, {useState} from "react";
-
-import { useProcessFlowDetailContext } from "../hooks/useProcessFlowDetailContext";
 import {Item} from "../../../../types/item";
-import {ProcessFlowItem} from "../../../../types/processFlow";
-import {useProcessFlowDetail} from "../hooks/useProcessFlowDetail"
+import { useProcessFlowDetailContext } from "../hooks/detail/useProcessFlowDetailContext";
+import {useDetailItemTab} from "../hooks/detail/useDetailItemTab";
 
 
 export default function ProcessFlowItemTab() {
@@ -18,22 +15,23 @@ export default function ProcessFlowItemTab() {
         itemRows,        // 전체 제품 목록
         flowItemRows,    // 흐름에 속한 제품 목록
         setFlowItemRows, // 흐름 제품 setter
+        itemPage, setItemPage,
+        itemPageSize, setItemPageSize
     } = useProcessFlowDetailContext();
 
     const {
         inputValues,
         handleInputChange,
+        filteredRows,
         handleSearch,
-        filteredRows: filteredItemRows,
-    } = useProcessFlowDetail(itemRows, {
-        fields: {
-            "0": (row) => row.itemCode,
-            "1": (row) => row.itemName,
-        }
-    });
+        leftSelected,
+        rightSelected,
+        setLeftSelected,
+        setRightSelected,
+        addItems,
+        removeItems,
+    } = useDetailItemTab(processFlow, itemRows, flowItemRows, setFlowItemRows);
 
-    const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
-    const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
 
 
     const columns: GridColDef[] = [
@@ -45,51 +43,13 @@ export default function ProcessFlowItemTab() {
     ];
 
     const rightColumns: GridColDef[] = [
+        { field: 'flowItemCodeId'},
         { field: 'flowItemCode', headerName: '품목 코드', flex: 1, headerAlign: 'center' },
         { field: 'flowItemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
         { field: 'unitName', headerName: '단위', flex: 1, headerAlign: 'center', align: 'center' },
         { field: 'unit', headerName: '단위코드', },
     ];
-
-
-
-    const handleMoveRight = () => {
-        if (leftSelected.length === 0 || !processFlow) return;
-
-        // 이미 추가된 itemCode 목록
-        const existingCodes = new Set(flowItemRows.map(row => row.flowItemCode));
-
-        // 선택된 아이템 중 기존에 없는 것만 추림
-        const filteredItems = itemRows.filter(
-            it => leftSelected.includes(it.itemCode) && !existingCodes.has(it.itemCode)
-        );
-
-        // 신규 추가 목록 생성
-        const newRows: ProcessFlowItem[] = filteredItems.map(i => ({
-            flowRowId: crypto.randomUUID(),
-            flowItemId: null,
-            flowItemCode: i.itemCode,
-            flowItemName: i.itemName,
-            specification: i.specification ?? "",
-            unit: i.unit ?? "",
-            unitName: i.unitName ?? "",
-            processFlowCode: processFlow.processFlowCode ?? "",
-            processFlowId: processFlow.processFlowId ?? "",
-        }));
-
-        setFlowItemRows(prev => [...prev, ...newRows]);
-        setLeftSelected([]);
-    }
-
-    const handleRemoveRight = () => {
-        if (rightSelected.length === 0) return;
-        setFlowItemRows(prev =>
-            prev.filter(i => !rightSelected.includes(i.flowItemId ?? i.flowRowId))
-        );
-    }
-
-
 
     return(
         <>
@@ -130,9 +90,22 @@ export default function ProcessFlowItemTab() {
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.5  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
-                        rows={filteredItemRows}
+                        rows={filteredRows}
                         columns={columns}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         getRowId={(row:Item) => row.itemCode}
+
+                        pagination
+                        paginationModel={{
+                            page: itemPage,
+                            pageSize: itemPageSize
+                        }}
+                        onPaginationModelChange={(m) => {
+                            setItemPage(m.page);
+                            setItemPageSize(m.pageSize);
+                        }}
+                        pageSizeOptions={[10, 20, 50]}
                         columnVisibilityModel={{ unit: false }}   // 화면에서만 숨김
                         checkboxSelection
                         disableRowSelectionExcludeModel
@@ -151,6 +124,9 @@ export default function ProcessFlowItemTab() {
                         autoHeight={false}
                         sx={{
                             height: 450,
+                            "& .MuiDataGrid-cell": {
+                                padding: "0 2px",     // 셀 패딩 축소
+                            },
                         }}
                     />
                 </Grid>
@@ -169,7 +145,7 @@ export default function ProcessFlowItemTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={handleMoveRight}
+                            onClick={addItems}
                             disabled={leftSelected.length === 0}
                             aria-label="move selected right"
                         >
@@ -179,7 +155,7 @@ export default function ProcessFlowItemTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={handleRemoveRight}
+                            onClick={removeItems}
                             disabled={rightSelected.length === 0}
                             aria-label="move selected left"
                         >
@@ -191,8 +167,13 @@ export default function ProcessFlowItemTab() {
                     <DataGrid
                         rows={flowItemRows}
                         columns={rightColumns}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         getRowId={(row) => row.flowItemId ?? row.flowRowId}
-                        columnVisibilityModel={{ unit: false }}   // 화면에서만 숨김
+                        columnVisibilityModel={{
+                            unit: false,
+                            flowItemCodeId:false
+                        }}   // 화면에서만 숨김
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableRowSelectionExcludeModel
@@ -203,6 +184,9 @@ export default function ProcessFlowItemTab() {
                         autoHeight={false}
                         sx={{
                             height: 450,
+                            "& .MuiDataGrid-cell": {
+                                padding: "0 2px",     // 셀 패딩 축소
+                            },
                         }}
                     />
                 </Grid>

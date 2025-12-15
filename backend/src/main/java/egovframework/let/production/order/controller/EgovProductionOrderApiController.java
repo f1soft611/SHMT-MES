@@ -5,6 +5,8 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
+import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
@@ -17,13 +19,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,6 +46,7 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/production-orders")
 @Tag(name="EgovProductionOrderApiController",description = "생산 지시 관리")
 public class EgovProductionOrderApiController {
 
@@ -70,7 +73,7 @@ public class EgovProductionOrderApiController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
-    @GetMapping(value ="/production-orders")
+    @GetMapping
     public ResultVO selectProductionOrderList(@ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
                                         @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
@@ -96,6 +99,106 @@ public class EgovProductionOrderApiController {
         paginationInfo.setTotalRecordCount(totCnt);
         resultMap.put("productionOrderVO", productionOrderVO);
         resultMap.put("paginationInfo", paginationInfo);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 생산지시관리에서 사용하는 생산계획 목록 조회
+     */
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "데이터 없음")
+    })
+    @GetMapping("/plans")
+    public ResultVO getProdPlans(
+            @RequestParam(required = false) String workCenter,
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        List<Map<String, Object>> prodPlanList = productionOrderService.selectProdPlans(workCenter, dateFrom, dateTo);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", prodPlanList);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+
+    }
+
+    /**
+     * 생산지시관리에서 폼목별 공정 흐름 조회
+     */
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "데이터 없음")
+    })
+    @GetMapping("/process")
+    public ResultVO getFlowProcessByItem(
+            @RequestParam(required = false) String prodPlanId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        List<Map<String, Object>> prodPlanList = productionOrderService.selectFlowProcessByPlanId(prodPlanId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", prodPlanList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+
+    }
+
+
+    /**
+     * 생산지시관리에서 계획id 로 저장된 생산지시 조회
+     */
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "데이터 없음")
+    })
+    @GetMapping("/orders")
+    public ResultVO getProdOrdersByPlanId(
+            @RequestParam(required = false) String prodPlanId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        List<Map<String, Object>> prodPlanList = productionOrderService.selectProdOrdersByPlanId(prodPlanId);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", prodPlanList);
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+
+    }
+
+
+    /**
+     * 생산지시 저장
+     */
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping
+    public ResultVO createProductionOrders(
+            @RequestBody List<Map<String, Object>> orders,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        for (Map<String,Object> order : orders) {
+            order.put("OPMAN_CODE", user.getUniqId());
+        }
+
+        productionOrderService.insertProductionOrders(orders);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "생산지시가 완료되었습니다.");
         resultMap.put("user", user);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);

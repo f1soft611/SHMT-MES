@@ -1,11 +1,9 @@
 package egovframework.let.production.order.service;
 
-import egovframework.com.cmm.LoginVO;
-import egovframework.let.cop.bbs.domain.model.Board;
-import egovframework.let.cop.bbs.domain.model.BoardVO;
-import egovframework.let.cop.bbs.dto.request.BbsManageDeleteBoardRequestDTO;
+
 import egovframework.let.production.order.domain.model.ProductionOrderVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,5 +34,15 @@ public interface EgovProductionOrderService {
 	 */
 	public Map<String, Object> selectProductionOrderList(ProductionOrderVO productionOrderVO, String attrbFlag)
 	  throws Exception;
+
+
+	List<Map<String, Object>> selectProdPlans(String workCenter, String dateFrom, String dateTo) throws Exception;
+
+
+	List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception;
+	List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception;
+
+
+	void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
 
 }
