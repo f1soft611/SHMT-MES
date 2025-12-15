@@ -91,7 +91,14 @@ const ProdOrderList = ({
             align: "center",
         },
         {
-            field: "equipmentName",
+            field: "EQUIPMENT_CODE",
+            headerName: "설비코드",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "EQUIPMENT_NAME",
             headerName: "설비명",
             width: 100,
             headerAlign: "center",

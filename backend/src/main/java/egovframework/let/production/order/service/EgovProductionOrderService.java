@@ -43,6 +43,7 @@ public interface EgovProductionOrderService {
 	List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception;
 
 
+	// 생산지시 저장
 	void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
 
 }
