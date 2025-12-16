@@ -166,7 +166,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setSelectedItem(item);
 
     const updates = {
-      itemCode: item.itemCode || '',
+      // 품목 직접 선택 시, 저장될 필드인 itemCode에 품목 ID를 매핑
+      // (기존 품목코드 대신 내부 식별자 사용)
+      itemCode: (item as any).id || (item as any).itemId || '',
       itemName: item.itemName || '',
       plannedQty: 1, // 기본값
       // 생산의뢰 정보 초기화
