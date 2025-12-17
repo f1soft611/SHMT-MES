@@ -1,14 +1,17 @@
 import React from 'react';
-import {DataGrid, GridColDef} from '@mui/x-data-grid';
-import { Box, Card, CardHeader, CardContent } from '@mui/material';
+import {DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {Box, Card, CardHeader, CardContent, CardActions} from '@mui/material';
 
 interface Props {
     rows: any[];
     loading: boolean;
     onRowClick?: (row: any) => void;
+    paginationModel: GridPaginationModel;
+    totalCount: number;
+    onPaginationChange: (model: GridPaginationModel) => void;
 }
 
-const ProdPlanList = ({ rows, loading, onRowClick }: Props) => {
+const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange }: Props) => {
 
     const columns: GridColDef[] = [
         {
@@ -103,9 +106,12 @@ const ProdPlanList = ({ rows, loading, onRowClick }: Props) => {
                         disableRowSelectionOnClick
                         onRowClick={(params) => onRowClick?.(params.row)}
                         getRowId={(row) => row.PRODPLAN_ID}
-                        hideFooter
-                        hideFooterPagination
-                        hideFooterSelectedRowCount
+                        pagination
+                        paginationMode="server"
+                        rowCount={totalCount}
+                        pageSizeOptions={[10, 20, 50]}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={onPaginationChange}
                         rowHeight={35}
                         columnHeaderHeight={40}
                         sx={{
@@ -123,6 +129,7 @@ const ProdPlanList = ({ rows, loading, onRowClick }: Props) => {
                     />
                 </Box>
             </CardContent>
+            <CardActions sx={{ display: 'none' }} />
         </Card>
     )
 }

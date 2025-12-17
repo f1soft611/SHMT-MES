@@ -36,5 +36,10 @@ export function useProdOrder(){
         fetchProdOrders();
     }, []);
 
-    return { rows, loading, error, fetchProdOrders };
+    return {
+        orderRows: rows,
+        loading,
+        error,
+        fetchProdOrders
+    };
 }

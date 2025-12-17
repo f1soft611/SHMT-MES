@@ -35,9 +35,34 @@
 		ON A.FACTORY_CODE = B.FACTORY_CODE
 		AND A.PRODPLAN_DATE = B.PRODPLAN_DATE
 		AND A.PRODPLAN_SEQ = B.PRODPLAN_SEQ
-		WHERE A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+		WHERE 1=1
+		    AND A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+			<if test="workplace != null and workplace != ''">
+				AND A.WORKCENTER_CODE = #{workplace}
+			</if>
 		ORDER BY PROD_DATE DESC
+		OFFSET #{offset} ROWS
+		FETCH NEXT #{size} ROWS ONLY
 	</select>
+
+	<select id="selectProdPlanCount"
+			parameterType="map"
+			resultType="int">
+		SELECT COUNT(*)
+		FROM TPR301 A
+		INNER JOIN TPR301M B
+		ON A.FACTORY_CODE = B.FACTORY_CODE
+		AND A.PRODPLAN_DATE = B.PRODPLAN_DATE
+		AND A.PRODPLAN_SEQ = B.PRODPLAN_SEQ
+		WHERE 1=1
+		AND A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+		<if test="workplace != null and workplace != ''">
+			AND A.WORKCENTER_CODE = #{workplace}
+		</if>
+	</select>
+
+
+
 
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"

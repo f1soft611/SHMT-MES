@@ -3,6 +3,8 @@ import { useProdPlan } from "./useProdPlan";
 import { useProdOrder } from "./useProdOrder";
 import {productionOrderService} from "../../../services/productionOrderService";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import {useProdOrderSearchFilter} from "./useProdOrderSearchFilter";
+
 
 interface ProdPlanRow {
     PRODPLAN_ID: string;
@@ -14,33 +16,14 @@ export function useProductionOrder() {
 
     const { showToast } = useToast();
 
+    const searchFilter = useProdOrderSearchFilter();
+    const prodPlan = useProdPlan();
+    const { orderRows, loading: orderLoading, fetchProdOrders } = useProdOrder();
+
     // 위 그리드 선택된 데이터
     const [selectedPlan, setSelectedPlan] = useState<ProdPlanRow | null>(null);
     const [localRows, setLocalRows] = useState<any[]>([]);
 
-    const { rows: planRows, loading: planLoading, fetchProdPlan } = useProdPlan();
-    const { rows: orderRows, loading: orderLoading, fetchProdOrders } = useProdOrder();
-
-    // 검색 조건
-    const today = new Date().toISOString().slice(0, 10);
-    const dateFrom = new Date();
-    dateFrom.setDate(dateFrom.getDate() - 30);
-    const dateFromStr = dateFrom.toISOString().slice(0, 10);
-
-    const [search, setSearch] = useState({
-        workCenter: '',
-        dateFrom: dateFromStr,
-        dateTo: today
-    });
-
-    const handleSearchChange = (name: string, value: string) => {
-        setSearch(prev => ({ ...prev, [name]: value }));
-    };
-
-    // 검색 실행 함수
-    const handleSearchExecute = async () => {
-        await fetchProdPlan(search);
-    };
 
     // 생산계획 row 선택했을때
     const handlePlanSelect = async (row: any) => {
@@ -76,12 +59,12 @@ export function useProductionOrder() {
                 severity: 'success',
             });
             // 저장 후 목록 리로드
-            await fetchProdPlan(search);
+            await prodPlan.fetchProdPlan();
 
             // 기존 선택된 행 다시 선택 처리
             if (selectedPlan) {
                 // planRows 새로 갱신된 후 그리드 데이터에서 같은 row 찾기
-                const refreshed = planRows.find(
+                const refreshed = prodPlan.planRows.find(
                     (p: any) =>
                         p.PRODPLAN_ID === selectedPlan.PRODPLAN_ID &&
                         p.PRODPLAN_SEQ === selectedPlan.PRODPLAN_SEQ
@@ -105,14 +88,21 @@ export function useProductionOrder() {
 
     return {
         selectedPlan,
-        planRows, planLoading,
+        planRows: prodPlan.planRows,
+        planLoading: prodPlan.loading,
         localRows, orderLoading,
         setLocalRows,
-        search,
-        handleSearchChange,
-        handleSearchExecute,
+        search: prodPlan.search,
+        handleSearchChange: prodPlan.handleSearchChange,
+        handleSearch: prodPlan.handleSearch,
         handlePlanSelect,
         handleAddRow,
         handleSaveOrders,
+
+        workplaces: searchFilter.workplaces,
+
+        paginationModel: prodPlan.paginationModel,
+        handlePaginationChange: prodPlan.handlePaginationChange,
+        totalCount: prodPlan.totalCount
     };
 }

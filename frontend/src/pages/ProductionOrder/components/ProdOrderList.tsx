@@ -1,6 +1,6 @@
 import React from 'react';
 import {DataGrid, GridColDef } from '@mui/x-data-grid';
-import {Box, IconButton, Button, Chip, Card, CardHeader, CardContent} from '@mui/material';
+import {Box, IconButton, Button, Chip, Card, CardHeader, CardContent, CardActions} from '@mui/material';
 import {
     Add as AddIcon,
     Save as SavetIcon,
@@ -25,22 +25,14 @@ const ProdOrderList = ({
     const CustomToolbar = () => {
         const status = selectedPlan?.ORDER_FLAG.trim();
         return (
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    p: 1,
-                }}
-            >
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    startIcon={status === "PLANNED" ? <SavetIcon /> : <EditIcon />}
-                    onClick={status === "PLANNED" ? onSave : onEdit}>
-                    {status === "PLANNED" ? '저장' : '수정'}
-                </Button>
-            </Box>
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={status === "PLANNED" ? <SavetIcon /> : <EditIcon />}
+                onClick={status === "PLANNED" ? onSave : onEdit}>
+                {status === "PLANNED" ? '저장' : '수정'}
+            </Button>
         );
     }
 
@@ -339,9 +331,12 @@ const ProdOrderList = ({
             <CardHeader
                 sx={{ p: 1, }}
                 title="생산지시 목록"
-                titleTypographyProps={{
-                    fontSize: 16,
-                }}
+                titleTypographyProps={{fontSize: 16,}}
+                action={
+                    <Box sx={{ m:1 }}>
+                        <CustomToolbar />
+                    </Box>
+                }
             />
             <CardContent sx={{ p: 0 }}>
                 <Box sx={{ height: 400 }}>
@@ -362,10 +357,6 @@ const ProdOrderList = ({
                             PRODPLAN_DATE: false,
                             PRODPLAN_SEQ: false,
                         }}   // 화면에서만 숨김
-                        showToolbar
-                        slots={{
-                            toolbar: CustomToolbar,
-                        }}
                         processRowUpdate={(newRow) => {
                             setRows((prev) =>
                                 prev.map((p) =>
@@ -393,7 +384,7 @@ const ProdOrderList = ({
                     />
                 </Box>
             </CardContent>
-
+            <CardActions sx={{ display: 'none' }} />
         </Card>
 
     )

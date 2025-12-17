@@ -4,19 +4,17 @@ import {
     Paper, Stack, Typography
 } from "@mui/material";
 import {
-    // Add as AddIcon,
-    // Edit as EditIcon,
-    // Delete as DeleteIcon,
-    // Refresh as RefreshIcon,
     Search as SearchIcon,
     FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
+import {Workplace} from "../../../types/workplace";
 
 interface Props {
+    workplaces: Workplace[];
     search: {
-        workCenter: string;
+        workplace: string;
         dateFrom: string;
         dateTo: string;
     };
@@ -24,7 +22,7 @@ interface Props {
     onSearch: () => void;
 }
 
-const ProdOrderSearchFilter = ({ search, onChange, onSearch }: Props) => {
+const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -70,12 +68,18 @@ const ProdOrderSearchFilter = ({ search, onChange, onSearch }: Props) => {
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>작업장</InputLabel>
                         <Select
-                            value={search.workCenter}
+                            value={search.workplace}
                             label="작업장"
-                            onChange={(e) => onChange('workCenter', e.target.value)}
+                            onChange={(e) => onChange('workplace', e.target.value)}
                         >
-                            <MenuItem value="1">품목코드</MenuItem>
-                            <MenuItem value="2">품목명</MenuItem>
+                            <MenuItem value="">
+                                전체
+                            </MenuItem>
+                            {workplaces.map(wp => (
+                                <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
+                                    {wp.workplaceName} ({wp.workplaceCode})
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
 

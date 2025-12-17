@@ -10,7 +10,6 @@ const ProductionOrder: React.FC = () => {
 
     const prodOrder = useProductionOrder();
 
-
     return (
         <Box>
             <Box
@@ -28,9 +27,10 @@ const ProductionOrder: React.FC = () => {
 
             {/* 검색 영역 */}
             <ProdOrderSearchFilter
+                workplaces={prodOrder.workplaces}
                 search={prodOrder.search}
                 onChange={prodOrder.handleSearchChange}
-                onSearch={prodOrder.handleSearchExecute}
+                onSearch={prodOrder.handleSearch}
             />
 
 
@@ -40,6 +40,10 @@ const ProductionOrder: React.FC = () => {
                     rows={prodOrder.planRows}
                     loading={prodOrder.planLoading}
                     onRowClick={prodOrder.handlePlanSelect}
+
+                    paginationModel={prodOrder.paginationModel}
+                    totalCount={prodOrder.totalCount}
+                    onPaginationChange={prodOrder.handlePaginationChange}
                 />
             </Grid>
 
