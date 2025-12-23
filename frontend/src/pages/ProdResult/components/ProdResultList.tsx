@@ -1,34 +1,45 @@
 import React, {useState} from 'react';
-import {Box, Card, CardContent, CardHeader, IconButton} from '@mui/material';
-import {DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {Box, Card, CardActions, CardContent, CardHeader, IconButton} from '@mui/material';
+import {DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
     KeyboardArrowDown as KeyboardArrowDownIcon,
     KeyboardArrowUp as KeyboardArrowUpIcon
 } from '@mui/icons-material';
 
-const ProdResurlList = () => {
-    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-        page: 0,
-        pageSize: 20,
-    });
-    const [open, setOpen] = useState<{ [key: string]: boolean }>({});
+interface Props {
+    rows: any[];
+    rowCount: number;
+    loading: boolean;
+    paginationModel: any;
+    onPaginationModelChange: (model: any) => void;
+}
 
-    const toggle = (id: string) =>
-        setOpen(prev => ({ ...prev, [id]: !prev[id] }));
+export default function ProdResultList({
+    rows,
+    rowCount,
+    loading,
+    paginationModel,
+    onPaginationModelChange,
+}: Props) {
+
+    // const [open, setOpen] = useState<{ [key: string]: boolean }>({});
+    //
+    // const toggle = (id: string) =>
+    //     setOpen(prev => ({ ...prev, [id]: !prev[id] }));
 
     const columns: GridColDef[] = [
+        // {
+        //     field: "collapse",
+        //     headerName: "",
+        //     width: 40,
+        //     renderCell: (p) => (
+        //         <IconButton size="small" onClick={() => toggle(p.row.id)}>
+        //             {open[p.row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+        //         </IconButton>
+        //     ),
+        // },
         {
-            field: "collapse",
-            headerName: "",
-            width: 40,
-            renderCell: (p) => (
-                <IconButton size="small" onClick={() => toggle(p.row.id)}>
-                    {open[p.row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                </IconButton>
-            ),
-        },
-        {
-            field: "STATUS",
+            field: "PRODPLAN_DATE",
             headerName: "등록상태",
             width: 70,
             headerAlign: "center",
@@ -149,24 +160,40 @@ const ProdResurlList = () => {
     ];
 
     return(
-            <DataGrid
-                rows={[]}
-                columns={columns}
-                rowHeight={35}
-                columnHeaderHeight={40}
-                pagination
-                pageSizeOptions={[10, 20, 50, 100]}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                sx={{
-                    fontSize: 14,
-                    "& .MuiDataGrid-cell": { padding: "0 2px" },
-                    "& .MuiDataGrid-cell:focus": { outline: "none" },
-                    "& .MuiDataGrid-row:hover": { backgroundColor: "action.hover" },
-                }}
+        <Card>
+            <CardHeader sx={{ p: 1, }}
+                        title="생산지시 목록"
+                        titleTypographyProps={{
+                            fontSize: 16,
+                        }}
             />
+            <CardContent sx={{ p: 0 }}>
+                <Box sx={{ height: 500 }}>
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        loading={loading}
+                        getRowId={(row) => row.TPR504ID}
+                        pagination
+                        paginationMode="server"
+                        rowCount={rowCount}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={onPaginationModelChange}
+                        pageSizeOptions={[10, 20, 50]}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
+                        sx={{
+                            fontSize: 14,
+                            "& .MuiDataGrid-cell": { padding: "0 2px" },
+                            "& .MuiDataGrid-cell:focus": { outline: "none" },
+                            "& .MuiDataGrid-row:hover": { backgroundColor: "action.hover" },
+                        }}
+                    />
+                </Box>
+            </CardContent>
+            <CardActions sx={{ display: 'none' }} />
+        </Card>
+
     );
 
 }
-
-export default ProdResurlList;

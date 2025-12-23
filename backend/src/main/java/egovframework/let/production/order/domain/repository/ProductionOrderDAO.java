@@ -43,18 +43,25 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
 	}
 
     /**
-     * 조건에 맞는 생산 지시 목록에 대한 전체 건수를 조회 한다.
+     * 조건에 맞는 생산 계획 목록에 대한 전체 건수를 조회 한다.
      *
-     * @param productionOrderVO
+     * @param searchVO
      * @return
      * @throws Exception
      */
-    public int selectProductionOrderListCnt(ProductionOrderVO productionOrderVO) throws Exception {
-        return (Integer)selectOne("ProductionOrderDAO.selectProductionOrderListCnt", productionOrderVO);
+    public int selectProdPlanCount(Map<String, Object> searchVO) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdPlanCount", searchVO);
     }
 
-    public List<Map<String, Object>> selectProdPlans(Map<String, Object> prodPlanSearchFilter) throws Exception {
-        return selectList("ProductionOrderDAO.selectProdPlan", prodPlanSearchFilter);
+    /**
+     * 조건에 맞는 생산 계획 목록에 대한 전체 목록을 조회 한다.
+     *
+     * @param searchVO
+     * @return
+     * @throws Exception
+     */
+    public List<Map<String, Object>> selectProdPlans(Map<String, Object> searchVO) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdPlan", searchVO);
     }
 
     // 생산지시] 생산지시 등록되기 전 제품의 공정 가져오기

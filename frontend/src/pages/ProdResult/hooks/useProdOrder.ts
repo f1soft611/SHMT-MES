@@ -1,49 +1,59 @@
 import {useEffect, useState} from "react";
-import { productionOrderService } from '../../../services/productionOrderService';
+import {productionResultService} from "../../../services/productionResultService";
 import {GridPaginationModel} from "@mui/x-data-grid";
+import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
-export function useProdPlan() {
+export function useProdOrder() {
+
+    const { showToast } = useToast();
 
     // 검색 조건
     const today = new Date().toISOString().slice(0, 10);
     const dateFrom = new Date();
-    dateFrom.setDate(dateFrom.getDate() - 30);
+    dateFrom.setDate(dateFrom.getDate() - 7);
     const dateFromStr = dateFrom.toISOString().slice(0, 10);
 
+    // 검색 상태
     const [search, setSearch] = useState({
-        workplace: '',
+        workplace: "",
+        equipment: "",
         dateFrom: dateFromStr,
-        dateTo: today
+        dateTo: today,
     });
 
-    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    // DataGrid 페이징
+    const [paginationModel, setPaginationModel] = useState({
         page: 0,
-        pageSize: 10,
+        pageSize: 20,
     });
 
-    const [rows, setRows] = useState([]);
+    // 데이터 상태
+    const [rows, setRows] = useState<any[]>([]);
+    const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [totalCount, setTotalCount] = useState(0);
     const [searchTrigger, setSearchTrigger] = useState(0);
 
-    const fetchProdPlan = async () => {
 
+    // API 호출
+    const fetchList = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            setError(null);
-
-            const response = await productionOrderService.getProdPlans({
+            const params = {
                 ...search,
                 page: paginationModel.page,
                 size: paginationModel.pageSize,
-            });
-            setRows(response.result.resultList);
-            setTotalCount(response.result.totalCount);
+            };
+
+            const response = await productionResultService.getProdOrders(params)
+            setRows(response.result?.resultList ?? []);
+            setRowCount(response.result?.totalCount ?? 0);
         } catch (err: any) {
-            setError(err.message || "생산계획 조회 실패");
+            showToast({
+                message: "생산지시 목록 조회 실패",
+                severity: 'error',
+            })
             setRows([]);
-            setTotalCount(0);
+            setRowCount(0);
         } finally {
             setLoading(false);
         }
@@ -57,30 +67,33 @@ export function useProdPlan() {
         setSearch(prev => ({ ...prev, [name]: value }));
     };
 
-    // 검색 실행 함수
+    // 검색 버튼
     const handleSearch = () => {
-        setPaginationModel(p => ({ ...p, page: 0 }));
+        setPaginationModel(prev => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
         setSearchTrigger(t => t + 1);
     };
 
+    // 페이지 변경 시 자동 fetch
     useEffect(() => {
-        fetchProdPlan();
+        fetchList();
     }, [
         paginationModel.page,
         paginationModel.pageSize,
         searchTrigger
     ]);
 
+
     return {
-        planRows: rows,
-        loading,
-        totalCount,
         search,
         handleSearchChange,
         handleSearch,
+
+        rows,
+        rowCount,
+        loading,
+
         paginationModel,
         setPaginationModel,
         handlePaginationChange,
-        fetchProdPlan,
     };
 }

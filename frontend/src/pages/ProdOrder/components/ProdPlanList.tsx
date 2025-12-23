@@ -1,6 +1,12 @@
-import React from 'react';
+import React from "react";
 import {DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import {Box, Card, CardHeader, CardContent, CardActions} from '@mui/material';
+import {
+    Box, Stack,
+    Card, CardHeader, CardContent, CardActions, IconButton,
+} from '@mui/material';
+import {
+    AssignmentAdd as AssignmentAddIcon,
+} from "@mui/icons-material";
 
 interface Props {
     rows: any[];
@@ -36,8 +42,15 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             align: "center",
         },
         {
-            field: "prodType",
-            headerName: "생산구분",
+            field: "WORKCENTER_NAME",
+            headerName: "작업장",
+            width: 120,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "EQUIPMENT_NAME",
+            headerName: "설비명",
             width: 100,
             headerAlign: "center",
             align: "center",
@@ -85,26 +98,55 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             headerAlign: "center",
             align: "left",
         },
+        {
+            field: "actions",
+            headerName: "생산지시",
+            sortable: false,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params) => (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                    }}
+                >
+                    <Stack direction="row" spacing={1}>
+                        <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onRowClick?.(params.row);
+                            }}
+                        >
+                            <AssignmentAddIcon />
+                        </IconButton>
 
+                    </Stack>
+                </Box>
+            )
+        },
     ];
 
     return(
         <Card sx={{boxShadow: 2 }}>
             {/* 타이틀 */}
             <CardHeader sx={{ p: 1, }}
-                title="생산계획 목록"
-                titleTypographyProps={{
-                    fontSize: 16,
-                }}
+                        title="생산계획 목록"
+                        titleTypographyProps={{
+                            fontSize: 16,
+                        }}
             />
             <CardContent sx={{ p: 0 }}>
-                <Box sx={{ height: 250 }}>
+                <Box sx={{ height: 500 }}>
                     <DataGrid
                         rows={rows}
                         columns={columns}
                         loading={loading}
                         disableRowSelectionOnClick
-                        onRowClick={(params) => onRowClick?.(params.row)}
                         getRowId={(row) => row.PRODPLAN_ID}
                         pagination
                         paginationMode="server"
@@ -134,4 +176,4 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
     )
 }
 
-export default ProdPlanList
+export default ProdPlanList;

@@ -114,17 +114,11 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/plans")
     public ResultVO getProdPlans(
-            @RequestParam(required = false) String workCenter,
-            @RequestParam(required = false) String dateFrom,
-            @RequestParam(required = false) String dateTo,
+            @RequestParam Map<String, String> params,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        List<Map<String, Object>> prodPlanList = productionOrderService.selectProdPlans(workCenter, dateFrom, dateTo);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("resultList", prodPlanList);
-
+        Map<String, Object> resultMap = productionOrderService.selectProdPlans(params);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }
@@ -203,4 +197,7 @@ public class EgovProductionOrderApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+
+
 }

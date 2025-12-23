@@ -3,8 +3,10 @@ import {Box, Typography, Grid} from '@mui/material';
 import ProdOrderList from './components/ProdOrderList';
 import ProdResurlList from "./components/ProdResultList";
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
+import {useProductionResult} from "../ProdResult/hooks/useProductionResult";
 
 const ProductionResult: React.FC = () => {
+    const rs = useProductionResult();
 
     return (
         <Box>
