@@ -51,6 +51,7 @@ const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
 });
 
 const WorkplaceManagement: React.FC = () => {
+  const SHOW_WORKPLACE_PROCESS = false;
   // 권한 체크
   const { hasWritePermission, refreshPermissions } = usePermissions();
   const workplaceMenuUrls = ['/base/workplace'];
@@ -341,17 +342,19 @@ const WorkplaceManagement: React.FC = () => {
             >
               <PeopleIcon fontSize="small" />
             </IconButton>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => {
-                handleOpenDetailDialog(params.row);
-                setDetailTab(1);
-              }}
-              title="공정 관리"
-            >
-              <BuildIcon fontSize="small" />
-            </IconButton>
+            {SHOW_WORKPLACE_PROCESS && (
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => {
+                  handleOpenDetailDialog(params.row);
+                  setDetailTab(1);
+                }}
+                title="공정 관리"
+              >
+                <BuildIcon fontSize="small" />
+              </IconButton>
+            )}
             <IconButton
               size="small"
               color="primary"
