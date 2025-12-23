@@ -36,7 +36,7 @@ public interface EgovProductionOrderService {
 	  throws Exception;
 
 
-	List<Map<String, Object>> selectProdPlans(String workCenter, String dateFrom, String dateTo) throws Exception;
+	Map<String, Object> selectProdPlans(Map<String, String> params) throws Exception;
 
 
 	List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception;

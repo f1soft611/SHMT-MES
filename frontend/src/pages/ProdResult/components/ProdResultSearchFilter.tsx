@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Button, FormControl, InputLabel, MenuItem,
     Paper, Stack, Typography
@@ -15,6 +14,7 @@ interface Props {
     workplaces: Workplace[];
     search: {
         workplace: string;
+        equipment: string;
         dateFrom: string;
         dateTo: string;
     };
@@ -22,7 +22,7 @@ interface Props {
     onSearch: () => void;
 }
 
-const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
+const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -83,6 +83,24 @@ const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props
                         </Select>
                     </FormControl>
 
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>설비</InputLabel>
+                        <Select
+                            value={search.workplace}
+                            label="설비"
+                            onChange={(e) => onChange('equipment', e.target.value)}
+                        >
+                            <MenuItem value="">
+                                전체
+                            </MenuItem>
+                            {workplaces.map(wp => (
+                                <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
+                                    {wp.workplaceName} ({wp.workplaceCode})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
                     <TextField
                         label="시작일"
                         type="date"
@@ -105,10 +123,11 @@ const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props
                     >
                         검색
                     </Button>
+
                 </Stack>
             </Paper>
         </>
     )
 }
 
-export default ProdOrderSearchFilter
+export default ProdResultSearchFilter;

@@ -20,7 +20,9 @@ import EquipmentManagement from './pages/BaseData/EquipmentManagement';
 import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrder from './pages/ProductionOrder';
-import ProductionResult from './pages/ProductionResult';
+import ProdOrder from './pages/ProdOrder';
+import ProductionResult2 from './pages/ProductionResult';
+import ProductionResult from './pages/ProdResult';
 import ProductionResultForm from './pages/ProductionResult/components/ProductionResultForm';
 import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -92,8 +94,16 @@ function App() {
                             element={<ProductionOrder />}
                           />
                           <Route
+                              path={URL.PRODUCTION_ORDERS2}
+                              element={<ProdOrder />}
+                          />
+                          <Route
                             path={URL.PRODUCTION_RESULTS}
                             element={<ProductionResult />}
+                          />
+                          <Route
+                              path={URL.PRODUCTION_RESULTS2}
+                              element={<ProductionResult2 />}
                           />
                           <Route
                             path={`${URL.PRODUCTION_RESULTS}/new`}

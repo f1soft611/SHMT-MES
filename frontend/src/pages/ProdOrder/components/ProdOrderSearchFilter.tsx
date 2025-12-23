@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Button, FormControl, InputLabel, MenuItem,
     Paper, Stack, Typography
@@ -111,4 +110,4 @@ const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props
     )
 }
 
-export default ProdOrderSearchFilter
+export default ProdOrderSearchFilter;

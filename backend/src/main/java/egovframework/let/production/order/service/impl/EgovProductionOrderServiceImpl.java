@@ -77,14 +77,23 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public List<Map<String, Object>> selectProdPlans(String workCenter, String dateFrom, String dateTo) throws Exception{
+	public Map<String, Object> selectProdPlans(Map<String, String> params) throws Exception{
 
-		Map<String, Object> param = new HashMap<>();
-		param.put("workCenter", workCenter);
-		param.put("dateFrom", dateFrom);
-		param.put("dateTo", dateTo);
+		int page = Integer.parseInt(params.getOrDefault("page", "0"));
+		int size = Integer.parseInt(params.getOrDefault("size", "10"));
 
-		return productionOrderDAO.selectProdPlans(param);
+		Map<String, Object> dbParams = new HashMap<>(params);
+		dbParams.put("offset", page * size);
+		dbParams.put("size", size);
+
+		List<Map<String, Object>> list = productionOrderDAO.selectProdPlans(dbParams);
+		int totalCount = productionOrderDAO.selectProdPlanCount(dbParams);
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("resultList", list);
+		result.put("totalCount", totalCount);
+
+		return result;
 	}
 
 	/**
