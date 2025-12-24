@@ -123,8 +123,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	public void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
 		for(Map<String, Object> prodOrder : prodOrderList){
 			try {
-				String newId = egovProdOrderIdGnrService.getNextStringId();
-				prodOrder.put("PRODORDER_ID", newId);
+				String nextId = productionOrderDAO.selectProdOrderNextId();
+				prodOrder.put("PRODORDER_ID", nextId);
 
 				int orderSeq = productionOrderDAO.selectProdOrderWorkSeq(prodOrder);
 				prodOrder.put("ORDER_SEQ", orderSeq);

@@ -74,6 +74,11 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         return selectList("ProductionOrderDAO.selectProdOrders", prodPlanId);
     }
 
+    // 생산지시] 생산지시 저장 전 nextId 가져오기
+    public String selectProdOrderNextId(){
+        return selectOne("ProductionOrderDAO.selectProdOrderNextId");
+    }
+
     // 생산지시] 생산지시 저장 전 WORK_SEQ 가져오기
     public int selectProdOrderWorkSeq(Map<String, Object> prodOrder) throws Exception {
         return (Integer)selectOne("ProductionOrderDAO.selectProdOrderWorkSeq", prodOrder);

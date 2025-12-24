@@ -208,6 +208,22 @@
 		ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ;
 	</select>
 
+	<!-- 생산지시 TPR504 NextId 가져오기    -->
+	<select id="selectProdOrderNextId" resultType="string">
+		SELECT
+			'PO' + CONVERT(char(8), GETDATE(), 112)
+				+ RIGHT('0000' +
+			CAST(
+			ISNULL(
+			MAX(CAST(RIGHT(TPR504ID, 4) AS INT)), 0
+			) + 1
+			AS varchar),
+			4
+			) AS NEXT_ID
+		FROM TPR504
+		WHERE TPR504ID LIKE  'PO' + CONVERT(char(8), GETDATE(), 112) + '%'
+	</select>
+
 	<!-- 생산지시 INSERT 전 WORK_SEQ 값 가져오기	-->
 	<select id="selectProdOrderWorkSeq" parameterType="map" resultType="int">
 		SELECT COUNT(*)+1
