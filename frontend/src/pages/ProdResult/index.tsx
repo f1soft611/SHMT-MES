@@ -1,12 +1,18 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import {Box, Typography, Grid} from '@mui/material';
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
 import ProdResultList from "./components/ProdResultList";
 import {useProductionResult} from "./hooks/useProductionResult";
+import ProdResultDialog from "./components/ProdResultDialog";
+import ProdResultTable from "./components/ProdResultTable";
 
 const ProductionResult: React.FC = () => {
 
-    const rs = useProductionResult();
+    const location = useLocation();
+    const rowData = location.state?.rowData?? null; // 생산지시에서 넘어올때 사용하는 params
+
+    const rs = useProductionResult(rowData);
 
     return(
         <Box>
@@ -34,17 +40,31 @@ const ProductionResult: React.FC = () => {
 
             <Grid container spacing={2} columns={12}>
                 <Grid size={{xs: 12, md: 12}}>
-                    {/* 생산지시 목록 */}
-                    <ProdResultList
-                        rows={rs.rows}
-                        loading={rs.loading}
 
-                        paginationModel={rs.paginationModel}
-                        rowCount={rs.rowCount}
-                        onPaginationModelChange={rs.setPaginationModel}
-                    />
+
+                    <ProdResultTable
+                        rows={rs.rows} />
+
+                    {/* 생산지시 목록 */}
+                    {/*<ProdResultList*/}
+                    {/*    rows={rs.rows}*/}
+                    {/*    loading={rs.loading}*/}
+                    {/*    onRowClick={rs.handleResultSelect}*/}
+
+                    {/*    paginationModel={rs.paginationModel}*/}
+                    {/*    rowCount={rs.rowCount}*/}
+                    {/*    onPaginationModelChange={rs.setPaginationModel}*/}
+                    {/*/>*/}
                 </Grid>
             </Grid>
+
+
+            <ProdResultDialog
+                open={rs.open}
+                order={rs.order}
+                rows={rs.rows}
+                onClose={rs.closeDialog}
+                onSubmit={rs.submit} />
 
         </Box>
     )

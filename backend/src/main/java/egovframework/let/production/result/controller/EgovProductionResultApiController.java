@@ -50,7 +50,7 @@ public class EgovProductionResultApiController {
 	private final EgovPropertyService propertyService;
 
 	/**
-	 * 작업지시 목록을 조회한다.
+	 * 생산실적 목록을 조회한다.
 	 *
 	 * @param searchVO 검색 조건
 	 * @param user 사용자 정보
@@ -58,8 +58,8 @@ public class EgovProductionResultApiController {
 	 * @throws Exception
 	 */
 	@Operation(
-			summary = "작업지시 목록 조회",
-			description = "작업지시 목록을 조회한다.",
+			summary = "생산실적 목록 조회",
+			description = "생산실적 목록을 조회한다.",
 			security = {@SecurityRequirement(name = "Authorization")},
 			tags = {"EgovProductionResultApiController"}
 	)
@@ -68,7 +68,7 @@ public class EgovProductionResultApiController {
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
 	@GetMapping
-	public ResultVO selectProductionOrderList(
+	public ResultVO selectProductionResultList(
 			@RequestParam Map<String, String> searchVO,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
@@ -81,7 +81,7 @@ public class EgovProductionResultApiController {
 	/**
 	 * 생산실적을 등록한다
 	 *
-	 * @param params 생산실적 등록 요청 정보
+	 * @param details 생산실적 등록 요청 정보
 	 * @param user 사용자 정보
 	 * @return ResultVO
 	 * @throws Exception
@@ -97,16 +97,48 @@ public class EgovProductionResultApiController {
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
 	@PostMapping
-	public ResultVO insertProductionPlan(
-			@RequestBody Map<String, Object> params,
+	public ResultVO insertProductionResult(
+			@RequestBody List<Map<String, Object>> details,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+		for (Map<String, Object> detail : details) {
+			detail.put("OPMAN_CODE", user.getUniqId());
+		}
 
-
+		productionResultService.insertProductionResult(details);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산실적이 등록되었습니다.");
 		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+
+	/**
+	 * 생산실적 detail 목록을 조회한다.
+	 *
+	 * @param searchVO 검색 조건
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산실적 목록 조회",
+			description = "생산실적 목록을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionResultApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping("/details")
+	public ResultVO selectProductionResultDetailList(
+			@RequestParam Map<String, Object> searchVO,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		Map<String, Object> resultMap = productionResultService.selectProductionResultDetailList(searchVO, user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}

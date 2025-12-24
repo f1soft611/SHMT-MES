@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {productionResultService} from "../../../services/productionResultService";
 import {GridPaginationModel} from "@mui/x-data-grid";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import {ProductionResult} from "../../../types/productionResult";
 
 export function useProdOrder() {
 
@@ -28,7 +29,7 @@ export function useProdOrder() {
     });
 
     // 데이터 상태
-    const [rows, setRows] = useState<any[]>([]);
+    const [rows, setRows] = useState<ProductionResult[]>([]);
     const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [searchTrigger, setSearchTrigger] = useState(0);
@@ -85,6 +86,7 @@ export function useProdOrder() {
 
     return {
         search,
+        setSearch,
         handleSearchChange,
         handleSearch,
 

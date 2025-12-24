@@ -6,11 +6,44 @@
     <select id="selectProductionOrderList"
             parameterType="map"
             resultType="map">
-        SELECT *
-        FROM TPR504
+        SELECT A.FACTORY_CODE
+            , A.PRODPLAN_ID
+            , A.PRODPLAN_DATE
+            , A.PRODPLAN_SEQ
+            , A.PRODWORK_SEQ
+            , CAST(A.WORK_SEQ AS INT) AS WORK_SEQ
+            , A.WORKDT_DATE
+            , A.WORK_CODE
+            , B.WORK_NAME
+            , ISNULL(A.ITEM_CODE, '-') AS ITEM_CODE
+            , ISNULL(C.MATERIAL_NAME, '-') AS ITEM_NAME
+            , ISNULL(A.EQUIP_SYS_CD, '-') AS EQUIP_SYS_CD
+            , ISNULL(D.EQUIPMENT_NAME, '-') AS EQUIP_SYS_CD_NM
+            , A.PROD_QTY
+            , A.ORDER_FLAG
+            , A.WORKORDER_SEQ
+            , A.LOT_NO
+            , A.ERP_SEND_FLAG
+            , A.ERP_WORKDT_IDX
+            , A.OPMAN_CODE
+            , A.OPTIME
+            , A.OPMAN_CODE2
+            , A.OPTIME2
+            , A.TPR504ID
+            , A.PRODORDER_ID
+        FROM TPR504 A
+        LEFT JOIN TPR102 B
+        ON A.FACTORY_CODE = B.FACTORY_CODE
+        AND A.WORK_CODE = B.WORK_CODE
+
+        LEFT JOIN TCO403 C
+        ON A.ITEM_CODE = C.MATERIAL_ID
+
+        LEFT JOIN TPR151 D
+        ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
         WHERE 1=1
-        AND WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
-        ORDER BY WORKDT_DATE DESC
+        AND A.WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
+        ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, A.WORK_SEQ, A.WORKDT_DATE DESC
         OFFSET #{offset} ROWS
         FETCH NEXT #{size} ROWS ONLY
     </select>
@@ -23,5 +56,103 @@
         FROM TPR504
         WHERE 1=1
     </select>
+
+    <!-- 생산실적 TPR601 NextId 가져오기    -->
+    <select id="selectProdResultNextId"
+            resultType="string">
+        SELECT
+            'PR' + CONVERT(char(8), GETDATE(), 112)
+                + RIGHT('0000' +
+            CAST(
+            ISNULL(
+            MAX(CAST(RIGHT(TPR601ID, 4) AS INT)), 0
+            ) + 1
+            AS varchar),
+            4
+            ) AS NEXT_ID
+        FROM TPR601
+        WHERE TPR601ID LIKE 'PR' + CONVERT(char(8), GETDATE(), 112) + '%'
+    </select>
+
+    <!-- 생산실적 TPR601 prod_seq 가져오기  -->
+    <select id="selectProdSeq"
+            parameterType="map"
+            resultType="int">
+        SELECT COUNT(*)+1
+        FROM TPR601
+        WHERE FACTORY_CODE = #{FACTORY_CODE}
+        AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+        AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+        AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+        AND WORK_SEQ = #{WORK_SEQ}
+    </select>
+
+    <!-- 생산실적 TPR601 저장   -->
+    <insert id="insertProductionResult"
+            parameterType="map">
+        INSERT INTO TPR601(
+            FACTORY_CODE,
+            PRODPLAN_DATE,
+            PRODPLAN_SEQ,
+            PRODWORK_SEQ,
+            WORK_SEQ,
+            PROD_SEQ,
+            ITEM_CODE,
+            WORK_CODE,
+            PROD_STIME,
+            PROD_ETIME,
+            ORDER_FLAG,
+            PROD_QTY,
+            GOOD_QTY,
+            BAD_QTY,
+            RCV_QTY,
+            WORKORDER_SEQ,
+            TPR601ID,
+            TPR504ID,
+            OPMAN_CODE,
+            OPTIME
+        )
+        VALUES (
+            '000001',
+            #{PRODPLAN_DATE},
+            #{PRODPLAN_SEQ},
+            #{PRODWORK_SEQ},
+            #{WORK_SEQ},
+            #{PROD_SEQ},
+            #{ITEM_CODE},
+            #{WORK_CODE},
+            #{PROD_STIME},
+            #{PROD_ETIME},
+            #{ORDER_FLAG},
+            #{PROD_QTY},
+            #{GOOD_QTY},
+            #{BAD_QTY},
+            #{RCV_QTY},
+            #{PROD_SEQ},
+            #{TPR601ID},
+            #{TPR504ID},
+            #{OPMAN_CODE},
+            GETDATE()
+        )
+    </insert>
+
+    <!-- 생산실적 저장 후 TPR504 ORDER_FLAG UPDATE  -->
+    <update id="updateProdOrderOrderFlag" parameterType="map">
+        UPDATE TPR504 SET ORDER_FLAG = #{ORDER_FLAG}
+        WHERE FACTORY_CODE = '000001'
+        AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+        AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+    </update>
+
+
+    <!-- 생산실적 detail 조회  -->
+    <select id="selectProductionResultDetailList"
+            parameterType="map"
+            resultType="map">
+        SELECT A.*
+        FROM TPR601 A
+        WHERE A.TPR504ID = #{TPR504ID}
+    </select>
+
 
 </mapper>

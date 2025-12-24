@@ -1,5 +1,6 @@
 package egovframework.let.production.result.domain.repository;
 
+import egovframework.let.production.result.domain.model.ProductionResult;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -27,13 +28,38 @@ import java.util.Map;
 public class ProductionResultDAO extends EgovAbstractMapper {
 
 	// 조건에 맞는 생산지시 목록 반환
-	public List<Map<String, Object>> selectProductionOrderList(Map<String, Object> searchVO) throws Exception {
+	public List<ProductionResult> selectProductionOrderList(Map<String, Object> searchVO) throws Exception {
 		return selectList("ProductionResultDAO.selectProductionOrderList", searchVO);
 	}
 
 	// 조건에 맞는 생산지시 전체 건 수
 	public int selectProductionOrderListCount(Map<String, Object> searchVO) throws Exception {
 		return (Integer)selectOne("ProductionResultDAO.selectProductionOrderListCount", searchVO);
+	}
+
+	// 생산실적 TPR601 nextId 가져오기
+	public String selectProdResultNextId() throws Exception {
+		return (String)selectOne("ProductionResultDAO.selectProdResultNextId");
+	}
+
+	// 생산실적 시퀀스 가져오기 PROD_SEQ
+	public int selectProdSeq(Map<String, Object> params) throws Exception {
+		return (Integer)selectOne("ProductionResultDAO.selectProdSeq", params);
+	}
+
+	// 생산실적 등록
+	public void insertProductionResult(Map<String, Object> params) throws Exception {
+		insert("ProductionResultDAO.insertProductionResult", params);
+	}
+
+	// 생산실적 등록 후 TPR504 ORDER_FLAG UPDATE
+	public void updateProdOrderOrderFlag(Map<String, Object> params) throws Exception {
+		update("ProductionResultDAO.updateProdOrderOrderFlag", params);
+	}
+
+	//생산실적 detail 목록 조회
+	public List<Map<String, Object>> selectProductionResultDetailList(Map<String, Object> searchVO) throws Exception {
+		return selectList("ProductionResultDAO.selectProductionResultDetailList", searchVO);
 	}
 
 }
