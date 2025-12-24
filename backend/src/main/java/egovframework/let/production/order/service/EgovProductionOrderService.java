@@ -46,4 +46,10 @@ public interface EgovProductionOrderService {
 	// 생산지시 저장
 	void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
 
+	// 생산지시 수정
+	void updateProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
+
+	// 생산지시 삭제
+	void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception;
+
 }

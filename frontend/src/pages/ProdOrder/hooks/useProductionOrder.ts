@@ -28,13 +28,45 @@ export function useProductionOrder() {
 
             const payload = localRows.map((row, index) => ({
                 ...row,
-                WORKORDER_SEQ: index + 1,   // 화면 순서대로
+                NEW_WORKORDER_SEQ: index + 1,   // 화면 순서대로
             }));
 
-            const response = await productionOrderService.createProductionOrder(payload);
+            // console.log(payload)
+
+            const isEmptyId = (v: any) =>
+                v === undefined || v === null || v === "" || v === "new";
+
+            const insertRows = payload.filter(
+                r => r._isNew || isEmptyId(r.PRODORDER_ID)
+            );
+
+            const updateRows = payload.filter(
+                r => !r._isNew && !isEmptyId(r.PRODORDER_ID)
+            );
+
+            let lastMessage = "저장되었습니다";
+
+            if (updateRows.length > 0) {
+                const { data } = await productionOrderService.updateProductionOrder(updateRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return;
+                }
+                lastMessage = data.resultMessage;
+            }
+
+            if (insertRows.length > 0) {
+                const { data } = await productionOrderService.createProductionOrder(insertRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return;
+                }
+                lastMessage = data.resultMessage;
+            }
+
             showToast({
-                message: "등록되었습니다.",
-                severity: 'success',
+                message: lastMessage,
+                severity: "success",
             });
             // 저장 후 목록 리로드
             await prodPlan.fetchProdPlan();
@@ -57,17 +89,49 @@ export function useProductionOrder() {
                     await prodOrder.fetchProdOrders(updatedPlan);
                 }
             }
-        } catch (err){
-            console.error(err);
+        } catch (e) {
+            console.log(e);
             showToast({
-                message: "저장 실패하였습니다.",
-                severity: 'error',
+                message: "저장 실패",
+                severity: "error",
             });
         }
     };
 
+    const handleDeleteOrder = async () => {
+        try {
+            const { data } = await productionOrderService.deleteProductionOrders(selectedPlan);
+            if (data.resultCode !== 200) {
+                showToast({
+                    message: data.resultMessage,
+                    severity: "error",
+                });
+                return;
+            }
 
-    const dialog = useProdOrderDialog(handleSaveOrders);
+            showToast({
+                message: data.resultMessage,
+                severity: "success",
+            });
+
+            // 삭제 후 목록 리로드
+            await prodPlan.fetchProdPlan();
+
+        } catch (e) {
+            console.log(e)
+            showToast({
+                message: "삭제 요청 중 오류가 발생했습니다.",
+                severity: "error",
+            });
+        }
+
+    }
+
+
+    const dialog = useProdOrderDialog(
+        handleSaveOrders,
+        handleDeleteOrder
+    );
 
 
     // 생산계획 row 선택했을때
@@ -87,9 +151,11 @@ export function useProductionOrder() {
 
             const newRow = {
                 ...base, // 전체 행 복사
+                PRODORDER_ID: '',
+                ORDER_SEQ: 0,
+                WORKORDER_SEQ: 0,
                 IDX: `${Date.now()}_${Math.random()}`,
                 _isNew: true,
-                WORKORDER_SEQ: 0,
             };
 
             const copy = [...prev];
@@ -97,6 +163,12 @@ export function useProductionOrder() {
             return copy;
         });
     };
+
+    const handleRemoveRow  = (index: number) => {
+        setLocalRows(prev =>
+            prev.filter((_, i) => i !== index)
+        );
+    }
 
 
     const handleProcessRowUpdate = (newRow: any) => {
@@ -120,6 +192,7 @@ export function useProductionOrder() {
         handleSearch: prodPlan.handleSearch,
         handlePlanSelect,
         handleAddRow,
+        handleRemoveRow,
         handleSaveOrders,
 
         workplaces: wpfetchHook.workplaces,
@@ -132,7 +205,7 @@ export function useProductionOrder() {
         openDialog: dialog.openDialog,
         closeDialog: dialog.closeDialog,
         submit: dialog.submit,
-
+        deleteOrder: dialog.deleteOrder,
 
         handleProcessRowUpdate
 

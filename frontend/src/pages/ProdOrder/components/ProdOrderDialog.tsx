@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import {
     Add as AddIcon,
+    Remove as RemoveIcon,
 } from '@mui/icons-material';
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 
@@ -16,17 +17,27 @@ interface Props {
     rows: any[];
     onClose: () => void;
     onSubmit: () => void;
+    onDelete: () => void;
     onAddRow: (index: number) => void;
+    onRemoveRow: (index: number) => void;
     onProcessRowUpdate: (newRow: any) => any;
     canWrite: boolean;
 }
 
-export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, onAddRow, onProcessRowUpdate, canWrite}:Props){
+export default function ProdOrderDialog({
+    open,
+    plan, rows,
+    onClose, onSubmit, onDelete,
+    onAddRow, onRemoveRow,
+    onProcessRowUpdate, canWrite
+}:Props){
 
     const columns: GridColDef[] =[
         { field: 'PRODPLAN_ID'},
         { field: 'PRODPLAN_DATE'},
         { field: 'PRODPLAN_SEQ'},
+        { field: 'PRODORDER_ID'},
+        { field: 'ORDER_SEQ'},
         {
             field: "add",
             headerName: "분할",
@@ -34,18 +45,33 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
             headerAlign: "center",
             align: "center",
             sortable: false,
-            renderCell: (params) => (
-                <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => {
-                        const index = params.api.getRowIndexRelativeToVisibleRows(params.id);
-                        onAddRow(index);
-                    }}
-                >
-                    <AddIcon fontSize="small" />
-                </IconButton>
-            ),
+            renderCell: (params) => {
+                const isNew = params.row._isNew === true;
+                const disabled = params.row.RST_CNT > 0;
+                return (
+                    <IconButton
+                        size="small"
+                        color={isNew ? "error" : "primary"}
+                        disabled={disabled}
+                        onClick={() => {
+                            const index =
+                                params.api.getRowIndexRelativeToVisibleRows(params.id);
+
+                            if (isNew) {
+                                onRemoveRow(index);   // 행 삭제
+                            } else {
+                                onAddRow(index);      // 행 분할
+                            }
+                        }}
+                    >
+                        {isNew ? (
+                            <RemoveIcon fontSize="small" />
+                        ) : (
+                            <AddIcon fontSize="small" />
+                        )}
+                    </IconButton>
+                );
+            },
         },
         {
             field: "WORK_NAME",
@@ -69,7 +95,14 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
             align: "center",
         },
         {
-            field: "MATERIAL_CODE",
+            field: "ITEM_CODE",
+            headerName: "아이템코드",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "PROD_CODE",
             headerName: "생산품목코드",
             width: 100,
             headerAlign: "center",
@@ -106,79 +139,53 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
             renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
-            field: "START_DATE",
+            field: "WORKDT_DATE",
             headerName: "시작일",
             width: 100,
             headerAlign: "center",
             align: "center",
             editable: true,
             renderCell: (params) => {
-                const v = params.row.START_DATE;
+                const v = params.row.WORKDT_DATE || params.row.PRODPLAN_DATE;
                 if (!v) return "";
 
                 // 20251212 → 2025-12-12
-                const formatted = `${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;
-                return <span>{formatted}</span>;
+                return `${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;
             },
             renderEditCell: (params) => {
-                return (
-                    <input
-                        type="date"
-                        value={params.value || ""}
-                        onChange={(e) => {
-                            const yyyymmdd = e.target.value.replace(/-/g, "");
-                            // START_DATE 변경
-                            params.api.setEditCellValue({
-                                id: params.id,
-                                field: "START_DATE",
-                                value: yyyymmdd,
-                            });
-                            // END_DATE 비어 있으면 같이 세팅
-                            if (!params.row.END_DATE) {
-                                params.api.setEditCellValue({
-                                    id: params.id,
-                                    field: "END_DATE",
-                                    value: yyyymmdd,
-                                });
-                            }
-                        }}
-                    />
-                );
-            },
-        },
-        {
-            field: "END_DATE",
-            headerName: "종료일",
-            width: 100,
-            headerAlign: "center",
-            align: "center",
-            editable: true,
-            renderCell: (params) => {
-                const v = params.row.END_DATE;
-                if (!v) return "";
+                const raw =
+                    params.value ||
+                    params.row.WORKDT_DATE ||
+                    params.row.PRODPLAN_DATE ||
+                    "";
 
-                // 20251212 → 2025-12-12
-                const formatted = `${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;
-                return <span>{formatted}</span>;
-            },
-            renderEditCell: (params) => {
-                const rid = params.row.PRODPLAN_ID + "_" + params.row.PRODWORK_SEQ;
+                if (!params.value && raw) {
+                    params.api.setEditCellValue({
+                        id: params.id,
+                        field: "WORKDT_DATE",
+                        value: raw,
+                    });
+                }
+
+                const formatted =
+                    raw && raw.length === 8
+                        ? `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
+                        : "";
+
                 return (
                     <input
                         type="date"
-                        value={params.value || ""}
+                        value={formatted}
                         onChange={(e) => {
-                            const raw = e.target.value;      // 'yyyy-mm-dd'
-                            const yyyymmdd = raw.replace(/-/g, "");
                             params.api.setEditCellValue({
                                 id: params.id,
-                                field: params.field,
-                                value: yyyymmdd,
+                                field: "WORKDT_DATE",
+                                value: e.target.value.replace(/-/g, ""),
                             });
                         }}
                     />
                 );
-            }
+            },
         },
         {
             field: 'LAST_FLAG',
@@ -188,7 +195,6 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
             align: "center",
             renderCell: (params) => {
                 if (params.value !== 'Y') return null;
-
                 return (
                     <Chip
                         label="최종"
@@ -204,11 +210,6 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
             width: 100,
             headerAlign: "center",
             align: "center",
-            // renderHeader: () => (
-            //     // <div style={{ textAlign: "center" }}>
-            //     //     최종<br/>수정자
-            //     // </div>
-            // )
         },
         {
             field: 'OPTIME2',
@@ -372,8 +373,14 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
                             PRODPLAN_ID: false,
                             PRODPLAN_DATE: false,
                             PRODPLAN_SEQ: false,
+                            PRODORDER_ID: false,
+                            ORDER_SEQ: false,
                         }}   // 화면에서만 숨김
                         processRowUpdate={onProcessRowUpdate}
+                        isCellEditable={(params) => {
+                            // RST_CNT > 0 이면 전체 편집 불가
+                            return params.row.RST_CNT <= 0;
+                        }}
                         sx={{
                             fontSize: '0.8rem',                 // 기본 폰트
                         }}
@@ -387,8 +394,22 @@ export default function ProdOrderDialog({open, plan, rows, onClose, onSubmit, on
                     color="primary"
                     disabled={!canWrite}
                 >
-                    저장
+                    {plan?.ORDER_FLAG === 'ORDERED' ? '수정' : '저장'}
                 </Button>
+                {plan?.ORDER_FLAG === 'ORDERED' && (
+                    <Button
+                        variant="contained"
+                        color="error"
+                        disabled={!canWrite}
+                        onClick={() => {
+                            if (window.confirm('이미 생성된 생산지시를 삭제하시겠습니까?')) {
+                                onDelete();
+                            }
+                        }}
+                    >
+                        삭제
+                    </Button>
+                )}
                 <Button onClick={onClose}>취소</Button>
             </DialogActions>
         </Dialog>

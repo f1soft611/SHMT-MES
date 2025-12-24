@@ -51,7 +51,9 @@ const ProdOrder: React.FC = () => {
                 rows={prodOrder.localRows}
                 onClose={prodOrder.closeDialog}
                 onSubmit={prodOrder.submit}
+                onDelete={prodOrder.deleteOrder}
                 onAddRow={prodOrder.handleAddRow}
+                onRemoveRow={prodOrder.handleRemoveRow}
                 onProcessRowUpdate={prodOrder.handleProcessRowUpdate}
                 canWrite={canWrite}
             />

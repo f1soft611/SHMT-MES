@@ -74,14 +74,35 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         return selectList("ProductionOrderDAO.selectProdOrders", prodPlanId);
     }
 
+    // 생산지시] 생산지시 저장 전 WORK_SEQ 가져오기
+    public int selectProdOrderWorkSeq(Map<String, Object> prodOrder) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdOrderWorkSeq", prodOrder);
+    }
+
     // 생산지시] 생산지시 저장
     public void insertProductionOrder(Map<String, Object> prodOrder) throws Exception {
         insert("ProductionOrderDAO.insertProductionOrder", prodOrder);
     }
 
     // 생산지시] 생산지시 저장 -> 생산계획TPR301M ORDER FLAG UPDATE
+    // 생산지시] 생산지시 삭제 -> 생산계획TPR301M ORDER FLAG UPDATE
     public void updateProdPlanOrderFlag(Map<String, Object> prodOrder) throws Exception {
         update("ProductionOrderDAO.updateProdPlanOrderFlag", prodOrder);
+    }
+
+    // 생산지시] 생산지시 삭제
+    public void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception {
+        delete("ProductionOrderDAO.deleteProductionOrder", prodOrder);
+    }
+
+    // 생산지시] 해당 지시에 등록된 생산실적 있는지 확인
+    public int selectProdResultCount(Map<String, Object> prodOrder) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdResultCount", prodOrder);
+    }
+
+    // 생산지시] 생산지시 수정
+    public void updateProductionOrder(Map<String, Object> prodOrder) throws Exception {
+        update("ProductionOrderDAO.updateProductionOrder", prodOrder);
     }
 
 
