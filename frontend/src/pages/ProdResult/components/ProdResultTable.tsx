@@ -1,10 +1,9 @@
-import React, {useImperativeHandle, useRef, useState} from "react";
+import React, {useRef, useState} from "react";
 import {
     Box, Card, CardActions, CardContent, CardHeader,
     Collapse, Paper,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, MenuItem, Checkbox, ListItemText,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton,
 } from "@mui/material";
-import {DataGrid, GridColDef, GridRenderEditCellParams, GridToolbarContainer} from "@mui/x-data-grid";
 import {
     KeyboardArrowDown,
     KeyboardArrowUp,
@@ -14,16 +13,10 @@ import {
     ProductionResult,
     ProductionResultDetail
 } from "../../../types/productionResult";
-import Button from "@mui/material/Button";
-import {useProdResultDetail} from "../hooks/useProdResultDetail";
-import Select from "@mui/material/Select";
+import ProdResultList from "./ProdResultList";
 
 interface Props {
     rows: ProductionResult[];
-}
-
-interface DetailGridProps {
-    parentRow: ProductionResult;
 }
 
 export interface DetailGridRef {
@@ -165,10 +158,10 @@ function ProdResultRow({ row }: { row: ProductionResult }) {
                 <TableCell colSpan={11} sx={{ p: 0 }}>
                     <Collapse in={open} timeout="auto">
                         <Box sx={{ ml:'100px', backgroundColor: '#ddd' }}>
-                            <DetailGrid
+                            <ProdResultList
                                 ref={detailRef}
-                                parentRow={row} />
-                                {/*rows={dummyDetailMap[row.id] ?? []} />*/}
+                                parentRow={row}
+                            />
                         </Box>
                     </Collapse>
                 </TableCell>
@@ -176,120 +169,113 @@ function ProdResultRow({ row }: { row: ProductionResult }) {
         </>
     );
 }
-
-
-const workerOptions = [
-    { value: "W001", label: "홍길동" },
-    { value: "W002", label: "김철수" },
-    { value: "W003", label: "이영희" },
-];
-
-
-const DetailGrid = React.forwardRef(
-    (
-        { parentRow }: DetailGridProps,
-        ref: React.ForwardedRef<DetailGridRef>
-    ) => {
-        const details = useProdResultDetail(parentRow);
-
-        useImperativeHandle(ref, () => ({
-            addRow: details.addRow,
-            getRows: () => details.rows,
-            fetchDetails: details.fetchDetails,
-        }));
-
-        function createDetailToolbar(onSave: () => void) {
-            return function DetailToolbar() {
-                return (
-                    <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
-                        <Button
-                            size="small"
-                            variant="contained"
-                            onClick={onSave}
-                        >
-                            저장
-                        </Button>
-                    </GridToolbarContainer>
-                );
-            };
-        }
-
-        const columns: GridColDef[] = [
-            { field: "WORKSDATE", headerName: "작업시작일", headerAlign:'center', width: 120, type: "dateTime", editable: true },
-            { field: "PROD_STIME", headerName: "시작시간", headerAlign:'center', width: 120, editable: true },
-            { field: "WORKEDATE", headerName: "작업종료일", headerAlign:'center', width: 120, editable: true },
-            { field: "PROD_ETIME", headerName: "종료시간", headerAlign:'center', width: 120, editable: true },
-            { field: "PROD_QTY", headerName: "생산수량", headerAlign:'center', width: 120, type: "number", editable: true },
-            { field: "GOOD_QTY", headerName: "양품수량", headerAlign:'center', width: 120, type: "number", editable: true },
-            { field: "BAD_QTY", headerName: "불량수량", headerAlign:'center', width: 120, type: "number", editable: true },
-            { field: "RCV_QTY", headerName: "인수수량", headerAlign:'center', width: 120, type: "number", editable: true },
-            {
-                field: "WORKER",
-                headerName: "작업자",
-                headerAlign:'center',
-                width: 120,
-                editable: true,
-                renderEditCell: (params: GridRenderEditCellParams) => (
-                    <Select
-                        multiple
-                        fullWidth
-                        value={params.value || []}
-                        onChange={(e) => {
-                            params.api.setEditCellValue({
-                                id: params.id,
-                                field: params.field,
-                                value: e.target.value,
-                            });
-                        }}
-                        renderValue={(selected) =>
-                            workerOptions
-                            .filter(o => selected.includes(o.value))
-                            .map(o => o.label)
-                            .join(", ")
-                        }
-                    >
-                        {workerOptions.map(opt => (
-                            <MenuItem key={opt.value} value={opt.value}>
-                                <Checkbox checked={(params.value || []).includes(opt.value)} />
-                                <ListItemText primary={opt.label} />
-                            </MenuItem>
-                        ))}
-                    </Select>
-                ),
-                renderCell: (params) =>
-                    workerOptions
-                    .filter(o => (params.value || []).includes(o.value))
-                    .map(o => o.label)
-                    .join(", "),
-            },
-            { field: "INPUTMATERIAL", headerName: "투입자재", headerAlign:'center', width: 120, editable: true },
-        ];
-
-        const Toolbar = React.useMemo(
-            () => createDetailToolbar(() => {
-                details.handleSave();
-            }),
-            [details.handleSave]
-        );
-
-        return (
-            <DataGrid
-                rows={details.rows}
-                columns={columns}
-                getRowId={(row) => row.TPR601ID}
-                autoHeight
-                hideFooter
-                disableRowSelectionOnClick
-                rowHeight={35}
-                columnHeaderHeight={40}
-                showToolbar
-                slots={{
-                    toolbar: Toolbar,
-                }}
-                processRowUpdate={details.processRowUpdate}
-            />
-        );
-    }
-) as React.ForwardRefExoticComponent<
-    DetailGridProps & React.RefAttributes<DetailGridRef>
->;
+//
+//
+// const DetailGrid = React.forwardRef(
+//     (
+//         { parentRow }: DetailGridProps,
+//         ref: React.ForwardedRef<DetailGridRef>
+//     ) => {
+//         const details = useProdResultDetail(parentRow);
+//
+//         useImperativeHandle(ref, () => ({
+//             addRow: details.addRow,
+//             getRows: () => details.rows,
+//             fetchDetails: details.fetchDetails,
+//         }));
+//
+//         function createDetailToolbar(onSave: () => void) {
+//             return function DetailToolbar() {
+//                 return (
+//                     <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
+//                         <Button
+//                             size="small"
+//                             variant="contained"
+//                             onClick={onSave}
+//                         >
+//                             저장
+//                         </Button>
+//                     </GridToolbarContainer>
+//                 );
+//             };
+//         }
+//
+//         const columns: GridColDef[] = [
+//             { field: "WORKSDATE", headerName: "작업시작일", headerAlign:'center', width: 120, type: "dateTime", editable: true },
+//             { field: "PROD_STIME", headerName: "시작시간", headerAlign:'center', width: 120, editable: true },
+//             { field: "WORKEDATE", headerName: "작업종료일", headerAlign:'center', width: 120, editable: true },
+//             { field: "PROD_ETIME", headerName: "종료시간", headerAlign:'center', width: 120, editable: true },
+//             { field: "PROD_QTY", headerName: "생산수량", headerAlign:'center', width: 120, type: "number", editable: true },
+//             { field: "GOOD_QTY", headerName: "양품수량", headerAlign:'center', width: 120, type: "number", editable: true },
+//             { field: "BAD_QTY", headerName: "불량수량", headerAlign:'center', width: 120, type: "number", editable: true },
+//             { field: "RCV_QTY", headerName: "인수수량", headerAlign:'center', width: 120, type: "number", editable: true },
+//             {
+//                 field: "WORKER",
+//                 headerName: "작업자",
+//                 headerAlign:'center',
+//                 width: 120,
+//                 editable: true,
+//                 renderEditCell: (params: GridRenderEditCellParams) => (
+//                     <Select
+//                         multiple
+//                         fullWidth
+//                         value={params.value || []}
+//                         onChange={(e) => {
+//                             params.api.setEditCellValue({
+//                                 id: params.id,
+//                                 field: params.field,
+//                                 value: e.target.value,
+//                             });
+//                         }}
+//                         renderValue={(selected) =>
+//                             workerOptions
+//                             .filter(o => selected.includes(o.value))
+//                             .map(o => o.label)
+//                             .join(", ")
+//                         }
+//                     >
+//                         {workerOptions.map(opt => (
+//                             <MenuItem key={opt.value} value={opt.value}>
+//                                 <Checkbox checked={(params.value || []).includes(opt.value)} />
+//                                 <ListItemText primary={opt.label} />
+//                             </MenuItem>
+//                         ))}
+//                     </Select>
+//                 ),
+//                 renderCell: (params) =>
+//                     workerOptions
+//                     .filter(o => (params.value || []).includes(o.value))
+//                     .map(o => o.label)
+//                     .join(", "),
+//             },
+//             { field: "INPUTMATERIAL", headerName: "투입자재", headerAlign:'center', width: 120, editable: true },
+//         ];
+//
+//         const Toolbar = React.useMemo(
+//             () => createDetailToolbar(() => {
+//                 details.handleSave();
+//             }),
+//             [details.handleSave]
+//         );
+//
+//         return (
+//             <DataGrid
+//                 rows={details.rows}
+//                 columns={columns}
+//                 getRowId={(row) => row.TPR601ID}
+//                 autoHeight
+//                 hideFooter
+//                 disableRowSelectionOnClick
+//                 rowHeight={35}
+//                 columnHeaderHeight={40}
+//                 showToolbar
+//                 slots={{
+//                     toolbar: Toolbar,
+//                 }}
+//                 processRowUpdate={details.processRowUpdate}
+//             />
+//         );
+//     }
+// ) as React.ForwardRefExoticComponent<
+//     DetailGridProps & React.RefAttributes<DetailGridRef>
+// >;

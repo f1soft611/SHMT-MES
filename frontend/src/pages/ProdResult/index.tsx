@@ -40,17 +40,6 @@ const ProductionResult: React.FC = () => {
                 <Grid size={{xs: 12,}}>
                     <ProdResultTable
                         rows={rs.rows} />
-
-                    {/* 생산지시 목록 */}
-                    {/*<ProdResultList*/}
-                    {/*    rows={rs.rows}*/}
-                    {/*    loading={rs.loading}*/}
-                    {/*    onRowClick={rs.handleResultSelect}*/}
-
-                    {/*    paginationModel={rs.paginationModel}*/}
-                    {/*    rowCount={rs.rowCount}*/}
-                    {/*    onPaginationModelChange={rs.setPaginationModel}*/}
-                    {/*/>*/}
                 </Grid>
             </Grid>
 
