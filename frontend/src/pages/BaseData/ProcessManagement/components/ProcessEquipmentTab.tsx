@@ -57,8 +57,9 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
+  const canDelete = hasDeletePermission('/base/process');
 
   const [equipments, setEquipments] = useState<ProcessEquipment[]>([]);
   const [availableEquipments, setAvailableEquipments] = useState<Equipment[]>(
@@ -140,6 +141,10 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
   }, [selectedEquipSysCd, availableEquipments, dialogMode, setEquipmentValue]);
 
   const handleSave = async (data: ProcessEquipment) => {
+    if (!canWrite) {
+      showSnackbar('저장 권한이 없습니다.', 'error');
+      return;
+    }
     try {
       if (dialogMode === 'create') {
         const result = await processService.addProcessEquipment(
@@ -176,6 +181,10 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
   };
 
   const handleDelete = async (processEquipmentId: string) => {
+    if (!canDelete) {
+      showSnackbar('삭제 권한이 없습니다.', 'error');
+      return;
+    }
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
         await processService.removeProcessEquipment(
@@ -250,15 +259,15 @@ const ProcessEquipmentTab: React.FC<ProcessEquipmentTabProps> = ({
               }}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.processEquipmentId!)}
-              disabled={!canWrite}
+              disabled={!canDelete}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

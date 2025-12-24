@@ -55,6 +55,18 @@ public class ProductionPlanReference implements Serializable {
 	@Schema(description = "거래처 코드")
 	private String customerCode = "";
 
+	@Schema(description = "등록자 ID")
+	private String opmanCode = "";
+
+	@Schema(description = "등록일시")
+	private String optime = "";
+
+	@Schema(description = "수정자 ID")
+	private String opmanCode2 = "";
+
+	@Schema(description = "수정일시")
+	private String optime2 = "";
+
 	public String toString(){
 		return ToStringBuilder.reflectionToString(this);
 	}

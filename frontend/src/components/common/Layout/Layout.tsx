@@ -56,101 +56,108 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <PermissionProvider>
       <Box sx={{ display: 'flex' }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            SHMT-MES 시스템
-          </Typography>
-
-          {/* 사용자 정보 및 로그아웃 */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ display: { xs: 'none', sm: 'block' } }}
-            >
-              {user?.name}님 안녕하세요
-            </Typography>
-            <Button
-              onClick={handleProfileMenuOpen}
-              sx={{ minWidth: 'auto', p: 1 }}
-            >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                <Person />
-              </Avatar>
-            </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleProfileMenuClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <MenuItem disabled>
-                <Person sx={{ mr: 2 }} />
-                {user?.name}
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <ExitToApp sx={{ mr: 2 }} />
-                로그아웃
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      <Box
-        component="nav"
-        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
-      >
-        <Drawer
-          variant={isMobile ? 'temporary' : 'permanent'}
-          open={isMobile ? mobileOpen : true}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
+        <AppBar
+          position="fixed"
           sx={{
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: DRAWER_WIDTH,
-            },
+            width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+            ml: { md: `${DRAWER_WIDTH}px` },
           }}
         >
-          <Sidebar />
-        </Drawer>
-      </Box>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{ flexGrow: 1 }}
+            >
+              SHMT-MES 시스템
+            </Typography>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-        }}
-      >
-        <Toolbar />
-        {children}
+            {/* 사용자 정보 및 로그아웃 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography
+                variant="body2"
+                sx={{ display: { xs: 'none', sm: 'block' } }}
+              >
+                {user?.name}님 안녕하세요
+              </Typography>
+              <Button
+                onClick={handleProfileMenuOpen}
+                sx={{ minWidth: 'auto', p: 1 }}
+              >
+                <Avatar
+                  sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}
+                >
+                  <Person />
+                </Avatar>
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleProfileMenuClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <MenuItem disabled>
+                  <Person sx={{ mr: 2 }} />
+                  {user?.name}
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout}>
+                  <ExitToApp sx={{ mr: 2 }} />
+                  로그아웃
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <Box
+          component="nav"
+          sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+        >
+          <Drawer
+            variant={isMobile ? 'temporary' : 'permanent'}
+            open={isMobile ? mobileOpen : true}
+            onClose={handleDrawerToggle}
+            ModalProps={{ keepMounted: true }}
+            sx={{
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
+                width: DRAWER_WIDTH,
+              },
+            }}
+          >
+            <Sidebar />
+          </Drawer>
+        </Box>
+
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          }}
+        >
+          <Toolbar />
+          {children}
+        </Box>
       </Box>
-    </Box>
     </PermissionProvider>
   );
 };

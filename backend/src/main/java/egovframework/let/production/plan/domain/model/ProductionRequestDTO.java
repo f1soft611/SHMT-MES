@@ -22,6 +22,7 @@ public class ProductionRequestDTO {
     private Double orderAmount;         // ORDER_AMOUNT: money
     private Double shipOrderQty;        // SHIP_ORDER_QTY: float(15)
     private String closingFlag;         // CLOSING_FLAG: char(1)
+    private String prodPlanDate;        // PROD_PLAN_DATE: char(8)
     private String deliveryDate;        // DELIVERY_DATE: char(8)
     private String closingDate;         // CLOSING_DATE: char(8)
     private String vatFlag;             // VAT_FLAG: char(1)

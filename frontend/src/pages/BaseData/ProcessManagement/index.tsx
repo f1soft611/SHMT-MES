@@ -35,6 +35,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Process } from '../../../types/process';
 import processService from '../../../services/processService';
+import commonCodeService from '../../../services/commonCodeService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 import ProcessDetailDialog from './components/ProcessDetailDialog';
 import DataTable from '../../../components/common/DataTable/DataTable';
@@ -48,6 +49,7 @@ const processSchema: yup.ObjectSchema<Process> = yup.object({
   processName: yup.string().required('공정명은 필수입니다.'),
   description: yup.string(),
   processType: yup.string(),
+  erpProcessMapping: yup.string(),
   equipmentIntegrationYn: yup.string().required('설비연동 여부는 필수입니다.'),
   status: yup.string().required('상태는 필수입니다.'),
   useYn: yup.string().required('사용 여부는 필수입니다.'),
@@ -62,6 +64,14 @@ const ProcessManagement: React.FC = () => {
   const { hasWritePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/process');
 
+  // 페이지 로드 시 권한 새로고침
+  // useEffect(() => {
+  //   const refreshPerms = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refreshPerms();
+  // }, [refreshPermissions]);
+
   const [processes, setProcesses] = useState<Process[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
@@ -69,9 +79,12 @@ const ProcessManagement: React.FC = () => {
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [detailTab, setDetailTab] = useState(0);
+  const [erpProcessCodes, setErpProcessCodes] = useState<
+    Array<{ code: string; codeNm: string }>
+  >([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 25,
+    pageSize: 10,
   });
   const { showToast } = useToast();
 
@@ -88,6 +101,7 @@ const ProcessManagement: React.FC = () => {
       processName: '',
       description: '',
       processType: '',
+      erpProcessMapping: '',
       equipmentIntegrationYn: 'N',
       status: 'ACTIVE',
       useYn: 'Y',
@@ -133,6 +147,54 @@ const ProcessManagement: React.FC = () => {
     fetchProcesses();
   }, [fetchProcesses]);
 
+  // ERP 공정 코드 로드 (com008)
+  useEffect(() => {
+    const loadErpProcessCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM008',
+          'Y'
+        );
+
+        // result가 배열인지 확인
+        if (response.resultCode === 200 && response.result) {
+          // result가 직접 배열인 경우
+          if (Array.isArray(response.result)) {
+            setErpProcessCodes(response.result);
+          }
+          // result.resultList가 있는 경우
+          else if (
+            response.result.detailCodeList &&
+            Array.isArray(response.result.detailCodeList)
+          ) {
+            setErpProcessCodes(response.result.detailCodeList);
+          } else {
+            console.warn('Unknown response structure:', response);
+            showToast({
+              message:
+                'ERP 공정 코드를 불러오지 못했습니다. COM008 공통코드를 확인해주세요.',
+              severity: 'warning',
+            });
+          }
+        } else {
+          console.warn('Failed to load ERP process codes:', response);
+          showToast({
+            message:
+              'ERP 공정 코드를 불러오지 못했습니다. com008 공통코드를 확인해주세요.',
+            severity: 'warning',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch ERP process codes:', error);
+        showToast({
+          message: 'ERP 공정 코드 조회 중 오류가 발생했습니다.',
+          severity: 'error',
+        });
+      }
+    };
+    loadErpProcessCodes();
+  }, [showToast]);
+
   const handleSearch = () => {
     setSearchParams({ ...inputValues });
     setPaginationModel({ ...paginationModel, page: 0 });
@@ -149,6 +211,7 @@ const ProcessManagement: React.FC = () => {
       processName: '',
       description: '',
       processType: '',
+      erpProcessMapping: '',
       equipmentIntegrationYn: 'N',
       status: 'ACTIVE',
       useYn: 'Y',
@@ -290,7 +353,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="불량코드 관리"
             >
-              <BugReportIcon />
+              <BugReportIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -301,7 +364,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="검사항목 관리"
             >
-              <CheckCircleIcon />
+              <CheckCircleIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -312,7 +375,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="중지항목 관리"
             >
-              <PanToolIcon />
+              <PanToolIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -323,7 +386,7 @@ const ProcessManagement: React.FC = () => {
               }}
               title="설비 관리"
             >
-              <PrecisionManufacturingIcon />
+              <PrecisionManufacturingIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -332,7 +395,7 @@ const ProcessManagement: React.FC = () => {
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             {/* <IconButton
               size="small"
@@ -505,6 +568,25 @@ const ProcessManagement: React.FC = () => {
                   <TextField {...field} fullWidth label="공정 타입" />
                 )}
               />
+              <Controller
+                name="erpProcessMapping"
+                control={processControl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>ERP 공정 매핑</InputLabel>
+                    <Select {...field} label="ERP 공정 매핑">
+                      <MenuItem value="">선택 없음</MenuItem>
+                      {erpProcessCodes.map((code) => (
+                        <MenuItem key={code.code} value={code.code}>
+                          {code.codeNm}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              />
+            </Stack>
+            <Stack direction="row" spacing={2}>
               <Controller
                 name="sortOrder"
                 control={processControl}

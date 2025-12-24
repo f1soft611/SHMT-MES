@@ -17,7 +17,7 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { GridColDef } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import DataTable from '../../../../components/common/DataTable/DataTable';
 import ConfirmDialog from '../../../../components/common/Feedback/ConfirmDialog';
 import { useToast } from '../../../../components/common/Feedback/ToastProvider';
@@ -60,6 +60,10 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
   const { showToast } = useToast();
 
   const [detailCodes, setDetailCodes] = useState<CommonDetailCode[]>([]);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 10,
+  });
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
     target?: { codeId: string; code: string };
@@ -211,8 +215,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
     {
       field: 'actions',
       headerName: '작업',
-      flex: 0.8,
-      minWidth: 120,
+      width: 150,
       sortable: false,
       align: 'center',
       headerAlign: 'center',
@@ -232,7 +235,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
               onClick={() => handleOpenEditDetailDialog(params.row)}
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -245,7 +248,7 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
               }
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>
@@ -282,6 +285,10 @@ const DetailCodeTab: React.FC<DetailCodeTabProps> = ({
           rows={detailCodes}
           columns={detailColumns}
           getRowId={(row) => `${row.codeId}-${row.code}`}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 20, 50]}
+          onRefresh={fetchDetailCodes}
         />
       </Paper>
 

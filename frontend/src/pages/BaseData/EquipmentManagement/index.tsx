@@ -89,8 +89,17 @@ const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
 
 const EquipmentManagement: React.FC = () => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
+  const { hasWritePermission, hasDeletePermission } = usePermissions();
   const canWrite = hasWritePermission('/base/equipment');
+  const canDelete = hasDeletePermission('/base/equipment');
+
+  // 페이지 로드 시 권한 새로고침
+  // useEffect(() => {
+  //   const refreshPerms = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refreshPerms();
+  // }, [refreshPermissions]);
 
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -247,6 +256,10 @@ const EquipmentManagement: React.FC = () => {
   };
 
   const handleDeleteConfirm = async (equipmentId: string) => {
+    if (!canDelete) {
+      showToast({ message: '삭제 권한이 없습니다.', severity: 'error' });
+      return;
+    }
     try {
       await equipmentService.deleteEquipment(equipmentId);
       showToast({ message: '설비가 삭제되었습니다.', severity: 'success' });
@@ -354,16 +367,16 @@ const EquipmentManagement: React.FC = () => {
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(params.row.equipmentId)}
               title="삭제"
-              disabled={!canWrite}
+              disabled={!canDelete}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>

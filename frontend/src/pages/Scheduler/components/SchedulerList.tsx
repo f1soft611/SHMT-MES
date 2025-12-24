@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  TextField,
-  InputAdornment,
-  Chip,
-  Tooltip,
-  Alert,
-} from '@mui/material';
+import { Box, TextField, InputAdornment, Chip, Tooltip } from '@mui/material';
 import {
   DataGrid,
   GridColDef,
@@ -20,6 +13,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { schedulerService } from '../../../services/schedulerService';
 import DateRangeDialog from './DateRangeDialog';
+import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 interface SchedulerListProps {
   onEdit: (schedulerId: number) => void;
@@ -31,15 +26,16 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
     pageSize: 10,
   });
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [alertMessage, setAlertMessage] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    open: boolean;
+    targetId?: number;
+  }>({ open: false });
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
   const [selectedScheduler, setSelectedScheduler] = useState<{
     id: number;
     name: string;
   } | null>(null);
+  const { showToast } = useToast();
 
   // 마지막 정상 응답의 rows/total을 저장
   const lastRowsRef = useRef<any[]>([]);
@@ -94,18 +90,10 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       schedulerService.deleteScheduler(schedulerId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedulers'] });
-      setAlertMessage({
-        type: 'success',
-        message: '스케쥴러가 삭제되었습니다.',
-      });
-      setTimeout(() => setAlertMessage(null), 3000);
+      showToast({ message: '스케쥴러가 삭제되었습니다.', severity: 'success' });
     },
     onError: (error: any) => {
-      setAlertMessage({
-        type: 'error',
-        message: `삭제 실패: ${error.message}`,
-      });
-      setTimeout(() => setAlertMessage(null), 5000);
+      showToast({ message: `삭제 실패: ${error.message}`, severity: 'error' });
     },
   });
 
@@ -120,18 +108,10 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
       toDate?: string;
     }) => schedulerService.executeScheduler(schedulerId, fromDate, toDate),
     onSuccess: () => {
-      setAlertMessage({
-        type: 'success',
-        message: '스케쥴러가 실행되었습니다.',
-      });
-      setTimeout(() => setAlertMessage(null), 3000);
+      showToast({ message: '스케쥴러가 실행되었습니다.', severity: 'success' });
     },
     onError: (error: any) => {
-      setAlertMessage({
-        type: 'error',
-        message: `실행 실패: ${error.message}`,
-      });
-      setTimeout(() => setAlertMessage(null), 5000);
+      showToast({ message: `실행 실패: ${error.message}`, severity: 'error' });
     },
   });
 
@@ -140,9 +120,7 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
   };
 
   const handleDeleteClick = (schedulerId: number) => {
-    if (window.confirm('이 스케쥴러를 삭제하시겠습니까?')) {
-      deleteMutation.mutate(schedulerId);
-    }
+    setConfirmDelete({ open: true, targetId: schedulerId });
   };
 
   const handleExecuteClick = (schedulerId: number, schedulerName: string) => {
@@ -227,21 +205,18 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
         <GridActionsCellItem
           icon={
             <Tooltip title="즉시 실행">
-              <PlayArrowIcon />
+              <PlayArrowIcon color="success" />
             </Tooltip>
           }
           label="실행"
           onClick={() =>
-            handleExecuteClick(
-              params.row.schedulerId,
-              params.row.schedulerName
-            )
+            handleExecuteClick(params.row.schedulerId, params.row.schedulerName)
           }
         />,
         <GridActionsCellItem
           icon={
             <Tooltip title="수정">
-              <EditIcon />
+              <EditIcon color="primary" />
             </Tooltip>
           }
           label="수정"
@@ -250,7 +225,7 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
         <GridActionsCellItem
           icon={
             <Tooltip title="삭제">
-              <DeleteIcon />
+              <DeleteIcon color="error" />
             </Tooltip>
           }
           label="삭제"
@@ -270,20 +245,14 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
 
   if (error) {
     return (
-      <Alert severity="error">
+      <Box sx={{ p: 2, color: 'error.main' }}>
         데이터를 불러오는 중 오류가 발생했습니다: {(error as Error).message}
-      </Alert>
+      </Box>
     );
   }
 
   return (
     <Box sx={{ width: '100%' }}>
-      {alertMessage && (
-        <Alert severity={alertMessage.type} sx={{ mb: 2 }}>
-          {alertMessage.message}
-        </Alert>
-      )}
-
       <Box sx={{ mb: 2, ml: 2 }}>
         <TextField
           size="small"
@@ -328,6 +297,20 @@ const SchedulerList: React.FC<SchedulerListProps> = ({ onEdit }) => {
         onClose={() => setDateRangeDialogOpen(false)}
         onConfirm={handleDateRangeConfirm}
         schedulerName={selectedScheduler?.name || ''}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false })}
+        title="스케쥴러 삭제"
+        message="이 스케쥴러를 삭제하시겠습니까?"
+        confirmText="삭제"
+        onConfirm={() => {
+          if (confirmDelete.targetId) {
+            deleteMutation.mutate(confirmDelete.targetId);
+          }
+          setConfirmDelete({ open: false });
+        }}
       />
     </Box>
   );

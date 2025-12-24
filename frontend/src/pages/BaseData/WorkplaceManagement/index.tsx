@@ -51,9 +51,18 @@ const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
 });
 
 const WorkplaceManagement: React.FC = () => {
+  const SHOW_WORKPLACE_PROCESS = false;
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base/workplace');
+  const { hasWritePermission, refreshPermissions } = usePermissions();
+  const workplaceMenuUrls = ['/base/workplace'];
+  const canWrite = workplaceMenuUrls.some((url) => hasWritePermission(url));
+
+  // useEffect(() => {
+  //   const refresh = async () => {
+  //     await refreshPermissions();
+  //   };
+  //   refresh();
+  // }, [refreshPermissions]);
 
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -151,6 +160,10 @@ const WorkplaceManagement: React.FC = () => {
   };
 
   const handleOpenCreateDialog = () => {
+    if (!canWrite) {
+      showToast({ message: '쓰기 권한이 없습니다.', severity: 'error' });
+      return;
+    }
     setDialogMode('create');
     resetWorkplaceForm({
       workplaceCode: '',
@@ -165,6 +178,10 @@ const WorkplaceManagement: React.FC = () => {
   };
 
   const handleOpenEditDialog = (workplace: Workplace) => {
+    if (!canWrite) {
+      showToast({ message: '쓰기 권한이 없습니다.', severity: 'error' });
+      return;
+    }
     setDialogMode('edit');
     resetWorkplaceForm(workplace);
     setOpenDialog(true);
@@ -176,6 +193,10 @@ const WorkplaceManagement: React.FC = () => {
   };
 
   const handleSave = async (data: Workplace) => {
+    if (!canWrite) {
+      showToast({ message: '쓰기 권한이 없습니다.', severity: 'error' });
+      return;
+    }
     try {
       if (dialogMode === 'create') {
         const result = await workplaceService.createWorkplace(data);
@@ -201,6 +222,10 @@ const WorkplaceManagement: React.FC = () => {
   };
 
   const handleDeleteConfirm = async (workplaceId: string) => {
+    if (!canWrite) {
+      showToast({ message: '쓰기 권한이 없습니다.', severity: 'error' });
+      return;
+    }
     try {
       await workplaceService.deleteWorkplace(workplaceId);
       showToast({ message: '작업장이 삭제되었습니다.', severity: 'success' });
@@ -315,19 +340,21 @@ const WorkplaceManagement: React.FC = () => {
               }}
               title="작업자 관리"
             >
-              <PeopleIcon />
+              <PeopleIcon fontSize="small" />
             </IconButton>
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={() => {
-                handleOpenDetailDialog(params.row);
-                setDetailTab(1);
-              }}
-              title="공정 관리"
-            >
-              <BuildIcon />
-            </IconButton>
+            {SHOW_WORKPLACE_PROCESS && (
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => {
+                  handleOpenDetailDialog(params.row);
+                  setDetailTab(1);
+                }}
+                title="공정 관리"
+              >
+                <BuildIcon fontSize="small" />
+              </IconButton>
+            )}
             <IconButton
               size="small"
               color="primary"
@@ -335,7 +362,7 @@ const WorkplaceManagement: React.FC = () => {
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             {/* <IconButton
               size="small"
@@ -593,6 +620,7 @@ const WorkplaceManagement: React.FC = () => {
             onClick={handleWorkplaceSubmit(handleSave)}
             variant="contained"
             color="primary"
+            disabled={!canWrite}
           >
             저장
           </Button>

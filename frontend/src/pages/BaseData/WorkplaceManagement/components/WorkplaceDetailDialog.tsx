@@ -31,13 +31,15 @@ const WorkplaceDetailDialog: React.FC<WorkplaceDetailDialogProps> = ({
   setDetailTab,
   showSnackbar,
 }) => {
+  const SHOW_WORKPLACE_PROCESS = false;
+  const effectiveTab = SHOW_WORKPLACE_PROCESS ? detailTab : 0;
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>작업장 상세 관리 - {workplace.workplaceName}</DialogTitle>
       <DialogContent dividers={true}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs
-            value={detailTab}
+            value={effectiveTab}
             onChange={(e, newValue) => setDetailTab(newValue)}
           >
             <Tab
@@ -45,16 +47,22 @@ const WorkplaceDetailDialog: React.FC<WorkplaceDetailDialogProps> = ({
               icon={<PeopleIcon />}
               iconPosition="start"
             />
-            <Tab label="공정 관리" icon={<BuildIcon />} iconPosition="start" />
+            {SHOW_WORKPLACE_PROCESS && (
+              <Tab
+                label="공정 관리"
+                icon={<BuildIcon />}
+                iconPosition="start"
+              />
+            )}
           </Tabs>
         </Box>
-        {detailTab === 0 && (
+        {effectiveTab === 0 && (
           <WorkplaceWorkerTab
             workplace={workplace}
             showSnackbar={showSnackbar}
           />
         )}
-        {detailTab === 1 && (
+        {SHOW_WORKPLACE_PROCESS && effectiveTab === 1 && (
           <WorkplaceProcessTab
             workplace={workplace}
             showSnackbar={showSnackbar}

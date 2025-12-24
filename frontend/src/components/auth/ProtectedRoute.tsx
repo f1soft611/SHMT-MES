@@ -94,7 +94,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // 권한 부족 판단
   const lackPermission =
     userPermission === 'none' ||
-    (requiredPermission === 'write' && userPermission !== 'write');
+    (requiredPermission === 'write' && userPermission === 'read');
 
   if (lackPermission) {
     const alreadyAtFallback = normalize(fallbackPath) === currentPath;

@@ -63,25 +63,43 @@ const PermissionManagement: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      // 메뉴 및 권한 정보 로드
       const [menusResult, permissionsResult] = await Promise.all([
         permissionService.getMenus(),
         permissionService.getPermissionTypes(),
       ]);
-      setMenus(menusResult);
-      setPermissions(permissionsResult);
+      setMenus(menusResult ?? []);
+      setPermissions(permissionsResult ?? []);
 
+      // 역할이 선택된 경우 해당 역할의 권한 정보 로드
       if (selectedRole) {
-        const rolePermsResult = await permissionService.getRoleMenuPermissions(
-          selectedRole
-        );
-        setRolePermissions(rolePermsResult);
+        try {
+          const rolePermsResult =
+            await permissionService.getRoleMenuPermissions(selectedRole);
+          setRolePermissions(rolePermsResult ?? []);
+        } catch (roleErr: any) {
+          const errorMsg =
+            roleErr?.response?.data?.message ||
+            roleErr?.message ||
+            '역할 권한을 불러오는데 실패했습니다.';
+          setError(`역할 권한 로드 실패: ${errorMsg}`);
+          showToast({
+            message: `역할 권한 로드 실패: ${errorMsg}`,
+            severity: 'error',
+          });
+          setRolePermissions([]);
+        }
       } else {
         setRolePermissions([]);
       }
     } catch (err: any) {
-      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        '데이터를 불러오는데 실패했습니다.';
+      setError(`데이터 로드 실패: ${errorMsg}`);
       showToast({
-        message: '데이터를 불러오는데 실패했습니다.',
+        message: `데이터 로드 실패: ${errorMsg}`,
         severity: 'error',
       });
     } finally {
@@ -102,10 +120,14 @@ const PermissionManagement: React.FC = () => {
     permissionId: string,
     granted: boolean
   ) => {
-    if (!selectedRole) return;
+    if (!selectedRole) {
+      showToast({ message: '역할을 먼저 선택해주세요.', severity: 'warning' });
+      return;
+    }
 
     try {
       setLoading(true);
+      setError(null);
 
       if (granted) {
         await permissionService.createRoleMenuPermission({
@@ -118,21 +140,56 @@ const PermissionManagement: React.FC = () => {
         });
         showToast({ message: '권한이 부여되었습니다.', severity: 'success' });
       } else {
-        await permissionService.deleteRoleMenuPermission(
-          selectedRole,
-          menuId,
-          permissionId
-        );
-        showToast({ message: '권한이 해제되었습니다.', severity: 'success' });
+        // 권한 해제 전에 확인
+        try {
+          await permissionService.deleteRoleMenuPermission(
+            selectedRole,
+            menuId,
+            permissionId
+          );
+          showToast({ message: '권한이 해제되었습니다.', severity: 'success' });
+        } catch (deleteErr: any) {
+          const errorMsg =
+            deleteErr?.response?.data?.message ||
+            deleteErr?.message ||
+            '권한 해제에 실패했습니다.';
+          setError(`권한 해제 오류: ${errorMsg}`);
+          showToast({
+            message: `권한 해제 실패: ${errorMsg}`,
+            severity: 'error',
+          });
+          setLoading(false);
+          return;
+        }
       }
 
-      const rolePermsResult = await permissionService.getRoleMenuPermissions(
-        selectedRole
-      );
-      setRolePermissions(rolePermsResult);
+      // 최신 권한 정보 다시 로드
+      try {
+        const rolePermsResult = await permissionService.getRoleMenuPermissions(
+          selectedRole
+        );
+        setRolePermissions(rolePermsResult);
+      } catch (reloadErr: any) {
+        const reloadMsg =
+          reloadErr?.response?.data?.message ||
+          reloadErr?.message ||
+          '권한 정보를 새로고침하는데 실패했습니다.';
+        setError(`권한 정보 갱신 실패: ${reloadMsg}`);
+        showToast({
+          message: `권한 정보 갱신 실패: ${reloadMsg}`,
+          severity: 'error',
+        });
+      }
     } catch (err: any) {
-      setError(err.message || '권한 설정에 실패했습니다.');
-      showToast({ message: '권한 설정에 실패했습니다.', severity: 'error' });
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        '권한 설정에 실패했습니다.';
+      setError(`권한 설정 오류: ${errorMsg}`);
+      showToast({
+        message: `권한 설정 실패: ${errorMsg}`,
+        severity: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -177,11 +234,11 @@ const PermissionManagement: React.FC = () => {
   }, [menus, menuFilter]);
 
   return (
-    <ProtectedRoute requiredPermission="write">
+    <ProtectedRoute requiredPermission="read" matchMode="prefix">
       <Box>
         <PageHeader
           title=""
-          crumbs={[{ label: '관리' }, { label: '권한 관리' }]}
+          crumbs={[{ label: '시스템 관리' }, { label: '권한 관리' }]}
         />
 
         {error && (
@@ -240,6 +297,8 @@ const PermissionManagement: React.FC = () => {
                           <SecurityIcon />
                         ) : permission.permissionLevel === 'excel' ? (
                           <DescriptionIcon />
+                        ) : permission.permissionLevel === 'delete' ? (
+                          <DeleteIcon />
                         ) : (
                           <VisibilityIcon />
                         )
@@ -250,6 +309,8 @@ const PermissionManagement: React.FC = () => {
                           ? 'primary'
                           : permission.permissionLevel === 'excel'
                           ? 'success'
+                          : permission.permissionLevel === 'delete'
+                          ? 'error'
                           : 'default'
                       }
                       size="small"
@@ -272,11 +333,21 @@ const PermissionManagement: React.FC = () => {
                 {selectedRole && rolePermissions.length > 0 ? (
                   <TableContainer sx={{ maxHeight: 350, overflow: 'auto' }}>
                     <Table size="small" stickyHeader>
-                      <TableHead>
+                      <TableHead
+                        sx={{
+                          '& .MuiTableCell-head': {
+                            bgcolor: '#fff',
+                            fontWeight: 600,
+                            py: 2,
+                            // borderBottom: '2px solid',
+                            borderBottomColor: 'divider',
+                          },
+                        }}
+                      >
                         <TableRow>
-                          <TableCell>메뉴</TableCell>
-                          <TableCell>권한</TableCell>
-                          <TableCell>권한 레벨</TableCell>
+                          <TableCell align="center">메뉴</TableCell>
+                          <TableCell align="center">권한</TableCell>
+                          <TableCell align="center">권한 레벨</TableCell>
                           <TableCell align="center">작업</TableCell>
                         </TableRow>
                       </TableHead>
@@ -284,8 +355,10 @@ const PermissionManagement: React.FC = () => {
                         {rolePermissions.map((rp) => (
                           <TableRow key={rp.roleMenuId}>
                             <TableCell>{rp.menuNm}</TableCell>
-                            <TableCell>{rp.permissionNm}</TableCell>
-                            <TableCell>
+                            <TableCell align="center">
+                              {rp.permissionNm}
+                            </TableCell>
+                            <TableCell align="center">
                               <Chip
                                 label={rp.permissionLevel}
                                 color={
@@ -293,6 +366,8 @@ const PermissionManagement: React.FC = () => {
                                     ? 'primary'
                                     : rp.permissionLevel === 'excel'
                                     ? 'success'
+                                    : rp.permissionLevel === 'delete'
+                                    ? 'error'
                                     : 'default'
                                 }
                                 size="small"
@@ -306,7 +381,7 @@ const PermissionManagement: React.FC = () => {
                                 }
                                 disabled={loading}
                               >
-                                <DeleteIcon />
+                                <DeleteIcon fontSize="small" />
                               </IconButton>
                             </TableCell>
                           </TableRow>
@@ -363,9 +438,19 @@ const PermissionManagement: React.FC = () => {
                     sx={{ flex: 1, maxHeight: 630, overflow: 'auto' }}
                   >
                     <Table size="small" stickyHeader>
-                      <TableHead>
+                      <TableHead
+                        sx={{
+                          '& .MuiTableCell-head': {
+                            bgcolor: '#fff',
+                            fontWeight: 600,
+                            py: 2,
+                            // borderBottom: '2px solid',
+                            borderBottomColor: 'divider',
+                          },
+                        }}
+                      >
                         <TableRow>
-                          <TableCell>메뉴</TableCell>
+                          <TableCell align="center">메뉴</TableCell>
                           {permissions.map((pm) => (
                             <TableCell key={pm.permissionId} align="center">
                               {pm.permissionNm}
@@ -467,14 +552,27 @@ const PermissionManagement: React.FC = () => {
           message="선택한 권한을 해제하시겠습니까?"
           confirmText="해제"
           onConfirm={async () => {
-            if (confirmRevoke.rp) {
-              await handlePermissionChange(
-                confirmRevoke.rp.menuId,
-                confirmRevoke.rp.permissionId,
-                false
-              );
+            try {
+              if (confirmRevoke.rp) {
+                await handlePermissionChange(
+                  confirmRevoke.rp.menuId,
+                  confirmRevoke.rp.permissionId,
+                  false
+                );
+              }
+            } catch (err: any) {
+              const errorMsg =
+                err?.response?.data?.message ||
+                err?.message ||
+                '권한 해제 중 오류가 발생했습니다.';
+              setError(`권한 해제 오류: ${errorMsg}`);
+              showToast({
+                message: `권한 해제 오류: ${errorMsg}`,
+                severity: 'error',
+              });
+            } finally {
+              setConfirmRevoke({ open: false });
             }
-            setConfirmRevoke({ open: false });
           }}
         />
       </Box>

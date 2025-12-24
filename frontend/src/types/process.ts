@@ -8,6 +8,7 @@ export interface Process {
   processName: string;
   description?: string;
   processType?: string;
+  erpProcessMapping?: string;
   equipmentIntegrationYn?: string;
   status?: string;
   useYn?: string;

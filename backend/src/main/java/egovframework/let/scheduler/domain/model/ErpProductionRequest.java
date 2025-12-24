@@ -116,4 +116,31 @@ public class ErpProductionRequest implements Serializable {
 	 * 최종수정일시 (LastDateTime) - datetime
 	 */
 	private Date lastDateTime;
+
+	/**
+	 * 반제품 품목내부코드 (SemiItemSeq) - int
+	 * 반제품이 있을 경우만 값이 존재
+	 */
+	private Integer semiItemSeq;
+
+	/**
+	 * 반제품 품목번호 (SemiItemNo) - NVARCHAR(100)
+	 */
+	private String semiItemNo;
+
+	/**
+	 * 반제품 품목명 (SemiItemName) - NVARCHAR(100)
+	 */
+	private String semiItemName;
+
+	/**
+	 * 반제품 규격 (SemiSpec) - NVARCHAR(100)
+	 */
+	private String semiSpec;
+
+	/**
+	 * 품목 구분 플래그 (ItemFlag) - int
+	 * 0: 제품, 4: 반제품
+	 */
+	private Integer itemFlag;
 }

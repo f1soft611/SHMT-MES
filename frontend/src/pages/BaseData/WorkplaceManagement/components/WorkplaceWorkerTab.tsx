@@ -41,8 +41,16 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   showSnackbar,
 }) => {
   // 권한 체크
-  const { hasWritePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base/workplace');
+  const { hasWritePermission, refreshPermissions } = usePermissions();
+  const workplaceMenuUrls = ['/base/workplace', '/base-data/workplace'];
+  const canWrite = workplaceMenuUrls.some((url) => hasWritePermission(url));
+
+  useEffect(() => {
+    const refresh = async () => {
+      await refreshPermissions();
+    };
+    refresh();
+  }, [refreshPermissions]);
 
   const [workers, setWorkers] = useState<WorkplaceWorker[]>([]);
   const [openUserDialog, setOpenUserDialog] = useState(false);
@@ -213,7 +221,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               title="수정"
               disabled={!canWrite}
             >
-              <EditIcon />
+              <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -222,7 +230,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
               title="삭제"
               disabled={!canWrite}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Box>
@@ -261,7 +269,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
           hideFooterPagination
           disableRowSelectionOnClick
           sx={{
-            border: 'none',
+            // border: 'none',
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },
