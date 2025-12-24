@@ -70,7 +70,7 @@
             #{processFlowName},
             '0',
             GETDATE(),
-            'test'
+            #{regUserId}
         )
     </insert>
 
@@ -80,7 +80,7 @@
             WORKCENTER_CODE = #{workplaceCode},
             WORK_ORDER = #{processFlowCode},
             WORK_ORDER_NM = #{processFlowName},
-            OPMAN_CODE2 = 'test2',
+            OPMAN_CODE2 = #{updUserId},
             OPTIME2 = GETDATE()
         WHERE WORK_ORDER_ID = #{processFlowId}
     </update>

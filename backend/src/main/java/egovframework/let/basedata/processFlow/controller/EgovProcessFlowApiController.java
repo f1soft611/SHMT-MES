@@ -109,7 +109,7 @@ public class EgovProcessFlowApiController {
             @RequestBody ProcessFlow processFlow,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processFlow.setRegUserId(user.getId());
+        processFlow.setRegUserId(user.getUniqId());
         processFlowService.createProcessFlow(processFlow);
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -142,7 +142,7 @@ public class EgovProcessFlowApiController {
     ) throws Exception {
 
         // ✅ 수정자 정보 세팅
-        processFlow.setUpdUserId(user.getId());
+        processFlow.setUpdUserId(user.getUniqId());
         processFlow.setProcessFlowId(processFlowId);
 
         processFlowService.updateProcessFlow(processFlow);
@@ -207,7 +207,7 @@ public class EgovProcessFlowApiController {
 
         // 사용자 ID 세팅
         for (ProcessFlowProcess p : processList) {
-            p.setRegUserId(user.getId());
+            p.setRegUserId(user.getUniqId());
         }
 
         // 저장 서비스 호출

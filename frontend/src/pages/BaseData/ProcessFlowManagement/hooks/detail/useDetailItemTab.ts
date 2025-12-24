@@ -1,7 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import { GridPaginationModel, GridRowId } from '@mui/x-data-grid';
-import itemService from '../../../../../services/itemService';
-import processFlowService from '../../../../../services/processFlowService';
 import {ProcessFlow, ProcessFlowItem} from "../../../../../types/processFlow";
 import {Item} from "../../../../../types/item";
 
@@ -12,20 +10,11 @@ export function useDetailItemTab(
     setFlowItemRows: React.Dispatch<React.SetStateAction<ProcessFlowItem[]>>
 ) {
 
-    const [itemPagination, setItemPagination] = useState<GridPaginationModel>({
-        page: 0,
-        pageSize: 10,
-    });
-
     /** 검색 상태 */
     const [inputValues, setInputValues] = useState({
         searchCnd: "0",
         searchWrd: "",
-    });
-
-    const [searchParams, setSearchParams] = useState({
-        searchCnd: "0",
-        searchWrd: "",
+        useYn: "Y",
     });
 
     const handleInputChange = (field: string, value: string) => {
@@ -46,10 +35,6 @@ export function useDetailItemTab(
         });
     }, [itemRows, inputValues]);
 
-    const handleSearch = () => {
-        setSearchParams(inputValues);
-        setItemPagination(prev => ({ ...prev, page: 0 }));
-    };
 
 
     /** 선택 관리 */
@@ -98,22 +83,16 @@ export function useDetailItemTab(
 
     /** 탭 초기화 */
     const clearItemTab = () => {
-        setInputValues({ searchCnd: "0", searchWrd: "" });
+        setInputValues({ searchCnd: "0", searchWrd: "", useYn: "Y" });
         setLeftSelected([]);
         setRightSelected([]);
     };
 
     return {
-        /** 검색 */
+        /** 검색 UI */
         inputValues,
         handleInputChange,
         filteredRows,
-        handleSearch,
-
-        /** 전체 품목 / 흐름 품목 */
-        itemRows,
-        flowItemRows,
-        setFlowItemRows,
 
         /** 선택 */
         leftSelected,
@@ -121,7 +100,7 @@ export function useDetailItemTab(
         rightSelected,
         setRightSelected,
 
-        /** 이동 처리 */
+        /** 조작 */
         addItems,
         removeItems,
 

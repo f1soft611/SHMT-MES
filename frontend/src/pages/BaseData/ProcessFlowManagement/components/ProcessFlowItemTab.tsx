@@ -16,14 +16,15 @@ export default function ProcessFlowItemTab() {
         flowItemRows,    // 흐름에 속한 제품 목록
         setFlowItemRows, // 흐름 제품 setter
         itemPage, setItemPage,
-        itemPageSize, setItemPageSize
+        itemPageSize, setItemPageSize, itemTotalCount, itemSearch,
+        searchItems
+
     } = useProcessFlowDetailContext();
 
     const {
         inputValues,
         handleInputChange,
         filteredRows,
-        handleSearch,
         leftSelected,
         rightSelected,
         setLeftSelected,
@@ -74,12 +75,16 @@ export default function ProcessFlowItemTab() {
                         placeholder="검색어를 입력하세요"
                         value={inputValues.searchWrd}
                         onChange={(e)=>handleInputChange("searchWrd", e.target.value)}
-                        onKeyDown={(e)=>e.key==="Enter" && handleSearch()}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                searchItems();
+                            }
+                        }}
                     />
                     <Button
                         variant="contained"
                         startIcon={<SearchIcon />}
-                        onClick={handleSearch}
+                        onClick={searchItems}
                         sx={{ minWidth: 150 }}
                     >
                         검색
@@ -97,6 +102,8 @@ export default function ProcessFlowItemTab() {
                         getRowId={(row:Item) => row.itemCode}
 
                         pagination
+                        paginationMode="server"
+                        rowCount={itemTotalCount}
                         paginationModel={{
                             page: itemPage,
                             pageSize: itemPageSize

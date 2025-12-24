@@ -78,6 +78,7 @@ export function useProcessFlowMainDialog() {
             workplaceCode: row.workplaceCode,
             processFlowCode: row.processFlowCode,
             processFlowName: row.processFlowName,
+            processFlowId: row.processFlowId,
         });
 
         setOpen(true);

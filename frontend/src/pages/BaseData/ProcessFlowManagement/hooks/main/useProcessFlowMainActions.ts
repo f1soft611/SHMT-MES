@@ -1,7 +1,12 @@
 import {ProcessFlow} from "../../../../../types/processFlow";
 import processFlowService from "../../../../../services/processFlowService";
+import {useToast} from "../../../../../components/common/Feedback/ToastProvider";
 
 export function useProcessFlowMainActions(fetchList: () => void, closeDialog: () => void) {
+
+    const { showToast } = useToast();
+
+
     const handleSave = async (data: ProcessFlow, mode: "create" | "edit") => {
         // console.log("[MainActions] handleSave called:", mode, data);
         try {
@@ -11,11 +16,18 @@ export function useProcessFlowMainActions(fetchList: () => void, closeDialog: ()
                 if (!data.processFlowId) throw new Error("processFlowId 없음");
                 await processFlowService.updateProcessFlow(data.processFlowId, data);
             }
-
+            showToast({
+                message: '저장 성공',
+                severity: 'success'
+            })
             closeDialog();
             fetchList();
             return true;
-        } catch (e) {
+        } catch (e: any) {
+            showToast({
+                message: e.message,
+                severity: 'error'
+            })
             console.error(e);
             return false;
         }
