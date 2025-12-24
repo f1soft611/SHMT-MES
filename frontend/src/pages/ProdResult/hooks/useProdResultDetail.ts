@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useState} from "react";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
 import {ProductionResult, ProductionResultDetail} from "../../../types/productionResult";
 import {productionResultService} from "../../../services/productionResultService";
@@ -123,6 +123,7 @@ export function useProdResultDetail(parentRow: ProductionResult) {
         rows,
         setRows,
         addRow,
+        loading,
         processRowUpdate,
         handleSave,
         fetchDetails

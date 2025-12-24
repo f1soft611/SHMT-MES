@@ -1,4 +1,4 @@
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react";
+import React, {useImperativeHandle, useRef, useState} from "react";
 import {
     Box, Card, CardActions, CardContent, CardHeader,
     Collapse, Paper,
@@ -52,15 +52,27 @@ export default function ProdResultTable({ rows }: Props) {
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목코드</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목명</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목규격</TableCell>
-                                <TableCell width={80} align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
+                                <TableCell align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>작업시작일</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>실적등록</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows.map((row) => (
-                                <ProdResultRow key={row.TPR504ID} row={row} />
-                            ))}
+                            {rows.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={11}
+                                        align="center"
+                                        sx={{ height: 80, color: 'text.secondary' }}
+                                    >
+                                        조회된 데이터가 없습니다.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                rows.map((row) => (
+                                    <ProdResultRow key={row.TPR504ID} row={row} />
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>

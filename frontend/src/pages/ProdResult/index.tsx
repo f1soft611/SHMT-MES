@@ -2,9 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {Box, Typography, Grid} from '@mui/material';
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
-import ProdResultList from "./components/ProdResultList";
 import {useProductionResult} from "./hooks/useProductionResult";
-import ProdResultDialog from "./components/ProdResultDialog";
 import ProdResultTable from "./components/ProdResultTable";
 
 const ProductionResult: React.FC = () => {
@@ -38,10 +36,8 @@ const ProductionResult: React.FC = () => {
                 onSearch={rs.handleSearch}
             />
 
-            <Grid container spacing={2} columns={12}>
-                <Grid size={{xs: 12, md: 12}}>
-
-
+            <Grid container spacing={0} columns={12}>
+                <Grid size={{xs: 12,}}>
                     <ProdResultTable
                         rows={rs.rows} />
 
@@ -57,14 +53,6 @@ const ProductionResult: React.FC = () => {
                     {/*/>*/}
                 </Grid>
             </Grid>
-
-
-            <ProdResultDialog
-                open={rs.open}
-                order={rs.order}
-                rows={rs.rows}
-                onClose={rs.closeDialog}
-                onSubmit={rs.submit} />
 
         </Box>
     )
