@@ -339,47 +339,6 @@ const ProductionPlan: React.FC = () => {
     }
   }, [loadEquipments]);
 
-  const loadEquipmentsByWorkplace = useCallback(
-    async (workplaceCode: string) => {
-      try {
-        // 작업장별 설비 조회 (설비연동된 공정의 설비들)
-        const response = await workplaceService.getWorkplaceEquipments(
-          workplaceCode
-        );
-
-        if (response.resultCode === 200 && response.result?.resultList) {
-          const equipmentList = response.result.resultList.map((eq: any) => ({
-            equipCd: eq.equipCd,
-            equipmentName: eq.equipmentName,
-            equipmentId: eq.equipmentId,
-            processCode: eq.processCode,
-            processName: eq.processName,
-          }));
-
-          // 설비-공정 매핑 생성
-          const processMap = new Map<string, string>();
-          equipmentList.forEach((eq: any) => {
-            if (eq.equipCd && eq.processCode) {
-              processMap.set(eq.equipCd, eq.processCode);
-              processMap.set(eq.equipCd + 'NAME', eq.processName);
-            }
-          });
-          setEquipmentProcessMap(processMap);
-
-          setEquipments(equipmentList);
-          setExpandedEquipments(
-            new Set(equipmentList.map((eq: Equipment) => eq.equipCd))
-          );
-        }
-      } catch (error) {
-        console.error('Failed to load equipments:', error);
-        // Fallback to loading all equipments if workplace-specific loading fails
-        loadEquipments();
-      }
-    },
-    [loadEquipments]
-  );
-
   const loadWorkplaceWorkers = useCallback(async (workplaceCode: string) => {
     try {
       const response = await workplaceService.getWorkplaceWorkers(
@@ -422,13 +381,40 @@ const ProductionPlan: React.FC = () => {
       });
 
       if (response.resultCode === 200 && response.result?.equipmentPlans) {
+        // API 응답에서 설비 목록 추출
+        const equipmentList = response.result.equipmentPlans.map((eq: any) => ({
+          equipCd: eq.equipmentCode,
+          equipmentName: eq.equipmentName,
+          equipmentId: eq.equipmentId,
+          processCode: eq.processCode,
+          processName: eq.processName,
+        }));
+        setEquipments(equipmentList);
+        setExpandedEquipments(
+          new Set(equipmentList.map((eq: any) => eq.equipCd))
+        );
+
+        // 설비-공정 매핑 생성
+        const processMap = new Map<string, string>();
+        equipmentList.forEach((eq: any) => {
+          if (eq.equipCd && eq.processCode) {
+            processMap.set(eq.equipCd, eq.processCode);
+            processMap.set(eq.equipCd + 'NAME', eq.processName || '');
+          }
+        });
+        setEquipmentProcessMap(processMap);
+
+        // 주간 계획 매핑
         const mapped = mapWeeklyEquipmentPlans(
           response.result as WeeklyEquipmentPlanResponse,
           selectedWorkplace
         );
         setPlans(mapped);
       } else {
+        setEquipments([]);
         setPlans([]);
+        setExpandedEquipments(new Set());
+        setEquipmentProcessMap(new Map());
       }
     } catch (error) {
       console.error('Failed to load production plans:', error);
@@ -446,7 +432,7 @@ const ProductionPlan: React.FC = () => {
 
   useEffect(() => {
     if (selectedWorkplace) {
-      loadEquipmentsByWorkplace(selectedWorkplace);
+      // loadWeeklyPlans()가 자동으로 설비 목록을 로드하므로 별도 호출 불필요
       loadWorkplaceWorkers(selectedWorkplace);
       // loadWorkplaceProcesses(selectedWorkplace);
     } else {
@@ -455,10 +441,10 @@ const ProductionPlan: React.FC = () => {
       // setWorkplaceProcesses([]);
       setEquipmentProcessMap(new Map());
       setPlans([]);
+      setExpandedEquipments(new Set());
     }
   }, [
     selectedWorkplace,
-    loadEquipmentsByWorkplace,
     loadWorkplaceWorkers,
     // loadWorkplaceProcesses,
   ]);
@@ -908,7 +894,7 @@ const ProductionPlan: React.FC = () => {
                 onClick={() => {
                   loadWorkplaces();
                   if (selectedWorkplace) {
-                    loadEquipmentsByWorkplace(selectedWorkplace);
+                    loadWeeklyPlans();
                   }
                 }}
                 sx={{
