@@ -1,78 +1,46 @@
-import React, {useMemo, useState} from 'react';
-import {GridPaginationModel, GridRowId, GridRowModel} from "@mui/x-data-grid";
+import React, { useState} from 'react';
+import { GridRowId, GridRowModel} from "@mui/x-data-grid";
 import { useToast } from '../../../../../components/common/Feedback/ToastProvider';
-import {ProcessFlow, ProcessFlowProcess} from "../../../../../types/processFlow";
+import { ProcessFlowProcess} from "../../../../../types/processFlow";
 import {Process} from "../../../../../types/process";
 
-export function useDetailProcessTab(
-    selectedFlow: ProcessFlow | null,
-    processRows: Process[],
-    flowProcessRows: ProcessFlowProcess[],
-    setFlowProcessRows: React.Dispatch<React.SetStateAction<ProcessFlowProcess[]>>
-) {
+interface Props {
+    flowProcessRows: ProcessFlowProcess[];
+    setFlowProcessRows: React.Dispatch<React.SetStateAction<ProcessFlowProcess[]>>;
+}
+
+export function useDetailProcessTab({
+    flowProcessRows,
+    setFlowProcessRows,
+}: Props) {
 
     const { showToast } = useToast();
 
-    const [processPagination, setProcessPagination] = useState<GridPaginationModel>({
-        page: 0,
-        pageSize: 10,
-    });
-
-    /** 검색 상태 */
-    const [inputValues, setInputValues] = useState({
-        searchCnd: "0",
-        searchWrd: "",
-    });
-
-    const [searchParams, setSearchParams] = useState({
-        searchCnd: "0",
-        searchWrd: "",
-    });
-
-    const handleInputChange = (field: string, value: string) => {
-        setInputValues(prev => ({ ...prev, [field]: value }));
-    };
-
-    /** 검색 필터 적용 */
-    const filteredRows = useMemo(() => {
-        const { searchCnd, searchWrd } = inputValues;
-
-        if (!searchWrd.trim()) return processRows;
-
-        const kw = searchWrd.toLowerCase();
-
-        return processRows.filter(p => {
-            if (searchCnd === "0") return p.processCode.toLowerCase().includes(kw);
-            return p.processName.toLowerCase().includes(kw);
-        });
-    }, [inputValues, processRows]);
-
-
-    // 검색 실행
-    const handleSearch = () => {
-        setSearchParams(inputValues);
-        setProcessPagination(prev => ({ ...prev, page: 0 }));
-    };
-
 
     /** 선택 관리 */
-    const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
     const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
     const [lastProcessId, setLastProcessId] = useState<string | null>(null);
 
 
 
     /** 오른쪽으로 추가 */
-    const addProcess = () => {
-        if (leftSelected.length === 0 || !selectedFlow) return;
+    const addProcess = (
+        selectedLeft: GridRowId[],
+        processRows: Process[],
+        processFlowId: string,
+        processFlowCode: string
+    ) => {
+        if (selectedLeft.length === 0) return;
 
-        // 현재 flowProcessRows 중 Y 개수
-        const currentLinked = flowProcessRows.filter(p => p.equipmentFlag === "Y").length;
+        // 이미 등록된 설비연동(Y) 개수
+        const currentLinked = flowProcessRows.filter(
+            (p) => p.equipmentFlag === "Y"
+        ).length;
 
         // 왼쪽에서 선택된 공정 중 설비연동(Y) 개수
         const selectedLeftLinked = processRows
-        .filter(p => leftSelected.includes(p.processCode))
-        .filter(p => p.equipmentIntegrationYn === "Y").length;
+        .filter((p) => selectedLeft.includes(p.processCode))
+        .filter((p) => p.equipmentIntegrationYn === "Y").length;
 
         if (currentLinked + selectedLeftLinked > 1) {
             showToast?.({
@@ -83,25 +51,30 @@ export function useDetailProcessTab(
             return;
         }
 
-        const newRows: ProcessFlowProcess[] = processRows
-        .filter(p => leftSelected.includes(p.processCode))
-        .map(p => ({
-            flowRowId: crypto.randomUUID(),
-            flowProcessId: null,
+        setFlowProcessRows((prev) => {
+            const existCodes = new Set(prev.map((p) => p.flowProcessCode));
 
-            seq: "",
-            processFlowCode: selectedFlow.processFlowCode ?? "",
-            processFlowId: selectedFlow.processFlowId ?? "",
-            equipmentFlag: p.equipmentIntegrationYn ?? "N",
-            lastFlag: "N",
+            const newRows: ProcessFlowProcess[] = processRows
+            .filter((p) => selectedLeft.includes(p.processCode))
+            .filter((p) => !existCodes.has(p.processCode))
+            .map((p) => ({
+                flowRowId: crypto.randomUUID(),
+                flowProcessId: null,
 
-            flowProcessCode: p.processCode,
-            flowProcessName: p.processName,
-            processSeq: String(p.sortOrder ?? "")
-        }));
+                processFlowId,
+                processFlowCode,
 
-        setFlowProcessRows(prev => [...prev, ...newRows]);
-        setLeftSelected([]);
+                flowProcessCode: p.processCode,
+                flowProcessName: p.processName,
+
+                equipmentFlag: p.equipmentIntegrationYn ?? "N",
+                lastFlag: "N",
+                seq: "",
+                processSeq: String(p.sortOrder ?? ""),
+            }));
+
+            return [...prev, ...newRows];
+        });
     };
 
     /** 오른쪽 목록 삭제 */
@@ -152,48 +125,18 @@ export function useDetailProcessTab(
         setLastProcessId(rid);
     };
 
-    /** 탭 초기화 */
-    const clearProcessTab = () => {
-        setLeftSelected([]);
-        setRightSelected([]);
 
-        setLastProcessId(null);
-
-        setInputValues({ searchCnd: "0", searchWrd: "" });
-        setSearchParams({ searchCnd: "0", searchWrd: "" });
-        setProcessPagination({ page: 0, pageSize: 10 });
-    };
 
 
     return {
-        /** 검색 */
-        inputValues,
-        handleInputChange,
-        handleSearch,
-        filteredRows,
-
-        /** 리스트 */
-        flowProcessRows,
-        setFlowProcessRows,
-
-        /** 선택 */
-        leftSelected,
-        setLeftSelected,
         rightSelected,
         setRightSelected,
-
         lastProcessId,
-        setLastProcessId,
 
-        /** 이동 */
         addProcess,
         removeProcess,
-
-        /** 수정 */
         updateProcessRow,
         selectLastProcess,
-
-        clearProcessTab,
     };
 
 }
