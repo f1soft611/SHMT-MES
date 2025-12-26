@@ -6,36 +6,50 @@ import {
 import {Item} from "../../../../types/item";
 import { useProcessFlowDetailContext } from "../hooks/detail/useProcessFlowDetailContext";
 import {useDetailItemTab} from "../hooks/detail/useDetailItemTab";
+import { useItemList } from "../hooks/detail/useItemList";
 
 
 export default function ProcessFlowItemTab() {
 
+    //  공정흐름 기준
     const {
         processFlow,
-        itemRows,        // 전체 제품 목록
         flowItemRows,    // 흐름에 속한 제품 목록
         setFlowItemRows, // 흐름 제품 setter
-        itemPage, setItemPage,
-        itemPageSize, setItemPageSize, itemTotalCount, itemSearch,
-        searchItems
-
+        getSavePayload
     } = useProcessFlowDetailContext();
 
+    // 좌측 전체 목록 (서버 페이징 + 검색)
     const {
-        inputValues,
-        handleInputChange,
-        filteredRows,
-        leftSelected,
+        rows: itemRows,
+        totalCount,
+        page,
+        pageSize,
+        handlePaginationChange,
+
+        searchDraft,
+        updateSearchDraft,
+        handleSearchItem,
+
+        selected: leftSelected,
+        setSelected: setLeftSelected,
+    } = useItemList();
+
+
+    // 우측 등록 공정
+    const {
         rightSelected,
-        setLeftSelected,
         setRightSelected,
         addItems,
         removeItems,
-    } = useDetailItemTab(processFlow, itemRows, flowItemRows, setFlowItemRows);
+    } = useDetailItemTab({
+        flowItemRows,
+        setFlowItemRows,
+    });
 
 
 
-    const columns: GridColDef[] = [
+    const leftColumns: GridColDef[] = [
         { field: 'itemCode', headerName: '품목 코드', flex: 1, headerAlign: 'center' },
         { field: 'itemName', headerName: '품목명', flex: 1.2, headerAlign: 'center' },
         { field: 'specification', headerName: '규격', flex: 1, headerAlign: 'center', align: 'center' },
@@ -52,6 +66,20 @@ export default function ProcessFlowItemTab() {
         { field: 'unit', headerName: '단위코드', },
     ];
 
+    /** 좌 → 우 추가 */
+    const handleAdd = () => {
+        if (!processFlow) return;
+
+        addItems(
+            leftSelected,
+            itemRows,
+            processFlow.processFlowId!,
+            processFlow.processFlowCode!
+        );
+
+        setLeftSelected([]);
+    };
+
     return(
         <>
             {/* 검색 영역 */}
@@ -60,12 +88,12 @@ export default function ProcessFlowItemTab() {
                     <FormControl size="small" sx={{ minWidth: 200 }}>
                         <InputLabel>검색 조건</InputLabel>
                         <Select
-                            value={inputValues.searchCnd}
+                            value={searchDraft.searchCnd}
                             label="검색 조건"
-                            onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+                            onChange={(e) => updateSearchDraft('searchCnd', e.target.value)}
                         >
-                            <MenuItem value="0">품목 코드</MenuItem>
-                            <MenuItem value="1">품목명</MenuItem>
+                            <MenuItem value="1">품목 코드</MenuItem>
+                            <MenuItem value="2">품목명</MenuItem>
                         </Select>
                     </FormControl>
 
@@ -73,18 +101,14 @@ export default function ProcessFlowItemTab() {
                         size="small"
                         sx={{ flex: 1 }}
                         placeholder="검색어를 입력하세요"
-                        value={inputValues.searchWrd}
-                        onChange={(e)=>handleInputChange("searchWrd", e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                searchItems();
-                            }
-                        }}
+                        value={searchDraft.searchWrd}
+                        onChange={(e)=>updateSearchDraft("searchWrd", e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearchItem()}
                     />
                     <Button
                         variant="contained"
                         startIcon={<SearchIcon />}
-                        onClick={searchItems}
+                        onClick={handleSearchItem}
                         sx={{ minWidth: 150 }}
                     >
                         검색
@@ -95,23 +119,15 @@ export default function ProcessFlowItemTab() {
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.5  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
-                        rows={filteredRows}
-                        columns={columns}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
+                        rows={itemRows}
+                        columns={leftColumns}
                         getRowId={(row:Item) => row.itemCode}
 
                         pagination
                         paginationMode="server"
-                        rowCount={itemTotalCount}
-                        paginationModel={{
-                            page: itemPage,
-                            pageSize: itemPageSize
-                        }}
-                        onPaginationModelChange={(m) => {
-                            setItemPage(m.page);
-                            setItemPageSize(m.pageSize);
-                        }}
+                        rowCount={totalCount}
+                        paginationModel={{ page, pageSize }}
+                        onPaginationModelChange={handlePaginationChange}
                         pageSizeOptions={[10, 20, 50]}
                         columnVisibilityModel={{ unit: false }}   // 화면에서만 숨김
                         checkboxSelection
@@ -129,6 +145,8 @@ export default function ProcessFlowItemTab() {
                         //     setLeftSelected(Array.from(anyModel.ids ?? []));
                         // }}
                         autoHeight={false}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         sx={{
                             height: 450,
                             "& .MuiDataGrid-cell": {
@@ -152,7 +170,7 @@ export default function ProcessFlowItemTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={addItems}
+                            onClick={handleAdd}
                             disabled={leftSelected.length === 0}
                             aria-label="move selected right"
                         >
@@ -174,8 +192,6 @@ export default function ProcessFlowItemTab() {
                     <DataGrid
                         rows={flowItemRows}
                         columns={rightColumns}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
                         getRowId={(row) => row.flowItemId ?? row.flowRowId}
                         columnVisibilityModel={{
                             unit: false,
@@ -189,6 +205,8 @@ export default function ProcessFlowItemTab() {
                             setRightSelected(Array.from(anyModel.ids ?? []))
                         }}
                         autoHeight={false}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         sx={{
                             height: 450,
                             "& .MuiDataGrid-cell": {

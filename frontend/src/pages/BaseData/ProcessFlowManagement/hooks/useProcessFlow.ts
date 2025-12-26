@@ -22,6 +22,7 @@ export function useProcessFlow() {
     return {
         /** 목록 */
         rows: list.rows,
+        rowCount: list.rowCount,
         loading: list.loading,
         paginationModel: list.paginationModel,
         setPaginationModel: list.setPaginationModel,

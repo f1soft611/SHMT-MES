@@ -81,8 +81,8 @@ public class EgovProcessFlowApiController {
         processFlowVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
 
         Map<String, Object> resultMap = processFlowService.selectProcessFlowList(processFlowVO);
-//        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
-//        paginationInfo.setTotalRecordCount(totCnt);
+        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
+        paginationInfo.setTotalRecordCount(totCnt);
 
         resultMap.put("processFlowVO", processFlowVO);
         resultMap.put("paginationInfo", paginationInfo);

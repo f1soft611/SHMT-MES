@@ -20,43 +20,18 @@ import {
 } from "../../../../../types/processFlow";
 
 
-/** 품목 검색 조건 (서버용) */
-interface ItemSearchParams {
-    searchCnd: string;
-    searchWrd: string;
-    useYn: string;
-}
+
 
 interface DetailContextState {
 
     /** 기준 데이터 */
     processFlow: ProcessFlow | null;
 
-    processRows: Process[];
-    itemRows: Item[];
-
     flowProcessRows: ProcessFlowProcess[];
     flowItemRows: ProcessFlowItem[];
 
     setFlowProcessRows: React.Dispatch<React.SetStateAction<ProcessFlowProcess[]>>;
     setFlowItemRows: React.Dispatch<React.SetStateAction<ProcessFlowItem[]>>;
-
-    /** 페이징 */
-    processPage: number;
-    processPageSize: number;
-    setProcessPage: (n: number) => void;
-    setProcessPageSize: (n: number) => void;
-
-    itemPage: number;
-    itemPageSize: number;
-    itemTotalCount: number;
-    setItemPage: (n: number) => void;
-    setItemPageSize: (n: number) => void;
-
-    /** 검색 */
-    itemSearch: ItemSearchParams;
-    setItemSearch: (v: ItemSearchParams) => void;
-    searchItems: () => Promise<void>;
 
     /** 저장 payload 생성 */
     getSavePayload: (tabIndex: number) => DetailSavePayload;
@@ -71,138 +46,39 @@ export function ProcessFlowDetailProvider({
     processFlow: ProcessFlow | null;
     children: ReactNode;
 }) {
-    /** 페이징 */
-    const [processPage, setProcessPage] = useState(0);
-    const [processPageSize, setProcessPageSize] = useState(20);
-
-    const [itemPage, setItemPage] = useState(0);
-    const [itemPageSize, setItemPageSize] = useState(20);
-
-    /** 데이터 */
-    const [processRows, setProcessRows] = useState<Process[]>([]);
-    const [itemRows, setItemRows] = useState<Item[]>([]);
-    const [itemTotalCount, setItemTotalCount] = useState(0);
 
     const [flowProcessRows, setFlowProcessRows] = useState<ProcessFlowProcess[]>([]);
     const [flowItemRows, setFlowItemRows] = useState<ProcessFlowItem[]>([]);
 
-    /** 서버 검색 조건 */
-    const [itemSearch, setItemSearch] = useState<ItemSearchParams>({
-        searchCnd: "0",
-        searchWrd: "",
-        useYn: "Y",
-    });
-
     const flowId = processFlow?.processFlowId ?? null;  // ★ 공정 흐름 ID 추출
 
-    // 전체 공정 조회
-    useEffect(() => {
-        (async () => {
-            const res = await processService.getProcessList(processPage, processPageSize);
-            setProcessRows(res?.result?.resultList ?? []);
-        })();
-    }, [processPage, processPageSize]);
-
-
-    /** 전체 품목 (서버 페이징 + 검색) */
-    const fetchItems = async (
-        page = itemPage,
-        size = itemPageSize,
-        search = itemSearch
-    ) => {
-        const res = await itemService.getItemList(page, size, search);
-        setItemRows(res?.result?.resultList ?? []);
-        setItemTotalCount(res?.result?.resultCnt ?? 0);
-    };
-
-    useEffect(() => {
-        fetchItems();
-    }, [itemPage, itemPageSize]);
-
-    /** 검색 버튼용 */
-    const searchItems = async () => {
-        setItemPage(0);
-        await fetchItems(0, itemPageSize, itemSearch);
-    };
-
-    // 흐름별 공정 조회
     useEffect(() => {
         if (!flowId) return;
-        (async () => {
-            const res = await processFlowService.getProcessFlowProcess(flowId);
-            setFlowProcessRows(res?.result?.resultList ?? []);
-        })();
+        processFlowService.getProcessFlowProcess(flowId)
+        .then(res => setFlowProcessRows(res?.result?.resultList ?? []));
     }, [flowId]);
 
-    // 흐름별 품목 조회
     useEffect(() => {
         if (!flowId) return;
-        (async () => {
-            const res = await processFlowService.getProcessFlowItem(flowId);
-            setFlowItemRows(res?.result?.resultList ?? []);
-        })();
+        processFlowService.getProcessFlowItem(flowId)
+        .then(res => setFlowItemRows(res?.result?.resultList ?? []));
     }, [flowId]);
 
-    // 저장용 데이터 추출 함수
-    const getSavePayload = (tabIndex: number) => {
-        return tabIndex === 0
+    const getSavePayload = (tabIndex: number) =>
+        tabIndex === 0
             ? { processes: flowProcessRows }
             : { items: flowItemRows };
-    };
 
-
-    // // 흐름 상세 재조회 함수
-    // const fetchDetail = async (flowId: string) => {
-    //     const proc = await processService.getProcessList(processPage, processPageSize);
-    //     setProcessRows(
-    //         proc?.result?.resultList?.map((r: Process) => ({ ...r })) ?? []
-    //     );
-    //
-    //     const item = await itemService.getItemList(itemPage, itemPageSize);
-    //     setItemRows(
-    //         item?.result?.resultList?.map((r: Item) => ({ ...r })) ?? []
-    //     );
-    //
-    //     const resProc = await processFlowService.getProcessFlowProcess(flowId);
-    //     setFlowProcessRows(
-    //         resProc?.result?.resultList?.map((r: ProcessFlowProcess) => ({ ...r })) ?? []
-    //     );
-    //
-    //     const resItem = await processFlowService.getProcessFlowItem(flowId);
-    //     setFlowItemRows(
-    //         resItem?.result?.resultList?.map((r: ProcessFlowItem) => ({ ...r })) ?? []
-    //     );
-    // };
 
 
     return (
         <ProcessFlowDetailCtx.Provider
             value={{
                 processFlow,
-
-                processRows,
-                itemRows,
-
                 flowProcessRows,
-                flowItemRows,
                 setFlowProcessRows,
+                flowItemRows,
                 setFlowItemRows,
-
-                processPage,
-                processPageSize,
-                setProcessPage,
-                setProcessPageSize,
-
-                itemPage,
-                itemPageSize,
-                itemTotalCount,
-                setItemPage,
-                setItemPageSize,
-
-                itemSearch,
-                setItemSearch,
-                searchItems,
-
                 getSavePayload,
             }}
         >

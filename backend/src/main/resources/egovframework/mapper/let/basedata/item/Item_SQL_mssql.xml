@@ -73,20 +73,22 @@
 		</if>
 	</select>
 
-	<select id="ItemDAO.selectItemListCnt" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultType="int">
+	<select id="ItemDAO.selectItemListCnt"
+			parameterType="egovframework.let.basedata.item.domain.model.ItemVO"
+			resultType="int">
 		SELECT COUNT(*) AS CNT
 		FROM TCO403
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '1'">
+				<when test="searchCnd == 1">
 					AND MATERIAL_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
+				<when test="searchCnd == 2">
 					AND MATERIAL_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '3'">
+				<when test="searchCnd == 3">
 					AND MATERIAL_SPEC LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>

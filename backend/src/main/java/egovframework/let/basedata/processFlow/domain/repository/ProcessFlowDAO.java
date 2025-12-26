@@ -24,6 +24,10 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         return selectList("ProcessFlowDAO.selectProcessFlowList", processFlowVO);
     }
 
+    public int selectProcessFlowListCnt(ProcessFlowVO processFlowVO){
+        return selectOne("ProcessFlowDAO.selectProcessFlowListCnt", processFlowVO);
+    }
+
     public void createProcessFlow(ProcessFlow pf) {
         insert("ProcessFlowDAO.insertProcessFlow", pf);
     }

@@ -11,40 +11,50 @@ import {
 import {Process} from "../../../../types/process";
 import { useProcessFlowDetailContext } from "../hooks/detail/useProcessFlowDetailContext";
 import {useDetailProcessTab} from "../hooks/detail/useDetailProcessTab";
+import { useProcessList } from "../hooks/detail/useProcessList";
 
 
 export default function ProcessFlowProcessTab() {
 
+    //  공정흐름 기준
     const {
         processFlow,
-        processRows,        // 전체 공정 목록
         flowProcessRows,    // 흐름에 속한 공정 목록
         setFlowProcessRows, // 흐름 공정 setter
-        processPage, setProcessPage,
-        processPageSize, setProcessPageSize
+        getSavePayload
     } = useProcessFlowDetailContext();
 
+    // 좌측 전체 공정 (서버 페이징 + 검색)
     const {
-        filteredRows,
-        inputValues,
-        handleInputChange,
-        handleSearch,
+        rows: processRows,
+        totalCount,
+        page,
+        pageSize,
+        handlePaginationChange,
 
-        leftSelected, setLeftSelected,
-        rightSelected, setRightSelected,
+        searchDraft,
+        updateSearchDraft,
+        handleSearchProcess,
 
-        lastProcessId,
-        setLastProcessId,
+        selected: leftSelected,
+        setSelected: setLeftSelected,
+    } = useProcessList();
 
+    // 우측 등록 공정
+    const {
+        rightSelected,
+        setRightSelected,
         addProcess,
         removeProcess,
-
         updateProcessRow,
         selectLastProcess,
+    } = useDetailProcessTab({
+        flowProcessRows,
+        setFlowProcessRows,
+    });
 
-    } = useDetailProcessTab(processFlow, processRows, flowProcessRows, setFlowProcessRows);
-
-    const columns: GridColDef[] = [
+    // 왼쪽 전체 공정목록
+    const leftColumns: GridColDef[] = [
         { field: 'processCode', headerName: '공정 코드', flex: 1, headerAlign: 'center', align: 'center', },
         { field: 'processName', headerName: '공정 이름', flex: 1, headerAlign: 'center', align: 'center', },
         {
@@ -63,6 +73,7 @@ export default function ProcessFlowProcessTab() {
         },
     ];
 
+    // 오른쪽 해당 공정 흐름에 등록된 공정 목록
     const rightColumns: GridColDef[] = [
         { field: 'flowProcessCode', headerName: '공정 코드', flex: 1, headerAlign: 'center', align: 'center', },
         { field: 'flowProcessName', headerName: '공정 이름', flex: 1, headerAlign: 'center', align: 'center', },
@@ -116,23 +127,26 @@ export default function ProcessFlowProcessTab() {
                     <Radio
                         name="lastProcess"
                         checked={params.row.lastFlag === "Y"}
-                        onChange={() => {
-                            setLastProcessId(rid);
-                            // ★ 모든 lastFlag 초기화 + 선택된 것만 Y
-                            setFlowProcessRows(prev =>
-                                prev.map(p =>
-                                    (p.flowProcessId ?? p.flowRowId) === rid
-                                        ? { ...p, lastFlag: "Y" }
-                                        : { ...p, lastFlag: "N" }
-                                )
-                            );
-                        }}
+                        onChange={() => selectLastProcess(rid)}
                     />
                 );
             },
         }
     ];
 
+    /** 좌 → 우 추가 */
+    const handleAdd = () => {
+        if (!processFlow) return;
+
+        addProcess(
+            leftSelected,
+            processRows,
+            processFlow.processFlowId!,
+            processFlow.processFlowCode!
+        );
+
+        setLeftSelected([]);
+    };
 
 
     return(
@@ -143,9 +157,9 @@ export default function ProcessFlowProcessTab() {
                     <FormControl size="small" sx={{ minWidth: 200 }}>
                         <InputLabel>검색 조건</InputLabel>
                         <Select
-                            value={inputValues.searchCnd}
+                            value={searchDraft.searchCnd}
                             label="검색 조건"
-                            onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+                            onChange={(e) => updateSearchDraft('searchCnd', e.target.value)}
                         >
                             <MenuItem value="0">공정 코드</MenuItem>
                             <MenuItem value="1">공정 이름</MenuItem>
@@ -156,14 +170,14 @@ export default function ProcessFlowProcessTab() {
                         size="small"
                         sx={{ flex: 1 }}
                         placeholder="검색어를 입력하세요"
-                        value={inputValues.searchWrd}
-                        onChange={(e)=>handleInputChange("searchWrd", e.target.value)}
-                        onKeyDown={(e)=>e.key==="Enter" && handleSearch()}
+                        value={searchDraft.searchWrd}
+                        onChange={(e)=>updateSearchDraft("searchWrd", e.target.value)}
+                        onKeyDown={(e)=>e.key==="Enter" && handleSearchProcess()}
                     />
                     <Button
                         variant="contained"
                         startIcon={<SearchIcon />}
-                        onClick={handleSearch}
+                        onClick={handleSearchProcess}
                         sx={{ minWidth: 150 }}
                     >
                         검색
@@ -174,21 +188,15 @@ export default function ProcessFlowProcessTab() {
             <Grid container spacing={1} direction="row">
                 <Grid size={{ xs:5.0  }} sx={{ overflow: "hidden" }}>
                     <DataGrid
-                        rows={filteredRows}
-                        columns={columns}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
+                        rows={processRows}
+                        columns={leftColumns}
                         getRowId={(row:Process) => row.processCode}
 
                         pagination
-                        paginationModel={{
-                            page: processPage,
-                            pageSize: processPageSize,
-                        }}
-                        onPaginationModelChange={(model) => {
-                            setProcessPage(model.page);
-                            setProcessPageSize(model.pageSize);
-                        }}
+                        paginationMode="server"
+                        rowCount={totalCount}
+                        paginationModel={{ page, pageSize }}
+                        onPaginationModelChange={handlePaginationChange}
                         pageSizeOptions={[10, 20, 50]}
 
                         checkboxSelection
@@ -202,6 +210,8 @@ export default function ProcessFlowProcessTab() {
                             setLeftSelected(Array.from(model.ids));
                         }}
                         autoHeight={false}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         sx={{
                             height: 450,
                             "& .MuiDataGrid-cell": {
@@ -225,7 +235,7 @@ export default function ProcessFlowProcessTab() {
                             sx={{ my: 0.5 }}
                             variant="outlined"
                             size="small"
-                            onClick={addProcess}
+                            onClick={handleAdd}
                             disabled={leftSelected.length === 0}
                             aria-label="move selected right"
                         >
@@ -247,8 +257,6 @@ export default function ProcessFlowProcessTab() {
                     <DataGrid
                         rows={flowProcessRows}
                         columns={rightColumns}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
                         getRowId={(row) => row.flowProcessId ?? row.flowRowId}
                         editMode="cell"
                         processRowUpdate={updateProcessRow}
@@ -260,6 +268,8 @@ export default function ProcessFlowProcessTab() {
                             setRightSelected(Array.from(anyModel.ids ?? []))
                         }}
                         autoHeight={false}
+                        rowHeight={35}
+                        columnHeaderHeight={40}
                         sx={{
                             height: 450,
                             "& .MuiDataGrid-cell": {
