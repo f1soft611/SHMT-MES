@@ -35,3 +35,16 @@ export interface EquipmentSearchParams {
   pageIndex?: number;
   pageUnit?: number;
 }
+
+
+/**
+ * 요약 설비 타입
+ */
+export interface EquipmentInfo {
+  EQUIP_SYS_CD?: string;
+  EQUIPMENT_NAME?: string;
+  WORKCENTER_CODE: string;
+  WORKCENTER_NAME?: string;
+  WORK_CODE?: string;
+  WORK_NAME?: string;
+}

@@ -103,4 +103,11 @@ public class EquipmentDAO extends EgovAbstractMapper {
     public int selectEquipmentCodeCheckForUpdate(Map<String, String> params) {
         return selectOne("EquipmentDAO.selectEquipmentCodeCheckForUpdate", params);
     }
+
+    /**
+     * 작업장별 설비목록 리스트
+     */
+    public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception {
+        return selectList("EquipmentDAO.selectEquipmentListByWorkplaceCode", code);
+    }
 }

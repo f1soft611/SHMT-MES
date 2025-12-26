@@ -117,4 +117,15 @@ public class EgovEquipmentServiceImpl extends EgovAbstractServiceImpl implements
 		int count = equipmentDAO.selectEquipmentCodeCheckForUpdate(params);
 		return count > 0;
 	}
+
+	/**
+	 * 작업장별 설비목록 리스트
+	 */
+	@Override
+	public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception {
+		List<Map<String, Object>> resultList = equipmentDAO.selectEquipmentListByWorkplaceCode(code);
+		return resultList;
+	}
+
+
 }
