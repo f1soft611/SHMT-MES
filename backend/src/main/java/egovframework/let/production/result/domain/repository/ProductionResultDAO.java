@@ -28,7 +28,7 @@ import java.util.Map;
 public class ProductionResultDAO extends EgovAbstractMapper {
 
 	// 조건에 맞는 생산지시 목록 반환
-	public List<ProductionResult> selectProductionOrderList(Map<String, Object> searchVO) throws Exception {
+	public List<Map<String, Object>> selectProductionOrderList(Map<String, Object> searchVO) throws Exception {
 		return selectList("ProductionResultDAO.selectProductionOrderList", searchVO);
 	}
 

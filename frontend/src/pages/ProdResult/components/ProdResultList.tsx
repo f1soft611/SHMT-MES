@@ -8,7 +8,7 @@ import {
 import {
     Button, Select, MenuItem, Checkbox, ListItemText
 } from "@mui/material";
-import {ProductionResult, ProductionResultDetail} from "../../../types/productionResult";
+import {ProductionResultOrder, ProductionResultDetail} from "../../../types/productionResult";
 import { useProdResultDetail } from "../hooks/useProdResultDetail";
 
 export interface DetailGridRef {
@@ -18,7 +18,7 @@ export interface DetailGridRef {
 }
 
 interface Props {
-    parentRow: ProductionResult;
+    parentRow: ProductionResultOrder;
 }
 
 const workerOptions = [

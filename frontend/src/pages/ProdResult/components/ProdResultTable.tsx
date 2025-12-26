@@ -1,8 +1,8 @@
-import React, {useRef, useState} from "react";
+import React, { useMemo, useRef, useState} from "react";
 import {
     Box, Card, CardActions, CardContent, CardHeader,
-    Collapse, Paper,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton,
+    Collapse, Paper, IconButton,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination,
 } from "@mui/material";
 import {
     KeyboardArrowDown,
@@ -10,13 +10,20 @@ import {
     Add as AddIcon
 } from "@mui/icons-material";
 import {
-    ProductionResult,
+    ProductionResultOrder,
     ProductionResultDetail
 } from "../../../types/productionResult";
 import ProdResultList from "./ProdResultList";
 
 interface Props {
-    rows: ProductionResult[];
+    rows: ProductionResultOrder[];
+    rowCount: number;
+    pagination: {
+        page: number;
+        pageSize: number;
+    };
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
 }
 
 export interface DetailGridRef {
@@ -25,7 +32,8 @@ export interface DetailGridRef {
     fetchDetails: () => void;
 }
 
-export default function ProdResultTable({ rows }: Props) {
+export default function ProdResultTable({ rows, rowCount, pagination, onPageChange, onPageSizeChange }: Props) {
+
     return (
         <Card>
             <CardHeader
@@ -38,6 +46,8 @@ export default function ProdResultTable({ rows }: Props) {
                         <TableHead>
                             <TableRow sx={{ height: 40, }}>
                                 <TableCell width={40} sx={{ padding: "0 2px" }} />
+                                <TableCell align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
+                                <TableCell align="center" sx={{ padding: "0 2px" }}>거래처</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>공정명</TableCell>
                                 <TableCell align="center" sx={{ padding: "0 2px" }}>설비코드</TableCell>
@@ -70,12 +80,24 @@ export default function ProdResultTable({ rows }: Props) {
                     </Table>
                 </TableContainer>
             </CardContent>
-            <CardActions sx={{ display: 'none' }} />
+            <CardActions sx={{ p: 0, justifyContent: 'flex-end', }} >
+                <TablePagination
+                    component="div"
+                    count={rowCount}                 // 서버 totalCount
+                    page={pagination.page}
+                    rowsPerPage={pagination.pageSize}
+                    onPageChange={(_, newPage) => onPageChange(newPage)}
+                    onRowsPerPageChange={(e) =>
+                        onPageSizeChange(parseInt(e.target.value, 10))
+                    }
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                />
+            </CardActions>
         </Card>
     );
 }
 
-function ProdResultRow({ row }: { row: ProductionResult }) {
+function ProdResultRow({ row }: { row: ProductionResultOrder }) {
     const [open, setOpen] = useState(false);
     const detailRef = useRef<DetailGridRef>(null);
 
@@ -116,6 +138,12 @@ function ProdResultRow({ row }: { row: ProductionResult }) {
                     {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
+                    {row.ORDER_NO}
+                </TableCell>
+                <TableCell align="center" sx={{ padding: "0 2px" }}>
+                    {row.CUSTOMER_NAME}
+                </TableCell>
+                <TableCell align="center" sx={{ padding: "0 2px" }}>
                     {row.PRODPLAN_ID}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
@@ -134,7 +162,7 @@ function ProdResultRow({ row }: { row: ProductionResult }) {
                     {row.ITEM_NAME}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.ITEM_NAME}
+                    {row.ITEM_SPEC}
                 </TableCell>
                 <TableCell align="right" sx={{ padding: "0 2px" }}>
                     {row.PROD_QTY.toLocaleString()}

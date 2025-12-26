@@ -1,7 +1,13 @@
 /**
  * 생산실적 타입 정의
  */
-export interface ProductionResult {
+export interface ProductionResultOrder {
+    ORDER_NO?: string;
+    ORDER_SEQNO?: string;
+    ORDER_HISTNO?: string;
+    CUSTOMER_CODE?: string;
+    CUSTOMER_NAME?: string;
+
     FACTORY_CODE: string;
 
     PRODPLAN_ID: string;
@@ -15,6 +21,7 @@ export interface ProductionResult {
 
     ITEM_CODE: string;
     ITEM_NAME: string;
+    ITEM_SPEC?: string;
 
     WORK_CODE: string;
     WORK_NAME: string;

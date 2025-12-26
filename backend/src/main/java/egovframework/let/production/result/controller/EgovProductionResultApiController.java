@@ -50,7 +50,7 @@ public class EgovProductionResultApiController {
 	private final EgovPropertyService propertyService;
 
 	/**
-	 * 생산실적 목록을 조회한다.
+	 * 생산실적관리] 생산지시 목록을 조회한다.
 	 *
 	 * @param searchVO 검색 조건
 	 * @param user 사용자 정보
@@ -58,8 +58,8 @@ public class EgovProductionResultApiController {
 	 * @throws Exception
 	 */
 	@Operation(
-			summary = "생산실적 목록 조회",
-			description = "생산실적 목록을 조회한다.",
+			summary = "생산실적관리] 생산지시 목록을 조회",
+			description = "생산실적관리] 생산지시 목록을 조회",
 			security = {@SecurityRequirement(name = "Authorization")},
 			tags = {"EgovProductionResultApiController"}
 	)
@@ -67,13 +67,12 @@ public class EgovProductionResultApiController {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
 			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
 	})
-	@GetMapping
-	public ResultVO selectProductionResultList(
+	@GetMapping("/orders")
+	public ResultVO selectProductionOrderList(
 			@RequestParam Map<String, String> searchVO,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
 		Map<String, Object> resultMap = productionResultService.selectProductionOrderList(searchVO, user);
-
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 

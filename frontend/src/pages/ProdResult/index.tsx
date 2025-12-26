@@ -39,7 +39,12 @@ const ProductionResult: React.FC = () => {
             <Grid container spacing={0} columns={12}>
                 <Grid size={{xs: 12,}}>
                     <ProdResultTable
-                        rows={rs.rows} />
+                        rows={rs.rows}
+                        rowCount={rs.rowCount}
+                        pagination={rs.pagination}
+                        onPageChange={rs.handlePageChange}
+                        onPageSizeChange={rs.handlePageSizeChange}
+                    />
                 </Grid>
             </Grid>
 

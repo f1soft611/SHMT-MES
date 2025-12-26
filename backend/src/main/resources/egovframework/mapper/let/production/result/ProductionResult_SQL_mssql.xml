@@ -6,17 +6,22 @@
     <select id="selectProductionOrderList"
             parameterType="map"
             resultType="map">
-        SELECT A.FACTORY_CODE
+        SELECT X.ORDER_NO, X.ORDER_SEQNO, X.ORDER_HISTNO, X.CUSTOMER_CODE, X1.CUSTOMER_NAME
+            , A.FACTORY_CODE
             , A.PRODPLAN_ID
             , A.PRODPLAN_DATE
             , A.PRODPLAN_SEQ
             , A.PRODWORK_SEQ
             , CAST(A.WORK_SEQ AS INT) AS WORK_SEQ
             , A.WORKDT_DATE
+            , A1.WORKCENTER_CODE
+            , A2.WORKCENTER_NAME
             , A.WORK_CODE
             , B.WORK_NAME
-            , ISNULL(A.ITEM_CODE, '-') AS ITEM_CODE
+            , ISNULL(A.ITEM_CODE, '-') AS ITEM_CODE_ID
+            , ISNULL(C.MATERIAL_CODE, '-') AS ITEM_CODE
             , ISNULL(C.MATERIAL_NAME, '-') AS ITEM_NAME
+            , ISNULL(C.MATERIAL_SPEC, '-') AS ITEM_SPEC
             , ISNULL(A.EQUIP_SYS_CD, '-') AS EQUIP_SYS_CD
             , ISNULL(D.EQUIPMENT_NAME, '-') AS EQUIP_SYS_CD_NM
             , A.PROD_QTY
@@ -32,17 +37,40 @@
             , A.TPR504ID
             , A.PRODORDER_ID
         FROM TPR504 A
+            LEFT JOIN TPR301 A1
+            ON A.FACTORY_CODE = A1.FACTORY_CODE
+            AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
+            AND A.PRODPLAN_SEQ = A1.PRODPLAN_SEQ
+            LEFT JOIN TPR101 A2
+            ON A1.WORKCENTER_CODE = A2.WORKCENTER_CODE
         LEFT JOIN TPR102 B
         ON A.FACTORY_CODE = B.FACTORY_CODE
         AND A.WORK_CODE = B.WORK_CODE
-
         LEFT JOIN TCO403 C
         ON A.ITEM_CODE = C.MATERIAL_ID
-
         LEFT JOIN TPR151 D
         ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
+        LEFT JOIN TPR301R X --수주정보
+        ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
+        AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
+        LEFT JOIN TCO601 X1
+        ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
         AND A.WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
+        <if test="workplace != null and workplace != ''">
+            AND A1.WORKCENTER_CODE = #{workplace}
+        </if>
+        <if test="equipment != null and equipment != ''">
+            AND A.EQUIP_SYS_CD = #{equipment}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+            A.ITEM_CODE      LIKE '%' + #{keyword} + '%'
+            OR C.MATERIAL_NAME  LIKE '%' + #{keyword} + '%'
+            OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
+            OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
+            )
+        </if>
         ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, A.WORK_SEQ, A.WORKDT_DATE DESC
         OFFSET #{offset} ROWS
         FETCH NEXT #{size} ROWS ONLY
@@ -53,8 +81,41 @@
             parameterType="map"
             resultType="int">
         SELECT COUNT(*)
-        FROM TPR504
+        FROM TPR504 A
+        LEFT JOIN TPR301 A1
+        ON A.FACTORY_CODE = A1.FACTORY_CODE
+        AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
+        AND A.PRODPLAN_SEQ = A1.PRODPLAN_SEQ
+        LEFT JOIN TPR101 A2
+        ON A1.WORKCENTER_CODE = A2.WORKCENTER_CODE
+        LEFT JOIN TPR102 B
+        ON A.FACTORY_CODE = B.FACTORY_CODE
+        AND A.WORK_CODE = B.WORK_CODE
+        LEFT JOIN TCO403 C
+        ON A.ITEM_CODE = C.MATERIAL_ID
+        LEFT JOIN TPR151 D
+        ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
+        LEFT JOIN TPR301R X --수주정보
+        ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
+        AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
+        LEFT JOIN TCO601 X1
+        ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
+        AND A.WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
+        <if test="workplace != null and workplace != ''">
+            AND A1.WORKCENTER_CODE = #{workplace}
+        </if>
+        <if test="equipment != null and equipment != ''">
+            AND A.EQUIP_SYS_CD = #{equipment}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+            A.ITEM_CODE      LIKE '%' + #{keyword} + '%'
+            OR C.MATERIAL_NAME  LIKE '%' + #{keyword} + '%'
+            OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
+            OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
+            )
+        </if>
     </select>
 
     <!-- 생산실적 TPR601 NextId 가져오기    -->
@@ -119,7 +180,7 @@
             #{PRODWORK_SEQ},
             #{WORK_SEQ},
             #{PROD_SEQ},
-            #{ITEM_CODE},
+            #{ITEM_CODE_ID},
             #{WORK_CODE},
             #{PROD_STIME},
             #{PROD_ETIME},

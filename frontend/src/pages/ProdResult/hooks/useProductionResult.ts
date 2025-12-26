@@ -6,8 +6,13 @@ import {useEffect, useState} from "react";
 
 export function useProductionResult(rowData?: any) {
 
+    // 검색필터 작업장 fetch 공통 훅
     const wpfetchHook = useFetchWorkplaces();
+
+    // 생산지시
     const prodOrder = useProdOrder();
+
+    // dialog 상태 훅
     const dialog = useProdResultDialog();
 
     // 선택된 생산지시
@@ -26,8 +31,9 @@ export function useProductionResult(rowData?: any) {
         prodOrder.setSearch(prevState => ({
             workplace: rowData.WORKCENTER_CODE,
             equipment: rowData.EQUIP_SYS_CD,
-            dateFrom: rowData.PRODPLAN_DATE,
-            dateTo: rowData.PRODPLAN_DATE
+            dateFrom: rowData.PROD_DATE,
+            dateTo: rowData.PROD_DATE,
+            keyword: rowData.PROD_DATE // TODO: id값으로 변경
         }))
     }, [rowData]);
 
@@ -40,8 +46,10 @@ export function useProductionResult(rowData?: any) {
         rowCount: prodOrder.rowCount,
         loading: prodOrder.loading,
 
-        paginationModel: prodOrder.paginationModel,
-        setPaginationModel: prodOrder.setPaginationModel,
+        pagination: prodOrder.pagination,
+        setPagination: prodOrder.setPagination,
+        handlePageChange: prodOrder.handlePageChange,
+        handlePageSizeChange: prodOrder.handlePageSizeChange,
 
         workplaces: wpfetchHook.workplaces,
         refetchWorkplaces: wpfetchHook.refetchWorkplaces,

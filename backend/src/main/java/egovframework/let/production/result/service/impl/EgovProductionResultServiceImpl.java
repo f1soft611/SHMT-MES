@@ -50,8 +50,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		dbParams.put("offset", page * size);
 		dbParams.put("size", size);
 
-//		List<Map<String, Object>> resultList = productionResultDAO.selectProductionOrderList(dbParams);
-		List<ProductionResult> resultList = productionResultDAO.selectProductionOrderList(dbParams);
+		List<Map<String, Object>> resultList = productionResultDAO.selectProductionOrderList(dbParams);
 		int totalCount = productionResultDAO.selectProductionOrderListCount(dbParams);
 
 		Map<String, Object> result = new HashMap<>();

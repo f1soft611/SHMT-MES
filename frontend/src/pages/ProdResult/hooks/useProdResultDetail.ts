@@ -1,9 +1,9 @@
 import { useState} from "react";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
-import {ProductionResult, ProductionResultDetail} from "../../../types/productionResult";
+import {ProductionResultOrder, ProductionResultDetail} from "../../../types/productionResult";
 import {productionResultService} from "../../../services/productionResultService";
 
-export function useProdResultDetail(parentRow: ProductionResult) {
+export function useProdResultDetail(parentRow: ProductionResultOrder) {
     const { showToast } = useToast();
 
     const [rows, setRows] = useState<ProductionResultDetail[]>([]);
