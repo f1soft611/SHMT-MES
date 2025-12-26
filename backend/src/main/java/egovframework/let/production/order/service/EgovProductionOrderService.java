@@ -32,8 +32,7 @@ public interface EgovProductionOrderService {
 	 * @param attrbFlag
 	 * @exception Exception Exception
 	 */
-	public Map<String, Object> selectProductionOrderList(ProductionOrderVO productionOrderVO, String attrbFlag)
-	  throws Exception;
+	Map<String, Object> selectProductionOrderList(ProductionOrderVO productionOrderVO, String attrbFlag) throws Exception;
 
 
 	Map<String, Object> selectProdPlans(Map<String, String> params) throws Exception;

@@ -24,7 +24,7 @@ import java.io.Serializable;
  *
  * </pre>
  */
-@Schema(description = "게시물 VO")
+@Schema(description = "생산지시 VO")
 @Getter
 @Setter
 public class ProductionOrderVO extends ProductionOrder implements Serializable {
