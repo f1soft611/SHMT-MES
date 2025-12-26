@@ -57,11 +57,11 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 	@Override
 	public Map<String, Object> selectProcessFlowList(ProcessFlowVO processFlowVO) throws Exception {
 		List<ProcessFlowVO> resultList = processFlowDAO.selectProcessFlowList(processFlowVO);
-//		int totalCount = processFlowDAO.selectProcessListCnt(processFlowVO);
+		int resultCnt = processFlowDAO.selectProcessFlowListCnt(processFlowVO);
 
 		Map<String, Object> map = new HashMap<>();
 		map.put("resultList", resultList);
-//		map.put("resultCnt", Integer.toString(resultList.size()));
+		map.put("resultCnt", Integer.toString(resultCnt));
 
 		return map;
 	}
