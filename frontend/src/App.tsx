@@ -21,9 +21,7 @@ import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrder from './pages/ProductionOrder';
 import ProdOrder from './pages/ProdOrder';
-import ProductionResult2 from './pages/ProductionResult';
 import ProductionResult from './pages/ProdResult';
-import ProductionResultForm from './pages/ProductionResult/components/ProductionResultForm';
 import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
@@ -100,18 +98,6 @@ function App() {
                           <Route
                             path={URL.PRODUCTION_RESULTS}
                             element={<ProductionResult />}
-                          />
-                          <Route
-                              path={URL.PRODUCTION_RESULTS2}
-                              element={<ProductionResult2 />}
-                          />
-                          <Route
-                            path={`${URL.PRODUCTION_RESULTS}/new`}
-                            element={<ProductionResultForm />}
-                          />
-                          <Route
-                            path={`${URL.PRODUCTION_RESULTS}/:id/edit`}
-                            element={<ProductionResultForm />}
                           />
                           {/* <Route
                           path={URL.INTERFACE}

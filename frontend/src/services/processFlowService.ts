@@ -17,7 +17,9 @@ export const processFlowService = {
             pageUnit: pageSize,
             ...params,
         };
-        const response = await apiClient.get('/api/processflow', { params: requestParams });
+        const response = await apiClient.get('/api/processflow', {
+            params: requestParams
+        });
         return response.data;
     },
 

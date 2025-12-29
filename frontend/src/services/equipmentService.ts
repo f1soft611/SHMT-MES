@@ -59,6 +59,14 @@ export const equipmentService = {
     const response = await apiClient.delete(`/api/equipments/${equipmentId}`);
     return response.data;
   },
+
+  /**
+   * 작업장별 설비목록 조회
+   */
+  getEquipmentsByWorkplaceId: async (workplaceId: string) => {
+    const response = await apiClient.get(`/api/equipments/wokrplace/${workplaceId}`);
+    return response.data;
+  },
 };
 
 export default equipmentService;

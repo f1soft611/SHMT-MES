@@ -41,6 +41,27 @@ public class ResultVoHelper {
 	    resultVO.setResultMessage(code.getMessage());
 	    return resultVO;
 	}
+
+	/**
+	 * Map 기반 결과 데이터를 ResultVO로 생성한다.
+	 *
+	 * @param resultMap 결과 데이터 Map
+	 * @param code 응답 코드 (ResponseCode)
+	 * @param message 응답 메시지
+	 * @return 생성된 ResultVO 객체
+	 */
+	public ResultVO buildFromMap(
+			Map<String, Object> resultMap,
+			ResponseCode code,
+			String message
+	) {
+		ResultVO resultVO = new ResultVO();
+		resultVO.setResult(resultMap);
+		resultVO.setResultCode(code.getCode());
+		resultVO.setResultMessage(message);
+		return resultVO;
+	}
+
 	
 	/**
 	 * 이미 생성된 ResultVO 객체에 응답 코드 및 메시지를 설정한다.
@@ -54,4 +75,5 @@ public class ResultVoHelper {
 	    resultVO.setResultMessage(code.getMessage());
 	    return resultVO;
 	}
+
 }

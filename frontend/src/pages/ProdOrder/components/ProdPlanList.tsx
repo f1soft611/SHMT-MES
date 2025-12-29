@@ -1,38 +1,71 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import {DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import {
     Box, Stack,
-    Card, CardHeader, CardContent, CardActions, IconButton,
+    Card, CardHeader, CardContent, CardActions, IconButton, Chip,
 } from '@mui/material';
 import {
     AssignmentAdd as AssignmentAddIcon,
+    Input as InputIcon,
 } from "@mui/icons-material";
 
 interface Props {
     rows: any[];
     loading: boolean;
-    onRowClick?: (row: any) => void;
+    onRowClick: (row: any) => void;
     paginationModel: GridPaginationModel;
     totalCount: number;
     onPaginationChange: (model: GridPaginationModel) => void;
 }
 
+function ProductionActionCell({ row }: { row: any }) {
+    const navigate = useNavigate();
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        navigate('/prod/results', {
+            state: { rowData: row },
+        });
+    };
+
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+            }}
+        >
+            <Stack direction="row" spacing={1}>
+                <IconButton size="small" color="primary" onClick={handleClick}>
+                    <InputIcon />
+                </IconButton>
+            </Stack>
+        </Box>
+    );
+};
+
 const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange }: Props) => {
 
     const columns: GridColDef[] = [
-        {
-            field: "planStatus",
-            headerName: "계획상태",
-            width: 100,
-            headerAlign: "center",
-            align: "center",
-        },
         {
             field: "ORDER_FLAG",
             headerName: "지시상태",
             width: 100,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => {
+                const isOrdered = params.value === 'ORDERED';
+                return (
+                    <Chip
+                        label={params.value}
+                        color={isOrdered ? 'primary' : 'default'}
+                        size="small"
+                    />
+                );
+            },
         },
         {
             field: "PRODPLAN_ID",
@@ -99,7 +132,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             align: "left",
         },
         {
-            field: "actions",
+            field: "actionOrder",
             headerName: "생산지시",
             sortable: false,
             headerAlign: 'center',
@@ -119,7 +152,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                             color="primary"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onRowClick?.(params.row);
+                                onRowClick(params.row);
                             }}
                         >
                             <AssignmentAddIcon />
@@ -128,6 +161,14 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                     </Stack>
                 </Box>
             )
+        },
+        {
+            field: "actionResult",
+            headerName: "생산실적",
+            sortable: false,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params) => <ProductionActionCell row={params.row} />
         },
     ];
 

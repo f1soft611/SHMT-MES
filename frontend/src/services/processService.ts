@@ -27,7 +27,9 @@ export const processService = {
       pageUnit: pageSize,
       ...params,
     };
-    const response = await apiClient.get('/api/processes', { params: requestParams });
+    const response = await apiClient.get('/api/processes', {
+      params: requestParams
+    });
     return response.data;
   },
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import workplaceService from "../../../../../services/workplaceService";
@@ -78,6 +78,7 @@ export function useProcessFlowMainDialog() {
             workplaceCode: row.workplaceCode,
             processFlowCode: row.processFlowCode,
             processFlowName: row.processFlowName,
+            processFlowId: row.processFlowId,
         });
 
         setOpen(true);

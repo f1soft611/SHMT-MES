@@ -9,6 +9,7 @@ import {
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import {Workplace} from "../../../types/workplace";
+import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
 
 interface Props {
     workplaces: Workplace[];
@@ -17,12 +18,16 @@ interface Props {
         equipment: string;
         dateFrom: string;
         dateTo: string;
+        keyword: string; // 통합검색
     };
     onChange: (name: string, value: string) => void;
     onSearch: () => void;
 }
 
 const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
+
+    const { equipments } = useFetchEquipments(search.workplace);
+
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -86,16 +91,14 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Prop
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>설비</InputLabel>
                         <Select
-                            value={search.workplace}
+                            value={search.equipment}
                             label="설비"
                             onChange={(e) => onChange('equipment', e.target.value)}
                         >
-                            <MenuItem value="">
-                                전체
-                            </MenuItem>
-                            {workplaces.map(wp => (
-                                <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
-                                    {wp.workplaceName} ({wp.workplaceCode})
+                            <MenuItem value="">전체</MenuItem>
+                            {equipments.map(eq => (
+                                <MenuItem key={eq.EQUIP_SYS_CD} value={eq.EQUIP_SYS_CD}>
+                                    {eq.EQUIPMENT_NAME} ({eq.EQUIP_SYS_CD})
                                 </MenuItem>
                             ))}
                         </Select>
@@ -113,6 +116,14 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Prop
                         type="date"
                         value={search.dateTo}
                         onChange={(e) => onChange('dateTo', e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        label="통합검색"
+                        placeholder="품목명 / 품목코드"
+                        value={search.keyword}
+                        onChange={(e) => onChange('keyword', e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && onSearch()}
                         InputLabelProps={{ shrink: true }}
                     />
                     <Button

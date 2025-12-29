@@ -12,7 +12,6 @@ const URL = {
   PRODUCTION_ORDERS: '/prod/orders', //생산지시
   PRODUCTION_ORDERS2: '/prod/orders2', //생산지시
   PRODUCTION_RESULTS: '/prod/results', //생산실적
-  PRODUCTION_RESULTS2: '/prod/results2', //생산실적
   ERROR: '/error', //오류 페이지
   NOT_FOUND: '/not-found', //페이지를 찾을 수 없음
 

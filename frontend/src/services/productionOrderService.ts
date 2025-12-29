@@ -124,4 +124,10 @@ export const productionOrderService = {
 
   // 생산지시 저장
   createProductionOrder: (data: any[]) => apiClient.post('/api/production-orders', data),
+
+  // 생산지시 수정
+  updateProductionOrder: (data: any[]) => apiClient.post('/api/production-orders/update', data),
+
+  // 생산지시 삭제
+  deleteProductionOrders: (data: any) => apiClient.post('/api/production-orders/delete', data),
 };

@@ -53,9 +53,14 @@ export function useProductionOrder() {
 
     const handleSaveOrders = async () => {
         try {
-            const response = await productionOrderService.createProductionOrder(localRows);
+            const {data} = await productionOrderService.createProductionOrder(localRows);
+            if (data.resultCode !== 200) {
+                showToast({ message: data.resultMessage, severity: "error" });
+                return;
+            }
+
             showToast({
-                message: "등록되었습니다.",
+                message: data.resultMessage,
                 severity: 'success',
             });
             // 저장 후 목록 리로드

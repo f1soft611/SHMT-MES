@@ -185,19 +185,76 @@ public class EgovProductionOrderApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        for (Map<String,Object> order : orders) {
-            order.put("OPMAN_CODE", user.getUniqId());
-        }
-
-        productionOrderService.insertProductionOrders(orders);
-
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("message", "생산지시가 완료되었습니다.");
         resultMap.put("user", user);
 
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+        try {
+            for (Map<String,Object> order : orders) {
+                order.put("OPMAN_CODE", user.getUniqId());
+            }
+
+            productionOrderService.insertProductionOrders(orders);
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 등록이 완료되었습니다.");
+
+        } catch (IllegalStateException e) {
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
+        }
     }
 
+    /**
+     * 생산지시 수정
+     */
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/update")
+    public ResultVO updateProductionOrders(
+            @RequestBody List<Map<String, Object>> orders,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+
+        try {
+            for (Map<String,Object> order : orders) {
+                order.put("OPMAN_CODE", user.getUniqId());
+            }
+
+            productionOrderService.updateProductionOrders(orders);
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 수정이 완료되었습니다.");
+
+        } catch (IllegalStateException e) {
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
+        }
+    }
+
+
+
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/delete")
+    public ResultVO deleteProductionOrders(
+            @RequestBody Map<String, Object> order,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        try {
+            productionOrderService.deleteProductionOrder(order);
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 삭제가 완료되었습니다.");
+        } catch (IllegalStateException e) {
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.DELETE_ERROR, e.getMessage());
+        }
+
+
+
+    }
 
 
 }

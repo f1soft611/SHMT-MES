@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -209,4 +210,35 @@ public class EgovEquipmentApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+
+
+    /**
+     * 작업장 별 설비 목록을 조회한다.
+     */
+    @Operation(
+            summary = "작업장별 설비 목록 조회",
+            description = "작업장별 설비 목록을 조회한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovEquipmentApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/equipments/wokrplace/{wokrplaceId}")
+    public ResultVO selectEquipmentsByWorkplaceId(
+            @PathVariable String wokrplaceId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+
+        List<Map<String, Object>> resultList = equipmentService.selectEquipmentListByWorkplaceCode(wokrplaceId);
+        resultMap.put("resultList", resultList);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+
 }

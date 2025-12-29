@@ -1,12 +1,16 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import {Box, Typography, Grid} from '@mui/material';
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
-import ProdResultList from "./components/ProdResultList";
 import {useProductionResult} from "./hooks/useProductionResult";
+import ProdResultTable from "./components/ProdResultTable";
 
 const ProductionResult: React.FC = () => {
 
-    const rs = useProductionResult();
+    const location = useLocation();
+    const rowData = location.state?.rowData?? null; // 생산지시에서 넘어올때 사용하는 params
+
+    const rs = useProductionResult(rowData);
 
     return(
         <Box>
@@ -32,16 +36,14 @@ const ProductionResult: React.FC = () => {
                 onSearch={rs.handleSearch}
             />
 
-            <Grid container spacing={2} columns={12}>
-                <Grid size={{xs: 12, md: 12}}>
-                    {/* 생산지시 목록 */}
-                    <ProdResultList
+            <Grid container spacing={0} columns={12}>
+                <Grid size={{xs: 12,}}>
+                    <ProdResultTable
                         rows={rs.rows}
-                        loading={rs.loading}
-
-                        paginationModel={rs.paginationModel}
                         rowCount={rs.rowCount}
-                        onPaginationModelChange={rs.setPaginationModel}
+                        pagination={rs.pagination}
+                        onPageChange={rs.handlePageChange}
+                        onPageSizeChange={rs.handlePageSizeChange}
                     />
                 </Grid>
             </Grid>

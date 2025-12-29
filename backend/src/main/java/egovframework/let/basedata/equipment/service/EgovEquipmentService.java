@@ -3,6 +3,7 @@ package egovframework.let.basedata.equipment.service;
 import egovframework.let.basedata.equipment.domain.model.Equipment;
 import egovframework.let.basedata.equipment.domain.model.EquipmentVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -81,4 +82,10 @@ public interface EgovEquipmentService {
 	 * @throws Exception
 	 */
 	boolean isEquipmentCodeExistsForUpdate(String equipmentId, String equipSysCd, String equipCd) throws Exception;
+
+
+	/**
+	 * 작업장별 설비목록 리스트
+	 */
+	public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception;
 }

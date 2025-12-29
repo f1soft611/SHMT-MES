@@ -33,7 +33,7 @@ public interface EgovProcessFlowService {
 	 * @param processFlowVO
 	 * @exception Exception
 	 */
-	public Map<String, Object> selectProcessFlowList(ProcessFlowVO processFlowVO) throws Exception;
+	Map<String, Object> selectProcessFlowList(ProcessFlowVO processFlowVO) throws Exception;
 
 	void createProcessFlow(ProcessFlow pf) throws Exception;
 

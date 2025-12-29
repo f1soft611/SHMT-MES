@@ -17,7 +17,10 @@
         <result property="updDt" column="OPTIME2"/>
     </resultMap>
 
-    <select id="ProcessFlowDAO.selectProcessFlowList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO" resultMap="processFlowResult">
+    <!-- 검색조건에 따른 공정흐름 목록    -->
+    <select id="ProcessFlowDAO.selectProcessFlowList"
+            parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO"
+            resultMap="processFlowResult">
         SELECT
         A.FACTORY_CODE,
         A.WORK_ORDER_ID,
@@ -52,6 +55,30 @@
         </if>
     </select>
 
+    <!-- 검색조건에 따른 공정흐름 총 건수    -->
+    <select id="selectProcessFlowListCnt"
+            parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM TPR110 A
+        LEFT JOIN TPR101 B
+        ON A.FACTORY_CODE = B.FACTORY_CODE
+        AND A.WORKCENTER_CODE = B.WORKCENTER_CODE
+        WHERE 1=1
+        AND A.FACTORY_CODE = #{factoryCode}
+        AND ISNULL(A.DELETE_FLAG,'') != '1'
+        <if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
+            <choose>
+                <when test="searchCnd == 0">
+                    AND B.WORKCENTER_NAME LIKE '%' + #{searchWrd} + '%'
+                </when>
+                <when test="searchCnd == 1">
+                    AND  A.WORK_ORDER_NM LIKE '%' + #{searchWrd} + '%'
+                </when>
+            </choose>
+        </if>
+    </select>
+
     <insert id="ProcessFlowDAO.insertProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlow">
         INSERT INTO TPR110 (
             FACTORY_CODE,
@@ -70,7 +97,7 @@
             #{processFlowName},
             '0',
             GETDATE(),
-            'test'
+            #{regUserId}
         )
     </insert>
 
@@ -80,7 +107,7 @@
             WORKCENTER_CODE = #{workplaceCode},
             WORK_ORDER = #{processFlowCode},
             WORK_ORDER_NM = #{processFlowName},
-            OPMAN_CODE2 = 'test2',
+            OPMAN_CODE2 = #{updUserId},
             OPTIME2 = GETDATE()
         WHERE WORK_ORDER_ID = #{processFlowId}
     </update>

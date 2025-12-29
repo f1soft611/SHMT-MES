@@ -55,48 +55,35 @@ function DetailDialogActions({
                                 onClose,
                                 tabIndex
                             }: {
-    onSave: any;
-    onClose: any;
+    onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
+    onClose: () => void;
     tabIndex: number;
 }) {
-    const { flowProcessRows, flowItemRows, fetchDetail, processFlow  } = useProcessFlowDetailContext();
-
+    const { getSavePayload  } = useProcessFlowDetailContext();
     const { showToast } = useToast();
+
+    const handleSave = async () => {
+        const result = await onSave(getSavePayload(tabIndex));
+
+        if (!result.ok) {
+            showToast({
+                message: result.reason ?? "저장 실패",
+                severity: "error",
+            });
+            return;
+        }
+
+        showToast({
+            message: "등록되었습니다.",
+            severity: "success",
+        });
+
+        onClose();
+    };
 
     return (
         <DialogActions>
-            <Button
-                variant="contained"
-                onClick={async () => {
-                    const payload =
-                        tabIndex === 0
-                            ? { processes: flowProcessRows }
-                            : { items: flowItemRows };
-
-                    const result: DetailSaveResult = await onSave(payload);
-
-                    if (!result.ok) {
-                        showToast({
-                            message: result.reason ?? "저장 실패",
-                            severity: 'error',
-                            durationMs: 2500,
-                        });
-                        // showToast(result.reason ?? "저장 실패", "error");
-                        return;
-                    }
-
-                    // 성공
-                    // showToast("등록되었습니다.", "success");
-                    showToast({
-                        message: "등록되었습니다.",
-                        severity: 'success',
-                        durationMs: 2500,
-                    });
-
-                    // 성공 시 상세정보 다시 조회
-                    await fetchDetail(processFlow?.processFlowId ?? "");
-                }}
-            >
+            <Button variant="contained" onClick={handleSave}>
                 저장
             </Button>
             <Button onClick={onClose}>닫기</Button>

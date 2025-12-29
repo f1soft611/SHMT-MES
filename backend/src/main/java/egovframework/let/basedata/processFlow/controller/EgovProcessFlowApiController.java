@@ -81,8 +81,8 @@ public class EgovProcessFlowApiController {
         processFlowVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
 
         Map<String, Object> resultMap = processFlowService.selectProcessFlowList(processFlowVO);
-//        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
-//        paginationInfo.setTotalRecordCount(totCnt);
+        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
+        paginationInfo.setTotalRecordCount(totCnt);
 
         resultMap.put("processFlowVO", processFlowVO);
         resultMap.put("paginationInfo", paginationInfo);
@@ -109,7 +109,7 @@ public class EgovProcessFlowApiController {
             @RequestBody ProcessFlow processFlow,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        processFlow.setRegUserId(user.getId());
+        processFlow.setRegUserId(user.getUniqId());
         processFlowService.createProcessFlow(processFlow);
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -142,7 +142,7 @@ public class EgovProcessFlowApiController {
     ) throws Exception {
 
         // ✅ 수정자 정보 세팅
-        processFlow.setUpdUserId(user.getId());
+        processFlow.setUpdUserId(user.getUniqId());
         processFlow.setProcessFlowId(processFlowId);
 
         processFlowService.updateProcessFlow(processFlow);
@@ -207,7 +207,7 @@ public class EgovProcessFlowApiController {
 
         // 사용자 ID 세팅
         for (ProcessFlowProcess p : processList) {
-            p.setRegUserId(user.getId());
+            p.setRegUserId(user.getUniqId());
         }
 
         // 저장 서비스 호출

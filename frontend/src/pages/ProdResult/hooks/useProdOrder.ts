@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {productionResultService} from "../../../services/productionResultService";
-import {GridPaginationModel} from "@mui/x-data-grid";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import {ProductionResultOrder} from "../../../types/productionResult";
 
 export function useProdOrder() {
 
@@ -11,28 +11,26 @@ export function useProdOrder() {
     const today = new Date().toISOString().slice(0, 10);
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - 7);
-    const dateFromStr = dateFrom.toISOString().slice(0, 10);
 
-    // 검색 상태
     const [search, setSearch] = useState({
         workplace: "",
         equipment: "",
-        dateFrom: dateFromStr,
+        dateFrom: dateFrom.toISOString().slice(0, 10),
         dateTo: today,
+        keyword: "", //통합검색
     });
 
-    // DataGrid 페이징
-    const [paginationModel, setPaginationModel] = useState({
+    // 테이블 페이징
+    const [pagination, setPagination] = useState({
         page: 0,
         pageSize: 20,
     });
 
     // 데이터 상태
-    const [rows, setRows] = useState<any[]>([]);
+    const [rows, setRows] = useState<ProductionResultOrder[]>([]);
     const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [searchTrigger, setSearchTrigger] = useState(0);
-
+    const [searchTrigger, setSearchTrigger] = useState(0); // 통합검색 입력 될때마다 검색되는현상 방지
 
     // API 호출
     const fetchList = async () => {
@@ -40,10 +38,9 @@ export function useProdOrder() {
         try {
             const params = {
                 ...search,
-                page: paginationModel.page,
-                size: paginationModel.pageSize,
+                page: pagination.page,
+                size: pagination.pageSize,
             };
-
             const response = await productionResultService.getProdOrders(params)
             setRows(response.result?.resultList ?? []);
             setRowCount(response.result?.totalCount ?? 0);
@@ -59,8 +56,12 @@ export function useProdOrder() {
         }
     };
 
-    const handlePaginationChange = (model: GridPaginationModel) => {
-        setPaginationModel(model);
+    const handlePageChange = (page: number) => {
+        setPagination(prev => ({ ...prev, page }));
+    };
+
+    const handlePageSizeChange = (pageSize: number) => {
+        setPagination({ page: 0, pageSize });
     };
 
     const handleSearchChange = (name: string, value: string) => {
@@ -69,22 +70,19 @@ export function useProdOrder() {
 
     // 검색 버튼
     const handleSearch = () => {
-        setPaginationModel(prev => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
+        setPagination(prev => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
         setSearchTrigger(t => t + 1);
     };
 
-    // 페이지 변경 시 자동 fetch
+    // 페이지 변경 시 + 검색버튼 누를 시 자동 fetch
     useEffect(() => {
         fetchList();
-    }, [
-        paginationModel.page,
-        paginationModel.pageSize,
-        searchTrigger
-    ]);
+    }, [pagination.page, pagination.pageSize, searchTrigger]);
 
 
     return {
         search,
+        setSearch,
         handleSearchChange,
         handleSearch,
 
@@ -92,8 +90,9 @@ export function useProdOrder() {
         rowCount,
         loading,
 
-        paginationModel,
-        setPaginationModel,
-        handlePaginationChange,
+        pagination,
+        setPagination,
+        handlePageChange,
+        handlePageSizeChange,
     };
 }
