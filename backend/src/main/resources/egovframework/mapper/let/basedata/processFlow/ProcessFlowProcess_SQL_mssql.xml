@@ -95,7 +95,7 @@
                      #{processSeq},
                      #{lastFlag},
                     GETDATE(),
-                    'test'
+                    #{regUserId}
                  )
     </insert>
 

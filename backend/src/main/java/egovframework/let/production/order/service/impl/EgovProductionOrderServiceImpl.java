@@ -122,18 +122,80 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	@Transactional
 	public void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
 		for(Map<String, Object> prodOrder : prodOrderList){
-			String newId = egovProdOrderIdGnrService.getNextStringId();
-			prodOrder.put("PRODORDER_ID", newId);
-			prodOrder.put("WORKDT_DATE", LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)); // yyyyMMdd
+			try {
+				String nextId = productionOrderDAO.selectProdOrderNextId();
+				prodOrder.put("PRODORDER_ID", nextId);
 
-			// DB insert
-			productionOrderDAO.insertProductionOrder(prodOrder);
+				int orderSeq = productionOrderDAO.selectProdOrderWorkSeq(prodOrder);
+				prodOrder.put("ORDER_SEQ", orderSeq);
 
-			// 생산계획TPR301M ORDER_FLAG UPDATE
-			prodOrder.put("ORDER_FLAG", "ORDERED");
-			productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+				// DB insert
+				productionOrderDAO.insertProductionOrder(prodOrder);
+
+				// 생산계획TPR301M ORDER_FLAG UPDATE
+				prodOrder.put("ORDER_FLAG", "ORDERED");
+				productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+			} catch (Exception e){
+				Throwable cause = e.getCause();
+
+				if (cause instanceof com.microsoft.sqlserver.jdbc.SQLServerException) {
+					com.microsoft.sqlserver.jdbc.SQLServerException sqlEx =
+							(com.microsoft.sqlserver.jdbc.SQLServerException) cause;
+
+					throw new IllegalStateException(sqlEx.getMessage());
+				}
+
+				throw e;
+			}
 		}
 	}
+
+	/**
+	 * 생산지시 수정
+	 */
+	@Override
+	@Transactional
+	public void updateProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
+		for(Map<String, Object> prodOrder : prodOrderList){
+			try {
+				productionOrderDAO.updateProductionOrder(prodOrder);
+			} catch (Exception e){
+				Throwable cause = e.getCause();
+
+				if (cause instanceof com.microsoft.sqlserver.jdbc.SQLServerException) {
+					com.microsoft.sqlserver.jdbc.SQLServerException sqlEx =
+							(com.microsoft.sqlserver.jdbc.SQLServerException) cause;
+
+					throw new IllegalStateException(sqlEx.getMessage());
+				}
+
+				throw e;
+			}
+		}
+	}
+
+
+	/**
+	 * 생산지시 삭제
+	 */
+	@Override
+	@Transactional
+	public void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception {
+
+		// 삭제 전 등록된 생산실적이 있으면 삭제 안되게 처리
+		int cnt = productionOrderDAO.selectProdResultCount(prodOrder);
+		if (cnt > 0) {
+			throw new IllegalStateException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.");
+		}
+
+		// 삭제
+		productionOrderDAO.deleteProductionOrder(prodOrder);
+
+		// 생산계획TPR301M ORDER_FLAG UPDATE
+		prodOrder.put("ORDER_FLAG", "PLANNED");
+		productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+	}
+
 
 
 

@@ -67,20 +67,21 @@
 		</if>
 	</select>
 
-	<select id="ProcessDAO.selectProcessListCnt" parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultType="int">
+	<select id="ProcessDAO.selectProcessListCnt"
+			parameterType="egovframework.let.basedata.process.domain.model.ProcessVO" resultType="int">
 		SELECT COUNT(*) AS CNT
 		FROM TPR102
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
-				<when test="searchCnd == '0'">
+				<when test="searchCnd == 0">
 					AND WORK_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '1'">
+				<when test="searchCnd == 1">
 					AND WORK_NAME LIKE '%' + #{searchWrd} + '%'
 				</when>
-				<when test="searchCnd == '2'">
+				<when test="searchCnd == 2">
 					AND WORK_TYPE LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>

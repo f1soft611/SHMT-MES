@@ -25,12 +25,26 @@ import java.util.Map;
 public interface EgovProductionResultService {
 
     /**
-     * 작업지시 목록을 조회한다.
+     * 생산지시 목록을 조회한다.
      * @param searchVO 검색 조건
      * @param user 사용자 VO
      * @return 작업지시 목록과 총 건수
      * @throws Exception
      */
     Map<String, Object> selectProductionOrderList(Map<String, String> searchVO, LoginVO user) throws Exception;
+
+    // 생산지시 TPR601 등록
+    void insertProductionResult(List<Map<String, Object>> resultList) throws Exception;
+
+
+    /**
+     * 생산지시 detail 목록을 조회한다.
+     * @param searchVO 검색 조건
+     * @param user 사용자 VO
+     * @return 생산지시 detail 목록
+     * @throws Exception
+     */
+    Map<String, Object> selectProductionResultDetailList(Map<String, Object> searchVO, LoginVO user) throws Exception;
+
 
 }

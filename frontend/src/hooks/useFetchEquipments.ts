@@ -1,13 +1,13 @@
 import {useEffect, useState} from "react";
-import {Equipment} from "../types/equipment";
+import {EquipmentInfo} from "../types/equipment";
 import equipmentService from "../services/equipmentService";
 
-export function useFetchEquipments(){
-    const [equipments, setEquipments] = useState<Equipment[]>([]);
+export function useFetchEquipments(workplaceId: string){
+    const [equipments, setEquipments] = useState<EquipmentInfo[]>([]);
 
     const fetchEquipments = async () => {
         try {
-            const response = await equipmentService.getEquipmentList(0, 99 )
+            const response = await equipmentService.getEquipmentsByWorkplaceId(workplaceId)
             if (response.resultCode === 200 && response.result?.resultList) {
                 setEquipments(response.result.resultList);
             }
@@ -18,11 +18,15 @@ export function useFetchEquipments(){
     };
 
     useEffect(() => {
-        fetchEquipments
-    }, []);
+        if (!workplaceId) {
+            setEquipments([]);
+            return;
+        }
+        fetchEquipments();
+    }, [workplaceId]);
 
-    return{
+    return {
         equipments,
-        refetchEquips: fetchEquipments
-    }
+        refetchEquips: fetchEquipments,
+    };
 }

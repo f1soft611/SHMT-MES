@@ -4,10 +4,9 @@ import {DetailSavePayload, DetailSaveResult, ProcessFlow, ProcessFlowItem, Proce
 export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
 
     // 공정 흐름별 공정/제품 저장 및 수정
-    const handleDetailSave = async ({
-                                        processes,
-                                        items,
-                                    }: DetailSavePayload): Promise<DetailSaveResult> => {
+    const handleDetailSave = async (
+        payload: DetailSavePayload
+    ): Promise<DetailSaveResult> => {
 
         // selectedFlow가 반드시 있어야 저장 가능
         if (!selectedFlow?.processFlowId) {
@@ -16,8 +15,8 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
 
         try {
             // 공정 저장
-            if (processes !== undefined) {
-
+            if ("processes" in payload) {
+                const processes = payload.processes;
                 // seq 검사
                 const hasEmptySeq = processes.some(
                     (p) => !p.seq || p.seq.trim() === ""
@@ -52,7 +51,9 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
             }
 
             // 품목 저장
-            if (items !== undefined) {
+            if ("items" in payload) {
+                const items = payload.items;
+
                 const itemList = items.map((it: ProcessFlowItem) => ({
                     flowItemId: it.flowItemId ?? null,
                     flowItemCode: it.flowItemCode,

@@ -1,199 +1,112 @@
-import React, {useState} from 'react';
-import {Box, Card, CardActions, CardContent, CardHeader, IconButton} from '@mui/material';
-import {DataGrid, GridColDef } from '@mui/x-data-grid';
+import React, {forwardRef, useImperativeHandle} from "react";
 import {
-    KeyboardArrowDown as KeyboardArrowDownIcon,
-    KeyboardArrowUp as KeyboardArrowUpIcon
-} from '@mui/icons-material';
+    DataGrid,
+    GridColDef,
+    GridRenderEditCellParams,
+    GridToolbarContainer,
+} from "@mui/x-data-grid";
+import {
+    Button, Select, MenuItem, Checkbox, ListItemText
+} from "@mui/material";
+import {ProductionResultOrder, ProductionResultDetail} from "../../../types/productionResult";
+import { useProdResultDetail } from "../hooks/useProdResultDetail";
 
-interface Props {
-    rows: any[];
-    rowCount: number;
-    loading: boolean;
-    paginationModel: any;
-    onPaginationModelChange: (model: any) => void;
+export interface DetailGridRef {
+    addRow: () => void;
+    getRows: () => ProductionResultDetail[];
+    fetchDetails: () => void;
 }
 
-export default function ProdResultList({
-    rows,
-    rowCount,
-    loading,
-    paginationModel,
-    onPaginationModelChange,
-}: Props) {
+interface Props {
+    parentRow: ProductionResultOrder;
+}
 
-    // const [open, setOpen] = useState<{ [key: string]: boolean }>({});
-    //
-    // const toggle = (id: string) =>
-    //     setOpen(prev => ({ ...prev, [id]: !prev[id] }));
+const workerOptions = [
+    { value: "W001", label: "홍길동" },
+    { value: "W002", label: "김철수" },
+    { value: "W003", label: "이영희" },
+];
+
+const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => {
+
+    const details = useProdResultDetail(parentRow);
+
+    useImperativeHandle(ref, () => ({
+        addRow: details.addRow,
+        getRows: () => details.rows,
+        fetchDetails: details.fetchDetails,
+    }));
 
     const columns: GridColDef[] = [
-        // {
-        //     field: "collapse",
-        //     headerName: "",
-        //     width: 40,
-        //     renderCell: (p) => (
-        //         <IconButton size="small" onClick={() => toggle(p.row.id)}>
-        //             {open[p.row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-        //         </IconButton>
-        //     ),
-        // },
-        {
-            field: "PRODPLAN_DATE",
-            headerName: "등록상태",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "ADD",
-            headerName: "추가",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PROCESS",
-            headerName: "공정",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PROCESSITEMCODE",
-            headerName: "품목코드",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PROCESSITEMNAME",
-            headerName: "품목명",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PROCESSITEMSPEC",
-            headerName: "품목규격",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "WORKDATE",
-            headerName: "작업일",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "STARTTIME",
-            headerName: "시작시간",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "ENDDATE",
-            headerName: "종료일",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "ENDTIME",
-            headerName: "종료시간",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "ORDERQTY",
-            headerName: "지시량",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PRODQTY",
-            headerName: "생산량",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PASSQTY",
-            headerName: "합격량",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "FAILQTY",
-            headerName: "불량량",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
+        { field: "WORKSDATE", headerName: "작업시작일", width: 120, editable: true },
+        { field: "PROD_STIME", headerName: "시작시간", width: 120, editable: true },
+        { field: "WORKEDATE", headerName: "작업종료일", width: 120, editable: true },
+        { field: "PROD_ETIME", headerName: "종료시간", width: 120, editable: true },
+        { field: "PROD_QTY", headerName: "생산수량", width: 120, type: "number", editable: true },
+        { field: "GOOD_QTY", headerName: "양품수량", width: 120, type: "number", editable: true },
+        { field: "BAD_QTY", headerName: "불량수량", width: 120, type: "number", editable: true },
+        { field: "RCV_QTY", headerName: "인수수량", width: 120, type: "number", editable: true },
         {
             field: "WORKER",
             headerName: "작업자",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "PROCESSRATE",
-            headerName: "공정수율",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "BIGO",
-            headerName: "비고",
-            width: 70,
-            headerAlign: "center",
-            align: "center",
+            width: 150,
+            editable: true,
+            renderEditCell: (params: GridRenderEditCellParams) => (
+                <Select
+                    multiple
+                    fullWidth
+                    value={params.value || []}
+                    onChange={(e) =>
+                        params.api.setEditCellValue({
+                            id: params.id,
+                            field: params.field,
+                            value: e.target.value,
+                        })
+                    }
+                    renderValue={(selected) =>
+                        workerOptions
+                        .filter(o => selected.includes(o.value))
+                        .map(o => o.label)
+                        .join(", ")
+                    }
+                >
+                    {workerOptions.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                            <Checkbox checked={(params.value || []).includes(opt.value)} />
+                            <ListItemText primary={opt.label} />
+                        </MenuItem>
+                    ))}
+                </Select>
+            ),
         },
     ];
 
-    return(
-        <Card>
-            <CardHeader sx={{ p: 1, }}
-                        title="생산지시 목록"
-                        titleTypographyProps={{
-                            fontSize: 16,
-                        }}
-            />
-            <CardContent sx={{ p: 0 }}>
-                <Box sx={{ height: 500 }}>
-                    <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        loading={loading}
-                        getRowId={(row) => row.TPR504ID}
-                        pagination
-                        paginationMode="server"
-                        rowCount={rowCount}
-                        paginationModel={paginationModel}
-                        onPaginationModelChange={onPaginationModelChange}
-                        pageSizeOptions={[10, 20, 50]}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
-                        sx={{
-                            fontSize: 14,
-                            "& .MuiDataGrid-cell": { padding: "0 2px" },
-                            "& .MuiDataGrid-cell:focus": { outline: "none" },
-                            "& .MuiDataGrid-row:hover": { backgroundColor: "action.hover" },
-                        }}
-                    />
-                </Box>
-            </CardContent>
-            <CardActions sx={{ display: 'none' }} />
-        </Card>
-
+    const Toolbar = () => (
+        <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
+            <Button size="small" variant="contained" onClick={details.handleSave}>
+                저장
+            </Button>
+        </GridToolbarContainer>
     );
 
-}
+
+
+    return(
+        <DataGrid
+            rows={details.rows}
+            columns={columns}
+            getRowId={(row) => row.TPR601ID}
+            autoHeight
+            hideFooter
+            rowHeight={35}
+            columnHeaderHeight={40}
+            disableRowSelectionOnClick
+            processRowUpdate={details.processRowUpdate}
+            showToolbar
+            slots={{ toolbar: Toolbar }}
+        />
+    );
+
+})
+
+export default ProdResultList;

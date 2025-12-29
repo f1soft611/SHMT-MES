@@ -198,4 +198,20 @@
 		WHERE EQUIP_CD = #{equipCd}
 	</select>
 
+	<!-- 작업장 코드 주어졌을때 설비 목록 -->
+	<select id="selectEquipmentListByWorkplaceCode" parameterType="string" resultType="map">
+		SELECT A.WORKCENTER_CODE, A1.WORKCENTER_NAME, A.WORK_CODE, B.EQUIP_SYS_CD, B1.EQUIPMENT_NAME
+		FROM TPR103 A
+				 LEFT JOIN TPR101 A1
+						   ON A.FACTORY_CODE = A1.FACTORY_CODE
+							   AND A.WORKCENTER_CODE = A1.WORKCENTER_CODE
+				 LEFT JOIN TPR104 B
+						   ON A.FACTORY_CODE = B.FACTORY_CODE
+							   AND A.WORK_CODE = B.WORK_CODE
+				 LEFT JOIN TPR151 B1
+						   ON B.EQUIP_SYS_CD = B1.EQUIP_SYS_CD
+		WHERE A.WORKCENTER_CODE = #{value}
+		ORDER BY B.EQUIP_SYS_CD
+
+	</select>
 </mapper>

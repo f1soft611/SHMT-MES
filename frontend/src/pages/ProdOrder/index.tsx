@@ -1,5 +1,5 @@
 import React  from 'react';
-import {Box, Grid, Typography} from '@mui/material';
+import {Box, Typography} from '@mui/material';
 import ProdOrderSearchFilter from "./components/ProdOrderSearchFilter";
 import {useProductionOrder} from "./hooks/useProductionOrder";
 import ProdPlanList from "./components/ProdPlanList";
@@ -51,7 +51,9 @@ const ProdOrder: React.FC = () => {
                 rows={prodOrder.localRows}
                 onClose={prodOrder.closeDialog}
                 onSubmit={prodOrder.submit}
+                onDelete={prodOrder.deleteOrder}
                 onAddRow={prodOrder.handleAddRow}
+                onRemoveRow={prodOrder.handleRemoveRow}
                 onProcessRowUpdate={prodOrder.handleProcessRowUpdate}
                 canWrite={canWrite}
             />

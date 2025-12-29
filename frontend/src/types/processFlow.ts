@@ -46,10 +46,13 @@ export interface ProcessFlowItem {
 
 
 
-export interface DetailSavePayload {
+export type DetailSavePayload =
+    | {
     processes: ProcessFlowProcess[];
-    items: ProcessFlowItem[];
 }
+    | {
+    items: ProcessFlowItem[];
+};
 
 /**
  *
@@ -68,4 +71,6 @@ export type DetailSaveResult = {
     ok: boolean;
     reason?: string;
 };
+
+
 

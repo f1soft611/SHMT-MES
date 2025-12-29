@@ -12,6 +12,7 @@ import { ProcessFlow } from "../../../../types/processFlow";
 
 interface Props {
     rows: ProcessFlow[];
+    rowCount: number;
     paginationModel: GridPaginationModel;
     setPaginationModel: (model: GridPaginationModel) => void;
     onSelect?: (row: ProcessFlow) => void;
@@ -22,6 +23,7 @@ interface Props {
 
 export default function ProcessFlowList({
                                             rows,
+                                            rowCount,
                                             paginationModel,
                                             setPaginationModel,
                                             onSelect,
@@ -113,7 +115,8 @@ export default function ProcessFlowList({
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[5, 10, 25, 50]}
-                // paginationMode="server"
+                paginationMode="server"
+                rowCount={rowCount}
                 onRowClick={(params) => onSelect?.(params.row)}
                 disableRowSelectionOnClick
                 autoHeight

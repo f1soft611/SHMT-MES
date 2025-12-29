@@ -5,7 +5,9 @@ import processFlowService from "../../../../../services/processFlowService";
 
 export function useProcessFlowList() {
     const [rows, setRows] = useState<ProcessFlow[]>([]);
+    const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(false);
+
     //
     // 페이지네이션
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -42,12 +44,15 @@ export function useProcessFlowList() {
             const res = await processFlowService.getProcessFlowList(page, pageSize, params);
             if (res.resultCode === 200 && res.result?.resultList) {
                 setRows(res.result.resultList);
+                setRowCount(res.result.resultCnt ?? 0);
             } else {
                 setRows([]);
+                setRowCount(0);
             }
         } catch (e) {
             console.error(e);
             setRows([]);
+            setRowCount(0);
         } finally {
             setLoading(false);
         }
@@ -75,6 +80,7 @@ export function useProcessFlowList() {
 
     return {
         rows,
+        rowCount,
         loading,
         paginationModel,
         setPaginationModel,

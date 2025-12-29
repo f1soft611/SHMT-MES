@@ -166,7 +166,6 @@ const ProdOrderList = ({
                 return <span>{formatted}</span>;
             },
             renderEditCell: (params) => {
-                const rid = params.row.PRODPLAN_ID + "_" + params.row.PRODWORK_SEQ;
                 return (
                     <input
                         type="date"
@@ -206,7 +205,6 @@ const ProdOrderList = ({
                 return <span>{formatted}</span>;
             },
             renderEditCell: (params) => {
-                const rid = params.row.PRODPLAN_ID + "_" + params.row.PRODWORK_SEQ;
                 return (
                     <input
                         type="date"

@@ -23,7 +23,6 @@ export function useProdPlan() {
 
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [totalCount, setTotalCount] = useState(0);
     const [searchTrigger, setSearchTrigger] = useState(0);
 
@@ -31,8 +30,6 @@ export function useProdPlan() {
 
         try {
             setLoading(true);
-            setError(null);
-
             const response = await productionOrderService.getProdPlans({
                 ...search,
                 page: paginationModel.page,
@@ -41,7 +38,6 @@ export function useProdPlan() {
             setRows(response.result.resultList);
             setTotalCount(response.result.totalCount);
         } catch (err: any) {
-            setError(err.message || "생산계획 조회 실패");
             setRows([]);
             setTotalCount(0);
         } finally {

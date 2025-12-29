@@ -85,6 +85,7 @@ const ProcessFlowManagement: React.FC = () => {
                     {/* 공정 흐름 목록 */}
                     <ProcessFlowList
                         rows={pf.rows}
+                        rowCount={pf.rowCount}
                         paginationModel={pf.paginationModel}
                         setPaginationModel={pf.setPaginationModel}
                         onEdit={pf.handleOpenEditDialog}
