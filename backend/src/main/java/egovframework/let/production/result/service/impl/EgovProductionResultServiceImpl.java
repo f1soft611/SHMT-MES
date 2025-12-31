@@ -5,6 +5,7 @@ import egovframework.let.production.result.domain.model.ProductionResult;
 import egovframework.let.production.result.domain.repository.ProductionResultDAO;
 import egovframework.let.production.result.service.EgovProductionResultService;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.text.StringEscapeUtils;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
@@ -65,7 +66,8 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Transactional
 	public void insertProductionResult(List<Map<String, Object>> resultList) throws Exception {
 		for(Map<String, Object> resultMap : resultList){
-			if("new".equals(resultMap.get("TPR601ID"))){
+			String tpr601Id = String.valueOf(resultMap.get("TPR601ID"));
+			if (tpr601Id.toLowerCase().startsWith("new-")) {
 				// 저장일자의 max TPR601ID 값 가져오기
 				String nextId = productionResultDAO.selectProdResultNextId();
 				resultMap.put("TPR601ID", nextId);
@@ -78,6 +80,8 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 				productionResultDAO.insertProductionResult(resultMap);
 
 				// TPR601W 저장
+				saveProductionResultWorkers(resultMap);
+
 
 				// TPR601M 저장
 
@@ -90,6 +94,26 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	}
 
 	@Override
+	@Transactional
+	public void updateProductionResult(List<Map<String, Object>> resultList) throws Exception {
+		for(Map<String, Object> resultMap : resultList){
+
+			// TPR601 UPDATE
+			productionResultDAO.updateProductionResult(resultMap);
+
+			// TPR601W DELETE ALL -> INSERT
+			productionResultDAO.deleteProductionResultWorker(resultMap);
+			saveProductionResultWorkers(resultMap);
+
+
+			// TPR601M DELETE ALL -> INSERT
+		}
+	}
+
+
+
+
+	@Override
 	public Map<String, Object> selectProductionResultDetailList(Map<String, Object> searchVO, LoginVO user) throws Exception {
 
 		List<Map<String, Object>> resultList = productionResultDAO.selectProductionResultDetailList(searchVO);
@@ -99,6 +123,34 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		result.put("user", user);
 
 		return result;
+	}
+
+
+	// 작업자 저장 공통 로직
+	@SuppressWarnings("unchecked")
+	private void saveProductionResultWorkers(Map<String, Object> resultMap) throws Exception {
+
+		List<Object> workers = (List<Object>) resultMap.get("WORKER");
+		if (workers == null || workers.isEmpty()) return;
+
+		for (Object worker : workers) {
+			Map<String, Object> workerMap = new HashMap<>();
+			workerMap.put("TPR601ID", resultMap.get("TPR601ID"));
+			workerMap.put("WORKER_CODE", worker);
+			workerMap.put("PRODPLAN_DATE", resultMap.get("PRODPLAN_DATE"));
+			workerMap.put("PRODPLAN_SEQ", resultMap.get("PRODPLAN_SEQ"));
+			workerMap.put("PRODWORK_SEQ", resultMap.get("PRODWORK_SEQ"));
+			workerMap.put("WORK_SEQ", resultMap.get("WORK_SEQ"));
+			workerMap.put("PROD_SEQ", resultMap.get("PROD_SEQ"));
+
+			String nextWorkerId = productionResultDAO.selectProdResultWorkerNextId();
+			workerMap.put("TPR601WID", nextWorkerId);
+
+			Integer workerSeq = productionResultDAO.selectProdResultWorkerSeq(resultMap);
+			workerMap.put("WORKER_SEQ", workerSeq);
+
+			productionResultDAO.insertProductionResultWorker(workerMap);
+		}
 	}
 
 }

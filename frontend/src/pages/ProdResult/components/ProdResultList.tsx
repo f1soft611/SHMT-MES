@@ -2,12 +2,15 @@ import React, {forwardRef, useImperativeHandle} from "react";
 import {
     DataGrid,
     GridColDef,
-    GridRenderEditCellParams,
     GridToolbarContainer,
 } from "@mui/x-data-grid";
 import {
-    Button, Select, MenuItem, Checkbox, ListItemText
+    Button, Select, MenuItem, Checkbox, ListItemText,
+    Box, Stack, IconButton
 } from "@mui/material";
+import {
+    Delete as DeleteIcon
+} from "@mui/icons-material";
 import {ProductionResultOrder, ProductionResultDetail} from "../../../types/productionResult";
 import { useProdResultDetail } from "../hooks/useProdResultDetail";
 
@@ -21,12 +24,6 @@ interface Props {
     parentRow: ProductionResultOrder;
 }
 
-const workerOptions = [
-    { value: "W001", label: "홍길동" },
-    { value: "W002", label: "김철수" },
-    { value: "W003", label: "이영희" },
-];
-
 const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => {
 
     const details = useProdResultDetail(parentRow);
@@ -38,51 +35,126 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
     }));
 
     const columns: GridColDef[] = [
-        { field: "WORKSDATE", headerName: "작업시작일", width: 120, editable: true },
-        { field: "PROD_STIME", headerName: "시작시간", width: 120, editable: true },
-        { field: "WORKEDATE", headerName: "작업종료일", width: 120, editable: true },
-        { field: "PROD_ETIME", headerName: "종료시간", width: 120, editable: true },
-        { field: "PROD_QTY", headerName: "생산수량", width: 120, type: "number", editable: true },
-        { field: "GOOD_QTY", headerName: "양품수량", width: 120, type: "number", editable: true },
-        { field: "BAD_QTY", headerName: "불량수량", width: 120, type: "number", editable: true },
-        { field: "RCV_QTY", headerName: "인수수량", width: 120, type: "number", editable: true },
+        { field: "WORKSDATE", headerName: "작업시작일", width: 120,
+            headerAlign: 'center',
+            align: 'center', editable: true },
+        { field: "PROD_STIME", headerName: "시작시간", width: 120,
+            headerAlign: 'center',
+            align: 'center', editable: true },
+        { field: "WORKEDATE", headerName: "작업종료일", width: 120,
+            headerAlign: 'center',
+            align: 'center', editable: true },
+        { field: "PROD_ETIME", headerName: "종료시간", width: 120,
+            headerAlign: 'center',
+            align: 'center', editable: true },
+        { field: "PROD_QTY", headerName: "생산수량", width: 120,
+            headerAlign: 'center',
+            align: 'right', type: "number", editable: true },
+        { field: "GOOD_QTY", headerName: "양품수량", width: 120,
+            headerAlign: 'center',
+            align: 'right', type: "number", editable: true },
+        { field: "BAD_QTY", headerName: "불량수량", width: 120,
+            headerAlign: 'center',
+            align: 'right', type: "number", editable: true },
+        { field: "RCV_QTY", headerName: "인수수량", width: 120,
+            headerAlign: 'center',
+            align: 'right', type: "number", editable: true },
         {
             field: "WORKER",
             headerName: "작업자",
             width: 150,
+            headerAlign: 'center',
+            align: 'center',
             editable: true,
-            renderEditCell: (params: GridRenderEditCellParams) => (
-                <Select
-                    multiple
-                    fullWidth
-                    value={params.value || []}
-                    onChange={(e) =>
-                        params.api.setEditCellValue({
-                            id: params.id,
-                            field: params.field,
-                            value: e.target.value,
-                        })
-                    }
-                    renderValue={(selected) =>
-                        workerOptions
-                        .filter(o => selected.includes(o.value))
-                        .map(o => o.label)
-                        .join(", ")
-                    }
+            renderCell: (params) => {
+                const value: string[] = Array.isArray(params.value) ? params.value : [];
+
+                if (value.length === 0) return "";
+
+                const labels = details.workerOptions
+                .filter(o => value.includes(o.value))
+                .map(o => o.label);
+
+                if (labels.length === 0) return "";
+
+                if (labels.length === 1) {
+                    return labels[0];
+                }
+
+                return `${labels[0]} 외 ${labels.length - 1}명`;
+            },
+            renderEditCell: (params) => {
+                const value = Array.isArray(params.value) ? params.value : [];
+
+                return (
+                    <Select
+                        multiple
+                        fullWidth
+                        value={value}
+                        onChange={(e) =>
+                            params.api.setEditCellValue({
+                                id: params.id,
+                                field: params.field,
+                                value: e.target.value,
+                            })
+                        }
+                        renderValue={(selected) =>
+                            details.workerOptions
+                            .filter(o => selected.includes(o.value))
+                            .map(o => o.label)
+                            .join(", ")
+                        }
+                    >
+                        {details.workerOptions.map(opt => (
+                            <MenuItem key={opt.value} value={opt.value}>
+                                <Checkbox checked={value.includes(opt.value)} />
+                                <ListItemText primary={opt.label} />
+                            </MenuItem>
+                        ))}
+                    </Select>
+                );
+            },
+        },
+        { field: "input_mat", headerName: "투입자재", width: 120,
+            headerAlign: 'center',
+            align: 'center', editable: true },
+        {
+            field: "actionDelete",
+            headerName: "삭제",
+            sortable: false,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params) => (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                    }}
                 >
-                    {workerOptions.map(opt => (
-                        <MenuItem key={opt.value} value={opt.value}>
-                            <Checkbox checked={(params.value || []).includes(opt.value)} />
-                            <ListItemText primary={opt.label} />
-                        </MenuItem>
-                    ))}
-                </Select>
-            ),
+                    <Stack direction="row" spacing={1}>
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                                e.stopPropagation();               // 행 클릭 방지
+                                details.handleDeleteRow(params.row);
+                            }}
+                        >
+                            <DeleteIcon />
+                        </IconButton>
+                    </Stack>
+                </Box>
+            )
         },
     ];
 
     const Toolbar = () => (
         <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
+            <Button size="small" variant="contained" onClick={details.addRow}>
+                실적 추가
+            </Button>
             <Button size="small" variant="contained" onClick={details.handleSave}>
                 저장
             </Button>

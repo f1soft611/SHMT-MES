@@ -22,9 +22,10 @@ interface Props {
     };
     onChange: (name: string, value: string) => void;
     onSearch: () => void;
+    loading: boolean;
 }
 
-const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
+const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loading }: Props) => {
 
     const { equipments } = useFetchEquipments(search.workplace);
 
@@ -131,6 +132,7 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch }: Prop
                         color="primary"
                         startIcon={<SearchIcon/>}
                         onClick={onSearch}
+                        disabled={loading}
                     >
                         검색
                     </Button>

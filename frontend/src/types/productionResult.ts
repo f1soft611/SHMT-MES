@@ -19,12 +19,18 @@ export interface ProductionResultOrder {
 
     WORKDT_DATE: string; // 작업시작예정일
 
-    ITEM_CODE: string;
-    ITEM_NAME: string;
-    ITEM_SPEC?: string;
+    WORKCENTER_CODE: string;
+    WORKCENTER_NAME: string;
 
     WORK_CODE: string;
     WORK_NAME: string;
+
+    ITEM_CODE: string;
+    ITEM_NAME: string;
+
+    PROD_CODE: string;
+    PROD_NAME: string;
+    PROD_SPEC: string;
 
     EQUIP_SYS_CD: string;
     EQUIP_SYS_CD_NM: string;
@@ -67,6 +73,7 @@ export interface ProductionResultDetail {
     PROD_ETIME: string;
 
     ITEM_CODE: string;
+
     WORK_CODE: string;
 
     PROD_QTY: number;        // BigDecimal → number
@@ -76,13 +83,15 @@ export interface ProductionResultDetail {
 
     ORDER_FLAG: string;
 
-    WORKER: string;
+    WORKER: string[] | string;
     INPUTMATERIAL: string;
 
     TPR504ID: string;
     TPR601ID: string;
     TPR601WID: string;
     TPR601MID: string;
+
+    __isModified?: boolean;
 }
 
 /**

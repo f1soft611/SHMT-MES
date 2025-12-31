@@ -28,13 +28,30 @@ export function useProductionResult(rowData?: any) {
     // 생산지시에서 넘어오는경우 rowData !== null
     useEffect(() => {
         if (!rowData) return;
-        prodOrder.setSearch(prevState => ({
+
+        const formatDate = (v: string) =>
+            `${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;
+
+        const nextSearch = {
             workplace: rowData.WORKCENTER_CODE,
-            equipment: rowData.EQUIP_SYS_CD,
+            equipment: '',
+            dateFrom: formatDate(rowData.PROD_DATE),
+            dateTo: formatDate(rowData.PROD_DATE),
+            keyword: rowData.PRODPLAN_ID,
+        };
+
+        // 1) 검색필터 UI 세팅
+        prodOrder.setSearch(prev => ({ ...prev, ...nextSearch }));
+
+        // 2) 실제 조회 파라미터 세팅 (조회 트리거)
+        prodOrder.setSearchParams({
+            ...nextSearch,
             dateFrom: rowData.PROD_DATE,
             dateTo: rowData.PROD_DATE,
-            keyword: rowData.PROD_DATE // TODO: id값으로 변경
-        }))
+        });
+
+        // 3) 첫 페이지로
+        prodOrder.setPagination(prev => ({ ...prev, page: 0 }));
     }, [rowData]);
 
     return {

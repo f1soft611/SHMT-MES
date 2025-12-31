@@ -36,6 +36,9 @@ public interface EgovProductionResultService {
     // 생산지시 TPR601 등록
     void insertProductionResult(List<Map<String, Object>> resultList) throws Exception;
 
+    // 생산지시 수정
+    void updateProductionResult(List<Map<String, Object>> resultList) throws Exception;
+
 
     /**
      * 생산지시 detail 목록을 조회한다.
