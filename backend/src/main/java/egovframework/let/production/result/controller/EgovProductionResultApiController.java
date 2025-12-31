@@ -136,11 +136,49 @@ public class EgovProductionResultApiController {
 			@RequestBody List<Map<String, Object>> details,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		for (Map<String, Object> detail : details) {
-			detail.put("OPMAN_CODE", user.getUniqId());
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("user", user);
+
+		try {
+			for (Map<String, Object> detail : details) {
+				detail.put("OPMAN_CODE", user.getUniqId());
+			}
+			productionResultService.updateProductionResult(details);
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 수정이 완료되었습니다.");
+
+		} catch (IllegalStateException e) {
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
 		}
 
-		productionResultService.updateProductionResult(details);
+	}
+
+	/**
+	 * 생산실적을 삭제한다
+	 *
+	 * @param detail 생산실적 삭제 요청 정보
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산실적 삭제",
+			description = "생산실적을 삭제한다",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionResultApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "등록 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@PostMapping("/delete")
+	public ResultVO deleteProductionResult(
+			@RequestBody Map<String, Object> detail,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+
+
+
+		productionResultService.deleteProductionResult(detail);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산실적이 수정되었습니다.");
@@ -148,7 +186,6 @@ public class EgovProductionResultApiController {
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
-
 
 	/**
 	 * 생산실적 detail 목록을 조회한다.

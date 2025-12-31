@@ -9,16 +9,13 @@ export const productionResultService = {  // 생산지시 목록 조회
   },
 
   //생산실적 신규 등록
-  createProdResult: async(data: ProductionResultDetail[]) => {
-    const response = await apiClient.post('/api/production-results',data);
-    return response.data;
-  },
+  createProdResult: async(data: ProductionResultDetail[]) => await apiClient.post('/api/production-results',data),
 
   // 생산실적 수정
-  updateProdResult: async(data: ProductionResultDetail[]) => {
-    const response = await apiClient.post('/api/production-results/update',data);
-    return response.data;
-  },
+  updateProdResult: async(data: ProductionResultDetail[]) => await apiClient.post('/api/production-results/update',data),
+
+  // 생산실적 삭제
+  deleteProdResult: async(data: ProductionResultDetail) => await apiClient.post('/api/production-results/delete',data),
 
   // 생산실적 detail 조회
   getProdResultDetails: async(data: ProductionResultOrder) => {

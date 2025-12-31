@@ -1,7 +1,11 @@
-import React, {forwardRef, useImperativeHandle} from "react";
+import React, {forwardRef, useImperativeHandle, useState} from "react";
+import dayjs from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import {
     DataGrid,
-    GridColDef,
+    GridColDef, GridRenderEditCellParams,
     GridToolbarContainer,
 } from "@mui/x-data-grid";
 import {
@@ -34,31 +38,71 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
         fetchDetails: details.fetchDetails,
     }));
 
+    const DateTimeEditCell = (params: GridRenderEditCellParams) => {
+        const [temp, setTemp] = useState(
+            params.value ? dayjs(params.value) : null
+        );
+
+        return (
+            <DateTimePicker
+                value={temp}
+                onChange={setTemp}
+                onAccept={(v) => {
+                    params.api.setEditCellValue({
+                        id: params.id,
+                        field: params.field,
+                        value: v?.toDate() ?? null,
+                    });
+                    params.api.stopCellEditMode({ id: params.id, field: params.field });
+                }}
+                ampm={false}
+                format="YYYY-MM-DD HH:mm"
+                slotProps={{
+                    textField: {
+                        size: "small",
+                        fullWidth: true,
+                        variant: "outlined",
+                    },
+                }}
+            />
+        );
+    };
+
     const columns: GridColDef[] = [
-        { field: "WORKSDATE", headerName: "작업시작일", width: 120,
+        {
+            field: "PROD_STIME",
+            headerName: "작업시작시간",
+            width: 200,
             headerAlign: 'center',
-            align: 'center', editable: true },
-        { field: "PROD_STIME", headerName: "시작시간", width: 120,
+            align: 'center',
+            editable: true,
+            valueFormatter: (value) =>
+                value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
+            renderEditCell: (params) => <DateTimeEditCell {...params} />,
+        },
+        { field: "PROD_ETIME",
+            headerName: "작업종료시간",
+            type: "dateTime",
+            width: 200,
             headerAlign: 'center',
-            align: 'center', editable: true },
-        { field: "WORKEDATE", headerName: "작업종료일", width: 120,
+            align: 'center',
+            editable: true,
+            valueFormatter: (value) =>
+                value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
+            renderEditCell: (params) => <DateTimeEditCell {...params} />,
+        },
+        { field: "PROD_QTY", headerName: "생산수량", type: "number", width: 120,
             headerAlign: 'center',
-            align: 'center', editable: true },
-        { field: "PROD_ETIME", headerName: "종료시간", width: 120,
+            align: 'right', editable: true },
+        { field: "GOOD_QTY", headerName: "양품수량", type: "number", width: 120,
             headerAlign: 'center',
-            align: 'center', editable: true },
-        { field: "PROD_QTY", headerName: "생산수량", width: 120,
+            align: 'right', editable: true },
+        { field: "BAD_QTY", headerName: "불량수량", type: "number", width: 120,
             headerAlign: 'center',
-            align: 'right', type: "number", editable: true },
-        { field: "GOOD_QTY", headerName: "양품수량", width: 120,
+            align: 'right', editable: true },
+        { field: "RCV_QTY", headerName: "인수수량", type: "number", width: 120,
             headerAlign: 'center',
-            align: 'right', type: "number", editable: true },
-        { field: "BAD_QTY", headerName: "불량수량", width: 120,
-            headerAlign: 'center',
-            align: 'right', type: "number", editable: true },
-        { field: "RCV_QTY", headerName: "인수수량", width: 120,
-            headerAlign: 'center',
-            align: 'right', type: "number", editable: true },
+            align: 'right', editable: true },
         {
             field: "WORKER",
             headerName: "작업자",
@@ -164,19 +208,22 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
 
 
     return(
-        <DataGrid
-            rows={details.rows}
-            columns={columns}
-            getRowId={(row) => row.TPR601ID}
-            autoHeight
-            hideFooter
-            rowHeight={35}
-            columnHeaderHeight={40}
-            disableRowSelectionOnClick
-            processRowUpdate={details.processRowUpdate}
-            showToolbar
-            slots={{ toolbar: Toolbar }}
-        />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DataGrid
+                rows={details.rows}
+                columns={columns}
+                getRowId={(row) => row.TPR601ID}
+                autoHeight
+                hideFooter
+                rowHeight={35}
+                columnHeaderHeight={40}
+                disableRowSelectionOnClick
+                processRowUpdate={details.processRowUpdate}
+                showToolbar
+                slots={{ toolbar: Toolbar }}
+            />
+        </LocalizationProvider>
+
     );
 
 })

@@ -110,6 +110,12 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		}
 	}
 
+	@Override
+	@Transactional
+	public void deleteProductionResult(Map<String, Object> result) throws Exception {
+
+	}
+
 
 
 

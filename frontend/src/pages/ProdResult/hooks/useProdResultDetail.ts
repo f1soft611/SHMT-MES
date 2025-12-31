@@ -101,17 +101,32 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
             return false;
         }
 
+        let lastMessage = "저장되었습니다";
+
         try {
-            if (newRows.length > 0) {
-                await productionResultService.createProdResult(newRows);
-
-            }
-
             if (modifiedRows.length > 0) {
-                await productionResultService.updateProdResult(modifiedRows);
+                const { data } = await productionResultService.updateProdResult(modifiedRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return;
+                }
+                lastMessage = data.resultMessage;
             }
 
-            showToast({ message: "등록되었습니다.", severity: "success" });
+            if (newRows.length > 0) {
+                const { data } = await productionResultService.createProdResult(newRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return;
+                }
+                lastMessage = data.resultMessage;
+
+            }
+
+            showToast({
+                message: lastMessage,
+                severity: "success",
+            });
 
             // 플래그 초기화
             setRows(prev =>
@@ -124,12 +139,15 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
             return true;
         } catch (e) {
             console.error(e);
-            showToast({ message: "저장 중 오류가 발생했습니다.", severity: "error" });
+            showToast({
+                message: "저장 중 오류가 발생했습니다.",
+                severity: "error"
+            });
             return false;
         }
     };
 
-    const handleDeleteRow = (row: ProductionResultDetail) => {
+    const handleDeleteRow = (row: ProductionResultDetail) => async () => {
         // 신규 추가 행 → 바로 제거
         if (row.TPR601ID.startsWith("NEW-")) {
             setRows(prev => prev.filter(r => r.TPR601ID !== row.TPR601ID));
@@ -139,8 +157,34 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
         // 기존 행 → 확인
         if (!window.confirm("해당 실적을 삭제하시겠습니까?")) return;
 
+
+        let lastMessage = "삭제되었습니다";
+
         // // 실제 삭제는 저장 시 처리 → 여기서는 제거
-        // setRows(prev => prev.filter(r => r.id !== row.id));
+        try {
+            const { data } = await productionResultService.deleteProdResult(row);
+            if (data.resultCode !== 200) {
+                showToast({ message: data.resultMessage, severity: "error" });
+                return;
+            }
+            lastMessage = data.resultMessage;
+
+            // 화면에서도 제거
+            setRows(prev =>
+                prev.filter(r => r.TPR601ID !== row.TPR601ID)
+            );
+
+            showToast({
+                message: lastMessage,
+                severity: "success",
+            });
+        } catch (e) {
+            console.error(e);
+            showToast({
+                message: "삭제 중 오류가 발생했습니다.",
+                severity: "error",
+            });
+        }
     };
 
     const fetchWorkers = async () => {
