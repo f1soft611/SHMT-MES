@@ -158,7 +158,6 @@ public class EgovProductionResultApiController {
 	 * @param detail 생산실적 삭제 요청 정보
 	 * @param user 사용자 정보
 	 * @return ResultVO
-	 * @throws Exception
 	 */
 	@Operation(
 			summary = "생산실적 삭제",
@@ -175,16 +174,17 @@ public class EgovProductionResultApiController {
 			@RequestBody Map<String, Object> detail,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-
-
-
-		productionResultService.deleteProductionResult(detail);
+		System.out.println("controller -> check");
 
 		Map<String, Object> resultMap = new HashMap<>();
-		resultMap.put("message", "생산실적이 수정되었습니다.");
 		resultMap.put("user", user);
 
-		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+		try {
+			productionResultService.deleteProductionResult(detail);
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 삭제가 완료되었습니다.");
+		} catch (IllegalStateException e) {
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.DELETE_ERROR, e.getMessage());
+		}
 	}
 
 	/**

@@ -224,6 +224,16 @@
         AND PROD_SEQ = #{PROD_SEQ}
     </update>
 
+    <!-- 생산실적 TPR601 삭제   -->
+    <delete id="deleteProductionResult" parameterType="map">
+        DELETE FROM TPR601
+        WHERE FACTORY_CODE = '000001'
+          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+          AND WORK_SEQ = #{WORK_SEQ}
+          AND PROD_SEQ = #{PROD_SEQ}
+    </delete>
 
     <!-- 생산실적 작업자 TPR601W NextId 가져오기    -->
     <select id="selectProdResultWorkerNextId"
@@ -292,6 +302,18 @@
         AND PRODWORK_SEQ = #{PRODWORK_SEQ}
         AND WORK_SEQ = #{WORK_SEQ}
         AND PROD_SEQ = #{PROD_SEQ}
+    </delete>
+
+
+    <!-- 생산실적 투입자재 TPR601M 삭제   -->
+    <delete id="deleteProductionResultMaterial" parameterType="map">
+        DELETE FROM TPR601M
+        WHERE FACTORY_CODE = '000001'
+          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+          AND WORK_SEQ = #{WORK_SEQ}
+          AND PROD_SEQ = #{PROD_SEQ}
     </delete>
 
 

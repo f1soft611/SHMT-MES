@@ -147,7 +147,8 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
         }
     };
 
-    const handleDeleteRow = (row: ProductionResultDetail) => async () => {
+    const handleDeleteRow = async (row: ProductionResultDetail) => {
+
         // 신규 추가 행 → 바로 제거
         if (row.TPR601ID.startsWith("NEW-")) {
             setRows(prev => prev.filter(r => r.TPR601ID !== row.TPR601ID));

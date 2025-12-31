@@ -57,6 +57,11 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		update("ProductionResultDAO.updateProductionResult", params);
 	}
 
+	// 생산실적 삭제
+	public void deleteProductionResult(Map<String, Object> params) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResult", params);
+	}
+
 	// 생산실적 작업자 TPR601W nextId 가져오기
 	public String selectProdResultWorkerNextId() throws Exception {
 		return (String)selectOne("ProductionResultDAO.selectProdResultWorkerNextId");
@@ -75,6 +80,11 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 	// 생산실적 -작업자 삭제
 	public void deleteProductionResultWorker(Map<String, Object> params) throws Exception {
 		delete("ProductionResultDAO.deleteProductionResultWorker", params);
+	}
+
+	// 생산실적 -투입자재 삭제
+	public void deleteProductionResultMaterial(Map<String, Object> params) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResultMaterial", params);
 	}
 
 	// 생산실적 등록 후 TPR504 ORDER_FLAG UPDATE

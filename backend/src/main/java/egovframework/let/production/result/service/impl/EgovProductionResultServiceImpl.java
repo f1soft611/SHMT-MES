@@ -110,9 +110,19 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		}
 	}
 
+	// 생산실적 삭제
 	@Override
 	@Transactional
 	public void deleteProductionResult(Map<String, Object> result) throws Exception {
+
+		// 1. 실적별 작업자 삭제 TPR601W
+		productionResultDAO.deleteProductionResultWorker(result);
+
+		// 2. 실적별 투입자재 삭제 TPR601M
+		productionResultDAO.deleteProductionResultMaterial(result);
+
+		// 3. 실적 삭제 TPR601
+		productionResultDAO.deleteProductionResult(result);
 
 	}
 
