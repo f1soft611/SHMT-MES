@@ -69,7 +69,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         },
         {
             field: "PRODPLAN_ID",
-            headerName: "의뢰번호",
+            headerName: "지시번호",
             width: 140,
             headerAlign: "center",
             align: "center",
@@ -182,7 +182,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                         }}
             />
             <CardContent sx={{ p: 0 }}>
-                <Box sx={{ height: 500 }}>
+                <Box sx={{ height: 550 }}>
                     <DataGrid
                         rows={rows}
                         columns={columns}

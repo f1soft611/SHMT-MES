@@ -12,6 +12,7 @@ export function useProdOrder() {
     const dateFrom = new Date();
     dateFrom.setDate(dateFrom.getDate() - 7);
 
+    // 입력용 검색조건
     const [search, setSearch] = useState({
         workplace: "",
         equipment: "",
@@ -19,6 +20,10 @@ export function useProdOrder() {
         dateTo: today,
         keyword: "", //통합검색
     });
+
+    // 실제 검색용 파라미터
+    const [searchParams, setSearchParams] = useState<typeof search | null>(null);
+
 
     // 테이블 페이징
     const [pagination, setPagination] = useState({
@@ -30,14 +35,13 @@ export function useProdOrder() {
     const [rows, setRows] = useState<ProductionResultOrder[]>([]);
     const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [searchTrigger, setSearchTrigger] = useState(0); // 통합검색 입력 될때마다 검색되는현상 방지
 
     // API 호출
     const fetchList = async () => {
         setLoading(true);
         try {
             const params = {
-                ...search,
+                ...searchParams,
                 page: pagination.page,
                 size: pagination.pageSize,
             };
@@ -70,19 +74,27 @@ export function useProdOrder() {
 
     // 검색 버튼
     const handleSearch = () => {
+        setLoading(true);
+        const toYYYYMMDD = (v: string) => v.replaceAll('-', '');
+        setSearchParams({
+            ...search,
+            dateFrom: toYYYYMMDD(search.dateFrom),
+            dateTo: toYYYYMMDD(search.dateTo),
+        });
         setPagination(prev => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
-        setSearchTrigger(t => t + 1);
     };
 
     // 페이지 변경 시 + 검색버튼 누를 시 자동 fetch
     useEffect(() => {
+        if (!searchParams) return;
         fetchList();
-    }, [pagination.page, pagination.pageSize, searchTrigger]);
+    }, [pagination.page, pagination.pageSize, searchParams]);
 
 
     return {
         search,
         setSearch,
+        setSearchParams,
         handleSearchChange,
         handleSearch,
 
