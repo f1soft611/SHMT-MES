@@ -22,11 +22,7 @@ export const productionOrderService = {
 
   // 생산계획 품목별 공정 조회
   getFlowProcessByPlanId: async(params?: any) => {
-    const response = await apiClient.get('/api/production-orders/process', {
-      params: {
-        prodPlanId: params.PRODPLAN_ID
-      },
-    });
+    const response = await apiClient.get('/api/production-orders/process', { params });
     return response.data;
   },
 

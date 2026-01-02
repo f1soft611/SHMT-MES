@@ -65,8 +65,8 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     }
 
     // 생산지시] 생산지시 등록되기 전 제품의 공정 가져오기
-    public List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception {
-        return selectList("ProductionOrderDAO.selectFlowProcess", prodPlanId);
+    public List<Map<String, Object>> selectFlowProcessByPlanId(Map<String, Object> prodPlan) throws Exception {
+        return selectList("ProductionOrderDAO.selectFlowProcess", prodPlan);
     }
 
     // 생산지시] 생산지시 등록된 후 생산계획에 연결된 생산지시 조회

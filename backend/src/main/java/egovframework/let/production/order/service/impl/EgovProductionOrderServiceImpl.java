@@ -87,11 +87,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dbParams.put("size", size);
 
 		List<Map<String, Object>> list = productionOrderDAO.selectProdPlans(dbParams);
-		int totalCount = productionOrderDAO.selectProdPlanCount(dbParams);
+		int resultCnt = productionOrderDAO.selectProdPlanCount(dbParams);
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("resultList", list);
-		result.put("totalCount", totalCount);
+		result.put("resultCnt", resultCnt);
 
 		return result;
 	}
@@ -101,8 +101,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public List<Map<String, Object>> selectFlowProcessByPlanId(String prodPlanId) throws Exception{
-		return productionOrderDAO.selectFlowProcessByPlanId(prodPlanId);
+	public Map<String, Object> selectFlowProcessByPlanId(Map<String, Object> prodPlan) throws Exception{
+		List<Map<String, Object>> list = productionOrderDAO.selectFlowProcessByPlanId(prodPlan);
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("resultList", list);
+		return result;
 	}
 
 	/**
@@ -110,8 +114,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception{
-		return productionOrderDAO.selectProdOrdersByPlanId(prodPlanId);
+	public Map<String, Object> selectProdOrdersByPlanId(String prodPlanId) throws Exception{
+
+		List<Map<String, Object>> list = productionOrderDAO.selectProdOrdersByPlanId(prodPlanId);
+		Map<String, Object> result = new HashMap<>();
+		result.put("resultList", list);
+		return result;
 	}
 
 

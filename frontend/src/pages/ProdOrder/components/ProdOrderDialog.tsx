@@ -2,7 +2,7 @@ import React from "react";
 import {
     Chip, IconButton, Box,
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Button, Typography, Divider
+    Button, Typography, Divider, Tooltip
 } from "@mui/material";
 import {
     Add as AddIcon,
@@ -327,9 +327,11 @@ export default function ProdOrderDialog({
                             <Typography variant="caption" color="text.secondary">
                                 품목명
                             </Typography>
+                            <Tooltip title={plan.ITEM_NAME} arrow>
                             <Typography
                                 fontWeight={600}
                                 sx={{
+                                    maxWidth: 220,
                                     whiteSpace: 'nowrap',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
@@ -338,6 +340,7 @@ export default function ProdOrderDialog({
                             >
                                 {plan.ITEM_NAME}
                             </Typography>
+                            </Tooltip>
                         </Box>
 
                         <Divider

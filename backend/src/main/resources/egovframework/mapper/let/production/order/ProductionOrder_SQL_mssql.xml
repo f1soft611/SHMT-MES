@@ -54,6 +54,7 @@
 		FETCH NEXT #{size} ROWS ONLY
 	</select>
 
+	<!-- 생산계획 전체 건 수	-->
 	<select id="selectProdPlanCount"
 			parameterType="map"
 			resultType="int">
@@ -73,7 +74,7 @@
 
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"
-			parameterType="string"
+			parameterType="map"
 			resultType="map">
 		SELECT	ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
 			A.PRODPLAN_ID,
@@ -140,7 +141,9 @@
 				LEFT JOIN MES_CCMMNDETAIL_CODE F2
 				ON F2.CODE_ID = 'COM007'
 				AND F1.UNIT = F2.CODE
-		WHERE A.PRODPLAN_ID = #{value}
+		WHERE 1=1
+		AND A.PRODPLAN_DATE = #{PRODPLAN_DATE}
+		AND A.PRODPLAN_SEQ = #{PRODPLAN_SEQ}
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ
 	</select>
 

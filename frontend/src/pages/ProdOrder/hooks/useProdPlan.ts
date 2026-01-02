@@ -23,7 +23,7 @@ export function useProdPlan() {
 
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [totalCount, setTotalCount] = useState(0);
+    const [resultCnt, setResultCnt] = useState(0);
     const [searchTrigger, setSearchTrigger] = useState(0);
 
     const fetchProdPlan = async () => {
@@ -37,10 +37,10 @@ export function useProdPlan() {
                 size: paginationModel.pageSize,
             });
             setRows(response.result.resultList);
-            setTotalCount(response.result.totalCount);
+            setResultCnt(response.result.resultCnt);
         } catch (err: any) {
             setRows([]);
-            setTotalCount(0);
+            setResultCnt(0);
         } finally {
             setLoading(false);
         }
@@ -71,7 +71,7 @@ export function useProdPlan() {
     return {
         planRows: rows,
         loading,
-        totalCount,
+        resultCnt,
         search,
         handleSearchChange,
         handleSearch,
