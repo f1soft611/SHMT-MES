@@ -298,7 +298,35 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     {
       field: 'orderQty',
       headerName: '생산의뢰량',
-      width: 130,
+      width: 120,
+      align: 'right',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value?.toLocaleString()}
+          size="small"
+          color="default"
+        />
+      ),
+    },
+    {
+      field: 'allocatedQty',
+      headerName: '할당량',
+      width: 100,
+      align: 'right',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value?.toLocaleString() || '0'}
+          size="small"
+          color="info"
+        />
+      ),
+    },
+    {
+      field: 'remainingQty',
+      headerName: '남은수량',
+      width: 120,
       align: 'right',
       headerAlign: 'center',
       renderCell: (params) => (

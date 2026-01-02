@@ -31,6 +31,10 @@ export interface ProductionRequest {
   registDate?: string; // 등록일자
   customerCode?: string; // 거래처 코드
   customerName?: string; // 거래처명
+
+  // 계획 할당 관련 추가 정보
+  allocatedQty?: number; // 할당된 계획 수량 (TPR301R의 ORDER_QTY 합계)
+  remainingQty?: number; // 남은 수량 (ORDER_QTY - 할당된 수량)
 }
 
 /**

@@ -305,6 +305,26 @@
 		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
+	<!-- 생산계획 참조(주문연결) 삭제 (물리적 삭제) -->
+	<delete id="ProductionPlanDAO.deleteProductionPlanReference" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanReference">
+		DELETE FROM TPR301R
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+	</delete>
+
+	<!-- 생산계획 참조(주문연결) 삭제 - planId 기준 (TPR301 연계) -->
+	<delete id="ProductionPlanDAO.deleteProductionPlanReferenceByPlanId" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		DELETE R
+		FROM TPR301R R
+		JOIN TPR301 P
+		  ON P.FACTORY_CODE = R.FACTORY_CODE
+		 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+		 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+		WHERE P.FACTORY_CODE = #{factoryCode}
+		  AND P.PRODPLAN_ID = #{prodPlanId}
+	</delete>
+
 	<!-- 생산계획 참조(주문연결) 등록 -->
 	<insert id="ProductionPlanDAO.insertProductionPlanReference" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanReference">
 		INSERT INTO TPR301R (
@@ -470,26 +490,59 @@
 			CONVERT(VARCHAR(10), T.OPTIME, 108) AS REGIST_TIME,
 			CONVERT(VARCHAR(8), T.OPTIME, 112) AS REGIST_DATE,
 			T.PROD_PLAN_DATE,
-			T.END_DATE
+			T.END_DATE,
+			-- 할당량: 이미 계획된 수량
+			ISNULL(
+				(
+					SELECT SUM(R.ORDER_QTY)
+					FROM TPR301R R
+					JOIN TPR301 P
+					  ON P.FACTORY_CODE = R.FACTORY_CODE
+					 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+					 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+					WHERE R.FACTORY_CODE = T.FACTORY_CODE
+					  AND R.ORDER_NO = T.ORDER_NO
+					  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+					  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+					  AND P.ITEM_CODE = T.ITEM_CODE
+				), 0
+			) AS ALLOCATED_QTY,
+			-- 남은수량: 주문량 - 할당량
+			T.ORDER_QTY - ISNULL(
+				(
+					SELECT SUM(R.ORDER_QTY)
+					FROM TPR301R R
+					JOIN TPR301 P
+					  ON P.FACTORY_CODE = R.FACTORY_CODE
+					 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+					 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+					WHERE R.FACTORY_CODE = T.FACTORY_CODE
+					  AND R.ORDER_NO = T.ORDER_NO
+					  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+					  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+					  AND P.ITEM_CODE = T.ITEM_CODE
+				), 0
+			) AS REMAINING_QTY
 		FROM TSA308 T
 			LEFT JOIN TCO601 C ON T.FACTORY_CODE = C.FACTORY_CODE AND T.CUSTOMER_CODE = C.CUSTOMER_CODE
 			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1 ON CODE1.CODE_ID = 'COM007' AND CODE1.CODE = T.UNIT_CODE
 		WHERE 1=1
 		AND T.FACTORY_CODE = #{factoryCode}
-		-- 이미 생산계획(TPR301R)에 참조로 등록된 생산의뢰는 제외
-		AND NOT EXISTS (
-			SELECT 1
-			FROM TPR301R R
-			JOIN TPR301 P
-			  ON P.FACTORY_CODE = R.FACTORY_CODE
-			 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
-			 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
-			WHERE R.FACTORY_CODE = T.FACTORY_CODE
-			  AND R.ORDER_NO = T.ORDER_NO
-			  AND R.ORDER_SEQNO = T.ORDER_SEQNO
-			  AND R.ORDER_HISTNO = T.ORDER_HISTNO
-			  AND P.ITEM_CODE = T.ITEM_CODE
-		)
+		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
+		AND T.ORDER_QTY > ISNULL(
+			(
+				SELECT SUM(R.ORDER_QTY)
+				FROM TPR301R R
+				JOIN TPR301 P
+				  ON P.FACTORY_CODE = R.FACTORY_CODE
+				 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+				 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+				WHERE R.FACTORY_CODE = T.FACTORY_CODE
+				  AND R.ORDER_NO = T.ORDER_NO
+				  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+				  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+				  AND P.ITEM_CODE = T.ITEM_CODE
+			), 0)
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">
@@ -527,20 +580,21 @@
 		<if test="factoryCode != null and factoryCode != ''">
 			AND T.FACTORY_CODE = #{factoryCode}
 		</if>
-		-- 이미 생산계획(TPR301R)에 참조로 등록된 생산의뢰는 제외
-		AND NOT EXISTS (
-			SELECT 1
-			FROM TPR301R R
-			JOIN TPR301 P
-			  ON P.FACTORY_CODE = R.FACTORY_CODE
-			 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
-			 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
-			WHERE R.FACTORY_CODE = T.FACTORY_CODE
-			  AND R.ORDER_NO = T.ORDER_NO
-			  AND R.ORDER_SEQNO = T.ORDER_SEQNO
-			  AND R.ORDER_HISTNO = T.ORDER_HISTNO
-			  AND P.ITEM_CODE = T.ITEM_CODE
-		)
+		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
+		AND T.ORDER_QTY > ISNULL(
+			(
+				SELECT SUM(R.ORDER_QTY)
+				FROM TPR301R R
+				JOIN TPR301 P
+				  ON P.FACTORY_CODE = R.FACTORY_CODE
+				 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+				 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+				WHERE R.FACTORY_CODE = T.FACTORY_CODE
+				  AND R.ORDER_NO = T.ORDER_NO
+				  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+				  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+				  AND P.ITEM_CODE = T.ITEM_CODE
+			), 0)
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">

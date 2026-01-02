@@ -216,8 +216,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     const firstRequest = requests[0];
 
     // 여러 생산의뢰의 수량 합계
+    // remainingQty가 있으면 남은 수량을, 없으면 orderQty를 사용
     const totalQty = requests.reduce(
-      (sum, req) => sum + (req.orderQty || 0),
+      (sum, req) =>
+        sum +
+        (req.remainingQty !== undefined && req.remainingQty !== null
+          ? req.remainingQty
+          : req.orderQty || 0),
       0
     );
 
