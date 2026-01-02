@@ -52,6 +52,41 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		insert("ProductionResultDAO.insertProductionResult", params);
 	}
 
+	// 생산실적 수정
+	public void updateProductionResult(Map<String, Object> params) throws Exception {
+		update("ProductionResultDAO.updateProductionResult", params);
+	}
+
+	// 생산실적 삭제
+	public void deleteProductionResult(Map<String, Object> params) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResult", params);
+	}
+
+	// 생산실적 작업자 TPR601W nextId 가져오기
+	public String selectProdResultWorkerNextId() throws Exception {
+		return (String)selectOne("ProductionResultDAO.selectProdResultWorkerNextId");
+	}
+
+	// 생산실적 시퀀스 가져오기 PROD_SEQ
+	public int selectProdResultWorkerSeq(Map<String, Object> params) throws Exception {
+		return (Integer)selectOne("ProductionResultDAO.selectProdResultWorkerSeq", params);
+	}
+
+	// 생산실적 -작업자 등록
+	public void insertProductionResultWorker(Map<String, Object> params) throws Exception {
+		insert("ProductionResultDAO.insertProductionResultWorker", params);
+	}
+
+	// 생산실적 -작업자 삭제
+	public void deleteProductionResultWorker(Map<String, Object> params) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResultWorker", params);
+	}
+
+	// 생산실적 -투입자재 삭제
+	public void deleteProductionResultMaterial(Map<String, Object> params) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResultMaterial", params);
+	}
+
 	// 생산실적 등록 후 TPR504 ORDER_FLAG UPDATE
 	public void updateProdOrderOrderFlag(Map<String, Object> params) throws Exception {
 		update("ProductionResultDAO.updateProdOrderOrderFlag", params);

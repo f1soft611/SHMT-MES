@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState} from "react";
 import {
     Box, Card, CardActions, CardContent, CardHeader,
     Collapse, Paper, IconButton,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress,
 } from "@mui/material";
 import {
     KeyboardArrowDown,
@@ -24,6 +24,7 @@ interface Props {
     };
     onPageChange: (page: number) => void;
     onPageSizeChange: (pageSize: number) => void;
+    loading: boolean;
 }
 
 export interface DetailGridRef {
@@ -32,7 +33,7 @@ export interface DetailGridRef {
     fetchDetails: () => void;
 }
 
-export default function ProdResultTable({ rows, rowCount, pagination, onPageChange, onPageSizeChange }: Props) {
+export default function ProdResultTable({ rows, rowCount, pagination, onPageChange, onPageSizeChange, loading }: Props) {
 
     return (
         <Card>
@@ -41,58 +42,86 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                 titleTypographyProps={{ fontSize: 16 }}
             />
             <CardContent sx={{ p: 0 }}>
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ height: 40, }}>
-                                <TableCell width={40} sx={{ padding: "0 2px" }} />
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>거래처</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>공정명</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>설비코드</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>설비명</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목코드</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목명</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>생산품목규격</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>작업시작일</TableCell>
-                                <TableCell align="center" sx={{ padding: "0 2px" }}>실적등록</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {rows.length === 0 ? (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={11}
-                                        align="center"
-                                        sx={{ height: 80, color: 'text.secondary' }}
-                                    >
-                                        조회된 데이터가 없습니다.
-                                    </TableCell>
+                <Box sx={{ position: 'relative' }}>
+                    {loading && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'rgba(255,255,255,0.6)',
+                                zIndex: 10,
+                            }}
+                        >
+                            <CircularProgress size={40} />
+                        </Box>
+                    )}
+                    <TableContainer
+                        component={Paper}
+                        sx={{
+                            overflowX: 'auto',
+                            height: 500
+                        }}>
+                        <Table
+                            sx={{
+                                minWidth: 1500,
+                                whiteSpace: 'nowrap',
+                                tableLayout: 'fixed',
+                            }}
+                        >
+                            <TableHead>
+                                <TableRow sx={{ height: 40, }}>
+                                    <TableCell width={40} sx={{ padding: "0 2px" }} />
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>거래처</TableCell>
+                                    <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>
+                                    <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>제품명</TableCell>
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>공정명</TableCell>
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>설비코드</TableCell>
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>설비명</TableCell>
+                                    <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산품목코드</TableCell>
+                                    <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>생산품목명</TableCell>
+                                    <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산품목규격</TableCell>
+                                    <TableCell width={80} align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
+                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>작업시작일</TableCell>
+                                    {/*<TableCell align="center" sx={{ padding: "0 2px" }}>실적등록</TableCell>*/}
                                 </TableRow>
-                            ) : (
-                                rows.map((row) => (
-                                    <ProdResultRow key={row.TPR504ID} row={row} />
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {rows.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={13}
+                                            align="center"
+                                            sx={{ height: 80, color: 'text.secondary' }}
+                                        >
+                                            조회된 데이터가 없습니다.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    rows.map((row) => (
+                                        <ProdResultRow key={row.TPR504ID} row={row} />
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <TablePagination
+                        component="div"
+                        count={rowCount}                 // 서버 totalCount
+                        page={pagination.page}
+                        rowsPerPage={pagination.pageSize}
+                        onPageChange={(_, newPage) => onPageChange(newPage)}
+                        onRowsPerPageChange={(e) =>
+                            onPageSizeChange(parseInt(e.target.value, 10))
+                        }
+                        rowsPerPageOptions={[10, 20, 50]}
+                    />
+                </Box>
             </CardContent>
-            <CardActions sx={{ p: 0, justifyContent: 'flex-end', }} >
-                <TablePagination
-                    component="div"
-                    count={rowCount}                 // 서버 totalCount
-                    page={pagination.page}
-                    rowsPerPage={pagination.pageSize}
-                    onPageChange={(_, newPage) => onPageChange(newPage)}
-                    onRowsPerPageChange={(e) =>
-                        onPageSizeChange(parseInt(e.target.value, 10))
-                    }
-                    rowsPerPageOptions={[10, 20, 50, 100]}
-                />
-            </CardActions>
+            <CardActions sx={{ display: 'none' }} />
         </Card>
     );
 }
@@ -101,8 +130,7 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
     const [open, setOpen] = useState(false);
     const detailRef = useRef<DetailGridRef>(null);
 
-    const handleArrowClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const toggleOpen = () => {
         setOpen(prev => {
             const next = !prev;
             if (next) {
@@ -112,23 +140,42 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
         });
     };
 
-    const handleAddClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!open) {
-            setOpen(true);      // 처음만 열기
-            requestAnimationFrame(() => {
-                detailRef.current?.fetchDetails();
-            });
-        }
-
-        // 이미 열려 있으면 바로 행 추가
-        detailRef.current?.addRow();
+    const handleArrowClick = (e: React.MouseEvent) => {
+        e.stopPropagation();   // ★ row 클릭 방지
+        toggleOpen();
     };
+
+    // const handleAddClick = (e: React.MouseEvent) => {
+    //     e.stopPropagation();
+    //     if (!open) {
+    //         setOpen(true);      // 처음만 열기
+    //         requestAnimationFrame(() => {
+    //             detailRef.current?.fetchDetails();
+    //         });
+    //     }
+    //
+    //     // 이미 열려 있으면 바로 행 추가
+    //     detailRef.current?.addRow();
+    // };
+
+    const EllipsisCell = ({ value }: { value: string }) => (
+        <Box
+            sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+            }}
+            title={value}
+        >
+            {value}
+        </Box>
+    );
+
 
     return (
         <>
             {/* 메인 행 */}
-            <TableRow sx={{height: 40}}>
+            <TableRow sx={{height: 40, cursor:'pointer'}} onClick={toggleOpen} >
                 <TableCell
                     align="center"
                     width={40}
@@ -147,7 +194,10 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                     {row.PRODPLAN_ID}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.WORK_NAME}
+                    <EllipsisCell value={row.ITEM_NAME}/>
+                </TableCell>
+                <TableCell align="center" sx={{ padding: "0 2px" }}>
+                    <EllipsisCell value={row.WORK_NAME}/>
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     {row.EQUIP_SYS_CD}
@@ -156,13 +206,13 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                     {row.EQUIP_SYS_CD_NM}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.ITEM_CODE}
+                    {row.PROD_CODE}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.ITEM_NAME}
+                    <EllipsisCell value={row.PROD_NAME}/>
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.ITEM_SPEC}
+                    <EllipsisCell value={row.PROD_SPEC}/>
                 </TableCell>
                 <TableCell align="right" sx={{ padding: "0 2px" }}>
                     {row.PROD_QTY.toLocaleString()}
@@ -170,20 +220,11 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     {row.WORKDT_DATE}
                 </TableCell>
-                <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={handleAddClick}
-                    >
-                        <AddIcon />
-                    </IconButton>
-                </TableCell>
             </TableRow>
 
             {/* 디테일 행 */}
             <TableRow>
-                <TableCell colSpan={11} sx={{ p: 0 }}>
+                <TableCell colSpan={13} sx={{ p: 0 }}>
                     <Collapse in={open} timeout="auto">
                         <Box sx={{ ml:'100px', backgroundColor: '#ddd' }}>
                             <ProdResultList
@@ -197,113 +238,3 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
         </>
     );
 }
-//
-//
-// const DetailGrid = React.forwardRef(
-//     (
-//         { parentRow }: DetailGridProps,
-//         ref: React.ForwardedRef<DetailGridRef>
-//     ) => {
-//         const details = useProdResultDetail(parentRow);
-//
-//         useImperativeHandle(ref, () => ({
-//             addRow: details.addRow,
-//             getRows: () => details.rows,
-//             fetchDetails: details.fetchDetails,
-//         }));
-//
-//         function createDetailToolbar(onSave: () => void) {
-//             return function DetailToolbar() {
-//                 return (
-//                     <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
-//                         <Button
-//                             size="small"
-//                             variant="contained"
-//                             onClick={onSave}
-//                         >
-//                             저장
-//                         </Button>
-//                     </GridToolbarContainer>
-//                 );
-//             };
-//         }
-//
-//         const columns: GridColDef[] = [
-//             { field: "WORKSDATE", headerName: "작업시작일", headerAlign:'center', width: 120, type: "dateTime", editable: true },
-//             { field: "PROD_STIME", headerName: "시작시간", headerAlign:'center', width: 120, editable: true },
-//             { field: "WORKEDATE", headerName: "작업종료일", headerAlign:'center', width: 120, editable: true },
-//             { field: "PROD_ETIME", headerName: "종료시간", headerAlign:'center', width: 120, editable: true },
-//             { field: "PROD_QTY", headerName: "생산수량", headerAlign:'center', width: 120, type: "number", editable: true },
-//             { field: "GOOD_QTY", headerName: "양품수량", headerAlign:'center', width: 120, type: "number", editable: true },
-//             { field: "BAD_QTY", headerName: "불량수량", headerAlign:'center', width: 120, type: "number", editable: true },
-//             { field: "RCV_QTY", headerName: "인수수량", headerAlign:'center', width: 120, type: "number", editable: true },
-//             {
-//                 field: "WORKER",
-//                 headerName: "작업자",
-//                 headerAlign:'center',
-//                 width: 120,
-//                 editable: true,
-//                 renderEditCell: (params: GridRenderEditCellParams) => (
-//                     <Select
-//                         multiple
-//                         fullWidth
-//                         value={params.value || []}
-//                         onChange={(e) => {
-//                             params.api.setEditCellValue({
-//                                 id: params.id,
-//                                 field: params.field,
-//                                 value: e.target.value,
-//                             });
-//                         }}
-//                         renderValue={(selected) =>
-//                             workerOptions
-//                             .filter(o => selected.includes(o.value))
-//                             .map(o => o.label)
-//                             .join(", ")
-//                         }
-//                     >
-//                         {workerOptions.map(opt => (
-//                             <MenuItem key={opt.value} value={opt.value}>
-//                                 <Checkbox checked={(params.value || []).includes(opt.value)} />
-//                                 <ListItemText primary={opt.label} />
-//                             </MenuItem>
-//                         ))}
-//                     </Select>
-//                 ),
-//                 renderCell: (params) =>
-//                     workerOptions
-//                     .filter(o => (params.value || []).includes(o.value))
-//                     .map(o => o.label)
-//                     .join(", "),
-//             },
-//             { field: "INPUTMATERIAL", headerName: "투입자재", headerAlign:'center', width: 120, editable: true },
-//         ];
-//
-//         const Toolbar = React.useMemo(
-//             () => createDetailToolbar(() => {
-//                 details.handleSave();
-//             }),
-//             [details.handleSave]
-//         );
-//
-//         return (
-//             <DataGrid
-//                 rows={details.rows}
-//                 columns={columns}
-//                 getRowId={(row) => row.TPR601ID}
-//                 autoHeight
-//                 hideFooter
-//                 disableRowSelectionOnClick
-//                 rowHeight={35}
-//                 columnHeaderHeight={40}
-//                 showToolbar
-//                 slots={{
-//                     toolbar: Toolbar,
-//                 }}
-//                 processRowUpdate={details.processRowUpdate}
-//             />
-//         );
-//     }
-// ) as React.ForwardRefExoticComponent<
-//     DetailGridProps & React.RefAttributes<DetailGridRef>
-// >;

@@ -18,12 +18,15 @@
             , A2.WORKCENTER_NAME
             , A.WORK_CODE
             , B.WORK_NAME
-            , ISNULL(A.ITEM_CODE, '-') AS ITEM_CODE_ID
-            , ISNULL(C.MATERIAL_CODE, '-') AS ITEM_CODE
-            , ISNULL(C.MATERIAL_NAME, '-') AS ITEM_NAME
-            , ISNULL(C.MATERIAL_SPEC, '-') AS ITEM_SPEC
-            , ISNULL(A.EQUIP_SYS_CD, '-') AS EQUIP_SYS_CD
-            , ISNULL(D.EQUIPMENT_NAME, '-') AS EQUIP_SYS_CD_NM
+            , ISNULL(A.ITEM_CODE, '') AS ITEM_CODE_ID
+            , ISNULL(C.MATERIAL_CODE, '') AS ITEM_CODE
+            , ISNULL(C.MATERIAL_NAME, '') AS ITEM_NAME
+            , ISNULL(A.PROD_CODE, '') AS PROD_CODE_ID
+            , ISNULL(C1.MATERIAL_CODE, '') AS PROD_CODE
+            , ISNULL(C1.MATERIAL_NAME, '') AS PROD_NAME
+            , ISNULL(C1.MATERIAL_SPEC, '') AS PROD_SPEC
+            , ISNULL(A.EQUIP_SYS_CD, '') AS EQUIP_SYS_CD
+            , ISNULL(D.EQUIPMENT_NAME, '') AS EQUIP_SYS_CD_NM
             , A.PROD_QTY
             , A.ORDER_FLAG
             , A.WORKORDER_SEQ
@@ -48,11 +51,14 @@
         AND A.WORK_CODE = B.WORK_CODE
         LEFT JOIN TCO403 C
         ON A.ITEM_CODE = C.MATERIAL_ID
+        LEFT JOIN TCO403 C1
+        ON A.PROD_CODE = C1.MATERIAL_ID
         LEFT JOIN TPR151 D
         ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
         LEFT JOIN TPR301R X --수주정보
         ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
         AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
+        AND X.ORDER_HISTNO  = 1
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
@@ -65,13 +71,14 @@
         </if>
         <if test="keyword != null and keyword != ''">
             AND (
-            A.ITEM_CODE      LIKE '%' + #{keyword} + '%'
-            OR C.MATERIAL_NAME  LIKE '%' + #{keyword} + '%'
-            OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
-            OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
+                A.ITEM_CODE      LIKE '%' + #{keyword} + '%'
+                OR C.MATERIAL_NAME  LIKE '%' + #{keyword} + '%'
+                OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
+                OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
+                OR A.PRODPLAN_ID    LIKE '%' + #{keyword} + '%'
             )
         </if>
-        ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, A.WORK_SEQ, A.WORKDT_DATE DESC
+        ORDER BY ORDER_NO, ORDER_SEQNO, ORDER_HISTNO, A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, A.WORK_SEQ, A.WORKDT_DATE DESC
         OFFSET #{offset} ROWS
         FETCH NEXT #{size} ROWS ONLY
     </select>
@@ -98,6 +105,7 @@
         LEFT JOIN TPR301R X --수주정보
         ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
         AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
+        AND X.ORDER_HISTNO  = 1
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
@@ -114,6 +122,7 @@
             OR C.MATERIAL_NAME  LIKE '%' + #{keyword} + '%'
             OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
             OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
+            OR A.PRODPLAN_ID    LIKE '%' + #{keyword} + '%'
             )
         </if>
     </select>
@@ -197,6 +206,117 @@
         )
     </insert>
 
+    <!-- 생산실적 TPR601 수정   -->
+    <update id="updateProductionResult" parameterType="map">
+        UPDATE TPR601 SET PROD_STIME = #{PROD_STIME},
+                          PROD_ETIME = #{PROD_ETIME},
+                          PROD_QTY = #{PROD_QTY},
+                          GOOD_QTY = #{GOOD_QTY},
+                          BAD_QTY = #{BAD_QTY},
+                          RCV_QTY = #{RCV_QTY},
+                          OPMAN_CODE2 = #{OPMAN_CODE},
+                          OPTIME2 = GETDATE()
+        WHERE FACTORY_CODE = '000001'
+        AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+        AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+        AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+        AND WORK_SEQ = #{WORK_SEQ}
+        AND PROD_SEQ = #{PROD_SEQ}
+    </update>
+
+    <!-- 생산실적 TPR601 삭제   -->
+    <delete id="deleteProductionResult" parameterType="map">
+        DELETE FROM TPR601
+        WHERE FACTORY_CODE = '000001'
+          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+          AND WORK_SEQ = #{WORK_SEQ}
+          AND PROD_SEQ = #{PROD_SEQ}
+    </delete>
+
+    <!-- 생산실적 작업자 TPR601W NextId 가져오기    -->
+    <select id="selectProdResultWorkerNextId"
+            resultType="string">
+        SELECT
+            'PRW' + CONVERT(char(8), GETDATE(), 112)
+                + RIGHT('000' +
+            CAST(
+            ISNULL(
+            MAX(CAST(RIGHT(TPR601WID, 3) AS INT)), 0
+            ) + 1
+            AS varchar),
+            3
+            ) AS NEXT_ID
+        FROM TPR601W
+        WHERE TPR601WID LIKE 'PRW' + CONVERT(char(8), GETDATE(), 112) + '%'
+    </select>
+
+
+    <!-- 생산실적 작업자 TPR601W seq 가져오기  -->
+    <select id="selectProdResultWorkerSeq" parameterType="map" resultType="int">
+        SELECT COUNT(*)+1
+        FROM TPR601W
+        WHERE FACTORY_CODE = #{FACTORY_CODE}
+          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+          AND WORK_SEQ = #{WORK_SEQ}
+          AND PROD_SEQ = #{PROD_SEQ}
+    </select>
+
+    <!-- 생산실적 작업자 TPR601W 저장   -->
+    <insert id="insertProductionResultWorker" parameterType="map">
+        INSERT INTO TPR601W(
+            FACTORY_CODE,
+            PRODPLAN_DATE,
+            PRODPLAN_SEQ,
+            PRODWORK_SEQ,
+            WORK_SEQ,
+            PROD_SEQ,
+            WORKER_SEQ,
+            WORKER_CODE,
+            TPR601WID,
+            TPR601ID
+        )
+        VALUES (
+                   '000001',
+                   #{PRODPLAN_DATE},
+                   #{PRODPLAN_SEQ},
+                   #{PRODWORK_SEQ},
+                   #{WORK_SEQ},
+                   #{PROD_SEQ},
+                   #{WORKER_SEQ},
+                   #{WORKER_CODE},
+                   #{TPR601WID},
+                   #{TPR601ID}
+               )
+    </insert>
+
+    <!-- 생산실적 작업자 TPR601W 삭제   -->
+    <delete id="deleteProductionResultWorker" parameterType="map">
+        DELETE FROM TPR601W
+        WHERE FACTORY_CODE = '000001'
+        AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+        AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+        AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+        AND WORK_SEQ = #{WORK_SEQ}
+        AND PROD_SEQ = #{PROD_SEQ}
+    </delete>
+
+
+    <!-- 생산실적 투입자재 TPR601M 삭제   -->
+    <delete id="deleteProductionResultMaterial" parameterType="map">
+        DELETE FROM TPR601M
+        WHERE FACTORY_CODE = '000001'
+          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
+          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
+          AND WORK_SEQ = #{WORK_SEQ}
+          AND PROD_SEQ = #{PROD_SEQ}
+    </delete>
+
+
     <!-- 생산실적 저장 후 TPR504 ORDER_FLAG UPDATE  -->
     <update id="updateProdOrderOrderFlag" parameterType="map">
         UPDATE TPR504 SET ORDER_FLAG = #{ORDER_FLAG}
@@ -210,9 +330,24 @@
     <select id="selectProductionResultDetailList"
             parameterType="map"
             resultType="map">
-        SELECT A.*
+        SELECT A.*,
+               STUFF((
+                         SELECT ',' + X.WORKER_CODE
+                         FROM TPR601W X
+                         WHERE X.FACTORY_CODE  = A.FACTORY_CODE
+                           AND X.PRODPLAN_DATE = A.PRODPLAN_DATE
+                           AND X.PRODPLAN_SEQ  = A.PRODPLAN_SEQ
+                           AND X.PRODWORK_SEQ  = A.PRODWORK_SEQ
+                           AND X.WORK_SEQ      = A.WORK_SEQ
+                           AND X.PROD_SEQ      = A.PROD_SEQ
+                         FOR XML PATH(''), TYPE
+                   ).value('.', 'varchar(max)'), 1, 1, '') AS WORKER
         FROM TPR601 A
-        WHERE A.TPR504ID = #{TPR504ID}
+        WHERE A.FACTORY_CODE = '000001'
+        AND A.PRODPLAN_DATE = #{PRODPLAN_DATE}
+        AND A.PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+        AND A.PRODWORK_SEQ = #{PRODWORK_SEQ}
+        AND A.WORK_SEQ = #{WORK_SEQ}
     </select>
 
 

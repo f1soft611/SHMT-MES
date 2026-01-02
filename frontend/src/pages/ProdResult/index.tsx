@@ -34,6 +34,7 @@ const ProductionResult: React.FC = () => {
                 search={rs.search}
                 onChange={rs.handleSearchChange}
                 onSearch={rs.handleSearch}
+                loading={rs.loading}
             />
 
             <Grid container spacing={0} columns={12}>
@@ -44,6 +45,7 @@ const ProductionResult: React.FC = () => {
                         pagination={rs.pagination}
                         onPageChange={rs.handlePageChange}
                         onPageSizeChange={rs.handlePageSizeChange}
+                        loading={rs.loading}
                     />
                 </Grid>
             </Grid>
