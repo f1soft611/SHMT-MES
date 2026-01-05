@@ -150,7 +150,7 @@
 
 	<!--	작업지시 조회 by planId-->
 	<select id="selectProdOrders"
-			parameterType="string"
+			parameterType="map"
 			resultType="map">
 		SELECT
 			ROW_NUMBER() OVER( ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ) AS IDX,
@@ -207,7 +207,9 @@
 
 			LEFT JOIN TPR151 D1
 			ON D.EQUIP_SYS_CD = D1.EQUIP_SYS_CD
-		WHERE A.PRODPLAN_ID = #{value}
+		WHERE 1=1
+		  AND A.PRODPLAN_DATE = #{PRODPLAN_DATE}
+		  AND A.PRODPLAN_SEQ = #{PRODPLAN_SEQ}
 		ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ;
 	</select>
 

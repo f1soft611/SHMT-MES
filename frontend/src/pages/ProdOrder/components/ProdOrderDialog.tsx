@@ -1,4 +1,5 @@
 import React from "react";
+import dayjs from "dayjs";
 import {
     Chip, IconButton, Box,
     Dialog, DialogTitle, DialogContent, DialogActions,
@@ -216,6 +217,8 @@ export default function ProdOrderDialog({
             width: 150,
             headerAlign: "center",
             align: "center",
+            valueFormatter: (value) =>
+                value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "",
         },
     ];
 

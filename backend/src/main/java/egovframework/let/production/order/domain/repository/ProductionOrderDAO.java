@@ -70,8 +70,8 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     }
 
     // 생산지시] 생산지시 등록된 후 생산계획에 연결된 생산지시 조회
-    public List<Map<String, Object>> selectProdOrdersByPlanId(String prodPlanId) throws Exception {
-        return selectList("ProductionOrderDAO.selectProdOrders", prodPlanId);
+    public List<Map<String, Object>> selectProdOrdersByPlanId(Map<String, Object> prodPlan) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdOrders", prodPlan);
     }
 
     // 생산지시] 생산지시 저장 전 nextId 가져오기

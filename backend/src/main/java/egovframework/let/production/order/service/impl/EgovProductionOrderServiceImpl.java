@@ -114,9 +114,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdOrdersByPlanId(String prodPlanId) throws Exception{
+	public Map<String, Object> selectProdOrdersByPlanId(Map<String, Object> param) throws Exception{
 
-		List<Map<String, Object>> list = productionOrderDAO.selectProdOrdersByPlanId(prodPlanId);
+		List<Map<String, Object>> list = productionOrderDAO.selectProdOrdersByPlanId(param);
 		Map<String, Object> result = new HashMap<>();
 		result.put("resultList", list);
 		return result;

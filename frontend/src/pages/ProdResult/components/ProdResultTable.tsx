@@ -1,7 +1,8 @@
-import React, { useMemo, useRef, useState} from "react";
+import React, { useRef, useState} from "react";
+import dayjs from "dayjs";
 import {
     Box, Card, CardActions, CardContent, CardHeader,
-    Collapse, Paper, IconButton,
+    Collapse, Paper,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress,
 } from "@mui/material";
 import {
@@ -74,7 +75,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                             <TableHead>
                                 <TableRow sx={{ height: 40, }}>
                                     <TableCell width={40} sx={{ padding: "0 2px" }} />
-                                    <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
+                                    <TableCell width={120} align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>거래처</TableCell>
                                     <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>
                                     <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>제품명</TableCell>
@@ -86,7 +87,6 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                     <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산품목규격</TableCell>
                                     <TableCell width={80} align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>작업시작일</TableCell>
-                                    {/*<TableCell align="center" sx={{ padding: "0 2px" }}>실적등록</TableCell>*/}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -145,19 +145,6 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
         toggleOpen();
     };
 
-    // const handleAddClick = (e: React.MouseEvent) => {
-    //     e.stopPropagation();
-    //     if (!open) {
-    //         setOpen(true);      // 처음만 열기
-    //         requestAnimationFrame(() => {
-    //             detailRef.current?.fetchDetails();
-    //         });
-    //     }
-    //
-    //     // 이미 열려 있으면 바로 행 추가
-    //     detailRef.current?.addRow();
-    // };
-
     const EllipsisCell = ({ value }: { value: string }) => (
         <Box
             sx={{
@@ -188,7 +175,7 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                     {row.ORDER_NO}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.CUSTOMER_NAME}
+                    <EllipsisCell value={row.CUSTOMER_NAME ?? ""} />
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     {row.PRODPLAN_ID}
@@ -218,7 +205,9 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                     {row.PROD_QTY.toLocaleString()}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.WORKDT_DATE}
+                    {row.WORKDT_DATE
+                        ? dayjs(row.WORKDT_DATE).format("YYYY-MM-DD")
+                        : ""}
                 </TableCell>
             </TableRow>
 

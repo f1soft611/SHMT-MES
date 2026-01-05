@@ -133,8 +133,6 @@ public class EgovProductionOrderApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        System.out.println(params);
-
         Map<String, Object> resultMap = productionOrderService.selectFlowProcessByPlanId(params);
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
@@ -151,16 +149,12 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/orders")
     public ResultVO getProdOrdersByPlanId(
-            @RequestParam(required = false) String prodPlanId,
+            @RequestParam Map<String, Object> params,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> prodPlanList = productionOrderService.selectProdOrdersByPlanId(prodPlanId);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("resultList", prodPlanList);
+        Map<String, Object> resultMap = productionOrderService.selectProdOrdersByPlanId(params);
         resultMap.put("user", user);
-
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }

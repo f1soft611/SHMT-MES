@@ -7,7 +7,6 @@ import {yupResolver} from "@hookform/resolvers/yup";
 
 const schema = yup.object({
     workplaceCode: yup.string().required('작업장 선택은 필수입니다.'),
-    processFlowCode: yup.string().required('코드는 필수입니다.'),
     processFlowName: yup.string().required('이름은 필수입니다.')
 });
 
@@ -39,7 +38,6 @@ export function useProcessFlowMainDialog() {
         resolver: yupResolver(schema),
         defaultValues: {
             workplaceCode: "",
-            processFlowCode: "",
             processFlowName: "",
         },
     });
@@ -59,7 +57,6 @@ export function useProcessFlowMainDialog() {
 
         reset({
             workplaceCode: "",
-            processFlowCode: "",
             processFlowName: "",
         });
 
@@ -93,7 +90,6 @@ export function useProcessFlowMainDialog() {
 
         reset({
             workplaceCode: "",
-            processFlowCode: "",
             processFlowName: "",
         });
     };
@@ -105,6 +101,7 @@ export function useProcessFlowMainDialog() {
     const buildSubmitHandler = (onSubmit: (data: ProcessFlow, mode: "create" | "edit") => Promise<boolean>) =>
         handleSubmit(async (data) => {
             const success = await onSubmit(data, dialogMode);
+            console.log(success)
         });
 
 

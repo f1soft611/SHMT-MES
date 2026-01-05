@@ -56,7 +56,7 @@
     </select>
 
     <!-- 검색조건에 따른 공정흐름 총 건수    -->
-    <select id="selectProcessFlowListCnt"
+    <select id="ProcessFlowDAO.selectProcessFlowListCnt"
             parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO"
             resultType="int">
         SELECT COUNT(*)
@@ -79,28 +79,33 @@
         </if>
     </select>
 
-    <insert id="ProcessFlowDAO.insertProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlow">
+    <!-- 공정흐름 저장    -->
+    <insert id="insertProcessFlow"
+            parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlow">
         INSERT INTO TPR110 (
             FACTORY_CODE,
             WORKCENTER_CODE,
-            WORK_ORDER_ID,
             WORK_ORDER,
             WORK_ORDER_NM,
             DELETE_FLAG,
             OPTIME,
-            OPMAN_CODE
+            OPMAN_CODE,
+            WORK_ORDER_ID,
+            TPR110ID
         ) VALUES (
             #{factoryCode},
             #{workplaceCode},
-            #{processFlowId},
             #{processFlowCode},
             #{processFlowName},
             '0',
             GETDATE(),
-            #{regUserId}
+            #{regUserId},
+            #{processFlowId},
+            #{processFlowId}
         )
     </insert>
 
+    <!-- 공정흐름 수정    -->
     <update id="updateProcessFlow" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO">
         UPDATE TPR110
         SET
@@ -112,6 +117,7 @@
         WHERE WORK_ORDER_ID = #{processFlowId}
     </update>
 
+    <!-- 공정흐름 삭제    -->
     <update id="deleteProcessFlow" parameterType="string">
         UPDATE TPR110
         SET DELETE_FLAG = '1'
@@ -119,7 +125,31 @@
     </update>
 
 
+    <!-- 공정흐름 코드 자동채번    -->
+    <select id="selectProcessFlowCode" resultType="string">
+        SELECT
+            'PF'+
+            RIGHT('0000' +
+                CAST(ISNULL(MAX(CAST(RIGHT(WORK_ORDER, 4) AS INT)), 0) +1 AS VARCHAR), 4) NEXT_ID
+        FROM TPR110
+        WHERE WORK_ORDER LIKE 'PF%'
+    </select>
 
+    <!-- 공정흐름 TPR110ID 자동채번    -->
+    <select id="selectTPR110NextId">
+        SELECT
+            'PF' + CONVERT(char(8), GETDATE(), 112)
+                + RIGHT('0000' +
+            CAST(
+            ISNULL(
+            MAX(CAST(RIGHT(TPR110ID, 4) AS INT)), 0
+            ) + 1
+            AS varchar),
+            4
+            ) AS NEXT_ID
+        FROM TPR110
+        WHERE TPR110ID LIKE  'PF' + CONVERT(char(8), GETDATE(), 112) + '%'
+    </select>
 
 
     <select id="selectProcessByFlowId" parameterType="string" resultType="map">

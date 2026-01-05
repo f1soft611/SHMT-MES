@@ -39,7 +39,7 @@ public interface EgovProductionOrderService {
 
 
 	Map<String, Object>selectFlowProcessByPlanId(Map<String, Object> param) throws Exception;
-	Map<String, Object> selectProdOrdersByPlanId(String prodPlanId) throws Exception;
+	Map<String, Object> selectProdOrdersByPlanId(Map<String, Object> param) throws Exception;
 
 
 	// 생산지시 저장
