@@ -1436,7 +1436,10 @@ const ProductionPlan: React.FC = () => {
                                           >
                                             <Box sx={{ flex: 1 }}>
                                               <Chip
-                                                label={plan.itemCode}
+                                                label={
+                                                  plan.itemDisplayCode ||
+                                                  plan.itemCode
+                                                }
                                                 size="small"
                                                 color="primary"
                                                 variant="outlined"
