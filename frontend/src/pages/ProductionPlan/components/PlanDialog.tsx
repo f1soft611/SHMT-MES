@@ -8,6 +8,7 @@ import {
   TextField,
   Stack,
   FormControl,
+  FormHelperText,
   InputLabel,
   Select,
   MenuItem,
@@ -30,6 +31,8 @@ import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
 import { WorkplaceWorker } from '../../../types/workplace';
 import { ProductionPlanData } from '../../../types/productionPlan';
+import { CommonDetailCode } from '../../../types/commonCode';
+import commonCodeService from '../../../services/commonCodeService';
 
 /**
  * 근무구분(COM006) 코드를 한글 표시명으로 변환
@@ -55,8 +58,18 @@ const getShiftDisplayName = (code?: string): string => {
     case 'NIGHT':
       return '야간';
     default:
-      return '';
+      return code; // 알 수 없는 코드는 그대로 표시
   }
+};
+
+const formatShiftLabel = (
+  code?: string,
+  shiftCodes?: CommonDetailCode[]
+): string => {
+  if (!code) return '';
+  const matched = shiftCodes?.find((c) => c.code === code);
+  if (matched) return `${matched.codeNm} (${matched.code})`;
+  return getShiftDisplayName(code);
 };
 
 // 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
@@ -73,7 +86,7 @@ const productionPlanSchema = yup.object({
   equipmentId: yup.string().notRequired(),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
-  shift: yup.string(),
+  shift: yup.string().required('근무구분은 필수입니다.'),
   remark: yup.string().notRequired().default(''),
   orderNo: yup.string(),
   orderSeqno: yup.number(),
@@ -126,6 +139,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   );
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [productionReferences, setProductionReferences] = useState<any[]>([]);
+  const [shiftCodes, setShiftCodes] = useState<CommonDetailCode[]>([]);
 
   // react-hook-form 설정
   const {
@@ -143,6 +157,28 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   useEffect(() => {
     reset(formData);
   }, [formData, reset]);
+
+  // 근무구분(COM006) 공통코드 조회
+  useEffect(() => {
+    const fetchShiftCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM006',
+          'Y'
+        );
+        if (response.resultCode === 200 && response.result?.detailCodeList) {
+          setShiftCodes(response.result.detailCodeList);
+        }
+      } catch (error) {
+        console.error('Failed to fetch shift codes (COM006):', error);
+        setShiftCodes([]);
+      }
+    };
+
+    if (open) {
+      fetchShiftCodes();
+    }
+  }, [open]);
 
   const handleOpenRequestDialog = () => {
     setOpenRequestDialog(true);
@@ -695,9 +731,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           field.onChange(e.target.value);
                           if (selectedWorker) {
                             setValue('workerName', selectedWorker.workerName);
-                            if (selectedWorker.position) {
-                              setValue('shift', selectedWorker.position);
-                            }
+                            // 작업자에 근무구분이 없을 수 있으므로, 일단 자동 설정 후 비어있으면 직접 선택하도록 유지
+                            setValue('shift', selectedWorker.position || '');
                           }
                         }}
                       >
@@ -711,7 +746,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           >
                             {worker.workerName} ({worker.workerCode})
                             {worker.position &&
-                              ` - ${getShiftDisplayName(worker.position)}`}
+                              ` - ${formatShiftLabel(
+                                worker.position,
+                                shiftCodes
+                              )}`}
                           </MenuItem>
                         ))}
                       </Select>
@@ -733,14 +771,35 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   name="shift"
                   control={control}
                   render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="근무구분"
-                      value={getShiftDisplayName(field.value)}
-                      disabled
-                      InputProps={{ readOnly: true }}
-                    />
+                    <FormControl fullWidth required error={!!errors.shift}>
+                      <InputLabel>근무구분</InputLabel>
+                      <Select
+                        {...field}
+                        label="근무구분"
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        <MenuItem value="">
+                          <em>선택(작업자에 없는 경우 직접 지정)</em>
+                        </MenuItem>
+                        {shiftCodes.map((option) => (
+                          <MenuItem key={option.code} value={option.code}>
+                            {`${option.codeNm} (${option.code})`}
+                          </MenuItem>
+                        ))}
+                        {field.value &&
+                          !shiftCodes.some(
+                            (option) => option.code === field.value
+                          ) && (
+                            <MenuItem value={field.value}>
+                              {formatShiftLabel(field.value, shiftCodes)}
+                            </MenuItem>
+                          )}
+                      </Select>
+                      {errors.shift && (
+                        <FormHelperText>{errors.shift.message}</FormHelperText>
+                      )}
+                    </FormControl>
                   )}
                 />
               </Stack>
