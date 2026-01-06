@@ -226,6 +226,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.prodplanDate(planDate)
 						.prodplanSeq((Integer) row.get("planSeq"))
 						.itemCode((String) row.get("itemCode"))
+						.itemDisplayCode((String) row.get("itemDisplayCode"))
 						.itemName((String) row.get("itemName"))
 						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
 						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)

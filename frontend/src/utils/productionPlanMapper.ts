@@ -11,6 +11,7 @@ export interface ServiceProductionPlan {
   planDate?: string;
   planSeq?: number;
   itemCode: string;
+  itemDisplayCode?: string;
   itemName: string;
   plannedQty: number;
   actualQty?: number;
@@ -80,6 +81,7 @@ export const toProductionPlanData = (
     date:
       planDate && planDate.includes('-') ? planDate : normalizeDate(planDate),
     itemCode: plan.itemCode || '',
+    itemDisplayCode: plan.itemDisplayCode || plan.itemCode || '',
     itemName: plan.itemName || '',
     plannedQty: plan.plannedQty ?? 0,
     actualQty: plan.actualQty ?? 0,

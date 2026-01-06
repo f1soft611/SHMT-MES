@@ -371,6 +371,7 @@
 			D.PRODWORK_SEQ,
 			D.PROD_DATE AS PLAN_DATE,
 			D.ITEM_CODE,
+			COALESCE(I.MATERIAL_CODE, D.ITEM_CODE) AS ITEM_DISPLAY_CODE,
 			D.ITEM_NAME,
 			D.PROD_QTY AS PLANNED_QTY,
 			0 AS ACTUAL_Qty,
@@ -429,6 +430,9 @@
 			<if test="endDate != null and endDate != ''">
 				AND D.PROD_DATE &lt;= #{endDate}
 			</if>
+			LEFT JOIN TCO403 I
+			ON I.FACTORY_CODE = D.FACTORY_CODE
+			AND I.MATERIAL_ID = D.ITEM_CODE
 			LEFT JOIN (
 				-- TPR301R에서 거래처 정보 집계
 				SELECT
