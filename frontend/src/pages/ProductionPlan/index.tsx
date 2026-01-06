@@ -41,6 +41,7 @@ import {
   ViewWeek as ViewWeekIcon,
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
+  ViewCompact as ViewCompactIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
 import workplaceService from '../../services/workplaceService';
@@ -207,6 +208,7 @@ const ProductionPlan: React.FC = () => {
     new Set()
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [compactMode, setCompactMode] = useState(true);
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
   const getDefault3DaysFilter = (): boolean[] => {
@@ -804,6 +806,14 @@ const ProductionPlan: React.FC = () => {
       .reduce((sum, p) => sum + p.plannedQty, 0);
   };
 
+  const equipmentColWidth = compactMode ? 200 : 250;
+  const dayColMinWidth = compactMode ? 140 : 180;
+  const cardPadding = compactMode ? 1 : 1.5;
+  const cellPadding = compactMode ? 1 : 1.5;
+  const sectionGap = compactMode ? 1.5 : 2;
+  const headerTitleVariant: 'h4' | 'h5' = compactMode ? 'h5' : 'h4';
+  const headerPad = compactMode ? 2 : 3;
+
   return (
     <Box
       sx={{
@@ -817,8 +827,8 @@ const ProductionPlan: React.FC = () => {
       <Paper
         elevation={0}
         sx={{
-          p: 3,
-          mb: 2,
+          p: headerPad,
+          mb: sectionGap,
           bgcolor: 'white',
           borderBottom: '3px solid',
           borderColor: 'primary.main',
@@ -829,13 +839,13 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 2,
+            mb: compactMode ? 1.5 : 2,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
               sx={{
-                p: 1.5,
+                p: compactMode ? 1 : 1.5,
                 bgcolor: 'primary.main',
                 borderRadius: 2,
                 display: 'flex',
@@ -843,24 +853,46 @@ const ProductionPlan: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <ViewWeekIcon sx={{ fontSize: 32, color: 'white' }} />
+              <ViewWeekIcon
+                sx={{ fontSize: compactMode ? 28 : 32, color: 'white' }}
+              />
             </Box>
-            <Box>
+            <Stack
+              direction="row"
+              spacing={compactMode ? 1 : 1.25}
+              alignItems="center"
+              flexWrap="nowrap"
+              sx={{ whiteSpace: 'nowrap', minWidth: 0 }}
+            >
               <Typography
-                variant="h4"
+                variant={headerTitleVariant}
                 sx={{ color: 'text.primary', fontWeight: 700 }}
               >
                 생산계획 수립
               </Typography>
               <Typography
-                variant="body2"
-                sx={{ color: 'text.secondary', mt: 0.5 }}
+                variant={compactMode ? 'body2' : 'body1'}
+                sx={{ color: 'text.secondary', fontWeight: 500 }}
               >
-                주간 생산 일정을 관리하고 계획하세요
+                · 주간 일정 관리
               </Typography>
-            </Box>
+            </Stack>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title={compactMode ? '기본 모드' : 'Compact 모드'}>
+              <IconButton
+                onClick={() => setCompactMode((prev) => !prev)}
+                sx={{
+                  bgcolor: compactMode ? 'primary.main' : 'grey.100',
+                  color: compactMode ? 'white' : 'text.secondary',
+                  '&:hover': {
+                    bgcolor: compactMode ? 'primary.dark' : 'grey.200',
+                  },
+                }}
+              >
+                <ViewCompactIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="요일 표시 설정">
               <IconButton
                 onClick={() => setShowDayFilter(!showDayFilter)}
@@ -946,8 +978,8 @@ const ProductionPlan: React.FC = () => {
 
       {/* 요일 표시 설정 패널 */}
       <Collapse in={showDayFilter}>
-        <Card sx={{ mb: 2, boxShadow: 2 }}>
-          <CardContent>
+        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
+          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
             <Typography
               variant="h6"
               sx={{
@@ -963,7 +995,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={3}
+              spacing={compactMode ? 2 : 3}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1016,7 +1048,7 @@ const ProductionPlan: React.FC = () => {
             <Typography
               variant="caption"
               color="text.secondary"
-              sx={{ mt: 1.5, display: 'block' }}
+              sx={{ mt: compactMode ? 1 : 1.5, display: 'block' }}
             >
               💡 선택한 요일 설정은 자동으로 저장되며, 다음날이 되면 기본
               3일(어제, 오늘, 내일)로 자동 초기화됩니다.
@@ -1027,8 +1059,8 @@ const ProductionPlan: React.FC = () => {
 
       {/* 검색 영역 */}
       <Collapse in={showSearchPanel}>
-        <Card sx={{ mb: 2, boxShadow: 2 }}>
-          <CardContent>
+        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
+          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
             <Typography
               variant="h6"
               sx={{
@@ -1044,7 +1076,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={2}
+              spacing={compactMode ? 1.5 : 2}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1073,6 +1105,7 @@ const ProductionPlan: React.FC = () => {
               />
               <Button
                 variant="contained"
+                size={compactMode ? 'small' : 'medium'}
                 startIcon={<SearchIcon />}
                 onClick={handleSearch}
               >
@@ -1084,11 +1117,11 @@ const ProductionPlan: React.FC = () => {
       </Collapse>
 
       {/* 주간 네비게이션 */}
-      <Card sx={{ mb: 2, boxShadow: 2 }}>
-        <CardContent>
+      <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
+        <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
           <Stack
             direction="row"
-            spacing={2}
+            spacing={compactMode ? 1.5 : 2}
             alignItems="center"
             justifyContent="center"
           >
@@ -1105,18 +1138,20 @@ const ProductionPlan: React.FC = () => {
               </IconButton>
             </Tooltip>
 
-            <Box sx={{ textAlign: 'center', minWidth: 350 }}>
+            <Box
+              sx={{ textAlign: 'center', minWidth: compactMode ? 260 : 350 }}
+            >
               <Typography
-                variant="h5"
+                variant={compactMode ? 'h6' : 'h5'}
                 sx={{ fontWeight: 700, color: 'primary.main' }}
               >
                 {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
                 {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
               </Typography>
               <Typography
-                variant="body2"
+                variant="caption"
                 color="text.secondary"
-                sx={{ mt: 0.5 }}
+                sx={{ mt: 0.25 }}
               >
                 월요일 - 일요일
               </Typography>
@@ -1149,18 +1184,22 @@ const ProductionPlan: React.FC = () => {
 
       {/* 주간 그리드 */}
       <Paper sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}>
-        <TableContainer sx={{ height: '100%' }}>
-          <Table stickyHeader>
+        <TableContainer sx={{ height: '100%', overflowX: 'auto' }}>
+          <Table stickyHeader size={compactMode ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    width: 250,
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 3,
+                    width: equipmentColWidth,
                     bgcolor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
-                    fontSize: '1rem',
+                    fontSize: compactMode ? '0.95rem' : '1rem',
                     borderRight: '1px solid rgba(224, 224, 224, 1)',
+                    p: compactMode ? 1 : 1.5,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1182,7 +1221,7 @@ const ProductionPlan: React.FC = () => {
                       key={dateStr}
                       align="center"
                       sx={{
-                        minWidth: 180,
+                        minWidth: dayColMinWidth,
                         bgcolor: isToday
                           ? 'warning.main'
                           : isWeekendDay
@@ -1191,39 +1230,50 @@ const ProductionPlan: React.FC = () => {
                         color: 'white',
                         fontWeight: 'bold',
                         borderRight: '1px solid rgba(224, 224, 224, 1)',
+                        p: compactMode ? 1 : 1.25,
                       }}
                     >
-                      <Box>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: compactMode ? 1 : 1.25,
+                          flexWrap: 'nowrap',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
                         <Typography variant="caption" sx={{ opacity: 0.9 }}>
                           {formatDate(day, 'ddd')}요일
                         </Typography>
                         <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 700, my: 0.5 }}
+                          variant={compactMode ? 'subtitle1' : 'h6'}
+                          sx={{ fontWeight: 700, lineHeight: 1.1 }}
                         >
                           {formatDate(day, 'MM/DD')}
                         </Typography>
                         {totalPlans > 0 && (
-                          <Box
+                          <Chip
+                            label={`${totalPlans}건`}
+                            size="small"
+                            color="error"
                             sx={{
-                              display: 'flex',
-                              justifyContent: 'center',
-                              gap: 1,
-                              mt: 1,
+                              bgcolor: 'rgba(255,255,255,0.9)',
+                              color: 'error.main',
+                              fontWeight: 600,
                             }}
-                          >
-                            <Badge badgeContent={totalPlans} color="error">
-                              <Chip
-                                label={`${(totalQty ?? 0).toLocaleString()}`}
-                                size="small"
-                                sx={{
-                                  bgcolor: 'rgba(255,255,255,0.9)',
-                                  color: 'primary.main',
-                                  fontWeight: 'bold',
-                                }}
-                              />
-                            </Badge>
-                          </Box>
+                          />
+                        )}
+                        {totalPlans > 0 && (
+                          <Chip
+                            label={`${(totalQty ?? 0).toLocaleString()} 개`}
+                            size="small"
+                            sx={{
+                              bgcolor: 'rgba(255,255,255,0.9)',
+                              color: 'primary.main',
+                              fontWeight: 'bold',
+                            }}
+                          />
                         )}
                       </Box>
                     </TableCell>
@@ -1265,10 +1315,14 @@ const ProductionPlan: React.FC = () => {
                       >
                         <TableCell
                           sx={{
+                            position: 'sticky',
+                            left: 0,
+                            zIndex: 2,
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             borderRight: '1px solid',
                             borderColor: 'divider',
+                            bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
                           }}
                           onClick={() => toggleEquipment(equipment.equipCd)}
                         >
@@ -1323,7 +1377,7 @@ const ProductionPlan: React.FC = () => {
                                 backgroundColor: isWeekendDay
                                   ? 'grey.100'
                                   : 'white',
-                                p: 1.5,
+                                p: cellPadding,
                                 borderRight: '1px solid',
                                 borderColor: 'divider',
                               }}
@@ -1345,12 +1399,12 @@ const ProductionPlan: React.FC = () => {
                                       )
                                     }
                                     variant="contained"
-                                    sx={{ mb: 1.5 }}
+                                    sx={{ mb: compactMode ? 1 : 1.5 }}
                                   >
                                     계획 추가
                                   </Button>
 
-                                  <Stack spacing={1.5}>
+                                  <Stack spacing={compactMode ? 1 : 1.5}>
                                     {dayPlans.map((plan) => (
                                       <Card
                                         key={plan.id}
@@ -1369,8 +1423,8 @@ const ProductionPlan: React.FC = () => {
                                       >
                                         <CardContent
                                           sx={{
-                                            p: 1.5,
-                                            '&:last-child': { pb: 1.5 },
+                                            p: cardPadding,
+                                            '&:last-child': { pb: cardPadding },
                                           }}
                                         >
                                           <Box
@@ -1393,7 +1447,7 @@ const ProductionPlan: React.FC = () => {
                                                 sx={{
                                                   fontWeight: 600,
                                                   color: 'text.primary',
-                                                  my: 0.5,
+                                                  my: compactMode ? 0.25 : 0.5,
                                                 }}
                                               >
                                                 {plan.itemName}
@@ -1403,7 +1457,7 @@ const ProductionPlan: React.FC = () => {
                                                   display: 'flex',
                                                   alignItems: 'center',
                                                   gap: 1,
-                                                  mt: 1,
+                                                  mt: compactMode ? 0.5 : 1,
                                                 }}
                                               >
                                                 <Chip
@@ -1430,7 +1484,9 @@ const ProductionPlan: React.FC = () => {
                                                   sx={{
                                                     display: 'flex',
                                                     gap: 1,
-                                                    mt: 0.5,
+                                                    mt: compactMode
+                                                      ? 0.25
+                                                      : 0.5,
                                                     flexWrap: 'wrap',
                                                   }}
                                                 >
