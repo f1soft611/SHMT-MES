@@ -72,8 +72,10 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 	@Transactional
 	@Override
 	public void createProcessFlow(ProcessFlow pf) throws Exception {
-		String processId = egovProcessFlowIdGnrService.getNextStringId();
+		String processId = processFlowDAO.selectProcessFlowCode();
+		String processCode = processFlowDAO.selectProcessFlowCode();
 		pf.setProcessFlowId(processId);
+		pf.setProcessFlowCode(processCode);
 		processFlowDAO.createProcessFlow(pf);
 	}
 

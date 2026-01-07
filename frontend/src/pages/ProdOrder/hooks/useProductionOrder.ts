@@ -199,7 +199,7 @@ export function useProductionOrder() {
 
         paginationModel: prodPlan.paginationModel,
         handlePaginationChange: prodPlan.handlePaginationChange,
-        totalCount: prodPlan.totalCount,
+        prodplanResultCnt: prodPlan.resultCnt,
 
         open: dialog.open,
         openDialog: dialog.openDialog,

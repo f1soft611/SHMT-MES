@@ -58,7 +58,7 @@
         LEFT JOIN TPR301R X --수주정보
         ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
         AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
-        AND X.ORDER_HISTNO  = 1
+        --AND X.ORDER_HISTNO  = 1
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
@@ -105,7 +105,7 @@
         LEFT JOIN TPR301R X --수주정보
         ON A1.PRODPLAN_DATE = X.PRODPLAN_DATE
         AND A1.PRODPLAN_SEQ = X.PRODPLAN_SEQ
-        AND X.ORDER_HISTNO  = 1
+        --AND X.ORDER_HISTNO  = 1
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
@@ -189,7 +189,7 @@
             #{PRODWORK_SEQ},
             #{WORK_SEQ},
             #{PROD_SEQ},
-            #{ITEM_CODE_ID},
+            #{ITEM_CODE},
             #{WORK_CODE},
             #{PROD_STIME},
             #{PROD_ETIME},

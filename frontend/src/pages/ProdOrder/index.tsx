@@ -35,13 +35,14 @@ const ProdOrder: React.FC = () => {
                 onChange={prodOrder.handleSearchChange}
                 onSearch={prodOrder.handleSearch} />
 
+            {/*생산계획 목록*/}
             <ProdPlanList
                 rows={prodOrder.planRows}
+                totalCount={prodOrder.prodplanResultCnt}
                 loading={prodOrder.planLoading}
                 onRowClick={prodOrder.handlePlanSelect}
 
                 paginationModel={prodOrder.paginationModel}
-                totalCount={prodOrder.totalCount}
                 onPaginationChange={prodOrder.handlePaginationChange} />
 
 

@@ -108,6 +108,6 @@ export function useProductionOrder() {
 
         paginationModel: prodPlan.paginationModel,
         handlePaginationChange: prodPlan.handlePaginationChange,
-        totalCount: prodPlan.totalCount
+        totalCount: prodPlan.planResultCnt
     };
 }
