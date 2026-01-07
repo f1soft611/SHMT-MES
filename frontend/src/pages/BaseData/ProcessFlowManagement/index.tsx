@@ -94,6 +94,7 @@ const ProcessFlowManagement: React.FC = () => {
                 </Grid>
             </Grid>
 
+            {/*메인 공정흐름 등록 창*/}
             <ProcessFlowDialog
                 open={pf.openDialog}
                 dialogMode={pf.dialogMode}

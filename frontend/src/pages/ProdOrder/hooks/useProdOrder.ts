@@ -11,6 +11,7 @@ interface ProdOrderRow {
 export function useProdOrder(selectedPlan: any | null) {
 
     const [rows, setRows] = useState<ProdOrderRow[]>([]);
+    const [resultCnt, setResultCnt] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -26,6 +27,7 @@ export function useProdOrder(selectedPlan: any | null) {
                     ? await productionOrderService.getFlowProcessByPlanId(selectedPlan)
                     : await productionOrderService.getProdOrdersByPlanId(selectedPlan);
             setRows(response.result?.resultList ?? []);
+            setResultCnt(response.result?.resultCnt ?? 0);
         } catch (err: any) {
             setError(err.message || "생산지시 조회 실패");
             setRows([]);
@@ -41,6 +43,7 @@ export function useProdOrder(selectedPlan: any | null) {
 
     return {
         orderRows: rows,
+        orderResultCnt: resultCnt,
         loading,
         error,
         fetchProdOrders

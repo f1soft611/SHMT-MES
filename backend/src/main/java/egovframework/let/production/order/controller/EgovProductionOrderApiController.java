@@ -5,8 +5,6 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
-import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
-import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
@@ -19,11 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +115,7 @@ public class EgovProductionOrderApiController {
     ) throws Exception {
 
         Map<String, Object> resultMap = productionOrderService.selectProdPlans(params);
+        resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }
@@ -126,23 +123,18 @@ public class EgovProductionOrderApiController {
     /**
      * 생산지시관리에서 폼목별 공정 흐름 조회
      */
-
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "데이터 없음")
     })
     @GetMapping("/process")
     public ResultVO getFlowProcessByItem(
-            @RequestParam(required = false) String prodPlanId,
+            @RequestParam Map<String, Object> params,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        List<Map<String, Object>> prodPlanList = productionOrderService.selectFlowProcessByPlanId(prodPlanId);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("resultList", prodPlanList);
+        Map<String, Object> resultMap = productionOrderService.selectFlowProcessByPlanId(params);
         resultMap.put("user", user);
-
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }
@@ -157,16 +149,12 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/orders")
     public ResultVO getProdOrdersByPlanId(
-            @RequestParam(required = false) String prodPlanId,
+            @RequestParam Map<String, Object> params,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        List<Map<String, Object>> prodPlanList = productionOrderService.selectProdOrdersByPlanId(prodPlanId);
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("resultList", prodPlanList);
+        Map<String, Object> resultMap = productionOrderService.selectProdOrdersByPlanId(params);
         resultMap.put("user", user);
-
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }

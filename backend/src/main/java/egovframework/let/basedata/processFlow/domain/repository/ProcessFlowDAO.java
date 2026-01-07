@@ -32,6 +32,15 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         insert("ProcessFlowDAO.insertProcessFlow", pf);
     }
 
+    // WF0000 코드 자동채번
+    public String selectProcessFlowCode(){
+        return selectOne("ProcessFlowDAO.selectProcessFlowCode");
+    }
+
+    // WF202512120001 ID 자동채번
+    public String selectTPR110NextId(){
+        return selectOne("ProcessFlowDAO.selectTPR110NextId");
+    }
 
     public void updateProcessFlow(ProcessFlow processFlow) {
         update("ProcessFlowDAO.updateProcessFlow", processFlow);

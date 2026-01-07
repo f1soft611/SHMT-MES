@@ -6,7 +6,7 @@ export interface ProcessFlow {
     workplaceCode: string; // 작업장
     workplaceName?: string | null;
     processFlowId?: string | null;
-    processFlowCode: string;
+    processFlowCode?: string | null;
     processFlowName: string;
 }
 

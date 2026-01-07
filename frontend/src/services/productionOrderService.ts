@@ -22,22 +22,13 @@ export const productionOrderService = {
 
   // 생산계획 품목별 공정 조회
   getFlowProcessByPlanId: async(params?: any) => {
-    const response = await apiClient.get('/api/production-orders/process', {
-      params: {
-        prodPlanId: params.PRODPLAN_ID
-      },
-    });
+    const response = await apiClient.get('/api/production-orders/process', { params });
     return response.data;
   },
 
   // 생산계획별 생산지시 조회
   getProdOrdersByPlanId: async (params?: any) => {
-    const response = await apiClient.get('/api/production-orders/orders', {
-      // params: params,   // ← 검색 조건을 쿼리 파라미터로 전달
-      params: {
-        prodPlanId: params.PRODPLAN_ID
-      },
-    });
+    const response = await apiClient.get('/api/production-orders/orders', { params });
     return response.data;
   },
 

@@ -70,9 +70,8 @@ export default function ProcessFlowDialog({
                                     label="공정흐름 코드"
                                     fullWidth
                                     size="small"
-                                    error={!!errors.processFlowCode}
-                                    helperText={errors.processFlowCode?.message}
-                                    disabled={dialogMode === "edit"}
+                                    value={field.value || "자동 생성"}
+                                    disabled
                                 />
                             )}
                         />
@@ -106,7 +105,12 @@ export default function ProcessFlowDialog({
                 >
                     저장
                 </Button>
-                <Button onClick={onClose}>취소</Button>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    color="error"
+                >
+                    취소</Button>
             </DialogActions>
         </Dialog>
     );

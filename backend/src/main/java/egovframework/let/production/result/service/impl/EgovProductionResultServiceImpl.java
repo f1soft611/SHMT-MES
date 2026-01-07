@@ -158,6 +158,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			workerMap.put("PRODWORK_SEQ", resultMap.get("PRODWORK_SEQ"));
 			workerMap.put("WORK_SEQ", resultMap.get("WORK_SEQ"));
 			workerMap.put("PROD_SEQ", resultMap.get("PROD_SEQ"));
+			workerMap.put("ITEM_CODE", resultMap.get("PROD_CODE_ID"));
 
 			String nextWorkerId = productionResultDAO.selectProdResultWorkerNextId();
 			workerMap.put("TPR601WID", nextWorkerId);
