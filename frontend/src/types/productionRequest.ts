@@ -79,6 +79,7 @@ export interface ProductionRequestSearchParams {
   searchWrd?: string; // 검색어
   dateFrom?: string;
   dateTo?: string;
+  workplaceCode?: string; // 작업장 코드
   pageIndex?: number;
   pageUnit?: number;
 }

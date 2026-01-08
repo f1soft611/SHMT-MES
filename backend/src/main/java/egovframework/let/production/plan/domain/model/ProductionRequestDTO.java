@@ -29,6 +29,7 @@ public class ProductionRequestDTO {
     private String opmanCode;           // OPMAN_CODE: varchar(10)
     private String optime;              // OPTIME: char(12)
     private String itemCode;            // ITEM_CODE: varchar(15) (FK)
+    private String itemNo;              // ITEM_NO: 품목번호
     
     // 조인하여 가져올 추가 정보
     private String itemName;            // 품목명 (ITEM_NAME from TSA101)

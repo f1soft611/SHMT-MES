@@ -40,6 +40,7 @@ interface ProductionRequestDialogProps {
   onClose: () => void;
   onSelect: (requests: ProductionRequest[]) => void;
   multiSelect?: boolean;
+  workplaceCode?: string;
 }
 
 const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
@@ -47,6 +48,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   onClose,
   onSelect,
   multiSelect = true,
+  workplaceCode,
 }) => {
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +65,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     searchWrd: '',
     dateFrom: '',
     dateTo: '',
+    workplaceCode: workplaceCode || '',
   });
 
   // 입력 필드용 상태 (화면 입력용)
@@ -71,12 +74,13 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     searchWrd: '',
     dateFrom: '',
     dateTo: '',
+    workplaceCode: workplaceCode || '',
   });
 
   // 페이지네이션
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 100,
   });
   const [totalCount, setTotalCount] = useState(0);
 
@@ -90,9 +94,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         searchParams
       );
 
+      console.log('Production Request API Response:', response);
+
       if (response.resultCode === 200 && response.result?.resultList) {
         setRequests(response.result.resultList);
-        setTotalCount(response.result.paginationInfo.totalRecordCount);
+        const totalCount =
+          response.result.paginationInfo?.totalRecordCount || 0;
+        console.log('Total Count:', totalCount);
+        setTotalCount(totalCount);
       } else {
         setRequests([]);
         setTotalCount(0);
@@ -111,6 +120,20 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       loadProductionRequests();
     }
   }, [open, loadProductionRequests]);
+
+  // workplaceCode 변경 시 검색 조건 업데이트
+  useEffect(() => {
+    if (workplaceCode) {
+      setSearchParams((prev) => ({
+        ...prev,
+        workplaceCode: workplaceCode,
+      }));
+      setInputValues((prev) => ({
+        ...prev,
+        workplaceCode: workplaceCode,
+      }));
+    }
+  }, [workplaceCode]);
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
@@ -198,14 +221,16 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       searchWrd: '',
       dateFrom: '',
       dateTo: '',
+      workplaceCode: workplaceCode || '',
     });
     setSearchParams({
       searchCnd: '1',
       searchWrd: '',
       dateFrom: '',
       dateTo: '',
+      workplaceCode: workplaceCode || '',
     });
-    setPaginationModel({ page: 0, pageSize: 10 });
+    setPaginationModel({ page: 0, pageSize: 100 });
   };
 
   const formatDate = (dateStr?: string) => {
@@ -257,6 +282,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           variant="outlined"
         />
       ),
+    },
+    {
+      field: 'itemNo',
+      headerName: '품목번호',
+      width: 130,
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (value) => value || '-',
     },
     {
       field: 'itemFlag',
@@ -483,7 +516,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             }
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25, 50]}
+            pageSizeOptions={[5, 10, 25, 50, 100]}
             rowCount={totalCount}
             paginationMode="server"
             loading={loading}

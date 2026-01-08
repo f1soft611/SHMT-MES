@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Button,
@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   Tooltip,
-  Badge,
   Checkbox,
   FormControlLabel,
   FormGroup,
@@ -42,6 +41,8 @@ import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
   ViewCompact as ViewCompactIcon,
+  CameraAlt as CameraAltIcon,
+  LocationOn as LocationOnIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
 import workplaceService from '../../services/workplaceService';
@@ -58,6 +59,7 @@ import {
 import PlanDialog from './components/PlanDialog';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
+import html2canvas from 'html2canvas';
 
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
@@ -209,6 +211,7 @@ const ProductionPlan: React.FC = () => {
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
+  const weeklyGridRef = useRef<HTMLDivElement>(null);
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
   const getDefault3DaysFilter = (): boolean[] => {
@@ -502,6 +505,35 @@ const ProductionPlan: React.FC = () => {
     setVisibleDays(default3Days);
     saveFilterToStorage(default3Days);
     setCurrentWeekStart(getMonday(new Date()));
+  };
+
+  const handleCapture = async () => {
+    if (!weeklyGridRef.current) return;
+
+    try {
+      const canvas = await html2canvas(weeklyGridRef.current, {
+        logging: false,
+      } as any);
+
+      // 캡쳐된 이미지를 다운로드
+      const link = document.createElement('a');
+      const weekStart = formatDate(currentWeekStart, 'YYYY-MM-DD');
+      const weekEnd = formatDate(addDays(currentWeekStart, 6), 'YYYY-MM-DD');
+      link.download = `생산계획_${weekStart}~${weekEnd}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      showToast({
+        message: '주간 달력이 캡쳐되었습니다.',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('캡쳐 실패:', error);
+      showToast({
+        message: '캡쳐에 실패했습니다.',
+        severity: 'error',
+      });
+    }
   };
 
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
@@ -808,11 +840,11 @@ const ProductionPlan: React.FC = () => {
 
   const equipmentColWidth = compactMode ? 200 : 250;
   const dayColMinWidth = compactMode ? 140 : 180;
-  const cardPadding = compactMode ? 1 : 1.5;
-  const cellPadding = compactMode ? 1 : 1.5;
-  const sectionGap = compactMode ? 1.5 : 2;
+  const cardPadding = compactMode ? 0.75 : 1.5;
+  const cellPadding = compactMode ? 0.75 : 1.5;
+  const sectionGap = compactMode ? 1 : 2;
   const headerTitleVariant: 'h4' | 'h5' = compactMode ? 'h5' : 'h4';
-  const headerPad = compactMode ? 2 : 3;
+  const headerPad = compactMode ? 1.5 : 2.5;
 
   return (
     <Box
@@ -839,10 +871,16 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: compactMode ? 1.5 : 2,
+            mb: compactMode ? 1 : 1.5,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: compactMode ? 1.5 : 2,
+            }}
+          >
             <Box
               sx={{
                 p: compactMode ? 1 : 1.5,
@@ -878,7 +916,80 @@ const ProductionPlan: React.FC = () => {
               </Typography>
             </Stack>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel>작업장 선택 *</InputLabel>
+              <Select
+                value={selectedWorkplace}
+                onChange={(e) => setSelectedWorkplace(e.target.value)}
+                label="작업장 선택 *"
+                required
+                sx={{
+                  borderRadius: 2,
+                  fontWeight: 600,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease',
+                    backgroundColor: selectedWorkplace
+                      ? 'rgba(25, 103, 210, 0.05)'
+                      : 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 103, 210, 0.08)',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                        borderWidth: '2px',
+                      },
+                    },
+                    '&.Mui-focused': {
+                      backgroundColor: 'white',
+                      boxShadow: '0 0 0 3px rgba(25, 103, 210, 0.1)',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main',
+                        borderWidth: '2px',
+                      },
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    fontWeight: 600,
+                    color: selectedWorkplace
+                      ? 'primary.main'
+                      : 'text.secondary',
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>작업장을 선택하세요</em>
+                </MenuItem>
+                {workplaces.map((workplace) => (
+                  <MenuItem
+                    key={workplace.workplaceCode}
+                    value={workplace.workplaceCode}
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'rgba(25, 103, 210, 0.1)',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: 'primary.dark',
+                        },
+                      },
+                    }}
+                  >
+                    <LocationOnIcon
+                      sx={{
+                        mr: 1,
+                        fontSize: '1rem',
+                        color: 'inherit',
+                      }}
+                    />
+                    {workplace.workplaceName} ({workplace.workplaceCode})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Tooltip title={compactMode ? '기본 모드' : 'Compact 모드'}>
               <IconButton
                 onClick={() => setCompactMode((prev) => !prev)}
@@ -940,46 +1051,12 @@ const ProductionPlan: React.FC = () => {
             </Tooltip>
           </Box>
         </Box>
-
-        {/* 작업장 선택 영역 */}
-        <Box sx={{ mt: 2 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>작업장 선택 *</InputLabel>
-            <Select
-              value={selectedWorkplace}
-              onChange={(e) => setSelectedWorkplace(e.target.value)}
-              label="작업장 선택 *"
-              required
-            >
-              <MenuItem value="">
-                <em>작업장을 선택하세요</em>
-              </MenuItem>
-              {workplaces.map((workplace) => (
-                <MenuItem
-                  key={workplace.workplaceCode}
-                  value={workplace.workplaceCode}
-                >
-                  {workplace.workplaceName} ({workplace.workplaceCode})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {!selectedWorkplace && (
-            <Typography
-              variant="caption"
-              color="error"
-              sx={{ mt: 0.5, display: 'block' }}
-            >
-              생산계획을 등록하려면 먼저 작업장을 선택해주세요.
-            </Typography>
-          )}
-        </Box>
       </Paper>
 
       {/* 요일 표시 설정 패널 */}
       <Collapse in={showDayFilter}>
-        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+        <Card sx={{ mb: 1, boxShadow: 1 }}>
+          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
             <Typography
               variant="h6"
               sx={{
@@ -995,7 +1072,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={compactMode ? 2 : 3}
+              spacing={compactMode ? 1.5 : 2}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1016,34 +1093,6 @@ const ProductionPlan: React.FC = () => {
                   )
                 )}
               </FormGroup>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    const default3Days = getDefault3DaysFilter();
-                    setVisibleDays(default3Days);
-                    saveFilterToStorage(default3Days);
-                  }}
-                  color="info"
-                >
-                  기본 3일
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(true)}
-                >
-                  전체 표시
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(false)}
-                >
-                  전체 숨김
-                </Button>
-              </Box>
             </Stack>
             <Typography
               variant="caption"
@@ -1059,8 +1108,8 @@ const ProductionPlan: React.FC = () => {
 
       {/* 검색 영역 */}
       <Collapse in={showSearchPanel}>
-        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+        <Card sx={{ mb: 1, boxShadow: 1 }}>
+          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
             <Typography
               variant="h6"
               sx={{
@@ -1076,7 +1125,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={compactMode ? 1.5 : 2}
+              spacing={compactMode ? 1 : 1.5}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1117,11 +1166,11 @@ const ProductionPlan: React.FC = () => {
       </Collapse>
 
       {/* 주간 네비게이션 */}
-      <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-        <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+      <Card sx={{ mb: 1, boxShadow: 1 }}>
+        <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
           <Stack
             direction="row"
-            spacing={compactMode ? 1.5 : 2}
+            spacing={compactMode ? 1 : 1.5}
             alignItems="center"
             justifyContent="center"
           >
@@ -1178,12 +1227,24 @@ const ProductionPlan: React.FC = () => {
             >
               오늘
             </Button>
+
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<CameraAltIcon />}
+              onClick={handleCapture}
+            >
+              캡쳐
+            </Button>
           </Stack>
         </CardContent>
       </Card>
 
       {/* 주간 그리드 */}
-      <Paper sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}>
+      <Paper
+        ref={weeklyGridRef}
+        sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}
+      >
         <TableContainer sx={{ height: '100%', overflowX: 'auto' }}>
           <Table stickyHeader size={compactMode ? 'small' : 'medium'}>
             <TableHead>
@@ -1197,9 +1258,9 @@ const ProductionPlan: React.FC = () => {
                     bgcolor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
-                    fontSize: compactMode ? '0.95rem' : '1rem',
+                    fontSize: compactMode ? '0.85rem' : '0.95rem',
                     borderRight: '1px solid rgba(224, 224, 224, 1)',
-                    p: compactMode ? 1 : 1.5,
+                    p: compactMode ? 0.75 : 1,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1230,7 +1291,8 @@ const ProductionPlan: React.FC = () => {
                         color: 'white',
                         fontWeight: 'bold',
                         borderRight: '1px solid rgba(224, 224, 224, 1)',
-                        p: compactMode ? 1 : 1.25,
+                        p: compactMode ? 0.75 : 1,
+                        fontSize: compactMode ? '0.85rem' : '0.95rem',
                       }}
                     >
                       <Box
@@ -1347,14 +1409,18 @@ const ProductionPlan: React.FC = () => {
                             <Box>
                               <Typography
                                 variant="body1"
-                                sx={{ fontWeight: 700, color: 'text.primary' }}
+                                sx={{
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  lineHeight: 1.2,
+                                }}
                               >
                                 {equipment.equipmentName}
                               </Typography>
                               <Chip
                                 label={equipment.equipCd}
                                 size="small"
-                                sx={{ mt: 0.5 }}
+                                sx={{ mt: 0.25 }}
                               />
                             </Box>
                           </Box>
@@ -1387,7 +1453,7 @@ const ProductionPlan: React.FC = () => {
                                 timeout="auto"
                                 unmountOnExit
                               >
-                                <Box sx={{ minHeight: 100 }}>
+                                <Box sx={{ minHeight: compactMode ? 60 : 100 }}>
                                   <Button
                                     fullWidth
                                     size="small"
@@ -1399,12 +1465,12 @@ const ProductionPlan: React.FC = () => {
                                       )
                                     }
                                     variant="contained"
-                                    sx={{ mb: compactMode ? 1 : 1.5 }}
+                                    sx={{ mb: compactMode ? 0.75 : 1 }}
                                   >
                                     계획 추가
                                   </Button>
 
-                                  <Stack spacing={compactMode ? 1 : 1.5}>
+                                  <Stack spacing={compactMode ? 0.75 : 1}>
                                     {dayPlans.map((plan) => (
                                       <Card
                                         key={plan.id}
@@ -1435,41 +1501,70 @@ const ProductionPlan: React.FC = () => {
                                             }}
                                           >
                                             <Box sx={{ flex: 1 }}>
-                                              <Chip
-                                                label={
-                                                  plan.itemDisplayCode ||
-                                                  plan.itemCode
-                                                }
-                                                size="small"
-                                                color="primary"
-                                                variant="outlined"
-                                                sx={{ mb: 0.5 }}
-                                              />
-                                              <Typography
-                                                variant="body2"
-                                                sx={{
-                                                  fontWeight: 600,
-                                                  color: 'text.primary',
-                                                  my: compactMode ? 0.25 : 0.5,
-                                                }}
-                                              >
-                                                {plan.itemName}
-                                              </Typography>
+                                              {/* 1줄: 품목코드, 품목명 */}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
                                                   alignItems: 'center',
-                                                  gap: 1,
-                                                  mt: compactMode ? 0.5 : 1,
+                                                  gap: 0.5,
+                                                  flexWrap: 'wrap',
+                                                }}
+                                              >
+                                                <Chip
+                                                  label={
+                                                    plan.itemDisplayCode ||
+                                                    plan.itemCode
+                                                  }
+                                                  size="small"
+                                                  color="primary"
+                                                  variant="outlined"
+                                                />
+                                                <Typography
+                                                  variant="body2"
+                                                  sx={{
+                                                    fontWeight: 600,
+                                                    fontSize: compactMode
+                                                      ? '0. nine rem'
+                                                      : '1rem',
+                                                    color: 'text.primary',
+                                                  }}
+                                                >
+                                                  {plan.itemName}
+                                                </Typography>
+                                              </Box>
+
+                                              {/* 2줄: 수량, 담당자, 근무구분, 거래처 */}
+                                              <Box
+                                                sx={{
+                                                  display: 'flex',
+                                                  gap: 0.5,
+                                                  mt: 0.25,
+                                                  flexWrap: 'wrap',
+                                                  alignItems: 'center',
                                                 }}
                                               >
                                                 <Chip
                                                   label={`${(
                                                     plan.plannedQty ?? 0
-                                                  ).toLocaleString()} 개`}
+                                                  ).toLocaleString()}`}
                                                   size="small"
-                                                  color="success"
+                                                  color="error"
+                                                  sx={{
+                                                    fontWeight: 600,
+                                                  }}
                                                 />
+                                                {plan.workerName && (
+                                                  <Chip
+                                                    label={plan.workerName}
+                                                    size="small"
+                                                    variant="outlined"
+                                                    sx={{
+                                                      borderColor:
+                                                        'primary.main',
+                                                      color: 'primary.main',
+                                                    }}
+                                                  />
+                                                )}
                                                 <Chip
                                                   label={getShiftLabel(
                                                     plan.shift
@@ -1479,80 +1574,51 @@ const ProductionPlan: React.FC = () => {
                                                     plan.shift
                                                   )}
                                                 />
-                                              </Box>
-                                              {/* 담당자 및 거래처 정보 표시 (같은 줄) */}
-                                              {(plan.workerName ||
-                                                plan.customerName) && (
-                                                <Box
-                                                  sx={{
-                                                    display: 'flex',
-                                                    gap: 1,
-                                                    mt: compactMode
-                                                      ? 0.25
-                                                      : 0.5,
-                                                    flexWrap: 'wrap',
-                                                  }}
-                                                >
-                                                  {plan.workerName && (
-                                                    <Chip
-                                                      label={`담당: ${plan.workerName}`}
-                                                      size="small"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        borderColor:
-                                                          'primary.main',
-                                                        color: 'primary.main',
-                                                      }}
-                                                    />
-                                                  )}
-                                                  {plan.customerName && (
-                                                    <Chip
-                                                      label={
+                                                {plan.customerName && (
+                                                  <Chip
+                                                    label={
+                                                      plan.additionalCustomers &&
+                                                      plan.additionalCustomers
+                                                        .length > 0
+                                                        ? `${plan.customerName} 외${plan.additionalCustomers.length}`
+                                                        : plan.customerName
+                                                    }
+                                                    size="small"
+                                                    color="secondary"
+                                                    variant="outlined"
+                                                    sx={{
+                                                      cursor: plan
+                                                        .additionalCustomers
+                                                        ?.length
+                                                        ? 'pointer'
+                                                        : 'default',
+                                                    }}
+                                                    onClick={() => {
+                                                      if (
                                                         plan.additionalCustomers &&
                                                         plan.additionalCustomers
                                                           .length > 0
-                                                          ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
-                                                          : plan.customerName
+                                                      ) {
+                                                        alert(
+                                                          `거래처 목록:\n- ${
+                                                            plan.customerName
+                                                          }\n- ${plan.additionalCustomers.join(
+                                                            '\n- '
+                                                          )}`
+                                                        );
                                                       }
-                                                      size="small"
-                                                      color="secondary"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        cursor: plan
-                                                          .additionalCustomers
-                                                          ?.length
-                                                          ? 'pointer'
-                                                          : 'default',
-                                                      }}
-                                                      onClick={() => {
-                                                        if (
-                                                          plan.additionalCustomers &&
-                                                          plan
-                                                            .additionalCustomers
-                                                            .length > 0
-                                                        ) {
-                                                          alert(
-                                                            `거래처 목록:\n- ${
-                                                              plan.customerName
-                                                            }\n- ${plan.additionalCustomers.join(
-                                                              '\n- '
-                                                            )}`
-                                                          );
-                                                        }
-                                                      }}
-                                                    />
-                                                  )}
-                                                </Box>
-                                              )}
-                                              {plan.orderNo && (
-                                                <Chip
-                                                  label={`의뢰: ${plan.orderNo}`}
-                                                  size="small"
-                                                  sx={{ mt: 0.5 }}
-                                                  color="info"
-                                                  variant="outlined"
-                                                />
-                                              )}
+                                                    }}
+                                                  />
+                                                )}
+                                                {plan.orderNo && (
+                                                  <Chip
+                                                    label={`의뢰:${plan.orderNo}`}
+                                                    size="small"
+                                                    color="info"
+                                                    variant="outlined"
+                                                  />
+                                                )}
+                                              </Box>
                                             </Box>
                                             <Box
                                               sx={{
@@ -1632,6 +1698,7 @@ const ProductionPlan: React.FC = () => {
         formData={formData}
         equipments={equipments}
         workplaceWorkers={workplaceWorkers}
+        workplaceCode={selectedWorkplace}
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}

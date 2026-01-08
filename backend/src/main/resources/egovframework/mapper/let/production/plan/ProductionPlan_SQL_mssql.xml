@@ -532,6 +532,20 @@
 			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1 ON CODE1.CODE_ID = 'COM007' AND CODE1.CODE = T.UNIT_CODE
 		WHERE 1=1
 		AND T.FACTORY_CODE = #{factoryCode}
+		<!-- 작업장 필터 (workplaceCode가 지정된 경우 - 해당 작업장의 공정흐름에 포함된 제품만 조회) -->
+		<if test="workplaceCode != null and workplaceCode != ''">
+			AND EXISTS (
+				SELECT 1
+				FROM TPR110 PF
+				JOIN TPR112 PFI
+				  ON PF.FACTORY_CODE = PFI.FACTORY_CODE
+				 AND PF.WORK_ORDER_ID = PFI.WORK_ORDER_ID
+				WHERE PF.FACTORY_CODE = T.FACTORY_CODE
+				  AND PF.WORKCENTER_CODE = #{workplaceCode}
+				  AND PFI.PROD_CODE_ID = T.ITEM_CODE
+				  AND ISNULL(PF.DELETE_FLAG, '') != '1'
+			)
+		</if>
 		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
 		AND T.ORDER_QTY > ISNULL(
 			(
@@ -583,6 +597,20 @@
 		WHERE 1=1
 		<if test="factoryCode != null and factoryCode != ''">
 			AND T.FACTORY_CODE = #{factoryCode}
+		</if>
+		<!-- 작업장 필터 (workplaceCode가 지정된 경우 - 해당 작업장의 공정흐름에 포함된 제품만 조회) -->
+		<if test="workplaceCode != null and workplaceCode != ''">
+			AND EXISTS (
+				SELECT 1
+				FROM TPR110 PF
+				JOIN TPR112 PFI
+				  ON PF.FACTORY_CODE = PFI.FACTORY_CODE
+				 AND PF.WORK_ORDER_ID = PFI.WORK_ORDER_ID
+				WHERE PF.FACTORY_CODE = T.FACTORY_CODE
+				  AND PF.WORKCENTER_CODE = #{workplaceCode}
+				  AND PFI.PROD_CODE = T.ITEM_CODE
+				  AND ISNULL(PF.DELETE_FLAG, '') != '1'
+			)
 		</if>
 		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
 		AND T.ORDER_QTY > ISNULL(
