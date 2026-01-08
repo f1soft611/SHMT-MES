@@ -117,6 +117,7 @@ interface PlanDialogProps {
   formData: ProductionPlanData;
   equipments: Equipment[];
   workplaceWorkers?: WorkplaceWorker[];
+  workplaceCode?: string;
   onSave: (data: ProductionPlanData, references?: any[]) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
@@ -129,6 +130,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   selectedDate,
   formData,
   workplaceWorkers = [],
+  workplaceCode,
   onSave,
   onBatchChange,
 }) => {
@@ -840,6 +842,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         open={openRequestDialog}
         onClose={handleCloseRequestDialog}
         onSelect={handleSelectRequest}
+        workplaceCode={workplaceCode}
       />
 
       {/* 품목 선택 다이얼로그 */}

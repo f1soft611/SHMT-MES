@@ -50,6 +50,8 @@ class ProductionRequestService {
       if (searchParams.orderNo) params.orderNo = searchParams.orderNo;
       if (searchParams.itemCode) params.itemCode = searchParams.itemCode;
       if (searchParams.itemName) params.itemName = searchParams.itemName;
+      if (searchParams.workplaceCode)
+        params.workplaceCode = searchParams.workplaceCode;
       // 날짜는 YYYY-MM-DD 입력 가능 -> YYYYMMDD로 변환
       if (searchParams.dateFrom)
         params.dateFrom = searchParams.dateFrom.replace(/-/g, '');

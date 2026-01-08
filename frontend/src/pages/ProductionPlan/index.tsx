@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Button,
@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   Tooltip,
-  Badge,
   Checkbox,
   FormControlLabel,
   FormGroup,
@@ -42,6 +41,7 @@ import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
   ViewCompact as ViewCompactIcon,
+  CameraAlt as CameraAltIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
 import workplaceService from '../../services/workplaceService';
@@ -58,6 +58,7 @@ import {
 import PlanDialog from './components/PlanDialog';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
+import html2canvas from 'html2canvas';
 
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
@@ -209,6 +210,7 @@ const ProductionPlan: React.FC = () => {
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
+  const weeklyGridRef = useRef<HTMLDivElement>(null);
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
   const getDefault3DaysFilter = (): boolean[] => {
@@ -502,6 +504,35 @@ const ProductionPlan: React.FC = () => {
     setVisibleDays(default3Days);
     saveFilterToStorage(default3Days);
     setCurrentWeekStart(getMonday(new Date()));
+  };
+
+  const handleCapture = async () => {
+    if (!weeklyGridRef.current) return;
+
+    try {
+      const canvas = await html2canvas(weeklyGridRef.current, {
+        logging: false,
+      } as any);
+
+      // 캡쳐된 이미지를 다운로드
+      const link = document.createElement('a');
+      const weekStart = formatDate(currentWeekStart, 'YYYY-MM-DD');
+      const weekEnd = formatDate(addDays(currentWeekStart, 6), 'YYYY-MM-DD');
+      link.download = `생산계획_${weekStart}~${weekEnd}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      showToast({
+        message: '주간 달력이 캡쳐되었습니다.',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('캡쳐 실패:', error);
+      showToast({
+        message: '캡쳐에 실패했습니다.',
+        severity: 'error',
+      });
+    }
   };
 
   const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
@@ -1178,12 +1209,24 @@ const ProductionPlan: React.FC = () => {
             >
               오늘
             </Button>
+
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<CameraAltIcon />}
+              onClick={handleCapture}
+            >
+              캡쳐
+            </Button>
           </Stack>
         </CardContent>
       </Card>
 
       {/* 주간 그리드 */}
-      <Paper sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}>
+      <Paper
+        ref={weeklyGridRef}
+        sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}
+      >
         <TableContainer sx={{ height: '100%', overflowX: 'auto' }}>
           <Table stickyHeader size={compactMode ? 'small' : 'medium'}>
             <TableHead>
@@ -1435,41 +1478,64 @@ const ProductionPlan: React.FC = () => {
                                             }}
                                           >
                                             <Box sx={{ flex: 1 }}>
-                                              <Chip
-                                                label={
-                                                  plan.itemDisplayCode ||
-                                                  plan.itemCode
-                                                }
-                                                size="small"
-                                                color="primary"
-                                                variant="outlined"
-                                                sx={{ mb: 0.5 }}
-                                              />
-                                              <Typography
-                                                variant="body2"
-                                                sx={{
-                                                  fontWeight: 600,
-                                                  color: 'text.primary',
-                                                  my: compactMode ? 0.25 : 0.5,
-                                                }}
-                                              >
-                                                {plan.itemName}
-                                              </Typography>
+                                              {/* 1줄: 품목코드, 품목명 */}
                                               <Box
                                                 sx={{
                                                   display: 'flex',
                                                   alignItems: 'center',
-                                                  gap: 1,
-                                                  mt: compactMode ? 0.5 : 1,
+                                                  gap: 0.5,
+                                                  flexWrap: 'wrap',
+                                                }}
+                                              >
+                                                <Chip
+                                                  label={
+                                                    plan.itemDisplayCode ||
+                                                    plan.itemCode
+                                                  }
+                                                  size="small"
+                                                  color="primary"
+                                                  variant="outlined"
+                                                />
+                                                <Typography
+                                                  variant="body2"
+                                                  sx={{
+                                                    fontWeight: 600,
+                                                    color: 'text.primary',
+                                                  }}
+                                                >
+                                                  {plan.itemName}
+                                                </Typography>
+                                              </Box>
+
+                                              {/* 2줄: 수량, 담당자, 근무구분, 거래처 */}
+                                              <Box
+                                                sx={{
+                                                  display: 'flex',
+                                                  gap: 0.5,
+                                                  mt: 0.5,
+                                                  flexWrap: 'wrap',
+                                                  alignItems: 'center',
                                                 }}
                                               >
                                                 <Chip
                                                   label={`${(
                                                     plan.plannedQty ?? 0
-                                                  ).toLocaleString()} 개`}
+                                                  ).toLocaleString()}`}
                                                   size="small"
                                                   color="success"
                                                 />
+                                                {plan.workerName && (
+                                                  <Chip
+                                                    label={plan.workerName}
+                                                    size="small"
+                                                    variant="outlined"
+                                                    sx={{
+                                                      borderColor:
+                                                        'primary.main',
+                                                      color: 'primary.main',
+                                                    }}
+                                                  />
+                                                )}
                                                 <Chip
                                                   label={getShiftLabel(
                                                     plan.shift
@@ -1479,80 +1545,51 @@ const ProductionPlan: React.FC = () => {
                                                     plan.shift
                                                   )}
                                                 />
-                                              </Box>
-                                              {/* 담당자 및 거래처 정보 표시 (같은 줄) */}
-                                              {(plan.workerName ||
-                                                plan.customerName) && (
-                                                <Box
-                                                  sx={{
-                                                    display: 'flex',
-                                                    gap: 1,
-                                                    mt: compactMode
-                                                      ? 0.25
-                                                      : 0.5,
-                                                    flexWrap: 'wrap',
-                                                  }}
-                                                >
-                                                  {plan.workerName && (
-                                                    <Chip
-                                                      label={`담당: ${plan.workerName}`}
-                                                      size="small"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        borderColor:
-                                                          'primary.main',
-                                                        color: 'primary.main',
-                                                      }}
-                                                    />
-                                                  )}
-                                                  {plan.customerName && (
-                                                    <Chip
-                                                      label={
+                                                {plan.customerName && (
+                                                  <Chip
+                                                    label={
+                                                      plan.additionalCustomers &&
+                                                      plan.additionalCustomers
+                                                        .length > 0
+                                                        ? `${plan.customerName} 외${plan.additionalCustomers.length}`
+                                                        : plan.customerName
+                                                    }
+                                                    size="small"
+                                                    color="secondary"
+                                                    variant="outlined"
+                                                    sx={{
+                                                      cursor: plan
+                                                        .additionalCustomers
+                                                        ?.length
+                                                        ? 'pointer'
+                                                        : 'default',
+                                                    }}
+                                                    onClick={() => {
+                                                      if (
                                                         plan.additionalCustomers &&
                                                         plan.additionalCustomers
                                                           .length > 0
-                                                          ? `${plan.customerName} 외 ${plan.additionalCustomers.length}건`
-                                                          : plan.customerName
+                                                      ) {
+                                                        alert(
+                                                          `거래처 목록:\n- ${
+                                                            plan.customerName
+                                                          }\n- ${plan.additionalCustomers.join(
+                                                            '\n- '
+                                                          )}`
+                                                        );
                                                       }
-                                                      size="small"
-                                                      color="secondary"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        cursor: plan
-                                                          .additionalCustomers
-                                                          ?.length
-                                                          ? 'pointer'
-                                                          : 'default',
-                                                      }}
-                                                      onClick={() => {
-                                                        if (
-                                                          plan.additionalCustomers &&
-                                                          plan
-                                                            .additionalCustomers
-                                                            .length > 0
-                                                        ) {
-                                                          alert(
-                                                            `거래처 목록:\n- ${
-                                                              plan.customerName
-                                                            }\n- ${plan.additionalCustomers.join(
-                                                              '\n- '
-                                                            )}`
-                                                          );
-                                                        }
-                                                      }}
-                                                    />
-                                                  )}
-                                                </Box>
-                                              )}
-                                              {plan.orderNo && (
-                                                <Chip
-                                                  label={`의뢰: ${plan.orderNo}`}
-                                                  size="small"
-                                                  sx={{ mt: 0.5 }}
-                                                  color="info"
-                                                  variant="outlined"
-                                                />
-                                              )}
+                                                    }}
+                                                  />
+                                                )}
+                                                {plan.orderNo && (
+                                                  <Chip
+                                                    label={`의뢰:${plan.orderNo}`}
+                                                    size="small"
+                                                    color="info"
+                                                    variant="outlined"
+                                                  />
+                                                )}
+                                              </Box>
                                             </Box>
                                             <Box
                                               sx={{
@@ -1632,6 +1669,7 @@ const ProductionPlan: React.FC = () => {
         formData={formData}
         equipments={equipments}
         workplaceWorkers={workplaceWorkers}
+        workplaceCode={selectedWorkplace}
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}
