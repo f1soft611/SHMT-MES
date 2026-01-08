@@ -1093,6 +1093,34 @@ const ProductionPlan: React.FC = () => {
                   )
                 )}
               </FormGroup>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    const default3Days = getDefault3DaysFilter();
+                    setVisibleDays(default3Days);
+                    saveFilterToStorage(default3Days);
+                  }}
+                  color="info"
+                >
+                  기본 3일
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(true)}
+                >
+                  전체 표시
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(false)}
+                >
+                  전체 숨김
+                </Button>
+              </Box>
             </Stack>
             <Typography
               variant="caption"
