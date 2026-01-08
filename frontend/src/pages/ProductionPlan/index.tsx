@@ -1522,7 +1522,10 @@ const ProductionPlan: React.FC = () => {
                                                     plan.plannedQty ?? 0
                                                   ).toLocaleString()}`}
                                                   size="small"
-                                                  color="success"
+                                                  color="error"
+                                                  sx={{
+                                                    fontWeight: 600,
+                                                  }}
                                                 />
                                                 {plan.workerName && (
                                                   <Chip
