@@ -17,6 +17,7 @@ import {
   Menu as MenuIcon,
   People as PeopleIcon,
   Assignment as AssignmentIcon,
+  VpnKey as VpnKeyIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
@@ -43,6 +44,12 @@ const AdminDashboard: React.FC = () => {
       description: '시스템 사용자를 관리하고 권한을 할당합니다.',
       icon: <PeopleIcon color="primary" sx={{ fontSize: 40 }} />,
       path: URL.ADMIN_USERS,
+    },
+    {
+      title: '로그인 이력 관리',
+      description: '시스템 로그인 이력을 조회하고 모니터링합니다.',
+      icon: <VpnKeyIcon color="primary" sx={{ fontSize: 40 }} />,
+      path: URL.ADMIN_LOGIN_HISTORY,
     },
   ];
 

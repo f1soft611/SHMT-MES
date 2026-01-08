@@ -24,6 +24,7 @@ export interface LoginResponse {
   };
   jToken: string;
   refreshToken: string;
+  loginHistoryId?: number;
   resultCode: string;
   resultMessage: string;
 }
@@ -52,6 +53,13 @@ export const authService = {
         sessionStorage.setItem('user', JSON.stringify(response.data.resultVO));
         // 토큰 발급 시간 저장 (밀리초)
         sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
+        // 로그인 이력 ID 저장 (로그아웃 시 사용)
+        if (response.data.loginHistoryId) {
+          sessionStorage.setItem(
+            'loginHistoryId',
+            response.data.loginHistoryId.toString()
+          );
+        }
 
         // 자동 갱신 타이머 시작
         // this.startTokenRefreshTimer();
@@ -68,11 +76,21 @@ export const authService = {
     }
   },
 
-  logout() {
+  async logout() {
+    try {
+      const loginHistoryId = sessionStorage.getItem('loginHistoryId');
+      // 백엔드 로그아웃 호출로 서버측 세션/이력 업데이트 수행
+      await apiClient.post('/auth/logout', {
+        loginHistoryId: loginHistoryId ? parseInt(loginHistoryId) : null,
+      });
+    } catch (e) {
+      console.warn('백엔드 로그아웃 호출 실패, 클라이언트만 정리합니다.', e);
+    }
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('tokenIssuedAt');
+    sessionStorage.removeItem('loginHistoryId');
     // this.stopTokenRefreshTimer();
   },
 
@@ -128,7 +146,7 @@ export const authService = {
       return null;
     } catch (error) {
       console.error('토큰 리프레쉬 실패:', error);
-      this.logout();
+      await this.logout();
       return null;
     }
   },

@@ -24,8 +24,20 @@ import {
   Chip,
   Tooltip,
   Stack,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
+  Dashboard as DashboardIcon,
+  Settings as SettingsIcon,
+  Assignment as AssignmentIcon,
+  Factory as FactoryIcon,
+  Monitor as MonitorIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  Security as SecurityIcon,
+  Menu as MenuIcon,
+  People as PeopleIcon,
+  Build as BuildIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -33,6 +45,7 @@ import {
   ExpandLess as ExpandLessIcon,
   FilterList as FilterListIcon,
   Search as SearchIcon,
+  VpnKey as VpnKeyIcon,
 } from '@mui/icons-material';
 import {
   MenuInfo,
@@ -91,7 +104,27 @@ const MenuManagement: React.FC = () => {
     'Menu',
     'People',
     'Build',
+    'VpnKey',
   ];
+
+  const iconMap = useMemo<Record<string, React.ReactElement>>(
+    () => ({
+      Dashboard: <DashboardIcon fontSize="small" />,
+      Settings: <SettingsIcon fontSize="small" />,
+      Assignment: <AssignmentIcon fontSize="small" />,
+      Factory: <FactoryIcon fontSize="small" />,
+      Monitor: <MonitorIcon fontSize="small" />,
+      AdminPanelSettings: <AdminPanelSettingsIcon fontSize="small" />,
+      Security: <SecurityIcon fontSize="small" />,
+      Menu: <MenuIcon fontSize="small" />,
+      People: <PeopleIcon fontSize="small" />,
+      Build: <BuildIcon fontSize="small" />,
+      VpnKey: <VpnKeyIcon fontSize="small" />,
+    }),
+    []
+  );
+
+  const renderIcon = (name?: string) => iconMap[name || ''] || null;
 
   const loadMenus = async () => {
     try {
@@ -406,7 +439,21 @@ const MenuManagement: React.FC = () => {
                     <TableCell>{parent.menuDc}</TableCell>
                     <TableCell>{parent.menuUrl}</TableCell>
                     <TableCell align="center">{parent.menuOrdr}</TableCell>
-                    <TableCell align="center">{parent.iconNm}</TableCell>
+                    <TableCell align="center">
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 1,
+                        }}
+                      >
+                        {renderIcon(parent.iconNm)}
+                        <Typography variant="body2" color="text.secondary">
+                          {parent.iconNm || '-'}
+                        </Typography>
+                      </Box>
+                    </TableCell>
                     <TableCell align="center">
                       <Chip
                         label={parent.useAt === 'Y' ? '사용' : '미사용'}
@@ -458,7 +505,21 @@ const MenuManagement: React.FC = () => {
                         <TableCell>{child.menuDc}</TableCell>
                         <TableCell>{child.menuUrl}</TableCell>
                         <TableCell align="center">{child.menuOrdr}</TableCell>
-                        <TableCell align="center">{child.iconNm}</TableCell>
+                        <TableCell align="center">
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 1,
+                            }}
+                          >
+                            {renderIcon(child.iconNm)}
+                            <Typography variant="body2" color="text.secondary">
+                              {child.iconNm || '-'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
                         <TableCell align="center">
                           <Chip
                             label={child.useAt === 'Y' ? '사용' : '미사용'}
@@ -603,7 +664,10 @@ const MenuManagement: React.FC = () => {
                 >
                   {iconOptions.map((icon) => (
                     <MenuItem key={icon} value={icon}>
-                      {icon}
+                      <ListItemIcon sx={{ minWidth: 32 }}>
+                        {renderIcon(icon)}
+                      </ListItemIcon>
+                      <ListItemText primary={icon} />
                     </MenuItem>
                   ))}
                 </Select>

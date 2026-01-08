@@ -24,6 +24,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SecurityIcon from '@mui/icons-material/Security';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
+import BuildIcon from '@mui/icons-material/Build';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 
@@ -37,6 +39,8 @@ const iconMap: { [key: string]: React.ReactElement } = {
   Security: <SecurityIcon />,
   Menu: <MenuIcon />,
   People: <PeopleIcon />,
+  Build: <BuildIcon />,
+  VpnKey: <VpnKeyIcon />,
 };
 
 const Sidebar: React.FC = () => {
