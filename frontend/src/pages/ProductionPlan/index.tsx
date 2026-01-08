@@ -1523,6 +1523,9 @@ const ProductionPlan: React.FC = () => {
                                                   variant="body2"
                                                   sx={{
                                                     fontWeight: 600,
+                                                    fontSize: compactMode
+                                                      ? '0. nine rem'
+                                                      : '1rem',
                                                     color: 'text.primary',
                                                   }}
                                                 >
