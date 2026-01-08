@@ -839,11 +839,11 @@ const ProductionPlan: React.FC = () => {
 
   const equipmentColWidth = compactMode ? 200 : 250;
   const dayColMinWidth = compactMode ? 140 : 180;
-  const cardPadding = compactMode ? 1 : 1.5;
-  const cellPadding = compactMode ? 1 : 1.5;
-  const sectionGap = compactMode ? 1.5 : 2;
+  const cardPadding = compactMode ? 0.75 : 1.5;
+  const cellPadding = compactMode ? 0.75 : 1.5;
+  const sectionGap = compactMode ? 1 : 2;
   const headerTitleVariant: 'h4' | 'h5' = compactMode ? 'h5' : 'h4';
-  const headerPad = compactMode ? 2 : 3;
+  const headerPad = compactMode ? 1.5 : 2.5;
 
   return (
     <Box
@@ -870,10 +870,16 @@ const ProductionPlan: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: compactMode ? 1.5 : 2,
+            mb: compactMode ? 1 : 1.5,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: compactMode ? 1.5 : 2,
+            }}
+          >
             <Box
               sx={{
                 p: compactMode ? 1 : 1.5,
@@ -1009,8 +1015,8 @@ const ProductionPlan: React.FC = () => {
 
       {/* 요일 표시 설정 패널 */}
       <Collapse in={showDayFilter}>
-        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+        <Card sx={{ mb: 1, boxShadow: 1 }}>
+          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
             <Typography
               variant="h6"
               sx={{
@@ -1026,7 +1032,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={compactMode ? 2 : 3}
+              spacing={compactMode ? 1.5 : 2}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1047,34 +1053,6 @@ const ProductionPlan: React.FC = () => {
                   )
                 )}
               </FormGroup>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    const default3Days = getDefault3DaysFilter();
-                    setVisibleDays(default3Days);
-                    saveFilterToStorage(default3Days);
-                  }}
-                  color="info"
-                >
-                  기본 3일
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(true)}
-                >
-                  전체 표시
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(false)}
-                >
-                  전체 숨김
-                </Button>
-              </Box>
             </Stack>
             <Typography
               variant="caption"
@@ -1090,8 +1068,8 @@ const ProductionPlan: React.FC = () => {
 
       {/* 검색 영역 */}
       <Collapse in={showSearchPanel}>
-        <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-          <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+        <Card sx={{ mb: 1, boxShadow: 1 }}>
+          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
             <Typography
               variant="h6"
               sx={{
@@ -1107,7 +1085,7 @@ const ProductionPlan: React.FC = () => {
             </Typography>
             <Stack
               direction="row"
-              spacing={compactMode ? 1.5 : 2}
+              spacing={compactMode ? 1 : 1.5}
               alignItems="center"
               flexWrap="wrap"
             >
@@ -1148,11 +1126,11 @@ const ProductionPlan: React.FC = () => {
       </Collapse>
 
       {/* 주간 네비게이션 */}
-      <Card sx={{ mb: sectionGap, boxShadow: 2 }}>
-        <CardContent sx={{ p: compactMode ? 1.5 : 2 }}>
+      <Card sx={{ mb: 1, boxShadow: 1 }}>
+        <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
           <Stack
             direction="row"
-            spacing={compactMode ? 1.5 : 2}
+            spacing={compactMode ? 1 : 1.5}
             alignItems="center"
             justifyContent="center"
           >
@@ -1240,9 +1218,9 @@ const ProductionPlan: React.FC = () => {
                     bgcolor: 'primary.main',
                     color: 'white',
                     fontWeight: 'bold',
-                    fontSize: compactMode ? '0.95rem' : '1rem',
+                    fontSize: compactMode ? '0.85rem' : '0.95rem',
                     borderRight: '1px solid rgba(224, 224, 224, 1)',
-                    p: compactMode ? 1 : 1.5,
+                    p: compactMode ? 0.75 : 1,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1273,7 +1251,8 @@ const ProductionPlan: React.FC = () => {
                         color: 'white',
                         fontWeight: 'bold',
                         borderRight: '1px solid rgba(224, 224, 224, 1)',
-                        p: compactMode ? 1 : 1.25,
+                        p: compactMode ? 0.75 : 1,
+                        fontSize: compactMode ? '0.85rem' : '0.95rem',
                       }}
                     >
                       <Box
@@ -1390,14 +1369,18 @@ const ProductionPlan: React.FC = () => {
                             <Box>
                               <Typography
                                 variant="body1"
-                                sx={{ fontWeight: 700, color: 'text.primary' }}
+                                sx={{
+                                  fontWeight: 700,
+                                  color: 'text.primary',
+                                  lineHeight: 1.2,
+                                }}
                               >
                                 {equipment.equipmentName}
                               </Typography>
                               <Chip
                                 label={equipment.equipCd}
                                 size="small"
-                                sx={{ mt: 0.5 }}
+                                sx={{ mt: 0.25 }}
                               />
                             </Box>
                           </Box>
@@ -1430,7 +1413,7 @@ const ProductionPlan: React.FC = () => {
                                 timeout="auto"
                                 unmountOnExit
                               >
-                                <Box sx={{ minHeight: 100 }}>
+                                <Box sx={{ minHeight: compactMode ? 60 : 100 }}>
                                   <Button
                                     fullWidth
                                     size="small"
@@ -1442,12 +1425,12 @@ const ProductionPlan: React.FC = () => {
                                       )
                                     }
                                     variant="contained"
-                                    sx={{ mb: compactMode ? 1 : 1.5 }}
+                                    sx={{ mb: compactMode ? 0.75 : 1 }}
                                   >
                                     계획 추가
                                   </Button>
 
-                                  <Stack spacing={compactMode ? 1 : 1.5}>
+                                  <Stack spacing={compactMode ? 0.75 : 1}>
                                     {dayPlans.map((plan) => (
                                       <Card
                                         key={plan.id}
@@ -1512,7 +1495,7 @@ const ProductionPlan: React.FC = () => {
                                                 sx={{
                                                   display: 'flex',
                                                   gap: 0.5,
-                                                  mt: 0.5,
+                                                  mt: 0.25,
                                                   flexWrap: 'wrap',
                                                   alignItems: 'center',
                                                 }}
