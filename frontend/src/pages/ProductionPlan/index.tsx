@@ -501,9 +501,6 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleToday = () => {
-    const default3Days = getDefault3DaysFilter();
-    setVisibleDays(default3Days);
-    saveFilterToStorage(default3Days);
     setCurrentWeekStart(getMonday(new Date()));
   };
 
@@ -1093,6 +1090,34 @@ const ProductionPlan: React.FC = () => {
                   )
                 )}
               </FormGroup>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    const default3Days = getDefault3DaysFilter();
+                    setVisibleDays(default3Days);
+                    saveFilterToStorage(default3Days);
+                  }}
+                  color="info"
+                >
+                  기본 3일
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(true)}
+                >
+                  전체 표시
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => toggleAllDays(false)}
+                >
+                  전체 숨김
+                </Button>
+              </Box>
             </Stack>
             <Typography
               variant="caption"
@@ -1167,7 +1192,12 @@ const ProductionPlan: React.FC = () => {
 
       {/* 주간 네비게이션 */}
       <Card sx={{ mb: 1, boxShadow: 1 }}>
-        <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
+        <CardContent
+          sx={{
+            pt: compactMode ? 1 : 1.5,
+            '&:last-child': { pb: compactMode ? 1 : 1.5 },
+          }}
+        >
           <Stack
             direction="row"
             spacing={compactMode ? 1 : 1.5}
@@ -1524,7 +1554,7 @@ const ProductionPlan: React.FC = () => {
                                                   sx={{
                                                     fontWeight: 600,
                                                     fontSize: compactMode
-                                                      ? '0. nine rem'
+                                                      ? '0.85rem'
                                                       : '1rem',
                                                     color: 'text.primary',
                                                   }}

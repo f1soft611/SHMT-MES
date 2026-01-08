@@ -1,0 +1,329 @@
+# SHMT-MES Project Rules
+
+## 프로젝트 개요
+
+새한마이크로텍 MES(Manufacturing Execution System)는 생산계획, 공정/설비/품목 관리, 작업장-공정 매핑, 외부 ERP/생산 의뢰 인터페이스 연계를 통합 제공하는 경량 제조 실행 시스템입니다.
+
+## 기술 스택
+
+### Backend
+- **Language**: Java 1.8
+- **Framework**: Spring Boot (eGovFrame 4.3.0)
+- **ORM**: MyBatis, QueryDSL APT
+- **Security**: JWT (jjwt 0.9.1) - Access Token (60분), Refresh Token (7일)
+- **Build**: Maven
+- **Database**: MySQL, MSSQL, Oracle, Altibase, Cubrid, Tibero 지원
+
+### Frontend
+- **Language**: TypeScript 4.9.x
+- **Framework**: React 19.x
+- **UI Library**: Material-UI (MUI) 7.x + Emotion
+- **State Management**: React Query 5.x (TanStack Query)
+- **HTTP Client**: Axios 1.x
+- **Form**: React Hook Form 7.x + Yup validation
+- **Routing**: React Router DOM 7.x
+- **Date**: date-fns 4.x, dayjs 1.x
+- **Build**: Create React App (react-scripts 5.0.1)
+
+## 프로젝트 구조
+
+```
+backend/
+  src/main/java/org/egovframe/template/
+    controller/     # REST API 컨트롤러
+    service/        # 비즈니스 로직
+    repository/     # 데이터 액세스 (MyBatis/QueryDSL)
+    entity/         # 엔티티 클래스
+    dto/            # 데이터 전송 객체
+    config/         # 설정 클래스 (Security, JWT, etc.)
+  DATABASE/         # DDL/DML 스크립트
+
+frontend/
+  src/
+    components/     # 재사용 가능한 UI 컴포넌트
+    pages/          # 페이지 컴포넌트
+    services/       # API 서비스 (Axios)
+    hooks/          # Custom React Hooks
+    types/          # TypeScript 타입 정의
+    contexts/       # React Context
+    constants/      # 상수 정의
+    styles/         # 글로벌 스타일
+    util/           # 유틸리티 함수
+
+문서/              # 프로젝트 문서
+```
+
+## 코딩 컨벤션
+
+### Backend (Java/Spring)
+
+1. **패키지 구조**:
+   - Controller: `@RestController`, RESTful API 엔드포인트
+   - Service: `@Service`, 비즈니스 로직, 트랜잭션 처리
+   - Repository: MyBatis Mapper 또는 QueryDSL Repository
+   - DTO: Request/Response 데이터 전송 객체
+
+2. **명명 규칙**:
+   - 클래스: PascalCase (예: `ProductionPlanService`)
+   - 메서드: camelCase (예: `getProductionPlan`)
+   - 상수: UPPER_SNAKE_CASE (예: `MAX_RETRY_COUNT`)
+   - DTO: ~Request, ~Response, ~Dto 접미사
+
+3. **API 응답 형식**:
+   ```java
+   {
+     "success": true,
+     "message": "Success message",
+     "data": {...}
+   }
+   ```
+
+4. **인증/권한**:
+   - JWT 기반 인증
+   - Access Token: 60분 (자동 5분 전 재발급)
+   - Refresh Token: 7일
+   - 권한: ADMIN, USER, VIEWER
+   - `@PreAuthorize` 어노테이션 사용
+
+5. **트랜잭션**:
+   - Service 레이어에 `@Transactional` 적용
+   - 읽기 전용: `@Transactional(readOnly = true)`
+
+### Frontend (React/TypeScript)
+
+1. **컴포넌트 구조**:
+   - Functional Components + Hooks 사용
+   - Props 인터페이스 정의 필수
+   - 컴포넌트명: PascalCase (예: `ProductionPlanList`)
+
+2. **명명 규칙**:
+   - 컴포넌트: PascalCase (예: `UserForm.tsx`)
+   - 함수/변수: camelCase (예: `handleSubmit`)
+   - 상수: UPPER_SNAKE_CASE (예: `API_BASE_URL`)
+   - 타입/인터페이스: PascalCase (예: `ProductionPlan`)
+
+3. **API 통신**:
+   - React Query 사용 (`useQuery`, `useMutation`)
+   - API 서비스는 `services/` 폴더에 정의
+   - Axios 인터셉터로 토큰 자동 갱신
+
+4. **상태 관리**:
+   - 서버 상태: React Query
+   - 전역 상태: Context API
+   - 로컬 상태: useState, useReducer
+
+5. **스타일링**:
+   - MUI 컴포넌트 우선 사용
+   - Emotion styled components
+   - sx prop 활용
+
+6. **타입 안정성**:
+   - `any` 타입 사용 금지
+   - API 응답 타입 정의
+   - Props 인터페이스 명시
+
+## 주요 도메인
+
+### 1. 생산계획 관리 (Production Plan)
+- 계획 마스터/상세/실적 구조
+- Shift 관리 및 트랜잭션 처리
+- ERP 연계
+
+### 2. 공정 관리 (Process)
+- 공정 정보 관리
+- ERP 공정 매핑
+- 작업장-공정 연계
+
+### 3. 설비 관리 (Equipment)
+- 설비 정보 관리
+- 설비 상태 모니터링
+- 작업장-설비 매핑
+
+### 4. 품목 관리 (Item)
+- 품목 정보 관리
+- ERP 품목 인터페이스
+- 품목 마스터 동기화
+
+### 5. 작업장 관리 (Workplace)
+- 작업장 정보 관리
+- Shift 정보 관리
+- 공정-설비 매핑
+
+### 6. 공통코드 (Common Code)
+- 시스템 전체 공통코드 관리
+- 계층형 코드 구조 (대/중/소)
+- 사용 유무 관리
+
+### 7. 권한 관리 (Permission)
+- 사용자 권한 관리 (ADMIN, USER, VIEWER)
+- 메뉴별 읽기/쓰기 권한
+- JWT 기반 인증
+
+### 8. 스케줄러 (Scheduler)
+- ERP/생산의뢰 인터페이스 자동 실행
+- 동시 실행 방지 (트랜잭션)
+- 수동 실행 지원 (날짜 범위 지정)
+
+## 개발 워크플로우
+
+### 백엔드 개발
+1. Entity/DTO 정의
+2. Repository (MyBatis Mapper) 작성
+3. Service 구현 (비즈니스 로직)
+4. Controller 작성 (REST API)
+5. 단위 테스트 작성
+6. API 문서화
+
+### 프론트엔드 개발
+1. 타입 정의 (`types/`)
+2. API 서비스 작성 (`services/`)
+3. 커스텀 훅 작성 (React Query)
+4. 컴포넌트 구현
+5. 페이지 통합
+6. 권한 처리 적용
+
+### 통합 개발
+1. API 명세 확정
+2. 백엔드 API 개발 및 테스트
+3. 프론트엔드 연동 및 테스트
+4. 권한 검증
+5. 통합 테스트
+6. 문서 업데이트
+
+## 데이터베이스
+
+### DDL 위치
+- `backend/DATABASE/all_sht_ddl_<db>.sql`
+- 지원 DB: MySQL, MSSQL, Oracle, Altibase, Cubrid, Tibero
+
+### 초기 데이터
+- `backend/DATABASE/all_sht_data_<db>.sql`
+- 공통코드, 권한, 샘플 데이터 포함
+
+### 마이그레이션
+- `backend/DATABASE/*_migration_*.sql`
+- 기능 추가 시 마이그레이션 스크립트 작성
+
+## 인증 및 보안
+
+### JWT 토큰
+- Access Token: 60분 유효
+- Refresh Token: 7일 유효
+- 자동 갱신: Access Token 만료 5분 전
+- Sliding Window 기능: 제거됨
+
+### 권한 레벨
+- **ADMIN**: 모든 기능 접근, 쓰기 권한
+- **USER**: 대부분 기능 접근, 제한된 쓰기 권한
+- **VIEWER**: 읽기 전용
+
+### API 보안
+- JWT Bearer Token 인증
+- 권한 기반 접근 제어 (`@PreAuthorize`)
+- CORS 설정
+- XSS/CSRF 방지
+
+## 테스트
+
+### Backend
+- JUnit 5 사용
+- Service 단위 테스트
+- Controller 통합 테스트 (MockMvc)
+
+### Frontend
+- Jest + React Testing Library
+- 컴포넌트 단위 테스트
+- API Mock (MSW)
+
+## 빌드 및 실행
+
+### Backend
+```bash
+cd backend
+mvn clean package
+java -jar target/*.war
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## 문서
+
+### 필독 문서
+- **[로컬 개발 환경 설정](./문서/로컬_개발_환경_설정.md)**: 최초 설정
+- **[백엔드 개발 가이드](./문서/백엔드_개발_가이드.md)**: 백엔드 개발 패턴
+- **[프론트엔드 개발 가이드](./문서/프론트엔드_개발_가이드.md)**: 프론트엔드 개발 패턴
+- **[통합 개발 워크플로우](./문서/통합_개발_워크플로우.md)**: 전체 개발 프로세스
+
+### 기능별 가이드
+- 공통코드: `문서/공통코드_구현_가이드.md`
+- 생산계획: `문서/생산계획_관리_구현_가이드.md`
+- 공정관리: `문서/공정_관리_구현_보고서.md`
+- 설비관리: `문서/설비_관리_구현_보고서.md`
+- 품목관리: `문서/품목_관리_요약.md`
+- 스케줄러: `문서/scheduler-overview.md`
+
+## 주의사항
+
+### 코드 작성 시
+1. **타입 안정성**: TypeScript에서 `any` 사용 금지
+2. **에러 처리**: 모든 API 호출에 try-catch 또는 에러 핸들러 추가
+3. **권한 체크**: API와 UI 모두에서 권한 검증
+4. **트랜잭션**: 여러 DB 작업 시 트랜잭션 처리
+5. **성능**: 불필요한 리렌더링 방지, 쿼리 최적화
+
+### 금지사항
+1. 하드코딩된 값 (상수로 정의)
+2. 중복 코드 (공통 함수/컴포넌트 활용)
+3. console.log 남기기 (개발 시에만 사용)
+4. 직접 DB 접근 (Repository 레이어 사용)
+5. 민감정보 커밋 (환경변수 사용)
+
+## Git 전략
+
+### 브랜치 전략
+- `main`: 프로덕션 브랜치
+- `develop`: 개발 브랜치
+- `feature/*`: 기능 개발 브랜치
+- `hotfix/*`: 긴급 수정 브랜치
+
+### 커밋 메시지
+```
+[타입] 제목
+
+본문 (선택)
+
+관련 이슈: #123
+```
+
+**타입**:
+- `feat`: 새로운 기능
+- `fix`: 버그 수정
+- `docs`: 문서 수정
+- `refactor`: 리팩토링
+- `test`: 테스트 추가/수정
+- `chore`: 빌드/설정 변경
+
+## AI Assistant 사용 가이드
+
+### 코드 작성 시
+- 프로젝트의 기존 패턴 준수
+- 관련 문서 먼저 참조
+- 타입 안정성 보장
+- 에러 처리 포함
+
+### 파일 수정 시
+- 관련 파일 전체 컨텍스트 파악
+- 기존 코드 스타일 유지
+- 변경사항 최소화
+- 테스트 영향도 확인
+
+### 질문 시
+- 구체적인 상황 설명
+- 관련 코드/파일 경로 제공
+- 에러 메시지 전체 포함
+- 원하는 결과 명확히 전달
