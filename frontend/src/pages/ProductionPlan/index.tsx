@@ -1195,7 +1195,12 @@ const ProductionPlan: React.FC = () => {
 
       {/* 주간 네비게이션 */}
       <Card sx={{ mb: 1, boxShadow: 1 }}>
-        <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
+        <CardContent
+          sx={{
+            pt: compactMode ? 1 : 1.5,
+            '&:last-child': { pb: compactMode ? 1 : 1.5 },
+          }}
+        >
           <Stack
             direction="row"
             spacing={compactMode ? 1 : 1.5}
