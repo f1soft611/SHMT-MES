@@ -1552,7 +1552,7 @@ const ProductionPlan: React.FC = () => {
                                                   sx={{
                                                     fontWeight: 600,
                                                     fontSize: compactMode
-                                                      ? '0. nine rem'
+                                                      ? '0.85rem'
                                                       : '1rem',
                                                     color: 'text.primary',
                                                   }}
