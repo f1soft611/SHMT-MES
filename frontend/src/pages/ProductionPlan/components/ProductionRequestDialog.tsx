@@ -18,6 +18,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  LinearProgress,
 } from '@mui/material';
 import {
   DataGrid,
@@ -31,27 +32,52 @@ import {
   Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
   FilterList as FilterListIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
 import { productionRequestService } from '../../../services/productionRequestService';
 import { ProductionRequest } from '../../../types/productionRequest';
+import productionPlanService, {
+  ProductionPlanRequest,
+} from '../../../services/productionPlanService';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 interface ProductionRequestDialogProps {
   open: boolean;
   onClose: () => void;
   onSelect: (requests: ProductionRequest[]) => void;
+  onRegisterComplete?: () => void; // 등록 완료 시 호출되는 콜백
   multiSelect?: boolean;
   workplaceCode?: string;
+  selectedDate?: string;
+  equipmentId?: string; // EQUIP_SYS_CD 값
+  equipmentCode?: string; // EQUIP_CD 값
+  processCode?: string;
+  workerCode?: string;
+  shift?: string;
 }
 
 const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   open,
   onClose,
   onSelect,
+  onRegisterComplete,
   multiSelect = true,
   workplaceCode,
+  selectedDate,
+  equipmentId,
+  equipmentCode,
+  processCode,
+  workerCode,
+  shift,
 }) => {
+  const { showToast } = useToast();
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [registerProgress, setRegisterProgress] = useState({
+    current: 0,
+    total: 0,
+  });
   // 선택모델 (현재 프로젝트의 커스텀 형태 사용)
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: 'include',
@@ -94,13 +120,10 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         searchParams
       );
 
-      console.log('Production Request API Response:', response);
-
       if (response.resultCode === 200 && response.result?.resultList) {
         setRequests(response.result.resultList);
         const totalCount =
           response.result.paginationInfo?.totalRecordCount || 0;
-        console.log('Total Count:', totalCount);
         setTotalCount(totalCount);
       } else {
         setRequests([]);
@@ -148,7 +171,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     });
   };
 
-  const handleConfirmSelection = () => {
+  const handleRegisterProductionPlans = async () => {
     if (!selectionModel || (selectionModel as any).ids?.size === 0) {
       setError('생산의뢰를 선택해주세요.');
       return;
@@ -166,50 +189,130 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       return;
     }
 
-    // 선택된 항목에 다른 품목코드가 섞여 있으면 저장 불가
-    if (selectedItems.length > 1) {
-      const firstItemCode = selectedItems[0].itemCode;
-      const allSameItem = selectedItems.every(
-        (item) => item.itemCode === firstItemCode
-      );
-      if (!allSameItem) {
-        setError(
-          '다른 품목코드가 섞여 있습니다. 같은 품목만 선택해서 저장할 수 있습니다.'
-        );
-        return;
-      }
+    // 작업장 코드 확인
+    if (!workplaceCode) {
+      setError('작업장 정보가 없습니다.');
+      return;
     }
 
-    // 수량 합계 계산
-    const totalQuantity = selectedItems.reduce(
-      (sum, item) => sum + (item.orderQty || 0),
-      0
-    );
+    setRegistering(true);
+    setError('');
+    setRegisterProgress({ current: 0, total: selectedItems.length });
 
-    // 마스터 데이터에 수량 합계 반영
-    const masterData = {
-      totalQuantity: totalQuantity,
-    };
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      const errors: string[] = [];
 
-    // references 데이터 구성 (TPR301R에 저장될 개별 생산의뢰 정보)
-    const references = selectedItems.map((item) => ({
-      orderNo: item.orderNo,
-      orderSeqno: item.orderSeqno || 0,
-      orderHistno: item.orderHistno || 0,
-      orderQty: item.orderQty,
-      workdtQty: 0,
-      representOrder: selectedItems.length === 1 ? 'Y' : 'N',
-      customerCode: item.customerCode || '',
-    }));
+      // 각 생산의뢰마다 개별 생산계획 등록
+      for (let i = 0; i < selectedItems.length; i++) {
+        const item = selectedItems[i];
+        setRegisterProgress({ current: i + 1, total: selectedItems.length });
+        try {
+          const today = new Date()
+            .toISOString()
+            .split('T')[0]
+            .replace(/-/g, '');
+          // selectedDate를 8자리 형식(YYYYMMDD)으로 변환
+          const planDate = selectedDate
+            ? selectedDate.replace(/-/g, '')
+            : today;
 
-    // 선택된 데이터와 마스터 데이터, references 처리
-    onSelect({
-      masterData,
-      selectedItems,
-      references,
-    } as any);
+          const planData: ProductionPlanRequest = {
+            master: {
+              planDate: planDate,
+              workplaceCode: workplaceCode,
+              planStatus: '1',
+              totalPlanQty: item.orderQty || 0,
+              useYn: 'Y',
+            },
+            details: [
+              {
+                planDate: planDate,
+                itemCode: item.itemCode || '',
+                itemName: item.itemName || '',
+                plannedQty: item.orderQty || 0,
+                workplaceCode: workplaceCode,
+                equipmentId: equipmentId || '', // EQUIP_SYS_CD 값 사용
+                equipmentCode: equipmentCode || '',
+                processCode: processCode || '',
+                workerType: shift || '',
+                workerCode: workerCode || '',
+                orderNo: item.orderNo || '',
+                orderSeqno: item.orderSeqno || 0,
+                orderHistno: item.orderHistno || 0,
+                customerCode: item.customerCode || '',
+                customerName: item.customerName || '',
+                deliveryDate: item.deliveryDate || '', // 납기일 추가
+                useYn: 'Y',
+              },
+            ],
+            references: [
+              {
+                orderNo: item.orderNo,
+                orderSeqno: item.orderSeqno || 0,
+                orderHistno: item.orderHistno || 0,
+                orderQty: item.orderQty,
+                workdtQty: 0,
+                representOrder: 'Y',
+                customerCode: item.customerCode || '',
+              },
+            ],
+          };
 
-    handleClose();
+          const response = await productionPlanService.createProductionPlan(
+            planData
+          );
+
+          if (response.resultCode === 200) {
+            successCount++;
+          } else {
+            failCount++;
+            errors.push(`${item.orderNo}: ${response.message}`);
+          }
+        } catch (err: any) {
+          failCount++;
+          errors.push(`${item.orderNo}: ${err.message || '등록 실패'}`);
+        }
+      }
+
+      // 결과 메시지
+      if (failCount === 0) {
+        showToast({
+          message: `${successCount}건의 생산계획이 성공적으로 등록되었습니다.`,
+          severity: 'success',
+        });
+        handleClose();
+        // 등록 완료 콜백 호출 (모달 닫기 + 데이터 새로고침)
+        if (onRegisterComplete) {
+          onRegisterComplete();
+        } else {
+          // 기존 방식 유지 (호환성)
+          onSelect(selectedItems as any);
+        }
+      } else {
+        const errorMsg = errors.join('\n');
+        showToast({
+          message: `등록 결과 - 성공: ${successCount}건, 실패: ${failCount}건${
+            errorMsg ? '\n' + errorMsg : ''
+          }`,
+          severity: 'warning',
+        });
+        if (successCount > 0) {
+          handleClose();
+          if (onRegisterComplete) {
+            onRegisterComplete();
+          } else {
+            onSelect(selectedItems as any);
+          }
+        }
+      }
+    } catch (error: any) {
+      setError('생산계획 등록 중 오류가 발생했습니다.');
+    } finally {
+      setRegistering(false);
+      setRegisterProgress({ current: 0, total: 0 });
+    }
   };
 
   const handleClose = () => {
@@ -503,6 +606,27 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         </Box>
       )}
 
+      {/* 등록 진행 상태 표시 */}
+      {registering && (
+        <Box sx={{ px: 2, pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Typography
+              variant="body2"
+              color="primary"
+              sx={{ fontWeight: 600 }}
+            >
+              생산계획 등록 중... ({registerProgress.current}/
+              {registerProgress.total})
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={(registerProgress.current / registerProgress.total) * 100}
+            sx={{ height: 8, borderRadius: 1 }}
+          />
+        </Box>
+      )}
+
       {/* DataGrid 영역 */}
       <DialogContent
         sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}
@@ -524,39 +648,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             disableMultipleRowSelection={!multiSelect}
             rowSelectionModel={selectionModel as any}
             onRowSelectionModelChange={(newSelection: any, details?: any) => {
-              // 헤더 체크박스 클릭 시 현재 페이지 데이터만 모두 선택
-              const isHeaderCheck =
-                details && details.reason === 'selectAllRows';
-              if (isHeaderCheck) {
-                const pageRequests = requests;
-                const firstItemCode = pageRequests[0]?.itemCode;
-                const allSame = pageRequests.every(
-                  (it) => it.itemCode === firstItemCode
-                );
-
-                if (!allSame) {
-                  setError('전체 선택은 같은 품목코드일 때만 가능합니다.');
-                  setSelectionModel({ type: 'include', ids: new Set() } as any);
-                  return;
-                }
-
-                // 전체 선택 대상 구성
-                const ids = new Set(
-                  pageRequests.map(
-                    (item) =>
-                      `${item.orderNo}-${item.orderSeqno}-${item.orderHistno}-${item.itemCode}`
-                  )
-                );
-
-                newSelection = { type: 'include', ids };
-                setError('');
-
-                // ⭐⭐ 강제 트리거 → 선택 버튼 즉시 활성화됨
-                setSelectionModel({ type: 'include', ids: new Set(ids) });
-                return; // 아래 기본 로직 실행 방지
-              }
-
               setSelectionModel(newSelection);
+              setError('');
             }}
             disableRowSelectionOnClick={false}
             sx={{
@@ -569,8 +662,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
                 cursor: 'pointer',
               },
               '& .MuiDataGrid-columnHeaderCheckbox .MuiCheckbox-root': {
-                pointerEvents: 'none',
-                opacity: 0.4,
+                pointerEvents: 'auto',
+                opacity: 1,
               },
             }}
           />
@@ -580,16 +673,20 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       <Divider />
       <DialogActions sx={{ p: 2 }}>
         <Button
-          onClick={handleConfirmSelection}
+          onClick={handleRegisterProductionPlans}
           variant="contained"
           disabled={
-            !selectionModel?.ids || (selectionModel as any).ids.size === 0
+            !selectionModel?.ids ||
+            (selectionModel as any).ids.size === 0 ||
+            registering
           }
-          startIcon={<CheckCircleIcon />}
+          startIcon={<AddIcon />}
         >
-          선택
+          {registering ? '등록 중...' : '등록'}
         </Button>
-        <Button onClick={handleClose}>취소</Button>
+        <Button onClick={handleClose} disabled={registering}>
+          취소
+        </Button>
       </DialogActions>
     </Dialog>
   );

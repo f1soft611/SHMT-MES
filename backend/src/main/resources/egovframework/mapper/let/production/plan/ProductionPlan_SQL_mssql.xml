@@ -31,6 +31,7 @@
 		<result property="workerType" column="WORKER_TYPE"/>
 		<result property="workerCode" column="WORKER_CODE"/>
 		<result property="workerName" column="WORKER_NAME"/>
+		<result property="deliveryDate" column="DELIVERY_DATE"/>
 		<result property="remark" column="BIGO"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
@@ -86,6 +87,7 @@
 		    WORKER_TYPE,
 			WORKER_CODE,
 			WORKER_NAME,
+			DELIVERY_DATE,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
@@ -110,6 +112,7 @@
 			#{workerType},
 			#{workerCode},
 			#{workerName},
+			#{deliveryDate},
 			#{opmanCode},
 			GETDATE()
 		)
@@ -159,6 +162,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
+			DELIVERY_DATE,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -208,6 +212,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
+			DELIVERY_DATE,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -255,6 +260,7 @@
 			LOT_NO,
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
+			DELIVERY_DATE,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -284,6 +290,7 @@
 			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
+			DELIVERY_DATE = #{deliveryDate},
 			BIGO = #{remark},
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
@@ -378,6 +385,7 @@
 			D.WORKER_TYPE AS SHIFT,
 			D.WORKER_CODE,
 			D.WORKER_NAME,
+			D.DELIVERY_DATE,
 			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
 			CASE 
 				WHEN C.CUSTOMER_COUNT > 1 THEN C.FIRST_CUSTOMER_NAME + ' 외 ' + CAST(C.CUSTOMER_COUNT - 1 AS VARCHAR) + '건'

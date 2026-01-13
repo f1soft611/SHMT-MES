@@ -153,6 +153,11 @@ public class ProductionPlanWeeklyDTO {
         private String customerName;
         
         /**
+         * 납기일 (YYYYMMDD)
+         */
+        private String deliveryDate;
+        
+        /**
          * 비고
          */
         private String remark;

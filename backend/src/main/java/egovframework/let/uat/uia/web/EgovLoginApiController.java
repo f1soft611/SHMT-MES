@@ -134,26 +134,19 @@ public class EgovLoginApiController {
 			resultMap.put("resultMessage", egovMessageSource.getMessage("fail.common.login"));
 		}
 
-		// 로그인 이력 저장
+		// 로그인 이렵 저장
 		try {
-			System.out.println("로그인 이력 저장 전 - loginHistoryId: " + loginHistory.getLoginHistoryId());
 			int result = loginHistoryService.insertLoginHistory(loginHistory);
-			System.out.println("로그인 이력 저장 후 - result: " + result + ", loginHistoryId: " + loginHistory.getLoginHistoryId());
 			
 			if (loginHistory.getLoginHistoryId() != null) {
 				request.getSession().setAttribute("loginHistoryId", loginHistory.getLoginHistoryId());
 				// 응답에도 loginHistoryId 포함 (JWT 방식 로그아웃을 위해)
 				resultMap.put("loginHistoryId", loginHistory.getLoginHistoryId());
-				System.out.println("세션에 loginHistoryId 저장 완료: " + loginHistory.getLoginHistoryId());
-				System.out.println("세션에서 다시 읽기: " + request.getSession().getAttribute("loginHistoryId"));
-			} else {
-				System.out.println("경고: loginHistoryId가 null입니다!");
 			}
 			log.info("로그인 이력 저장 완료 - userId: {}, result: {}, loginHistoryId: {}",
 				loginHistory.getUserId(), result, loginHistory.getLoginHistoryId());
 		} catch (Exception e) {
 			log.error("로그인 이력 저장 실패 - userId: {}", loginHistory.getUserId(), e);
-			e.printStackTrace();
 		}
 
 		return resultMap;
@@ -227,24 +220,17 @@ public class EgovLoginApiController {
 
 		// 로그인 이력 저장
 		try {
-			System.out.println("JWT 로그인 이력 저장 전 - loginHistoryId: " + loginHistory.getLoginHistoryId());
 			int result = loginHistoryService.insertLoginHistory(loginHistory);
-			System.out.println("JWT 로그인 이력 저장 후 - result: " + result + ", loginHistoryId: " + loginHistory.getLoginHistoryId());
 			
 			if (loginHistory.getLoginHistoryId() != null) {
 				request.getSession().setAttribute("loginHistoryId", loginHistory.getLoginHistoryId());
 				// 응답에도 loginHistoryId 포함 (JWT 방식 로그아웃을 위해)
 				resultMap.put("loginHistoryId", loginHistory.getLoginHistoryId());
-				System.out.println("세션에 loginHistoryId 저장 완료: " + loginHistory.getLoginHistoryId());
-				System.out.println("세션에서 다시 읽기: " + request.getSession().getAttribute("loginHistoryId"));
-			} else {
-				System.out.println("경고: JWT loginHistoryId가 null입니다!");
 			}
 			log.info("로그인 이력 저장 완료 - userId: {}, result: {}, loginHistoryId: {}",
 				loginHistory.getUserId(), result, loginHistory.getLoginHistoryId());
 		} catch (Exception e) {
 			log.error("로그인 이력 저장 실패 - userId: {}", loginHistory.getUserId(), e);
-			e.printStackTrace();
 		}
 		
 		return resultMap;
@@ -263,15 +249,7 @@ public class EgovLoginApiController {
 	public HashMap<String, Object> refreshToken(@RequestBody HashMap<String, String> request) {
 		HashMap<String, Object> resultMap = new HashMap<>();
 
-		// 디버깅: 전체 request 출력
-		System.out.println("===== Request Body =====");
-		System.out.println("전체 request: " + request);
-		System.out.println("request.keySet(): " + request.keySet());
-
 		String refreshToken = request.get("refreshToken");
-		System.out.println("refreshToken: " + refreshToken);
-		System.out.println("refreshToken is null: " + (refreshToken == null));
-		System.out.println("========================");
 
 		if (refreshToken == null || refreshToken.trim().isEmpty()) {
 			resultMap.put("resultCode", "401");
@@ -327,22 +305,6 @@ public class EgovLoginApiController {
 	public ResultVO actionLogoutJSON(@RequestBody(required = false) HashMap<String, Object> params, 
 									  HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-		System.out.println("========================================");
-		System.out.println("로그아웃 메서드 호출됨!");
-		System.out.println("요청 파라미터: " + params);
-		System.out.println("세션 ID: " + request.getSession().getId());
-		System.out.println("세션 생성 시간: " + new java.util.Date(request.getSession().getCreationTime()));
-		System.out.println("세션 isNew: " + request.getSession().isNew());
-		
-		// 세션의 모든 속성 출력
-		System.out.println("세션 속성 목록:");
-		java.util.Enumeration<String> attributeNames = request.getSession().getAttributeNames();
-		while (attributeNames.hasMoreElements()) {
-			String attrName = attributeNames.nextElement();
-			System.out.println("  - " + attrName + ": " + request.getSession().getAttribute(attrName));
-		}
-		System.out.println("========================================");
-		
 		ResultVO resultVO = new ResultVO();
 
 		log.info("=== 로그아웃 시작 ===");
@@ -354,14 +316,13 @@ public class EgovLoginApiController {
 			Object idObj = params.get("loginHistoryId");
 			if (idObj instanceof Number) {
 				loginHistoryId = ((Number) idObj).longValue();
-				System.out.println("파라미터에서 loginHistoryId 가져옴: " + loginHistoryId);
+				log.debug("파라미터에서 loginHistoryId 가져옴: {}", loginHistoryId);
 			}
 		}
 		
 		// 2. 세션에서 loginHistoryId 확인 (일반 로그인 방식)
 		if (loginHistoryId == null) {
 			Object historyIdObj = request.getSession().getAttribute("loginHistoryId");
-			System.out.println("세션에서 가져온 loginHistoryId: " + historyIdObj);
 			
 			if (historyIdObj != null) {
 				try {
@@ -372,7 +333,7 @@ public class EgovLoginApiController {
 					} else if (historyIdObj instanceof Number) {
 						loginHistoryId = ((Number) historyIdObj).longValue();
 					}
-					System.out.println("세션에서 변환된 loginHistoryId: " + loginHistoryId);
+					log.debug("세션에서 변환된 loginHistoryId: {}", loginHistoryId);
 				} catch (Exception e) {
 					log.error("loginHistoryId 변환 실패", e);
 				}
@@ -385,13 +346,11 @@ public class EgovLoginApiController {
 				log.info("로그아웃 이력 업데이트 시작 - loginHistoryId: {}", loginHistoryId);
 				int updateResult = loginHistoryService.updateLogoutInfo(loginHistoryId);
 				log.info("로그아웃 이력 업데이트 완료 - loginHistoryId: {}, updateResult: {}", loginHistoryId, updateResult);
-				System.out.println("로그아웃 이력 업데이트 완료 - loginHistoryId: " + loginHistoryId + ", updateResult: " + updateResult);
 			} catch (Exception e) {
 				log.error("로그아웃 이력 업데이트 실패 - loginHistoryId: {}", loginHistoryId, e);
 			}
 		} else {
 			log.warn("loginHistoryId를 찾을 수 없습니다. 로그아웃 이력 업데이트를 건너뜁니다.");
-			System.out.println("경고: loginHistoryId를 찾을 수 없습니다.");
 		}
 
 		// 시큐리티 로그아웃 수행 (세션/컨텍스트 초기화)

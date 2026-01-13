@@ -33,6 +33,7 @@ export interface ServiceProductionPlan {
   lotNo?: string;
   customerCode?: string;
   customerName?: string;
+  deliveryDate?: string; // 납기일 (YYYYMMDD)
   factoryCode?: string;
   useYn?: string;
   opmanCode?: string;
@@ -101,6 +102,11 @@ export const toProductionPlanData = (
     workerName: plan.workerName,
     customerCode: plan.customerCode,
     customerName: plan.customerName,
+    deliveryDate: plan.deliveryDate
+      ? plan.deliveryDate.includes('-')
+        ? plan.deliveryDate
+        : normalizeDate(plan.deliveryDate)
+      : undefined,
     planNo: planNo,
     planSeq: planSeq,
     factoryCode: plan.factoryCode,
