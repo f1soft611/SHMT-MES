@@ -382,26 +382,6 @@ const ProductionPlan: React.FC = () => {
         endDate: formatDate(weekEnd, 'YYYYMMDD'),
       });
 
-      console.log('=== 주간 생산계획 조회 응답 ===');
-      console.log('요청 파라미터:', {
-        workplaceCode: selectedWorkplace,
-        startDate: formatDate(weekStart, 'YYYYMMDD'),
-        endDate: formatDate(weekEnd, 'YYYYMMDD'),
-      });
-      console.log('응답 데이터:', response);
-      console.log('equipmentPlans:', response.result?.equipmentPlans);
-      if (response.result?.equipmentPlans?.[0]?.weeklyPlans) {
-        const firstEquipmentPlans =
-          response.result.equipmentPlans[0].weeklyPlans;
-        const firstDate = Object.keys(firstEquipmentPlans)[0];
-        if (firstDate && firstEquipmentPlans[firstDate]?.[0]) {
-          const sample = firstEquipmentPlans[firstDate][0];
-          console.log('첫번째 계획 샘플:', sample);
-          console.log('>>> deliveryDate 값:', sample.deliveryDate);
-          console.log('>>> deliveryDate 타입:', typeof sample.deliveryDate);
-        }
-      }
-
       if (response.resultCode === 200 && response.result?.equipmentPlans) {
         // API 응답에서 설비 목록 추출
         const equipmentList = response.result.equipmentPlans.map((eq: any) => ({
