@@ -1,5 +1,7 @@
 package egovframework.let.scheduler.service;
 
+import java.util.Map;
+
 /**
  * 동적 스케쥴러 관리 서비스
  * @author AI Assistant
@@ -28,4 +30,10 @@ public interface DynamicSchedulerService {
      * @throws Exception
      */
     void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception;
+
+    /**
+     * 스케쥴러 시스템의 상태를 조회한다.
+     * @return 스케쥴러 상태 정보
+     */
+    Map<String, Object> getSchedulerStatus();
 }
