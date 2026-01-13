@@ -218,6 +218,28 @@ public class SchedulerConfigApiController {
     }
 
     /**
+     * 스케쥴러 상태를 확인한다. (Health Check)
+     */
+    @Operation(
+            summary = "스케쥴러 상태 확인",
+            description = "스케쥴러 시스템의 상태를 확인 (초기화 여부, 활성 작업 수 등)",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"SchedulerConfigApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @GetMapping("/health")
+    public ResultVO checkSchedulerHealth(@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
+            throws Exception {
+
+        Map<String, Object> healthStatus = schedulerConfigService.getSchedulerHealthStatus();
+
+        return resultVoHelper.buildFromMap(healthStatus, ResponseCode.SUCCESS);
+    }
+
+    /**
      * 특정 스케쥴러를 즉시 실행한다.
      */
     @Operation(

@@ -97,7 +97,9 @@ class SchedulerService {
   }
 
   // 스케쥴러 상세 조회
-  async getSchedulerDetail(schedulerId: number): Promise<SchedulerDetailResponse> {
+  async getSchedulerDetail(
+    schedulerId: number
+  ): Promise<SchedulerDetailResponse> {
     const response = await api.get(`/api/schedulers/${schedulerId}`);
     return response.data;
   }
@@ -126,6 +128,12 @@ class SchedulerService {
   // 스케쥴러 재시작
   async restartSchedulers(): Promise<any> {
     const response = await api.post('/api/schedulers/restart');
+    return response.data;
+  }
+
+  // 스케쥴러 Health Check
+  async getSchedulerHealth(): Promise<any> {
+    const response = await api.get('/api/schedulers/health');
     return response.data;
   }
 

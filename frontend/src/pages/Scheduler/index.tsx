@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
-import { Box, Paper, Button, Tabs, Tab } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Button,
+  Tabs,
+  Tab,
+  Chip,
+  Stack,
+  Tooltip,
+  CircularProgress,
+} from '@mui/material';
 import {
   Add as AddIcon,
   History as HistoryIcon,
   Schedule as ScheduleIcon,
+  CheckCircle as HealthyIcon,
+  Error as ErrorIcon,
+  Warning as WarningIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { schedulerService } from '../../services/schedulerService';
 import SchedulerList from './components/SchedulerList';
 import SchedulerForm from './components/SchedulerForm';
@@ -48,6 +62,57 @@ const SchedulerManagement: React.FC = () => {
 
   const queryClient = useQueryClient();
 
+  // Health Check 주기적 조회 (30초마다)
+  const { data: healthData, refetch: refetchHealth } = useQuery({
+    queryKey: ['schedulerHealth'],
+    queryFn: () => schedulerService.getSchedulerHealth(),
+    refetchInterval: 30000, // 30초
+    retry: 1,
+  });
+
+  const getHealthStatusColor = (status: string) => {
+    switch (status) {
+      case 'HEALTHY':
+        return 'success';
+      case 'INITIALIZED_NO_TASKS':
+        return 'warning';
+      case 'NOT_INITIALIZED':
+      case 'UNHEALTHY':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getHealthStatusIcon = (status: string) => {
+    switch (status) {
+      case 'HEALTHY':
+        return <HealthyIcon />;
+      case 'INITIALIZED_NO_TASKS':
+        return <WarningIcon />;
+      case 'NOT_INITIALIZED':
+      case 'UNHEALTHY':
+        return <ErrorIcon />;
+      default:
+        return <InfoIcon />;
+    }
+  };
+
+  const getHealthStatusLabel = (status: string) => {
+    switch (status) {
+      case 'HEALTHY':
+        return '정상';
+      case 'INITIALIZED_NO_TASKS':
+        return '초기화됨 (작업없음)';
+      case 'NOT_INITIALIZED':
+        return '초기화 안됨';
+      case 'UNHEALTHY':
+        return '비정상';
+      default:
+        return '알 수 없음';
+    }
+  };
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
@@ -84,6 +149,8 @@ const SchedulerManagement: React.FC = () => {
         message: '스케쥴러가 재시작되었습니다.',
         severity: 'success',
       });
+      // Health Check 다시 조회
+      setTimeout(() => refetchHealth(), 1000);
     },
     onError: (error: any) => {
       showToast({
@@ -103,7 +170,45 @@ const SchedulerManagement: React.FC = () => {
         title=""
         crumbs={[{ label: '시스템 관리' }, { label: '스케쥴러 관리' }]}
         actionsRight={
-          <>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* Health Status */}
+            {healthData?.result && (
+              <Tooltip
+                title={
+                  <Box>
+                    <div>
+                      상태: {getHealthStatusLabel(healthData.result.status)}
+                    </div>
+                    <div>
+                      초기화:{' '}
+                      {healthData.result.isInitialized ? '완료' : '미완료'}
+                    </div>
+                    <div>
+                      TaskScheduler: {healthData.result.taskSchedulerStatus}
+                    </div>
+                    <div>
+                      등록된 작업: {healthData.result.registeredTasksCount}개
+                    </div>
+                    <div>활성 작업: {healthData.result.activeTasksCount}개</div>
+                    <div>
+                      DB 활성 스케줄러:{' '}
+                      {healthData.result.enabledSchedulersInDb}개
+                    </div>
+                    <div>확인 시간: {healthData.result.checkTime}</div>
+                  </Box>
+                }
+              >
+                <Chip
+                  icon={getHealthStatusIcon(healthData.result.status)}
+                  label={`상태: ${getHealthStatusLabel(
+                    healthData.result.status
+                  )}`}
+                  color={getHealthStatusColor(healthData.result.status) as any}
+                  size="small"
+                />
+              </Tooltip>
+            )}
+
             <Button
               variant="contained"
               color="info"
@@ -120,7 +225,7 @@ const SchedulerManagement: React.FC = () => {
             >
               스케쥴러 등록
             </Button>
-          </>
+          </Stack>
         }
       />
 
