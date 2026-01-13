@@ -25,6 +25,7 @@ export interface ProductionPlan {
   lotNo?: string;
   customerCode?: string;
   customerName?: string;
+  deliveryDate?: string; // 납기일 (YYYYMMDD)
   remark?: string;
   useYn?: string;
   opmanCode?: string;

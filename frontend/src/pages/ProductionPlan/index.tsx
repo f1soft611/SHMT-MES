@@ -250,7 +250,7 @@ const ProductionPlan: React.FC = () => {
       localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
       localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
     } catch (error) {
-      console.error('Failed to save day filter to localStorage:', error);
+      // Error saving filter to localStorage
     }
   };
 
@@ -267,7 +267,7 @@ const ProductionPlan: React.FC = () => {
         return default3Days;
       }
     } catch (error) {
-      console.error('Failed to check date change:', error);
+      // Error checking date change
     }
     return null;
   };
@@ -295,8 +295,7 @@ const ProductionPlan: React.FC = () => {
       saveFilterToStorage(default3Days);
       return default3Days;
     } catch (error) {
-      console.error('Failed to load day filter from localStorage:', error);
-      // 오류 시 기본 3일 표시
+      // Error loading day filter from localStorage
       return getDefault3DaysFilter();
     }
   };
@@ -322,7 +321,7 @@ const ProductionPlan: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error('Failed to load equipments:', error);
+      // Error loading equipments
     }
   }, []);
 
@@ -333,7 +332,6 @@ const ProductionPlan: React.FC = () => {
         setWorkplaces(response.result.resultList);
       }
     } catch (error) {
-      console.error('Failed to load workplaces:', error);
       // Mock data for development
       const mockWorkplaces = [
         { workplaceCode: 'WP001', workplaceName: '작업장1' },
@@ -353,7 +351,6 @@ const ProductionPlan: React.FC = () => {
         setWorkplaceWorkers(response.result.resultList);
       }
     } catch (error) {
-      console.error('Failed to load workplace workers:', error);
       setWorkplaceWorkers([]);
     }
   }, []);
@@ -384,6 +381,26 @@ const ProductionPlan: React.FC = () => {
         startDate: formatDate(weekStart, 'YYYYMMDD'),
         endDate: formatDate(weekEnd, 'YYYYMMDD'),
       });
+
+      console.log('=== 주간 생산계획 조회 응답 ===');
+      console.log('요청 파라미터:', {
+        workplaceCode: selectedWorkplace,
+        startDate: formatDate(weekStart, 'YYYYMMDD'),
+        endDate: formatDate(weekEnd, 'YYYYMMDD'),
+      });
+      console.log('응답 데이터:', response);
+      console.log('equipmentPlans:', response.result?.equipmentPlans);
+      if (response.result?.equipmentPlans?.[0]?.weeklyPlans) {
+        const firstEquipmentPlans =
+          response.result.equipmentPlans[0].weeklyPlans;
+        const firstDate = Object.keys(firstEquipmentPlans)[0];
+        if (firstDate && firstEquipmentPlans[firstDate]?.[0]) {
+          const sample = firstEquipmentPlans[firstDate][0];
+          console.log('첫번째 계획 샘플:', sample);
+          console.log('>>> deliveryDate 값:', sample.deliveryDate);
+          console.log('>>> deliveryDate 타입:', typeof sample.deliveryDate);
+        }
+      }
 
       if (response.resultCode === 200 && response.result?.equipmentPlans) {
         // API 응답에서 설비 목록 추출
@@ -422,7 +439,6 @@ const ProductionPlan: React.FC = () => {
         setEquipmentProcessMap(new Map());
       }
     } catch (error) {
-      console.error('Failed to load production plans:', error);
       showToast({
         message: '생산계획 조회에 실패했습니다.',
         severity: 'error',
@@ -525,7 +541,6 @@ const ProductionPlan: React.FC = () => {
         severity: 'success',
       });
     } catch (error) {
-      console.error('캡쳐 실패:', error);
       showToast({
         message: '캡쳐에 실패했습니다.',
         severity: 'error',
@@ -597,6 +612,7 @@ const ProductionPlan: React.FC = () => {
         '',
       processCode: processCode,
       processName: processName,
+      deliveryDate: plan.deliveryDate, // 납기일 포함
     });
     setOpenDialog(true);
   };
@@ -632,11 +648,6 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSave = async (data: ProductionPlanData, references?: any[]) => {
-    console.log('handleSave called');
-    console.log('dialogMode:', dialogMode);
-    console.log('data:', data);
-    console.log('formData:', formData);
-
     if (dialogMode === 'create') {
       try {
         const requestData: ProductionPlanRequest = {
@@ -672,6 +683,9 @@ const ProductionPlan: React.FC = () => {
               workerName: data.workerName,
               customerCode: data.customerCode,
               customerName: data.customerName,
+              deliveryDate: data.deliveryDate
+                ? data.deliveryDate.replace(/-/g, '')
+                : undefined,
             },
           ],
           references: references || [],
@@ -694,7 +708,6 @@ const ProductionPlan: React.FC = () => {
           });
         }
       } catch (error) {
-        console.error('Failed to save plan:', error);
         showToast({
           message: '생산계획 등록 중 오류가 발생했습니다.',
           severity: 'error',
@@ -746,6 +759,9 @@ const ProductionPlan: React.FC = () => {
               workerName: data.workerName,
               customerCode: data.customerCode,
               customerName: data.customerName,
+              deliveryDate: data.deliveryDate
+                ? data.deliveryDate.replace(/-/g, '')
+                : undefined,
             },
           ],
         };
@@ -768,7 +784,6 @@ const ProductionPlan: React.FC = () => {
           });
         }
       } catch (error) {
-        console.error('Failed to update plan:', error);
         showToast({
           message: '생산계획 수정 중 오류가 발생했습니다.',
           severity: 'error',
@@ -809,7 +824,6 @@ const ProductionPlan: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Failed to delete plan:', error);
       showToast({
         message: '생산계획 삭제 중 오류가 발생했습니다.',
         severity: 'error',
@@ -1732,6 +1746,7 @@ const ProductionPlan: React.FC = () => {
         onSave={handleSave}
         onChange={handleChange}
         onBatchChange={handleBatchChange}
+        onRefresh={loadWeeklyPlans}
       />
 
       {/* 삭제 확인 다이얼로그 */}

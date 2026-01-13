@@ -28,6 +28,8 @@ export interface ProductionPlanData {
   customerCode?: string;
   customerName?: string;
   additionalCustomers?: string[]; // 다수 거래처 표시용
+  // 납기일
+  deliveryDate?: string; // YYYY-MM-DD 또는 YYYYMMDD
   // 백엔드 원본 필드(선택적으로 활용)
   planNo?: string;
   planSeq?: number;

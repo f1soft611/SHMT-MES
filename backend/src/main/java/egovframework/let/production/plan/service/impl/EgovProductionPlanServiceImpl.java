@@ -233,6 +233,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.shift((String) row.get("shift"))
 						.workerCode((String) row.get("workerCode"))
 						.workerName((String) row.get("workerName"))
+						.deliveryDate((String) row.get("deliveryDate"))
 						.customerCode((String) row.get("customerCode"))
 						.customerName((String) row.get("customerName"))
 						.remark((String) row.get("remark"))

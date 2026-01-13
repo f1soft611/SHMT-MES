@@ -100,6 +100,9 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "거래처명")
 	private String customerName = "";
 
+	@Schema(description = "납기일 (YYYYMMDD)")
+	private String deliveryDate = "";
+
 	// 주문(생산의뢰) 연동 정보 - TPR301R 저장용
 	@Schema(description = "생산의뢰번호")
 	private String orderNo = "";

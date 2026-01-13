@@ -98,6 +98,7 @@ const productionPlanSchema = yup.object({
   customerCode: yup.string(),
   customerName: yup.string(),
   additionalCustomers: yup.array().of(yup.string().required()),
+  deliveryDate: yup.string(), // 납기일 (YYYY-MM-DD 또는 YYYYMMDD)
   // 선택적 확장/백엔드 매핑 필드
   processCode: yup.string(),
   processName: yup.string(),
@@ -121,6 +122,7 @@ interface PlanDialogProps {
   onSave: (data: ProductionPlanData, references?: any[]) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
+  onRefresh?: () => void; // 데이터 새로고침
 }
 
 const PlanDialog: React.FC<PlanDialogProps> = ({
@@ -133,6 +135,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   workplaceCode,
   onSave,
   onBatchChange,
+  onRefresh,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
@@ -172,7 +175,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
           setShiftCodes(response.result.detailCodeList);
         }
       } catch (error) {
-        console.error('Failed to fetch shift codes (COM006):', error);
         setShiftCodes([]);
       }
     };
@@ -234,8 +236,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleSelectRequest = (requestsOrData: ProductionRequest[] | any) => {
-    console.log('Selected requests:', requestsOrData);
-
     // 다중 선택 시 references가 포함된 객체가 전달됨
     let requests: ProductionRequest[] = [];
     let references: any[] = [];
@@ -289,6 +289,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       customerCode: uniqueCustomers[0],
       customerName: customerNames[0],
       additionalCustomers: uniqueCustomers.slice(1),
+      deliveryDate: firstRequest.deliveryDate || '', // 납기일 추가
     };
 
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
@@ -302,9 +303,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
-    console.log('handleFormSubmit called in PlanDialog');
-    console.log('data from form:', data);
-    console.log('productionReferences:', productionReferences);
     onSave(data, productionReferences);
   };
 
@@ -329,11 +327,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
         </DialogTitle>
         <Divider />
-        <form
-          onSubmit={handleSubmit(handleFormSubmit, (errors) => {
-            console.log('Form validation errors:', errors);
-          })}
-        >
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogContent sx={{ mt: 2 }}>
             <Stack spacing={3}>
               {/* ================================
@@ -720,6 +714,42 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
+              {/* 납기일 */}
+              <Controller
+                name="deliveryDate"
+                control={control}
+                render={({ field }) => {
+                  // YYYYMMDD -> YYYY-MM-DD 변환
+                  let displayValue = field.value || '';
+                  if (
+                    displayValue &&
+                    displayValue.length === 8 &&
+                    !displayValue.includes('-')
+                  ) {
+                    displayValue = `${displayValue.substring(
+                      0,
+                      4
+                    )}-${displayValue.substring(4, 6)}-${displayValue.substring(
+                      6,
+                      8
+                    )}`;
+                  }
+
+                  return (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="납기일"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={displayValue}
+                      error={!!errors.deliveryDate}
+                      helperText={errors.deliveryDate?.message}
+                    />
+                  );
+                }}
+              />
+
               <Stack direction="row" spacing={2}>
                 {/* 작업자 */}
                 <Controller
@@ -842,7 +872,21 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         open={openRequestDialog}
         onClose={handleCloseRequestDialog}
         onSelect={handleSelectRequest}
+        onRegisterComplete={() => {
+          // 생산의뢰에서 직접 등록 완료 시
+          handleCloseRequestDialog();
+          onClose(); // PlanDialog도 닫기
+          if (onRefresh) {
+            onRefresh(); // 데이터 새로고침
+          }
+        }}
         workplaceCode={workplaceCode}
+        selectedDate={selectedDate}
+        equipmentId={formData.equipmentId}
+        equipmentCode={formData.equipmentCode}
+        processCode={formData.processCode}
+        workerCode={formData.workerCode}
+        shift={formData.shift}
       />
 
       {/* 품목 선택 다이얼로그 */}
