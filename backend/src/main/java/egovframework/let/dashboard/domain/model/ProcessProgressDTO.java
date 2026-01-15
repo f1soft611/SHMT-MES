@@ -21,6 +21,7 @@ public class ProcessProgressDTO {
     private int goodQty;
     private int defectQty;
     private String processStatus;
+    private String isFinalProcess; // 최종공정 여부 ('Y' or 'N')
     private String startTime;
     private String endTime;
     private String remark;
