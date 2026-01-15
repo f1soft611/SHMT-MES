@@ -104,6 +104,23 @@ const ProcessStepper: React.FC<ProcessStepperProps> = ({
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                   {process.processName}
+                  {process.isFinalProcess === 'Y' && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        ml: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: 'white',
+                        backgroundColor: 'error.main',
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: 1,
+                      }}
+                    >
+                      최종공정
+                    </Typography>
+                  )}
                 </Typography>
                 <Chip
                   label={process.processStatus}
@@ -196,13 +213,13 @@ const ProcessStepper: React.FC<ProcessStepperProps> = ({
                         </Typography>
                       </Box>
                     </Grid>
-                    <Grid size={{ xs: 4 }}>
+                    <Grid size={{ xs: 3 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
                         display="block"
                       >
-                        계획수량
+                        작업지시량
                       </Typography>
                       <Typography
                         variant="body2"
@@ -212,7 +229,7 @@ const ProcessStepper: React.FC<ProcessStepperProps> = ({
                         {process.plannedQty.toLocaleString()}
                       </Typography>
                     </Grid>
-                    <Grid size={{ xs: 4 }}>
+                    <Grid size={{ xs: 3 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -228,7 +245,7 @@ const ProcessStepper: React.FC<ProcessStepperProps> = ({
                         {process.actualQty.toLocaleString()}
                       </Typography>
                     </Grid>
-                    <Grid size={{ xs: 4 }}>
+                    <Grid size={{ xs: 3 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -242,6 +259,22 @@ const ProcessStepper: React.FC<ProcessStepperProps> = ({
                         sx={{ fontWeight: 600 }}
                       >
                         {process.goodQty.toLocaleString()}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 3 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        불량수량
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="error.main"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {process.defectQty.toLocaleString()}
                       </Typography>
                     </Grid>
                     {process.remark && (

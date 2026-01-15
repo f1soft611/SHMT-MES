@@ -60,6 +60,7 @@ export interface ProductionProgressListResponse {
  */
 export type ProgressStatus =
   | 'PLANNED' // 계획
+  | 'ORDERED' // 지시
   | 'IN_PROGRESS' // 진행중
   | 'COMPLETED' // 완료
   | 'PAUSED' // 중단
@@ -102,6 +103,7 @@ export interface ProcessProgress {
   completionRate: number;
   processStatus: string;
   processStatusName: string;
+  isFinalProcess?: string; // 'Y' or 'N'
   startTime?: string;
   endTime?: string;
   remark?: string;

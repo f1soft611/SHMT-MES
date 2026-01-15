@@ -19,6 +19,11 @@ const getStatusInfo = (status: string): ProgressStatusInfo => {
       label: '계획',
       color: 'default',
     },
+    ORDERED: {
+      status: 'ORDERED',
+      label: '지시',
+      color: 'info',
+    },
     IN_PROGRESS: {
       status: 'IN_PROGRESS',
       label: '진행중',
