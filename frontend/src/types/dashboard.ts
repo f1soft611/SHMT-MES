@@ -22,7 +22,8 @@ export interface ProductionProgress {
   workerName?: string;
   shift?: string;
   plannedQty: number;
-  actualQty: number;
+  actualQty: number; // 최종공정 실적 (양품+불량)
+  progressQty: number; // 진행률 계산용 수량 (공정 진행도 반영)
   remainingQty: number;
   goodQty: number;
   defectQty: number;
