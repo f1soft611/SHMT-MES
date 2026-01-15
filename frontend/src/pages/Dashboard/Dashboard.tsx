@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
         const response = await dashboardService.getActiveProductionList();
         const progressList = response.resultList || [];
         setActiveProgressList(progressList);
-        
+
         // 초기 세팅: 첫 번째 계획 자동 선택
         if (progressList.length > 0 && !selectedProgress) {
           setSelectedProgress(progressList[0]);
