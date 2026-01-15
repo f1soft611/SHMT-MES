@@ -69,8 +69,11 @@ public class ProductionProgressDTO implements Serializable {
     @Schema(description = "계획수량")
     private BigDecimal plannedQty = BigDecimal.ZERO;
 
-    @Schema(description = "실적수량")
+    @Schema(description = "실적수량 (최종공정 양품+불량)")
     private BigDecimal actualQty = BigDecimal.ZERO;
+
+    @Schema(description = "진행률 계산용 수량 (공정 진행도 반영)")
+    private BigDecimal progressQty = BigDecimal.ZERO;
 
     @Schema(description = "잔여수량")
     private BigDecimal remainingQty = BigDecimal.ZERO;
@@ -112,11 +115,11 @@ public class ProductionProgressDTO implements Serializable {
     }
 
     /**
-     * 달성률 계산
+     * 달성률 계산 (진행률 계산용 수량 기준)
      */
     public void calculateCompletionRate() {
-        if (plannedQty != null && actualQty != null && plannedQty.compareTo(BigDecimal.ZERO) > 0) {
-            this.completionRate = actualQty
+        if (plannedQty != null && progressQty != null && plannedQty.compareTo(BigDecimal.ZERO) > 0) {
+            this.completionRate = progressQty
                     .multiply(BigDecimal.valueOf(100))
                     .divide(plannedQty, 2, RoundingMode.HALF_UP);
         }
