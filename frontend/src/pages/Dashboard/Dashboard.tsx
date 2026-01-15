@@ -107,7 +107,13 @@ const Dashboard: React.FC = () => {
       try {
         setLoading(true);
         const response = await dashboardService.getActiveProductionList();
-        setActiveProgressList(response.resultList || []);
+        const progressList = response.resultList || [];
+        setActiveProgressList(progressList);
+        
+        // 초기 세팅: 첫 번째 계획 자동 선택
+        if (progressList.length > 0 && !selectedProgress) {
+          setSelectedProgress(progressList[0]);
+        }
       } catch (err: any) {
         console.error('진행 중인 생산계획 조회 실패:', err);
       } finally {
