@@ -44,6 +44,9 @@ const Dashboard: React.FC = () => {
   const [processLoading, setProcessLoading] = useState<boolean>(false);
   const [workplaceList, setWorkplaceList] = useState<WorkplaceProgress[]>([]);
   const [workplaceLoading, setWorkplaceLoading] = useState<boolean>(false);
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string | null>(
+    null
+  );
   const [alertList, setAlertList] = useState<DashboardAlert[]>([]);
   const [alertLoading, setAlertLoading] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -106,7 +109,9 @@ const Dashboard: React.FC = () => {
     const fetchActiveProgress = async () => {
       try {
         setLoading(true);
-        const response = await dashboardService.getActiveProductionList();
+        const response = await dashboardService.getActiveProductionList(
+          selectedWorkplace || undefined
+        );
         const progressList = response.resultList || [];
         setActiveProgressList(progressList);
 
@@ -122,7 +127,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchActiveProgress();
-  }, []);
+  }, [selectedWorkplace]);
 
   // 리스트에서 생산계획 선택 핸들러
   const handleSelectProgress = (progress: ProductionProgress) => {
@@ -155,6 +160,12 @@ const Dashboard: React.FC = () => {
     fetchProcessProgress();
   }, [selectedProgress]);
 
+  // 작업장 선택 핸들러
+  const handleSelectWorkplace = (workplaceCode: string | null) => {
+    setSelectedWorkplace(workplaceCode);
+    setSelectedProgress(null); // 작업장 변경 시 선택된 생산계획 초기화
+  };
+
   return (
     <Box>
       <Box
@@ -180,7 +191,34 @@ const Dashboard: React.FC = () => {
         <AlertList alerts={alertList} loading={alertLoading} />
       </Box>
 
-      {/* 3. TOP 10 진행 중인 생산계획 + 상세 정보 */}
+      {/* 3. 🏭 작업장별 생산 현황 */}
+      <Box sx={{ mb: 3 }}>
+        <Card>
+          <CardContent>
+            <CardHeader>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                🏭 작업장별 생산 현황
+              </Typography>
+              {workplaceList.length > 0 && (
+                <Chip
+                  label={`${workplaceList.length}개 작업장`}
+                  size="small"
+                  color="secondary"
+                />
+              )}
+            </CardHeader>
+
+            <WorkplaceChart
+              workplaceList={workplaceList}
+              loading={workplaceLoading}
+              selectedWorkplace={selectedWorkplace}
+              onSelectWorkplace={handleSelectWorkplace}
+            />
+          </CardContent>
+        </Card>
+      </Box>
+
+      {/* 4. TOP 10 진행 중인 생산계획 + 상세 정보 */}
       <Grid container spacing={3}>
         {/* 왼쪽: 진행 중인 생산계획 리스트 */}
         <Grid size={{ xs: 12, md: 5 }} component="div">
@@ -189,6 +227,7 @@ const Dashboard: React.FC = () => {
               <CardHeader>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   🔥 진행 중인 생산계획 (TOP 10)
+                  {selectedWorkplace && ' - 작업장별 필터링'}
                 </Typography>
                 <Chip
                   label={`${activeProgressList.length}건`}
@@ -304,31 +343,6 @@ const Dashboard: React.FC = () => {
           )}
         </Grid>
       </Grid>
-
-      {/* 4. 🏭 작업장별 생산 현황 */}
-      <Box sx={{ mt: 3 }}>
-        <Card>
-          <CardContent>
-            <CardHeader>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                🏭 작업장별 생산 현황
-              </Typography>
-              {workplaceList.length > 0 && (
-                <Chip
-                  label={`${workplaceList.length}개 작업장`}
-                  size="small"
-                  color="secondary"
-                />
-              )}
-            </CardHeader>
-
-            <WorkplaceChart
-              workplaceList={workplaceList}
-              loading={workplaceLoading}
-            />
-          </CardContent>
-        </Card>
-      </Box>
     </Box>
   );
 };

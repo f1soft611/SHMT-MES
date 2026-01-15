@@ -244,6 +244,7 @@
         LEFT JOIN TPR301R ord WITH (NOLOCK) ON m.FACTORY_CODE = ord.FACTORY_CODE AND m.PRODPLAN_DATE = ord.PRODPLAN_DATE AND m.PRODPLAN_SEQ = ord.PRODPLAN_SEQ
         LEFT JOIN TCO601 c WITH (NOLOCK) ON ord.CUSTOMER_CODE = c.CUSTOMER_CODE AND m.FACTORY_CODE = c.FACTORY_CODE
         WHERE m.FACTORY_CODE = #{factoryCode}
+          AND m.PRODPLAN_DATE = CONVERT(VARCHAR(8), GETDATE(), 112)
         <if test="workplaceCode != null and workplaceCode != ''">
           AND p.WORKCENTER_CODE = #{workplaceCode}
         </if>
