@@ -82,7 +82,6 @@ const LoginHistoryManagement: React.FC = () => {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : '로그인 이력 조회에 실패했습니다.';
-      setError(errorMessage);
       showToast({ message: errorMessage, severity: 'error' });
       console.error('로그인 이력 조회 에러:', err);
     } finally {
