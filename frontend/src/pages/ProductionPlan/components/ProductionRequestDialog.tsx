@@ -30,7 +30,6 @@ import {
 import {
   Search as SearchIcon,
   Close as CloseIcon,
-  CheckCircle as CheckCircleIcon,
   FilterList as FilterListIcon,
   Add as AddIcon,
 } from '@mui/icons-material';
