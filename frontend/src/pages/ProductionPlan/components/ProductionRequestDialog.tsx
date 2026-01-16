@@ -173,8 +173,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   const handleRegisterProductionPlans = async () => {
     // 선택된 항목 확인
-    console.log('selectionModel:', selectionModel);
-
     let selectedIds: GridRowId[] = [];
 
     if (Array.isArray(selectionModel)) {
@@ -210,8 +208,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         }
       }
     }
-
-    console.log('selectedIds:', selectedIds);
 
     if (selectedIds.length === 0) {
       setError('생산의뢰를 1개 이상 선택해주세요.');
