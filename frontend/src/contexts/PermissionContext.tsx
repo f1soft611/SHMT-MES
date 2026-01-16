@@ -170,7 +170,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
       setLoading(false);
       setLoadedOnce(true);
     }
-  }, [user?.groupId, debug]);
+  }, [user?.groupId]);
 
   const refreshPermissions = useCallback(async () => {
     await loadUserPermissions();
@@ -231,7 +231,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
     candidates.sort((a, b) => b.length - a.length);
 
     return { permissionMap: map, prefixCandidates: candidates };
-  }, [userMenus, debug, prefixMatch]);
+  }, [userMenus]);
 
   const ready = loadedOnce && !loading;
 
@@ -271,7 +271,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
       const level = Array.from(permissions)[0];
       return level;
     },
-    [permissionMap, prefixCandidates, prefixMatch, ready, debug]
+    [permissionMap, prefixCandidates, prefixMatch, ready]
   );
 
   /**

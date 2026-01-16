@@ -1,76 +1,69 @@
-import React, { useMemo, useState} from 'react';
+import React, { useState } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
-import {ProcessFlowItem} from "../../../../../types/processFlow";
-import {Item} from "../../../../../types/item";
+import { ProcessFlowItem } from '../../../../../types/processFlow';
+import { Item } from '../../../../../types/item';
 
 interface Props {
-    flowItemRows: ProcessFlowItem[];
-    setFlowItemRows: React.Dispatch<
-        React.SetStateAction<ProcessFlowItem[]>
-    >;
+  flowItemRows: ProcessFlowItem[];
+  setFlowItemRows: React.Dispatch<React.SetStateAction<ProcessFlowItem[]>>;
 }
 
-export function useDetailItemTab({
-    flowItemRows,
-    setFlowItemRows,
-}: Props) {
+export function useDetailItemTab({ flowItemRows, setFlowItemRows }: Props) {
+  /** 선택 관리 */
+  const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
 
+  /** 오른쪽으로 추가 */
+  const addItems = (
+    leftSelected: GridRowId[],
+    itemRows: Item[],
+    processFlowId: string,
+    processFlowCode: string
+  ) => {
+    if (!leftSelected.length) return;
 
-    /** 선택 관리 */
-    const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
+    setFlowItemRows((prev) => {
+      const existCodes = new Set(prev.map((r) => r.flowItemCode));
 
-    /** 오른쪽으로 추가 */
-    const addItems = (
-        leftSelected: GridRowId[],
-        itemRows: Item[],
-        processFlowId: string,
-        processFlowCode: string
-    ) => {
-        if (!leftSelected.length) return;
+      const newList: ProcessFlowItem[] = itemRows
+        .filter((it) => leftSelected.includes(it.itemCode))
+        .filter((it) => !existCodes.has(it.itemCode))
+        .map((it) => ({
+          flowRowId: crypto.randomUUID(),
+          flowItemId: null,
 
-        setFlowItemRows((prev) => {
-            const existCodes = new Set(prev.map((r) => r.flowItemCode));
+          processFlowId,
+          processFlowCode,
 
-            const newList: ProcessFlowItem[] = itemRows
-            .filter((it) => leftSelected.includes(it.itemCode))
-            .filter((it) => !existCodes.has(it.itemCode))
-            .map((it) => ({
-                flowRowId: crypto.randomUUID(),
-                flowItemId: null,
+          flowItemCode: it.itemCode,
+          flowItemCodeId: it.itemId ?? '',
+          flowItemName: it.itemName,
+          specification: it.specification ?? '',
+          unit: it.unit ?? '',
+          unitName: it.unitName ?? '',
+        }));
 
-                processFlowId,
-                processFlowCode,
+      return [...prev, ...newList];
+    });
+  };
 
-                flowItemCode: it.itemCode,
-                flowItemCodeId: it.itemId ?? "",
-                flowItemName: it.itemName,
-                specification: it.specification ?? "",
-                unit: it.unit ?? "",
-                unitName: it.unitName ?? "",
-            }));
+  /** 오른쪽 목록 삭제 */
+  const removeItems = () => {
+    if (rightSelected.length === 0) return;
 
-            return [...prev, ...newList];
-        });
-    };
+    setFlowItemRows((prev) =>
+      prev.filter((r) => !rightSelected.includes(r.flowItemId ?? r.flowRowId))
+    );
 
-    /** 오른쪽 목록 삭제 */
-    const removeItems = () => {
-        if (rightSelected.length === 0) return;
+    setRightSelected([]);
+  };
 
-        setFlowItemRows(prev =>
-            prev.filter(r => !rightSelected.includes(r.flowItemId ?? r.flowRowId))
-        );
+  return {
+    /** 선택 */
+    rightSelected,
+    setRightSelected,
 
-        setRightSelected([]);
-    }
-
-    return {
-        /** 선택 */
-        rightSelected,
-        setRightSelected,
-
-        /** 조작 */
-        addItems,
-        removeItems,
-    };
+    /** 조작 */
+    addItems,
+    removeItems,
+  };
 }
