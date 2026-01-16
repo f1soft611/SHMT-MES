@@ -43,7 +43,6 @@ import { Divider } from '@mui/material';
 const LoginHistoryManagement: React.FC = () => {
   const [loginHistories, setLoginHistories] = useState<LoginHistory[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<LoginHistory | null>(
     null
@@ -70,7 +69,6 @@ const LoginHistoryManagement: React.FC = () => {
   // 로그인 이력 목록 조회
   const fetchLoginHistories = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await loginHistoryService.getLoginHistoryList({
         ...searchParams,
@@ -94,6 +92,7 @@ const LoginHistoryManagement: React.FC = () => {
 
   useEffect(() => {
     fetchLoginHistories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationModel.page, paginationModel.pageSize]);
 
   // 검색 처리
