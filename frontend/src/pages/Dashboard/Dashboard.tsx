@@ -50,7 +50,6 @@ const Dashboard: React.FC = () => {
   const [alertList, setAlertList] = useState<DashboardAlert[]>([]);
   const [alertLoading, setAlertLoading] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   // 금일 KPI 통계 조회
   useEffect(() => {
@@ -127,6 +126,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchActiveProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWorkplace]);
 
   // 리스트에서 생산계획 선택 핸들러
@@ -158,6 +158,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchProcessProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProgress]);
 
   // 작업장 선택 핸들러
@@ -289,7 +290,7 @@ const Dashboard: React.FC = () => {
                   <ProductionProgressCard
                     progress={selectedProgress}
                     loading={false}
-                    error={error}
+                    error={null}
                     compact={false}
                   />
                 </CardContent>

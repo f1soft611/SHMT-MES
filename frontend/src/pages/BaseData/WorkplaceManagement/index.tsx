@@ -53,7 +53,7 @@ const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
 const WorkplaceManagement: React.FC = () => {
   const SHOW_WORKPLACE_PROCESS = false;
   // 권한 체크
-  const { hasWritePermission, refreshPermissions } = usePermissions();
+  const { hasWritePermission } = usePermissions();
   const workplaceMenuUrls = ['/base/workplace'];
   const canWrite = workplaceMenuUrls.some((url) => hasWritePermission(url));
 
