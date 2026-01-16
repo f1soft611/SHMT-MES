@@ -78,11 +78,11 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     current: 0,
     total: 0,
   });
-  // 선택모델 (현재 프로젝트의 커스텀 형태 사용)
+  // 선택모델 (커스텀 GridRowSelectionModel 사용)
   const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>({
     type: 'include',
     ids: new Set<GridRowId>(),
-  } as any);
+  });
   const [error, setError] = useState<string>('');
 
   // 검색 조건 (실제 조회에 사용)
@@ -172,12 +172,57 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   };
 
   const handleRegisterProductionPlans = async () => {
-    if (!selectionModel || (selectionModel as any).ids?.size === 0) {
-      setError('생산의뢰를 선택해주세요.');
+    // 선택된 항목 확인
+    console.log('selectionModel:', selectionModel);
+
+    let selectedIds: GridRowId[] = [];
+
+    if (Array.isArray(selectionModel)) {
+      selectedIds = selectionModel;
+    } else if (selectionModel && typeof selectionModel === 'object') {
+      const modelType = (selectionModel as any).type;
+      const ids = (selectionModel as any).ids;
+
+      if (modelType === 'exclude') {
+        // type이 'exclude'이고 ids가 비어있으면 전체 선택
+        if (ids instanceof Set && ids.size === 0) {
+          // 모든 항목 선택
+          selectedIds = requests.map(
+            (req) =>
+              `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
+          );
+        } else if (ids instanceof Set) {
+          // exclude 항목을 제외한 나머지
+          const excludeSet = new Set(Array.from(ids).map(String));
+          selectedIds = requests
+            .map(
+              (req) =>
+                `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
+            )
+            .filter((id) => !excludeSet.has(id));
+        }
+      } else if (modelType === 'include') {
+        // type이 'include'이면 ids에 있는 항목만 선택
+        if (ids instanceof Set) {
+          selectedIds = Array.from(ids);
+        } else if (Array.isArray(ids)) {
+          selectedIds = ids;
+        }
+      }
+    }
+
+    console.log('selectedIds:', selectedIds);
+
+    if (selectedIds.length === 0) {
+      setError('생산의뢰를 1개 이상 선택해주세요.');
+      showToast({
+        message: '생산의뢰를 1개 이상 선택해주세요.',
+        severity: 'warning',
+      });
       return;
     }
 
-    const selectedKeys = Array.from((selectionModel as any).ids).map(String);
+    const selectedKeys = selectedIds.map(String);
     const selectedItems = requests.filter((req) =>
       selectedKeys.includes(
         `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
@@ -317,7 +362,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   const handleClose = () => {
     onClose();
-    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() } as any);
+    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
     setInputValues({
       searchCnd: '1',
@@ -646,9 +691,17 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             loading={loading}
             checkboxSelection={true}
             disableMultipleRowSelection={!multiSelect}
-            rowSelectionModel={selectionModel as any}
-            onRowSelectionModelChange={(newSelection: any, details?: any) => {
-              setSelectionModel(newSelection);
+            rowSelectionModel={selectionModel}
+            onRowSelectionModelChange={(newSelection) => {
+              // 배열로 오면 커스텀 형탄로 변환
+              if (Array.isArray(newSelection)) {
+                setSelectionModel({
+                  type: 'include',
+                  ids: new Set(newSelection),
+                });
+              } else {
+                setSelectionModel(newSelection);
+              }
               setError('');
             }}
             disableRowSelectionOnClick={false}
@@ -675,11 +728,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Button
           onClick={handleRegisterProductionPlans}
           variant="contained"
-          disabled={
-            !selectionModel?.ids ||
-            (selectionModel as any).ids.size === 0 ||
-            registering
-          }
+          disabled={registering}
           startIcon={<AddIcon />}
         >
           {registering ? '등록 중...' : '등록'}

@@ -1534,15 +1534,6 @@ const ProductionPlan: React.FC = () => {
                                                   flexWrap: 'wrap',
                                                 }}
                                               >
-                                                <Chip
-                                                  label={
-                                                    plan.itemDisplayCode ||
-                                                    plan.itemCode
-                                                  }
-                                                  size="small"
-                                                  color="primary"
-                                                  variant="outlined"
-                                                />
                                                 <Typography
                                                   variant="body2"
                                                   sx={{
@@ -1554,6 +1545,26 @@ const ProductionPlan: React.FC = () => {
                                                   }}
                                                 >
                                                   {plan.itemName}
+                                                  {(plan.itemDisplayCode ||
+                                                    plan.itemCode) && (
+                                                    <Typography
+                                                      component="span"
+                                                      variant="body2"
+                                                      sx={{
+                                                        ml: 1,
+                                                        color: 'primary.main',
+                                                        fontSize: compactMode
+                                                          ? '0.8rem'
+                                                          : '0.95rem',
+                                                        fontWeight: 500,
+                                                      }}
+                                                    >
+                                                      (
+                                                      {plan.itemDisplayCode ||
+                                                        plan.itemCode}
+                                                      )
+                                                    </Typography>
+                                                  )}
                                                 </Typography>
                                               </Box>
 
