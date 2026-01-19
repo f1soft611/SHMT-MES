@@ -8,7 +8,6 @@ import {
 import {
     KeyboardArrowDown,
     KeyboardArrowUp,
-    Add as AddIcon
 } from "@mui/icons-material";
 import {
     ProductionResultOrder,
