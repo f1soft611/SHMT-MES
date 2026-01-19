@@ -65,6 +65,8 @@ import html2canvas from 'html2canvas';
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
 const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
 const STORAGE_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
+// sessionStorage 키 상수
+const SESSION_KEY_WEEK_START = 'productionPlan_weekStart';
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -166,9 +168,21 @@ const ProductionPlan: React.FC = () => {
     return shift ? borderColorMap[shift] || 'grey.400' : 'grey.400';
   };
 
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
-    getMonday(new Date()),
-  );
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    // 세션스토리지에서 마지막 주간 시작일 불러오기
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY_WEEK_START);
+      if (saved) {
+        const parsedDate = new Date(saved);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
+    } catch (error) {
+      // Error loading week start from sessionStorage
+    }
+    return getMonday(new Date());
+  });
 
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
@@ -496,15 +510,33 @@ const ProductionPlan: React.FC = () => {
   const weekDays = getWeekDays();
 
   const handleNextWeek = () => {
-    setCurrentWeekStart(addDays(currentWeekStart, 7));
+    const newDate = addDays(currentWeekStart, 7);
+    setCurrentWeekStart(newDate);
+    try {
+      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
+    } catch (error) {
+      // Error saving week start to sessionStorage
+    }
   };
 
   const handlePrevWeek = () => {
-    setCurrentWeekStart(addDays(currentWeekStart, -7));
+    const newDate = addDays(currentWeekStart, -7);
+    setCurrentWeekStart(newDate);
+    try {
+      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
+    } catch (error) {
+      // Error saving week start to sessionStorage
+    }
   };
 
   const handleToday = () => {
-    setCurrentWeekStart(getMonday(new Date()));
+    const newDate = getMonday(new Date());
+    setCurrentWeekStart(newDate);
+    try {
+      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
+    } catch (error) {
+      // Error saving week start to sessionStorage
+    }
   };
 
   const handleCapture = async () => {
