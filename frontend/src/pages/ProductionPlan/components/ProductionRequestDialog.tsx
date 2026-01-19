@@ -116,13 +116,28 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       const response = await productionRequestService.getProductionRequestList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
 
+      // console.log('Production Request API Response:', response);
+
       if (response.resultCode === 200 && response.result?.resultList) {
-        setRequests(response.result.resultList);
+        const resultList = response.result.resultList;
+        setRequests(resultList);
+
+        // totalRecordCount를 paginationInfo에서 가져오기
         const totalCount =
-          response.result.paginationInfo?.totalRecordCount || 0;
+          response.result.paginationInfo?.totalRecordCount ||
+          parseInt(response.result.resultCnt || '0', 10) ||
+          resultList.length ||
+          0;
+
+        // console.log(
+        //   'Total Count:',
+        //   totalCount,
+        //   'Result List Length:',
+        //   resultList.length,
+        // );
         setTotalCount(totalCount);
       } else {
         setRequests([]);
@@ -141,7 +156,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     if (open) {
       loadProductionRequests();
     }
-  }, [open, loadProductionRequests]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, paginationModel.page, paginationModel.pageSize, searchParams]);
 
   // workplaceCode 변경 시 검색 조건 업데이트
   useEffect(() => {
@@ -186,7 +202,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           // 모든 항목 선택
           selectedIds = requests.map(
             (req) =>
-              `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
+              `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
           );
         } else if (ids instanceof Set) {
           // exclude 항목을 제외한 나머지
@@ -194,7 +210,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           selectedIds = requests
             .map(
               (req) =>
-                `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
+                `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
             )
             .filter((id) => !excludeSet.has(id));
         }
@@ -220,8 +236,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     const selectedKeys = selectedIds.map(String);
     const selectedItems = requests.filter((req) =>
       selectedKeys.includes(
-        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`
-      )
+        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
+      ),
     );
 
     if (selectedItems.length === 0) {
@@ -300,9 +316,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             ],
           };
 
-          const response = await productionPlanService.createProductionPlan(
-            planData
-          );
+          const response =
+            await productionPlanService.createProductionPlan(planData);
 
           if (response.resultCode === 200) {
             successCount++;
@@ -381,7 +396,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     if (dateStr.length === 8) {
       return `${dateStr.substring(0, 4)}-${dateStr.substring(
         4,
-        6
+        6,
       )}-${dateStr.substring(6, 8)}`;
     }
     return dateStr;
@@ -683,6 +698,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             pageSizeOptions={[5, 10, 25, 50, 100]}
             rowCount={totalCount}
             paginationMode="server"
+            pagination
             loading={loading}
             checkboxSelection={true}
             disableMultipleRowSelection={!multiSelect}
