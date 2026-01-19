@@ -76,4 +76,15 @@ public class SchedulerConfigServiceImpl implements SchedulerConfigService {
     public void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception {
         dynamicSchedulerService.executeSchedulerManually(schedulerId, fromDate, toDate);
     }
+
+    @Override
+    public Map<String, Object> getSchedulerHealthStatus() throws Exception {
+        Map<String, Object> healthStatus = dynamicSchedulerService.getSchedulerStatus();
+        
+        // DB에서 활성화된 스케줄러 수 조회
+        List<SchedulerConfig> enabledSchedulers = schedulerConfigDAO.selectEnabledSchedulers();
+        healthStatus.put("enabledSchedulersInDb", enabledSchedulers.size());
+        
+        return healthStatus;
+    }
 }

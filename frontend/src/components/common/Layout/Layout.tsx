@@ -15,11 +15,12 @@ import {
   Divider,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Person, ExitToApp } from '@mui/icons-material';
+import { Person, ExitToApp, LockReset } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionProvider } from '../../../contexts/PermissionContext';
 import Sidebar from '../Sidebar/Sidebar';
+import PasswordChangeDialog from '../PasswordChangeDialog/PasswordChangeDialog';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -51,6 +53,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     logout();
     navigate('/login');
     handleProfileMenuClose();
+  };
+
+  const handlePasswordChange = () => {
+    setPasswordDialogOpen(true);
+    handleProfileMenuClose();
+  };
+
+  const handlePasswordDialogClose = () => {
+    setPasswordDialogOpen(false);
   };
 
   return (
@@ -117,6 +128,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {user?.name}
                 </MenuItem>
                 <Divider />
+                <MenuItem onClick={handlePasswordChange}>
+                  <LockReset sx={{ mr: 2 }} />
+                  비밀번호 변경
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   <ExitToApp sx={{ mr: 2 }} />
                   로그아웃
@@ -157,6 +172,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Toolbar />
           {children}
         </Box>
+
+        {/* 비밀번호 변경 다이얼로그 */}
+        <PasswordChangeDialog
+          open={passwordDialogOpen}
+          onClose={handlePasswordDialogClose}
+        />
       </Box>
     </PermissionProvider>
   );

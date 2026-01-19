@@ -89,7 +89,7 @@ apiClient.interceptors.response.use(
         processQueue(error, null);
         isRefreshing = false;
         // 리프레쉬 실패 시 로그아웃 및 로그인 페이지로 이동
-        authService.logout();
+        await authService.logout();
         window.location.href = '/login';
       }
     }

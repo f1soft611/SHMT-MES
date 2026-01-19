@@ -63,6 +63,7 @@ public class ProductionRequestVO extends ComDefaultVO {
     private String dateFrom;        // 시작일자 (납기일 기준)
     private String dateTo;          // 종료일자 (납기일 기준)
     private String closingFlag;     // 마감여부
+    private String workplaceCode;   // 작업장코드
 
     /**
      * toString 메소드를 대치한다.

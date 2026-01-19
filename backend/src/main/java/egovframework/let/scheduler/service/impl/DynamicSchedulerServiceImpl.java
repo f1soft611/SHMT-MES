@@ -7,7 +7,9 @@ import egovframework.let.scheduler.service.DynamicSchedulerService;
 import egovframework.let.scheduler.service.SchedulerHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -15,7 +17,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 동적 스케쥴러 관리 서비스 구현체
@@ -39,50 +42,139 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
     private final SchedulerHistoryService schedulerHistoryService;
     private final ApplicationContext applicationContext;
     
-    private TaskScheduler taskScheduler;
+    private ThreadPoolTaskScheduler taskScheduler;
     private final Map<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+    private volatile boolean isInitialized = false;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(10);
         scheduler.setThreadNamePrefix("dynamic-scheduler-");
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
+        scheduler.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         scheduler.initialize();
         this.taskScheduler = scheduler;
         taskRegistrar.setTaskScheduler(scheduler);
+        log.info("TaskScheduler 설정 완료 - PoolSize: 10, GracefulShutdown: 30초");
     }
 
-    @PostConstruct
-    public void init() {
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
         try {
-            log.info("스케쥴러 초기화 시작");
+            log.info("=== 스케쥴러 초기화 시작 (ApplicationReadyEvent) ===");
+            
+            if (taskScheduler == null) {
+                log.error("TaskScheduler 초기화 실패 - taskScheduler가 null입니다.");
+                log.error("configureTasks()가 실행되지 않았을 수 있습니다.");
+                isInitialized = false;
+                return;
+            }
+            
+            // ThreadPoolTaskScheduler 상태 확인
+            if (taskScheduler.getScheduledExecutor() == null) {
+                log.error("TaskScheduler의 Executor가 초기화되지 않았습니다.");
+                isInitialized = false;
+                return;
+            }
+            
+            log.info("TaskScheduler 상태: 정상 (PoolSize: {})", 
+                ((ThreadPoolTaskScheduler)taskScheduler).getPoolSize());
+            
             initializeSchedulers();
-            log.info("스케쥴러 초기화 완료");
+            isInitialized = true;
+            log.info("=== 스케쥴러 초기화 완료: {} 개의 스케쥴러 등록됨 ===", scheduledTasks.size());
         } catch (Exception e) {
             log.error("스케쥴러 초기화 실패", e);
+            isInitialized = false;
+        }
+    }
+    
+    @PreDestroy
+    public void destroy() {
+        try {
+            log.info("=== 스케쥴러 종료 시작 ===");
+            
+            // 모든 스케쥴 작업 취소
+            scheduledTasks.values().forEach(task -> {
+                if (task != null && !task.isCancelled()) {
+                    task.cancel(false);
+                }
+            });
+            scheduledTasks.clear();
+            
+            // TaskScheduler 종료
+            if (taskScheduler != null) {
+                taskScheduler.shutdown();
+                // 종료 완료 대기
+                if (taskScheduler.getScheduledExecutor() != null) {
+                    taskScheduler.getScheduledExecutor().awaitTermination(30, TimeUnit.SECONDS);
+                }
+            }
+            
+            isInitialized = false;
+            log.info("=== 스케쥴러 정상 종료 완료 ===");
+        } catch (Exception e) {
+            log.error("스케쥴러 종료 중 오류 발생", e);
         }
     }
 
     @Override
     public void initializeSchedulers() throws Exception {
         List<SchedulerConfig> schedulers = schedulerConfigDAO.selectEnabledSchedulers();
+        log.info("활성화된 스케쥴러 개수: {}", schedulers.size());
+        
+        int successCount = 0;
         for (SchedulerConfig scheduler : schedulers) {
-            scheduleTask(scheduler);
+            try {
+                scheduleTask(scheduler);
+                successCount++;
+            } catch (Exception e) {
+                log.error("스케쥴러 등록 실패: {} - {}", scheduler.getSchedulerName(), e.getMessage());
+            }
         }
+        
+        log.info("스케쥴러 등록 결과: 성공 {}/{}", successCount, schedulers.size());
     }
 
     @Override
     public void restartSchedulers() throws Exception {
-        log.info("스케쥴러 재시작 시작");
+        log.info("=== 스케쥴러 재시작 시작 ===");
         
         // 모든 기존 스케쥴 작업 취소
-        scheduledTasks.values().forEach(task -> task.cancel(false));
+        int cancelledCount = 0;
+        for (ScheduledFuture<?> task : scheduledTasks.values()) {
+            if (task != null && !task.isCancelled()) {
+                task.cancel(false);
+                cancelledCount++;
+            }
+        }
         scheduledTasks.clear();
+        log.info("기존 스케쥴러 {} 개 취소됨", cancelledCount);
+        
+        // TaskScheduler 상태 확인
+        if (taskScheduler == null || taskScheduler.getScheduledExecutor() == null 
+                || taskScheduler.getScheduledExecutor().isShutdown()) {
+            log.warn("TaskScheduler가 종료되어 있습니다. 재생성합니다.");
+            
+            // TaskScheduler 재생성
+            ThreadPoolTaskScheduler newScheduler = new ThreadPoolTaskScheduler();
+            newScheduler.setPoolSize(10);
+            newScheduler.setThreadNamePrefix("dynamic-scheduler-");
+            newScheduler.setWaitForTasksToCompleteOnShutdown(true);
+            newScheduler.setAwaitTerminationSeconds(30);
+            newScheduler.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+            newScheduler.initialize();
+            this.taskScheduler = newScheduler;
+            log.info("TaskScheduler 재생성 완료");
+        }
         
         // 활성화된 스케쥴러 다시 등록
         initializeSchedulers();
+        isInitialized = true;
         
-        log.info("스케쥴러 재시작 완료");
+        log.info("=== 스케쥴러 재시작 완료: {} 개 등록됨 ===", scheduledTasks.size());
     }
 
     private void scheduleTask(SchedulerConfig config) {
@@ -330,5 +422,62 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         }
         
         log.info("스케쥴러 수동 실행 요청 완료: {}", config.getSchedulerName());
+    }
+
+    @Override
+    public Map<String, Object> getSchedulerStatus() {
+        Map<String, Object> status = new java.util.HashMap<>();
+        
+        // 초기화 상태
+        status.put("isInitialized", isInitialized);
+        
+        // TaskScheduler 상태
+        boolean taskSchedulerHealthy = false;
+        String taskSchedulerStatus = "UNKNOWN";
+        
+        if (taskScheduler != null) {
+            if (taskScheduler.getScheduledExecutor() != null) {
+                if (!taskScheduler.getScheduledExecutor().isShutdown()) {
+                    taskSchedulerHealthy = true;
+                    taskSchedulerStatus = "RUNNING";
+                } else {
+                    taskSchedulerStatus = "SHUTDOWN";
+                }
+            } else {
+                taskSchedulerStatus = "NOT_INITIALIZED";
+            }
+        } else {
+            taskSchedulerStatus = "NULL";
+        }
+        
+        status.put("taskSchedulerHealthy", taskSchedulerHealthy);
+        status.put("taskSchedulerStatus", taskSchedulerStatus);
+        
+        // 등록된 스케줄러 작업 수
+        status.put("registeredTasksCount", scheduledTasks.size());
+        
+        // 활성 작업 수 (취소되지 않은 작업)
+        long activeTasksCount = scheduledTasks.values().stream()
+                .filter(task -> task != null && !task.isCancelled() && !task.isDone())
+                .count();
+        status.put("activeTasksCount", activeTasksCount);
+        
+        // 전체 상태
+        String overallStatus;
+        if (isInitialized && taskSchedulerHealthy && activeTasksCount > 0) {
+            overallStatus = "HEALTHY";
+        } else if (isInitialized && taskSchedulerHealthy) {
+            overallStatus = "INITIALIZED_NO_TASKS";
+        } else if (!isInitialized) {
+            overallStatus = "NOT_INITIALIZED";
+        } else {
+            overallStatus = "UNHEALTHY";
+        }
+        status.put("status", overallStatus);
+        
+        // 마지막 확인 시간
+        status.put("checkTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        
+        return status;
     }
 }

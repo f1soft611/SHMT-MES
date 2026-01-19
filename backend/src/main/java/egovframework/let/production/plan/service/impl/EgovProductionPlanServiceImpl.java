@@ -84,6 +84,8 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 				ref.setFactoryCode(master.getFactoryCode());
 				ref.setProdplanDate(master.getProdPlanDate());
 				ref.setProdplanSeq(master.getProdPlanSeq());
+				// 계획수량을 주문연결 orderQty에 매핑 (요청 사항)
+				ref.setOrderQty(master.getTotalPlanQty());
 				ref.setOpmanCode(master.getOpmanCode());
 				productionPlanDAO.insertProductionPlanReference(ref);
 			}
@@ -155,18 +157,21 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	}
 
 	/**
-	 * 생산계획을 삭제한다. (마스터 + 상세 트랜잭션 처리)
+	 * 생산계획을 삭제한다. (마스터 + 상세 + 참조 트랜잭션 처리)
 	 */
 	@Override
 	@Transactional
 	public void deleteProductionPlan(ProductionPlanMaster master) throws Exception {
-		// 1. 상세 데이터 먼저 삭제 (TPR301)
+		// 1. 참조 데이터 먼저 삭제 (TPR301R) - planId 기준으로 삭제
+		productionPlanDAO.deleteProductionPlanReferenceByPlanId(master);
+		
+		// 2. 상세 데이터 삭제 (TPR301)
 		ProductionPlan detailForDelete = new ProductionPlan();
 		detailForDelete.setFactoryCode(master.getFactoryCode());
 		detailForDelete.setProdPlanId(master.getProdPlanId());
 		productionPlanDAO.deleteProductionPlan(detailForDelete);
 		
-		// 2. 마스터 데이터 삭제 (TPR301M)
+		// 3. 마스터 데이터 삭제 (TPR301M)
 		productionPlanDAO.deleteProductionPlanMaster(master);
 	}
 
@@ -221,12 +226,14 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.prodplanDate(planDate)
 						.prodplanSeq((Integer) row.get("planSeq"))
 						.itemCode((String) row.get("itemCode"))
+						.itemDisplayCode((String) row.get("itemDisplayCode"))
 						.itemName((String) row.get("itemName"))
 						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
 						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
 						.shift((String) row.get("shift"))
 						.workerCode((String) row.get("workerCode"))
 						.workerName((String) row.get("workerName"))
+						.deliveryDate((String) row.get("deliveryDate"))
 						.customerCode((String) row.get("customerCode"))
 						.customerName((String) row.get("customerName"))
 						.remark((String) row.get("remark"))

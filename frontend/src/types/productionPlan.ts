@@ -5,6 +5,7 @@ export interface ProductionPlanData {
   // 기본 계획 정보
   date: string; // YYYY-MM-DD (planDate 가공)
   itemCode: string;
+  itemDisplayCode?: string; // UI 노출용 품목코드 (백엔드 저장용 itemCode와 분리)
   itemName: string;
   plannedQty: number;
   equipmentId?: string;
@@ -27,6 +28,8 @@ export interface ProductionPlanData {
   customerCode?: string;
   customerName?: string;
   additionalCustomers?: string[]; // 다수 거래처 표시용
+  // 납기일
+  deliveryDate?: string; // YYYY-MM-DD 또는 YYYYMMDD
   // 백엔드 원본 필드(선택적으로 활용)
   planNo?: string;
   planSeq?: number;

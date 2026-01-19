@@ -164,6 +164,27 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	}
 
 	/**
+	 * 생산계획 참조(주문연결)를 삭제한다.
+	 * XML 매퍼의 'ProductionPlanDAO.deleteProductionPlanReference' ID를 호출한다.
+	 * @param reference 생산계획 참조 정보
+	 * @return 삭제(DELETE) 결과, 성공 시 삭제된 행 수
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int deleteProductionPlanReference(egovframework.let.production.plan.domain.model.ProductionPlanReference reference) throws Exception {
+		return delete("ProductionPlanDAO.deleteProductionPlanReference", reference);
+	}
+
+	/**
+	 * 생산계획 참조(주문연결)를 삭제한다. (planId 기준)
+	 * @param master 생산계획 마스터 정보
+	 * @return 삭제(DELETE) 결과
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int deleteProductionPlanReferenceByPlanId(ProductionPlanMaster master) throws Exception {
+		return delete("ProductionPlanDAO.deleteProductionPlanReferenceByPlanId", master);
+	}
+
+	/**
 	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화용)
 	 * XML 매퍼의 'ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace' ID를 호출한다.
 	 * @param searchVO 검색 조건 (workplaceCode, startDate, endDate)

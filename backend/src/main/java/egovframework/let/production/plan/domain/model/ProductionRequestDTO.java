@@ -29,6 +29,7 @@ public class ProductionRequestDTO {
     private String opmanCode;           // OPMAN_CODE: varchar(10)
     private String optime;              // OPTIME: char(12)
     private String itemCode;            // ITEM_CODE: varchar(15) (FK)
+    private String itemNo;              // ITEM_NO: 품목번호
     
     // 조인하여 가져올 추가 정보
     private String itemName;            // 품목명 (ITEM_NAME from TSA101)
@@ -39,4 +40,8 @@ public class ProductionRequestDTO {
     private String registDate;          // 등록일자 (DELIVERY_DATE or 별도 필드)
     private String customerCode;        // 거래처 코드 (ORDER 테이블과 조인 시)
     private String customerName;        // 거래처명 (ORDER 테이블과 조인 시)
+    
+    // 계획 할당 관련 추가 정보
+    private Double allocatedQty;        // 할당된 계획 수량 (TPR301R의 ORDER_QTY 합계)
+    private Double remainingQty;        // 남은 수량 (ORDER_QTY - 할당된 수량)
 }

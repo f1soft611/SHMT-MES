@@ -64,4 +64,11 @@ public interface SchedulerConfigService {
      * @throws Exception
      */
     void executeSchedulerManually(Long schedulerId, String fromDate, String toDate) throws Exception;
+
+    /**
+     * 스케쥴러 시스템의 상태를 확인한다.
+     * @return 스케쥴러 상태 정보 (초기화 여부, 활성 작업 수 등)
+     * @throws Exception
+     */
+    Map<String, Object> getSchedulerHealthStatus() throws Exception;
 }

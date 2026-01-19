@@ -103,9 +103,14 @@ public class ProductionPlanWeeklyDTO {
         private Integer prodplanSeq;
         
         /**
-         * 품목코드
+         * 품목코드 (시퀀스/ID)
          */
         private String itemCode;
+        
+        /**
+         * 품목 표시 코드 (실제 품목코드)
+         */
+        private String itemDisplayCode;
         
         /**
          * 품목명
@@ -146,6 +151,11 @@ public class ProductionPlanWeeklyDTO {
          * 거래처명
          */
         private String customerName;
+        
+        /**
+         * 납기일 (YYYYMMDD)
+         */
+        private String deliveryDate;
         
         /**
          * 비고

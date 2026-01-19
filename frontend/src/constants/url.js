@@ -21,6 +21,7 @@ const URL = {
   ADMIN_PERMISSIONS: '/admin/permissions', //권한 관리
   ADMIN_MENUS: '/admin/menus', //메뉴 관리
   ADMIN_USERS: '/admin/users', //사용자 관리
+  ADMIN_LOGIN_HISTORY: '/admin/login-history', //로그인 이력
   SCHEDULER: '/admin/scheduler', //스케쥴러 관리
 };
 

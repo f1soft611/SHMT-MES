@@ -8,12 +8,16 @@ export interface Crumb {
 
 interface PageHeaderProps {
   title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
   crumbs?: Crumb[];
   actionsRight?: React.ReactNode;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
+  subtitle,
+  icon,
   crumbs = [],
   actionsRight,
 }) => {
@@ -46,10 +50,22 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             )}
           </Breadcrumbs>
         )}
-        {title && (
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
+        {(title || subtitle) && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {icon}
+            <Box>
+              {title && (
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  {title}
+                </Typography>
+              )}
+              {subtitle && (
+                <Typography variant="body2" color="text.secondary">
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
+          </Box>
         )}
       </Box>
       {actionsRight && (

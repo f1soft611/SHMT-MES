@@ -28,6 +28,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
 import PermissionManagement from './pages/Admin/PermissionManagement';
 import UserManagement from './pages/Admin/UserManagement';
+import LoginHistoryManagement from './pages/Admin/LoginHistoryManagement';
 import ProcessFlowManagement from './pages/BaseData/ProcessFlowManagement';
 
 const queryClient = new QueryClient({
@@ -93,8 +94,8 @@ function App() {
                             element={<ProductionOrder />}
                           />
                           <Route
-                              path={URL.PRODUCTION_ORDERS2}
-                              element={<ProdOrder />}
+                            path={URL.PRODUCTION_ORDERS2}
+                            element={<ProdOrder />}
                           />
                           <Route
                               path={URL.PRODUCTION_RESULTS}
@@ -129,8 +130,8 @@ function App() {
                             element={<UserManagement />}
                           />
                           <Route
-                              path={URL.ADMIN_USERS}
-                              element={<UserManagement />}
+                            path={URL.ADMIN_LOGIN_HISTORY}
+                            element={<LoginHistoryManagement />}
                           />
                         </Routes>
                       </Layout>

@@ -8,6 +8,7 @@ import {
   TextField,
   Stack,
   FormControl,
+  FormHelperText,
   InputLabel,
   Select,
   MenuItem,
@@ -30,6 +31,8 @@ import { Item } from '../../../types/item';
 import { Equipment } from '../../../types/equipment';
 import { WorkplaceWorker } from '../../../types/workplace';
 import { ProductionPlanData } from '../../../types/productionPlan';
+import { CommonDetailCode } from '../../../types/commonCode';
+import commonCodeService from '../../../services/commonCodeService';
 
 /**
  * 근무구분(COM006) 코드를 한글 표시명으로 변환
@@ -55,8 +58,18 @@ const getShiftDisplayName = (code?: string): string => {
     case 'NIGHT':
       return '야간';
     default:
-      return '';
+      return code; // 알 수 없는 코드는 그대로 표시
   }
+};
+
+const formatShiftLabel = (
+  code?: string,
+  shiftCodes?: CommonDetailCode[]
+): string => {
+  if (!code) return '';
+  const matched = shiftCodes?.find((c) => c.code === code);
+  if (matched) return `${matched.codeNm} (${matched.code})`;
+  return getShiftDisplayName(code);
 };
 
 // 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
@@ -73,7 +86,7 @@ const productionPlanSchema = yup.object({
   equipmentId: yup.string().notRequired(),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
-  shift: yup.string(),
+  shift: yup.string().required('근무구분은 필수입니다.'),
   remark: yup.string().notRequired().default(''),
   orderNo: yup.string(),
   orderSeqno: yup.number(),
@@ -85,6 +98,7 @@ const productionPlanSchema = yup.object({
   customerCode: yup.string(),
   customerName: yup.string(),
   additionalCustomers: yup.array().of(yup.string().required()),
+  deliveryDate: yup.string(), // 납기일 (YYYY-MM-DD 또는 YYYYMMDD)
   // 선택적 확장/백엔드 매핑 필드
   processCode: yup.string(),
   processName: yup.string(),
@@ -104,9 +118,11 @@ interface PlanDialogProps {
   formData: ProductionPlanData;
   equipments: Equipment[];
   workplaceWorkers?: WorkplaceWorker[];
+  workplaceCode?: string;
   onSave: (data: ProductionPlanData, references?: any[]) => void;
   onChange: (field: keyof ProductionPlanData, value: any) => void;
   onBatchChange: (updates: Partial<ProductionPlanData>) => void;
+  onRefresh?: () => void; // 데이터 새로고침
 }
 
 const PlanDialog: React.FC<PlanDialogProps> = ({
@@ -116,8 +132,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   selectedDate,
   formData,
   workplaceWorkers = [],
+  workplaceCode,
   onSave,
   onBatchChange,
+  onRefresh,
 }) => {
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
@@ -126,6 +144,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   );
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [productionReferences, setProductionReferences] = useState<any[]>([]);
+  const [shiftCodes, setShiftCodes] = useState<CommonDetailCode[]>([]);
 
   // react-hook-form 설정
   const {
@@ -143,6 +162,27 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   useEffect(() => {
     reset(formData);
   }, [formData, reset]);
+
+  // 근무구분(COM006) 공통코드 조회
+  useEffect(() => {
+    const fetchShiftCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM006',
+          'Y'
+        );
+        if (response.resultCode === 200 && response.result?.detailCodeList) {
+          setShiftCodes(response.result.detailCodeList);
+        }
+      } catch (error) {
+        setShiftCodes([]);
+      }
+    };
+
+    if (open) {
+      fetchShiftCodes();
+    }
+  }, [open]);
 
   const handleOpenRequestDialog = () => {
     setOpenRequestDialog(true);
@@ -168,7 +208,12 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     const updates = {
       // 품목 직접 선택 시, 저장될 필드인 itemCode에 품목 ID를 매핑
       // (기존 품목코드 대신 내부 식별자 사용)
-      itemCode: (item as any).id || (item as any).itemId || '',
+      itemCode:
+        (item as any).itemId ||
+        (item as any).id ||
+        (item as any).itemCode ||
+        '',
+      itemDisplayCode: (item as any).itemCode || '',
       itemName: item.itemName || '',
       plannedQty: 1, // 기본값
       // 생산의뢰 정보 초기화
@@ -191,8 +236,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleSelectRequest = (requestsOrData: ProductionRequest[] | any) => {
-    console.log('Selected requests:', requestsOrData);
-
     // 다중 선택 시 references가 포함된 객체가 전달됨
     let requests: ProductionRequest[] = [];
     let references: any[] = [];
@@ -216,8 +259,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     const firstRequest = requests[0];
 
     // 여러 생산의뢰의 수량 합계
+    // remainingQty가 있으면 남은 수량을, 없으면 orderQty를 사용
     const totalQty = requests.reduce(
-      (sum, req) => sum + (req.orderQty || 0),
+      (sum, req) =>
+        sum +
+        (req.remainingQty !== undefined && req.remainingQty !== null
+          ? req.remainingQty
+          : req.orderQty || 0),
       0
     );
 
@@ -232,6 +280,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 
     const updates = {
       itemCode: firstRequest.itemCode || '',
+      itemDisplayCode: firstRequest.itemCode || '',
       itemName: firstRequest.itemName || '',
       plannedQty: totalQty,
       orderNo: firstRequest.orderNo,
@@ -240,6 +289,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       customerCode: uniqueCustomers[0],
       customerName: customerNames[0],
       additionalCustomers: uniqueCustomers.slice(1),
+      deliveryDate: firstRequest.deliveryDate || '', // 납기일 추가
     };
 
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
@@ -253,9 +303,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
-    console.log('handleFormSubmit called in PlanDialog');
-    console.log('data from form:', data);
-    console.log('productionReferences:', productionReferences);
     onSave(data, productionReferences);
   };
 
@@ -280,11 +327,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
         </DialogTitle>
         <Divider />
-        <form
-          onSubmit={handleSubmit(handleFormSubmit, (errors) => {
-            console.log('Form validation errors:', errors);
-          })}
-        >
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
           <DialogContent sx={{ mt: 2 }}>
             <Stack spacing={3}>
               {/* ================================
@@ -671,6 +714,42 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
+              {/* 납기일 */}
+              <Controller
+                name="deliveryDate"
+                control={control}
+                render={({ field }) => {
+                  // YYYYMMDD -> YYYY-MM-DD 변환
+                  let displayValue = field.value || '';
+                  if (
+                    displayValue &&
+                    displayValue.length === 8 &&
+                    !displayValue.includes('-')
+                  ) {
+                    displayValue = `${displayValue.substring(
+                      0,
+                      4
+                    )}-${displayValue.substring(4, 6)}-${displayValue.substring(
+                      6,
+                      8
+                    )}`;
+                  }
+
+                  return (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="납기일"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      value={displayValue}
+                      error={!!errors.deliveryDate}
+                      helperText={errors.deliveryDate?.message}
+                    />
+                  );
+                }}
+              />
+
               <Stack direction="row" spacing={2}>
                 {/* 작업자 */}
                 <Controller
@@ -690,9 +769,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           field.onChange(e.target.value);
                           if (selectedWorker) {
                             setValue('workerName', selectedWorker.workerName);
-                            if (selectedWorker.position) {
-                              setValue('shift', selectedWorker.position);
-                            }
+                            // 작업자에 근무구분이 없을 수 있으므로, 일단 자동 설정 후 비어있으면 직접 선택하도록 유지
+                            setValue('shift', selectedWorker.position || '');
                           }
                         }}
                       >
@@ -706,7 +784,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           >
                             {worker.workerName} ({worker.workerCode})
                             {worker.position &&
-                              ` - ${getShiftDisplayName(worker.position)}`}
+                              ` - ${formatShiftLabel(
+                                worker.position,
+                                shiftCodes
+                              )}`}
                           </MenuItem>
                         ))}
                       </Select>
@@ -728,14 +809,35 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   name="shift"
                   control={control}
                   render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="근무구분"
-                      value={getShiftDisplayName(field.value)}
-                      disabled
-                      InputProps={{ readOnly: true }}
-                    />
+                    <FormControl fullWidth required error={!!errors.shift}>
+                      <InputLabel>근무구분</InputLabel>
+                      <Select
+                        {...field}
+                        label="근무구분"
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      >
+                        <MenuItem value="">
+                          <em>선택(작업자에 없는 경우 직접 지정)</em>
+                        </MenuItem>
+                        {shiftCodes.map((option) => (
+                          <MenuItem key={option.code} value={option.code}>
+                            {`${option.codeNm} (${option.code})`}
+                          </MenuItem>
+                        ))}
+                        {field.value &&
+                          !shiftCodes.some(
+                            (option) => option.code === field.value
+                          ) && (
+                            <MenuItem value={field.value}>
+                              {formatShiftLabel(field.value, shiftCodes)}
+                            </MenuItem>
+                          )}
+                      </Select>
+                      {errors.shift && (
+                        <FormHelperText>{errors.shift.message}</FormHelperText>
+                      )}
+                    </FormControl>
                   )}
                 />
               </Stack>
@@ -770,6 +872,21 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         open={openRequestDialog}
         onClose={handleCloseRequestDialog}
         onSelect={handleSelectRequest}
+        onRegisterComplete={() => {
+          // 생산의뢰에서 직접 등록 완료 시
+          handleCloseRequestDialog();
+          onClose(); // PlanDialog도 닫기
+          if (onRefresh) {
+            onRefresh(); // 데이터 새로고침
+          }
+        }}
+        workplaceCode={workplaceCode}
+        selectedDate={selectedDate}
+        equipmentId={formData.equipmentId}
+        equipmentCode={formData.equipmentCode}
+        processCode={formData.processCode}
+        workerCode={formData.workerCode}
+        shift={formData.shift}
       />
 
       {/* 품목 선택 다이얼로그 */}
