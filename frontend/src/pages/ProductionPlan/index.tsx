@@ -64,6 +64,7 @@ import html2canvas from 'html2canvas';
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
 const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
+const STORAGE_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -122,7 +123,7 @@ const ProductionPlan: React.FC = () => {
   };
 
   const getShiftColor = (
-    shift?: string
+    shift?: string,
   ):
     | 'default'
     | 'primary'
@@ -166,7 +167,7 @@ const ProductionPlan: React.FC = () => {
   };
 
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(
-    getMonday(new Date())
+    getMonday(new Date()),
   );
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -198,16 +199,23 @@ const ProductionPlan: React.FC = () => {
   const [plans, setPlans] = useState<ProductionPlanData[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
-  const [selectedWorkplace, setSelectedWorkplace] = useState<string>('');
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string>(() => {
+    // 로컬스토리지에서 마지막 선택한 작업장 불러오기
+    try {
+      return localStorage.getItem(STORAGE_KEY_SELECTED_WORKPLACE) || '';
+    } catch (error) {
+      return '';
+    }
+  });
   const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>(
-    []
+    [],
   );
   // const [workplaceProcesses, setWorkplaceProcesses] = useState<any[]>([]);
   const [equipmentProcessMap, setEquipmentProcessMap] = useState<
     Map<string, string>
   >(new Map());
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
@@ -302,7 +310,7 @@ const ProductionPlan: React.FC = () => {
 
   // 요일별 표시 상태 (월~일) - lazy initialization
   const [visibleDays, setVisibleDays] = useState<boolean[]>(() =>
-    loadVisibleDaysFromStorage()
+    loadVisibleDaysFromStorage(),
   );
   const [showDayFilter, setShowDayFilter] = useState(false);
 
@@ -317,7 +325,7 @@ const ProductionPlan: React.FC = () => {
         }));
         setEquipments(equipmentList);
         setExpandedEquipments(
-          new Set(equipmentList.map((eq: Equipment) => eq.equipCd))
+          new Set(equipmentList.map((eq: Equipment) => eq.equipCd)),
         );
       }
     } catch (error) {
@@ -344,9 +352,8 @@ const ProductionPlan: React.FC = () => {
 
   const loadWorkplaceWorkers = useCallback(async (workplaceCode: string) => {
     try {
-      const response = await workplaceService.getWorkplaceWorkers(
-        workplaceCode
-      );
+      const response =
+        await workplaceService.getWorkplaceWorkers(workplaceCode);
       if (response.resultCode === 200 && response.result?.resultList) {
         setWorkplaceWorkers(response.result.resultList);
       }
@@ -393,7 +400,7 @@ const ProductionPlan: React.FC = () => {
         }));
         setEquipments(equipmentList);
         setExpandedEquipments(
-          new Set(equipmentList.map((eq: any) => eq.equipCd))
+          new Set(equipmentList.map((eq: any) => eq.equipCd)),
         );
 
         // 설비-공정 매핑 생성
@@ -409,7 +416,7 @@ const ProductionPlan: React.FC = () => {
         // 주간 계획 매핑
         const mapped = mapWeeklyEquipmentPlans(
           response.result as WeeklyEquipmentPlanResponse,
-          selectedWorkplace
+          selectedWorkplace,
         );
         setPlans(mapped);
       } else {
@@ -604,7 +611,7 @@ const ProductionPlan: React.FC = () => {
   // 넓은 시그니처 허용 (JSX 전달 시 string|number|symbol 형태 요구되는 경우 대응)
   const handleChange = (
     field: keyof ProductionPlanData | string | number | symbol,
-    value: any
+    value: any,
   ) => {
     setFormData({
       ...formData,
@@ -635,7 +642,7 @@ const ProductionPlan: React.FC = () => {
             planDate: data.date.replace(/-/g, ''), // Ensure YYYYMMDD
             workplaceCode: selectedWorkplace,
             workplaceName: workplaces.find(
-              (w) => w.workplaceCode === selectedWorkplace
+              (w) => w.workplaceCode === selectedWorkplace,
             )?.workplaceName,
             remark: data.remark,
           },
@@ -647,7 +654,7 @@ const ProductionPlan: React.FC = () => {
               plannedQty: data.plannedQty,
               workplaceCode: selectedWorkplace,
               workplaceName: workplaces.find(
-                (w) => w.workplaceCode === selectedWorkplace
+                (w) => w.workplaceCode === selectedWorkplace,
               )?.workplaceName,
               processCode: data.processCode,
               processName: data.processName,
@@ -671,9 +678,8 @@ const ProductionPlan: React.FC = () => {
           references: references || [],
         };
 
-        const response = await productionPlanService.createProductionPlan(
-          requestData
-        );
+        const response =
+          await productionPlanService.createProductionPlan(requestData);
         if (response.resultCode === 200) {
           showToast({
             message: '생산계획이 등록되었습니다.',
@@ -748,7 +754,7 @@ const ProductionPlan: React.FC = () => {
 
         const response = await productionPlanService.updateProductionPlan(
           formData.planNo,
-          requestData
+          requestData,
         );
         if (response.resultCode === 200) {
           showToast({
@@ -789,7 +795,7 @@ const ProductionPlan: React.FC = () => {
 
     try {
       const response = await productionPlanService.deleteProductionPlan(
-        confirmDelete.plan.planNo
+        confirmDelete.plan.planNo,
       );
       if (response.resultCode === 200) {
         showToast({
@@ -815,7 +821,7 @@ const ProductionPlan: React.FC = () => {
 
   const getPlansForDateAndEquipment = (date: string, equipmentCode: string) => {
     return plans.filter(
-      (p) => p.date === date && p.equipmentCode === equipmentCode
+      (p) => p.date === date && p.equipmentCode === equipmentCode,
     );
   };
 
@@ -912,7 +918,23 @@ const ProductionPlan: React.FC = () => {
               <InputLabel>작업장 선택 *</InputLabel>
               <Select
                 value={selectedWorkplace}
-                onChange={(e) => setSelectedWorkplace(e.target.value)}
+                onChange={(e) => {
+                  const newWorkplace = e.target.value;
+                  setSelectedWorkplace(newWorkplace);
+                  // 로컬스토리지에 저장
+                  try {
+                    if (newWorkplace) {
+                      localStorage.setItem(
+                        STORAGE_KEY_SELECTED_WORKPLACE,
+                        newWorkplace,
+                      );
+                    } else {
+                      localStorage.removeItem(STORAGE_KEY_SELECTED_WORKPLACE);
+                    }
+                  } catch (error) {
+                    // Error saving workplace to localStorage
+                  }
+                }}
                 label="작업장 선택 *"
                 required
                 sx={{
@@ -1081,7 +1103,7 @@ const ProductionPlan: React.FC = () => {
                       }
                       label={`${day}요일`}
                     />
-                  )
+                  ),
                 )}
               </FormGroup>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1310,8 +1332,8 @@ const ProductionPlan: React.FC = () => {
                         bgcolor: isToday
                           ? 'warning.main'
                           : isWeekendDay
-                          ? 'grey.400'
-                          : 'primary.main',
+                            ? 'grey.400'
+                            : 'primary.main',
                         color: 'white',
                         fontWeight: 'bold',
                         borderRight: '1px solid rgba(224, 224, 224, 1)',
@@ -1455,7 +1477,7 @@ const ProductionPlan: React.FC = () => {
                           const dateStr = formatDate(day, 'YYYY-MM-DD');
                           const dayPlans = getPlansForDateAndEquipment(
                             dateStr,
-                            equipment.equipCd
+                            equipment.equipCd,
                           );
                           const isWeekendDay = isWeekend(day);
 
@@ -1485,7 +1507,7 @@ const ProductionPlan: React.FC = () => {
                                     onClick={() =>
                                       handleOpenCreateDialog(
                                         dateStr,
-                                        equipment.equipCd
+                                        equipment.equipCd,
                                       )
                                     }
                                     variant="contained"
@@ -1507,7 +1529,7 @@ const ProductionPlan: React.FC = () => {
                                           transition: 'all 0.2s ease',
                                           borderLeft: '4px solid',
                                           borderColor: getShiftBorderColor(
-                                            plan.shift
+                                            plan.shift,
                                           ),
                                         }}
                                       >
@@ -1602,11 +1624,11 @@ const ProductionPlan: React.FC = () => {
                                                 )}
                                                 <Chip
                                                   label={getShiftLabel(
-                                                    plan.shift
+                                                    plan.shift,
                                                   )}
                                                   size="small"
                                                   color={getShiftColor(
-                                                    plan.shift
+                                                    plan.shift,
                                                   )}
                                                 />
                                                 {plan.customerName && (
@@ -1638,8 +1660,8 @@ const ProductionPlan: React.FC = () => {
                                                           `거래처 목록:\n- ${
                                                             plan.customerName
                                                           }\n- ${plan.additionalCustomers.join(
-                                                            '\n- '
-                                                          )}`
+                                                            '\n- ',
+                                                          )}`,
                                                         );
                                                       }
                                                     }}
