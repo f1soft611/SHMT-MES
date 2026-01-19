@@ -14,15 +14,7 @@ import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springmodules.validation.commons.DefaultBeanValidator;
 
 import egovframework.com.cmm.ComDefaultCodeVO;
@@ -594,5 +586,95 @@ public class EgovMberManageApiController {
 		resultMap.put("checkId", checkId);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
+	 * 로그인한 사용자의 비밀번호를 변경한다.
+	 * @param param - 현재 비밀번호(old_password), 새 비밀번호(new_password)
+	 * @param user - 현재 로그인한 사용자 정보
+	 * @return resultVO - 비밀번호 변경 결과
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "사용자 비밀번호 변경",
+			description = "로그인한 사용자의 비밀번호를 변경",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovMberManageApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "변경 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님"),
+			@ApiResponse(responseCode = "800", description = "저장시 내부 오류")
+	})
+	@PatchMapping(value = "/members/password")
+	public ResultVO updateUserPassword(
+			@RequestBody Map<String, String> param,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+		
+		log.info("===>>> 비밀번호 변경 요청 시작");
+		log.info("===>>> user 객체: {}", user);
+		
+		// 사용자 인증 확인
+		if (user == null) {
+			log.error("===>>> 사용자 인증 실패: user 객체가 null");
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("error", "인증되지 않은 사용자입니다.");
+			return resultVoHelper.buildFromMap(errorMap, ResponseCode.AUTH_ERROR);
+		}
+		
+		String oldPassword = param.get("old_password");
+		String newPassword = param.get("new_password");
+		String userId = user.getId();
+		
+		log.info("===>>> 비밀번호 변경 시도 사용자: {}", userId);
+
+		// 현재 비밀번호 확인
+		MberManageVO checkVO = new MberManageVO();
+		checkVO.setMberId(userId);
+		MberManageVO currentUser = mberManageService.selectMber(checkVO.getMberId());
+
+		log.info("===>>> DB에서 조회한 사용자: {}", currentUser);
+		
+		if (currentUser == null) {
+			log.error("===>>> 사용자를 찾을 수 없음: {}", userId);
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("error", "사용자를 찾을 수 없습니다.");
+			return resultVoHelper.buildFromMap(errorMap, ResponseCode.AUTH_ERROR);
+		}
+
+		// 비밀번호 암호화 시 mberId를 Salt로 사용
+		String mberId = currentUser.getMberId();
+		log.info("===>>> 암호화에 사용할 mberId: {}", mberId);
+		
+		// 현재 비밀번호 검증
+		String encryptedOldPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(oldPassword, mberId);
+		log.info("===>>> 입력한 비밀번호(암호화): {}", encryptedOldPassword);
+		log.info("===>>> DB 비밀번호: {}", currentUser.getPassword());
+		
+		if (!encryptedOldPassword.equals(currentUser.getPassword())) {
+			log.error("===>>> 현재 비밀번호 불일치");
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("error", "현재 비밀번호가 일치하지 않습니다.");
+			return resultVoHelper.buildFromMap(errorMap, ResponseCode.AUTH_ERROR);
+		}
+		
+		log.info("===>>> 현재 비밀번호 검증 통과");
+
+		// 새 비밀번호 암호화 및 업데이트
+		String encryptedNewPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(newPassword, mberId);
+		MberManageVO updateVO = new MberManageVO();
+		updateVO.setUniqId(userId);  // ESNTL_ID (uniqId) 설정
+		updateVO.setPassword(encryptedNewPassword);
+		
+		log.info("===>>> 업데이트 대상 - uniqId: {}, mberId: {}", userId, mberId);
+
+		try {
+			mberManageService.updatePassword(updateVO);
+			log.info("===>>> 사용자 비밀번호 변경 성공: {}", userId);
+			return resultVoHelper.buildFromMap(null, ResponseCode.SUCCESS);
+		} catch (Exception e) {
+			log.error("===>>> 사용자 비밀번호 변경 실패: {}", userId, e);
+			return resultVoHelper.buildFromMap(null, ResponseCode.SAVE_ERROR);
+		}
 	}
 }
