@@ -25,6 +25,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Skeleton,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -64,9 +65,9 @@ import html2canvas from 'html2canvas';
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
 const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
-const STORAGE_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 // sessionStorage 키 상수
 const SESSION_KEY_WEEK_START = 'productionPlan_weekStart';
+const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -214,9 +215,9 @@ const ProductionPlan: React.FC = () => {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [selectedWorkplace, setSelectedWorkplace] = useState<string>(() => {
-    // 로컬스토리지에서 마지막 선택한 작업장 불러오기
+    // 세션스토리지에서 마지막 선택한 작업장 불러오기
     try {
-      return localStorage.getItem(STORAGE_KEY_SELECTED_WORKPLACE) || '';
+      return sessionStorage.getItem(SESSION_KEY_SELECTED_WORKPLACE) || '';
     } catch (error) {
       return '';
     }
@@ -233,6 +234,7 @@ const ProductionPlan: React.FC = () => {
   );
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
+  const [loading, setLoading] = useState(false);
   const weeklyGridRef = useRef<HTMLDivElement>(null);
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
@@ -396,6 +398,7 @@ const ProductionPlan: React.FC = () => {
     const weekStart = currentWeekStart;
     const weekEnd = addDays(currentWeekStart, 6);
 
+    setLoading(true);
     try {
       const response = await productionPlanService.getWeeklyProductionPlans({
         workplaceCode: selectedWorkplace,
@@ -444,6 +447,8 @@ const ProductionPlan: React.FC = () => {
         message: '생산계획 조회에 실패했습니다.',
         severity: 'error',
       });
+    } finally {
+      setLoading(false);
     }
   }, [currentWeekStart, selectedWorkplace, showToast]);
 
@@ -953,18 +958,18 @@ const ProductionPlan: React.FC = () => {
                 onChange={(e) => {
                   const newWorkplace = e.target.value;
                   setSelectedWorkplace(newWorkplace);
-                  // 로컬스토리지에 저장
+                  // 세션스토리지에 저장
                   try {
                     if (newWorkplace) {
-                      localStorage.setItem(
-                        STORAGE_KEY_SELECTED_WORKPLACE,
+                      sessionStorage.setItem(
+                        SESSION_KEY_SELECTED_WORKPLACE,
                         newWorkplace,
                       );
                     } else {
-                      localStorage.removeItem(STORAGE_KEY_SELECTED_WORKPLACE);
+                      sessionStorage.removeItem(SESSION_KEY_SELECTED_WORKPLACE);
                     }
                   } catch (error) {
-                    // Error saving workplace to localStorage
+                    // Error saving workplace to sessionStorage
                   }
                 }}
                 label="작업장 선택 *"
@@ -1422,7 +1427,56 @@ const ProductionPlan: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {equipments.length === 0 ? (
+              {loading ? (
+                // 스켈레톤 UI
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={`skeleton-${index}`}>
+                    <TableCell
+                      sx={{
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 2,
+                        bgcolor: 'white',
+                        borderRight: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Skeleton
+                          variant="circular"
+                          width={32}
+                          height={32}
+                          sx={{ mr: 1 }}
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Skeleton variant="text" width="60%" />
+                          <Skeleton variant="text" width="40%" />
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    {weekDays.map((day, dayIndex) => {
+                      if (!visibleDays[dayIndex]) return null;
+                      return (
+                        <TableCell
+                          key={`skeleton-day-${dayIndex}`}
+                          sx={{
+                            verticalAlign: 'top',
+                            p: cellPadding,
+                            borderRight: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                        >
+                          <Skeleton
+                            variant="rectangular"
+                            height={compactMode ? 80 : 120}
+                            sx={{ borderRadius: 1 }}
+                          />
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              ) : equipments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                     <Box sx={{ opacity: 0.6 }}>
