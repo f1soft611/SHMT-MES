@@ -131,6 +131,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .antMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지는 ADMIN만 접근
+                        .antMatchers(HttpMethod.PATCH, "/members/password").hasAnyRole("ADMIN", "USER") // 비밀번호 변경은 모든 인증된 사용자 접근 가능
                         .antMatchers("/members/**").hasRole("ADMIN") // 회원 관리는 ADMIN만 접근
                         .antMatchers("/mypage/**").hasAnyRole("ADMIN", "USER") // 마이페이지는 ADMIN, USER 모두 접근
                         .antMatchers("/inform/**").hasAnyRole("ADMIN", "USER") // 게시판은 ADMIN, USER 모두 접근
