@@ -26,6 +26,11 @@ const processQueue = (error: any, token: string | null = null) => {
 // 요청 인터셉터: JWT 토큰 자동 첨부 및 만료 확인
 apiClient.interceptors.request.use(
   async (config) => {
+    // 서버 시간 동기화 API는 토큰 없이도 호출 가능하도록 스킵
+    if (config.url?.includes('/api/system/server-time')) {
+      return config;
+    }
+
     const token = authService.getToken();
     if (token) {
       // 요청 전에 토큰 만료 확인 및 자동 갱신
@@ -45,7 +50,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // 응답 인터셉터: 401 에러 시 토큰 리프레쉬 시도
@@ -61,6 +66,11 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+
+    // 서버 시간 동기화 API는 401 재시도 로직 스킵
+    if (originalRequest.url?.includes('/api/system/server-time')) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -94,7 +104,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;
