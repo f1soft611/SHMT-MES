@@ -22,6 +22,14 @@ let serverTimeOffset: number | null = null;
  */
 let isSyncing = false;
 let lastSyncTime: number | null = null;
+let lastFailedSyncTime: number | null = null;
+let syncRetryCount = 0;
+
+/**
+ * 재시도 설정
+ */
+const MAX_RETRY_COUNT = 3;
+const RETRY_DELAY = 5000; // 5초
 
 /**
  * 서버 시간 API 응답 타입
@@ -55,6 +63,26 @@ export const syncServerTime = async (): Promise<void> => {
     return;
   }
 
+  // 최근에 실패했다면 일정 시간 동안 재시도하지 않음
+  if (lastFailedSyncTime) {
+    const timeSinceLastFailure = Date.now() - lastFailedSyncTime;
+    if (timeSinceLastFailure < RETRY_DELAY) {
+      console.log(
+        `서버 시간 동기화 재시도 대기 중... (${Math.ceil((RETRY_DELAY - timeSinceLastFailure) / 1000)}초 후 재시도 가능)`,
+      );
+      return;
+    }
+  }
+
+  // 재시도 횟수 제한 체크
+  if (syncRetryCount >= MAX_RETRY_COUNT) {
+    console.warn(
+      `서버 시간 동기화 재시도 횟수 초과 (${MAX_RETRY_COUNT}회). 클라이언트 시간을 사용합니다.`,
+    );
+    serverTimeOffset = 0;
+    return;
+  }
+
   try {
     isSyncing = true;
 
@@ -78,6 +106,10 @@ export const syncServerTime = async (): Promise<void> => {
     serverTimeOffset = serverTime - adjustedClientTime;
     lastSyncTime = Date.now();
 
+    // 성공 시 재시도 카운트 및 실패 시간 초기화
+    syncRetryCount = 0;
+    lastFailedSyncTime = null;
+
     console.log('서버 시간 동기화 완료:', {
       serverTime: new Date(serverTime).toISOString(),
       clientTime: new Date(adjustedClientTime).toISOString(),
@@ -86,8 +118,22 @@ export const syncServerTime = async (): Promise<void> => {
     });
   } catch (error) {
     console.error('서버 시간 동기화 실패:', error);
-    // 실패 시 offset을 0으로 설정 (클라이언트 시간 사용)
-    serverTimeOffset = 0;
+
+    // 재시도 카운트 증가 및 실패 시간 기록
+    syncRetryCount++;
+    lastFailedSyncTime = Date.now();
+
+    // 첫 번째 실패이거나 재시도 횟수를 초과하지 않은 경우에만 0으로 설정
+    if (syncRetryCount >= MAX_RETRY_COUNT) {
+      console.warn(
+        '서버 시간 동기화 최대 재시도 횟수 도달. 클라이언트 시간을 사용합니다.',
+      );
+      serverTimeOffset = 0;
+    } else {
+      console.log(
+        `${RETRY_DELAY / 1000}초 후 재시도합니다. (${syncRetryCount}/${MAX_RETRY_COUNT})`,
+      );
+    }
   } finally {
     isSyncing = false;
   }
@@ -175,6 +221,8 @@ export const getServerTimeOffset = (): number | null => {
 export const resetServerTimeSync = (): void => {
   serverTimeOffset = null;
   lastSyncTime = null;
+  lastFailedSyncTime = null;
+  syncRetryCount = 0;
   isSyncing = false;
   //   console.log('서버 시간 동기화가 초기화되었습니다.');
 };
