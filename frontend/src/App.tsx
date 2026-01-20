@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material/styles';
@@ -7,6 +7,7 @@ import { theme } from './styles/theme';
 
 import URL from './constants/url';
 import { AuthProvider } from './contexts/AuthContext';
+import { syncServerTime } from './utils/dateUtils';
 
 import Layout from './components/common/Layout/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
@@ -40,6 +41,19 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // 서버 시간 동기화 초기화
+  useEffect(() => {
+    // 앱 시작 시 서버 시간 동기화
+    syncServerTime();
+
+    // 1시간마다 재동기화 (선택적)
+    const interval = setInterval(() => {
+      syncServerTime();
+    }, 3600000); // 3600000ms = 1시간
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
