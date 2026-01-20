@@ -9,6 +9,7 @@ import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { format } from 'date-fns';
+import { getServerDate } from '../../../utils/dateUtils';
 
 export interface SearchFilters {
   dateFrom?: string;
@@ -65,15 +66,18 @@ const SearchFiltersComponent: React.FC<SearchFiltersComponentProps> = ({
   };
 
   // Get today's date for default values
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const oneMonthAgo = format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+  const today = format(getServerDate(), 'yyyy-MM-dd');
+  const oneMonthAgo = format(
+    new Date(getServerDate().getTime() - 30 * 24 * 60 * 60 * 1000),
+    'yyyy-MM-dd',
+  );
 
   return (
     <FilterContainer elevation={0}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
         검색 조건
       </Typography>
-      
+
       <Grid container spacing={2} alignItems="center">
         {/* Date Range */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div">
@@ -92,7 +96,7 @@ const SearchFiltersComponent: React.FC<SearchFiltersComponentProps> = ({
             }}
           />
         </Grid>
-        
+
         <Grid size={{ xs: 12, sm: 6, md: 3 }} component="div">
           <TextField
             label="종료일"
@@ -183,7 +187,10 @@ const SearchFiltersComponent: React.FC<SearchFiltersComponentProps> = ({
             size="small"
             variant="text"
             onClick={() => {
-              const yesterday = format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+              const yesterday = format(
+                new Date(Date.now() - 24 * 60 * 60 * 1000),
+                'yyyy-MM-dd',
+              );
               onFiltersChange({
                 ...filters,
                 dateFrom: yesterday,
@@ -197,7 +204,10 @@ const SearchFiltersComponent: React.FC<SearchFiltersComponentProps> = ({
             size="small"
             variant="text"
             onClick={() => {
-              const sevenDaysAgo = format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+              const sevenDaysAgo = format(
+                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                'yyyy-MM-dd',
+              );
               onFiltersChange({
                 ...filters,
                 dateFrom: sevenDaysAgo,

@@ -39,6 +39,7 @@ import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
+import { getServerDate } from '../../../utils/dateUtils';
 
 interface ProductionRequestDialogProps {
   open: boolean;
@@ -265,7 +266,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         const item = selectedItems[i];
         setRegisterProgress({ current: i + 1, total: selectedItems.length });
         try {
-          const today = new Date()
+          const today = getServerDate()
             .toISOString()
             .split('T')[0]
             .replace(/-/g, '');

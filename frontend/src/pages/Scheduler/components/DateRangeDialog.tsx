@@ -8,6 +8,7 @@ import {
   TextField,
   Box,
 } from '@mui/material';
+import { getServerDate } from '../../../utils/dateUtils';
 
 interface DateRangeDialogProps {
   open: boolean;
@@ -22,7 +23,7 @@ const DateRangeDialog: React.FC<DateRangeDialogProps> = ({
   onConfirm,
   schedulerName,
 }) => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getServerDate().toISOString().split('T')[0];
   const [fromDate, setFromDate] = useState<string>(today);
   const [toDate, setToDate] = useState<string>(today);
 

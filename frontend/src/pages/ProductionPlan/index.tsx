@@ -61,6 +61,7 @@ import PlanDialog from './components/PlanDialog';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 import html2canvas from 'html2canvas';
+import { getServerDate } from '../../utils/dateUtils';
 
 // localStorage 키 상수
 const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
@@ -182,7 +183,7 @@ const ProductionPlan: React.FC = () => {
     } catch (error) {
       // Error loading week start from sessionStorage
     }
-    return getMonday(new Date());
+    return getMonday(getServerDate());
   });
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -239,7 +240,7 @@ const ProductionPlan: React.FC = () => {
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
   const getDefault3DaysFilter = (): boolean[] => {
-    const today = new Date();
+    const today = getServerDate();
     const todayDayOfWeek = today.getDay(); // 0(일) ~ 6(토)
     const mondayBasedDay = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // 0(월) ~ 6(일)
 
@@ -270,7 +271,7 @@ const ProductionPlan: React.FC = () => {
   // localStorage에 필터 저장하는 헬퍼 함수
   const saveFilterToStorage = (filter: boolean[]) => {
     try {
-      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      const currentDate = formatDate(getServerDate(), 'YYYY-MM-DD');
       localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
       localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
     } catch (error) {
@@ -282,7 +283,7 @@ const ProductionPlan: React.FC = () => {
   const checkAndResetIfDateChanged = (): boolean[] | null => {
     try {
       const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
-      const currentDate = formatDate(new Date(), 'YYYY-MM-DD');
+      const currentDate = formatDate(getServerDate(), 'YYYY-MM-DD');
 
       // 날짜가 변경되었으면 기본 3일로 초기화
       if (lastAccessDate && lastAccessDate !== currentDate) {
@@ -535,7 +536,7 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleToday = () => {
-    const newDate = getMonday(new Date());
+    const newDate = getMonday(getServerDate());
     setCurrentWeekStart(newDate);
     try {
       sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
@@ -1354,7 +1355,7 @@ const ProductionPlan: React.FC = () => {
                 {weekDays.map((day, dayIndex) => {
                   if (!visibleDays[dayIndex]) return null;
 
-                  const isToday = isSameDay(day, new Date());
+                  const isToday = isSameDay(day, getServerDate());
                   const isWeekendDay = isWeekend(day);
                   const dateStr = formatDate(day, 'YYYY-MM-DD');
                   const totalPlans = getTotalPlansForDate(dateStr);
