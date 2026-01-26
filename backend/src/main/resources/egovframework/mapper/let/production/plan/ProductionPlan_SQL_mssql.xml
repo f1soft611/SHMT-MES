@@ -9,6 +9,9 @@
 		<result property="prodPlanSeq" column="PRODPLAN_SEQ"/>
 		<result property="planDate" column="PLAN_DATE"/>
 		<result property="remark" column="BIGO"/>
+		<result property="createDays" column="CREATE_DAYS"/>
+		<result property="planGroupId" column="PLAN_GROUP_ID"/>
+		<result property="totalGroupCount" column="TOTAL_GROUP_COUNT"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -32,6 +35,9 @@
 		<result property="workerCode" column="WORKER_CODE"/>
 		<result property="workerName" column="WORKER_NAME"/>
 		<result property="deliveryDate" column="DELIVERY_DATE"/>
+		<result property="planGroupId" column="PLAN_GROUP_ID"/>
+		<result property="groupSeq" column="GROUP_SEQ"/>
+		<result property="createDays" column="CREATE_DAYS"/>
 		<result property="remark" column="BIGO"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
@@ -55,6 +61,9 @@
 			PRODPLAN_SEQ,
 		    PRODPLAN_ID,
 		    ORDER_FLAG,
+		    CREATE_DAYS,
+		    PLAN_GROUP_ID,
+		    TOTAL_GROUP_COUNT,
 			OPMAN_CODE,
 			OPTIME
 		)
@@ -64,6 +73,9 @@
 		   #{prodPlanSeq},  -- selectKey로 미리 조회한 값 사용
 		   #{prodPlanId},
 		   'PLANNED',
+		   #{createDays},
+		   #{planGroupId},
+		   #{totalGroupCount},
 		   #{opmanCode},
 		   GETDATE()                               -- 현재시간
 	   	);
@@ -88,6 +100,9 @@
 			WORKER_CODE,
 			WORKER_NAME,
 			DELIVERY_DATE,
+		    PLAN_GROUP_ID,
+		    GROUP_SEQ,
+		    CREATE_DAYS,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
@@ -98,7 +113,7 @@
 				SELECT ISNULL(MAX(PRODWORK_SEQ), 0) + 1
 				FROM TPR301
 				WHERE FACTORY_CODE = #{factoryCode}
-				  AND PRODPLAN_DATE = #{planDate}
+				  AND PRODPLAN_DATE = #{prodPlanDate}
 				  AND PRODPLAN_SEQ = #{prodPlanSeq}
 			),                                      -- 오늘 날짜의 순번 +1
 			#{prodPlanId},
@@ -113,6 +128,9 @@
 			#{workerCode},
 			#{workerName},
 			#{deliveryDate},
+			#{planGroupId},
+			#{groupSeq},
+			#{createDays},
 			#{opmanCode},
 			GETDATE()
 		)
@@ -125,6 +143,9 @@
 			PRODPLAN_DATE,
 			PRODPLAN_SEQ,
 			PRODPLAN_DATE AS PLAN_DATE,
+			CREATE_DAYS,
+			PLAN_GROUP_ID,
+			TOTAL_GROUP_COUNT,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
 			OPMAN_CODE2,
@@ -163,6 +184,9 @@
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
 			DELIVERY_DATE,
+			PLAN_GROUP_ID,
+			GROUP_SEQ,
+			CREATE_DAYS,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -213,6 +237,9 @@
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
 			DELIVERY_DATE,
+			PLAN_GROUP_ID,
+			GROUP_SEQ,
+			CREATE_DAYS,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -261,6 +288,9 @@
 			CUSTOMER_CODE,
 			CUSTOMER_NAME,
 			DELIVERY_DATE,
+			PLAN_GROUP_ID,
+			GROUP_SEQ,
+			CREATE_DAYS,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -386,6 +416,10 @@
 			D.WORKER_CODE,
 			D.WORKER_NAME,
 			D.DELIVERY_DATE,
+			D.PLAN_GROUP_ID AS planGroupId,
+			D.GROUP_SEQ AS groupSeq,
+			D.CREATE_DAYS AS createDays,
+			M.TOTAL_GROUP_COUNT AS totalGroupCount,
 			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
 			CASE 
 				WHEN C.CUSTOMER_COUNT > 1 THEN C.FIRST_CUSTOMER_NAME + ' 외 ' + CAST(C.CUSTOMER_COUNT - 1 AS VARCHAR) + '건'
@@ -438,6 +472,10 @@
 			<if test="endDate != null and endDate != ''">
 				AND D.PROD_DATE &lt;= #{endDate}
 			</if>
+			LEFT JOIN TPR301M M
+			ON M.FACTORY_CODE = D.FACTORY_CODE
+			AND M.PRODPLAN_DATE = D.PRODPLAN_DATE
+			AND M.PRODPLAN_SEQ = D.PRODPLAN_SEQ
 			LEFT JOIN TCO403 I
 			ON I.FACTORY_CODE = D.FACTORY_CODE
 			AND I.MATERIAL_ID = D.ITEM_CODE

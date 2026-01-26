@@ -40,6 +40,11 @@ export interface ServiceProductionPlan {
   optime?: string;
   opmanCode2?: string;
   optime2?: string;
+  // 생성일수/묶음 정보
+  createDays?: number;
+  planGroupId?: string;
+  groupSeq?: number;
+  totalGroupCount?: number;
 }
 
 export interface WeeklyEquipmentPlanResponse {
@@ -55,7 +60,7 @@ const normalizeDate = (raw: string): string => {
   if (/^\d{8}$/.test(raw)) {
     return `${raw.substring(0, 4)}-${raw.substring(4, 6)}-${raw.substring(
       6,
-      8
+      8,
     )}`;
   }
   return raw; // 이미 변환된 경우
@@ -68,7 +73,7 @@ export const toProductionPlanData = (
     equipmentName?: string;
     workplaceCode?: string;
     workplaceName?: string;
-  }
+  },
 ): ProductionPlanData => {
   // 백엔드 필드명 매핑 (prodplanId -> planNo, prodplanDate -> planDate, prodplanSeq -> planSeq)
   const planNo = plan.planNo || plan.prodplanId;
@@ -112,13 +117,17 @@ export const toProductionPlanData = (
     factoryCode: plan.factoryCode,
     lotNo: plan.lotNo,
     useYn: plan.useYn,
+    createDays: plan.createDays,
+    planGroupId: plan.planGroupId,
+    groupSeq: plan.groupSeq,
+    totalGroupCount: plan.totalGroupCount,
   };
 };
 
 export const mapWeeklyEquipmentPlans = (
   response: WeeklyEquipmentPlanResponse,
   workplaceCode?: string,
-  workplaceName?: string
+  workplaceName?: string,
 ): ProductionPlanData[] => {
   const list: ProductionPlanData[] = [];
   response.equipmentPlans.forEach((equip) => {
@@ -130,7 +139,7 @@ export const mapWeeklyEquipmentPlans = (
             equipmentName: equip.equipmentName,
             workplaceCode,
             workplaceName,
-          })
+          }),
         );
       });
     });

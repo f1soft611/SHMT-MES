@@ -204,6 +204,7 @@ const ProductionPlan: React.FC = () => {
     equipmentName: '',
     shift: 'DAY',
     remark: '',
+    createDays: 1,
   });
 
   const [searchValues, setSearchValues] = useState({
@@ -236,6 +237,7 @@ const ProductionPlan: React.FC = () => {
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const weeklyGridRef = useRef<HTMLDivElement>(null);
 
   // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
@@ -683,6 +685,7 @@ const ProductionPlan: React.FC = () => {
               (w) => w.workplaceCode === selectedWorkplace,
             )?.workplaceName,
             remark: data.remark,
+            createDays: data.createDays || 1,
           },
           details: [
             {
@@ -1604,212 +1607,335 @@ const ProductionPlan: React.FC = () => {
                                   </Button>
 
                                   <Stack spacing={compactMode ? 0.75 : 1}>
-                                    {dayPlans.map((plan) => (
-                                      <Card
-                                        key={plan.id}
-                                        elevation={2}
-                                        sx={{
-                                          '&:hover': {
-                                            boxShadow: 4,
-                                            transform: 'translateY(-2px)',
+                                    {dayPlans.map((plan) => {
+                                      const isGrouped =
+                                        !!plan.planGroupId &&
+                                        (plan.createDays ||
+                                          plan.totalGroupCount ||
+                                          1) > 1;
+                                      const groupSeq = plan.groupSeq || 1;
+                                      const groupTotal =
+                                        plan.totalGroupCount ||
+                                        plan.createDays ||
+                                        1;
+
+                                      // 그룹별 고유 색상 생성 (planGroupId 기반)
+                                      const getGroupColor = (
+                                        groupId: string,
+                                      ) => {
+                                        const colors = [
+                                          {
+                                            main: '#1976d2',
+                                            light: '#E3F2FD',
+                                            dark: '#1565c0',
                                           },
-                                          transition: 'all 0.2s ease',
-                                          borderLeft: '4px solid',
-                                          borderColor: getShiftBorderColor(
-                                            plan.shift,
-                                          ),
-                                        }}
-                                      >
-                                        <CardContent
+                                          {
+                                            main: '#9c27b0',
+                                            light: '#F3E5F5',
+                                            dark: '#7b1fa2',
+                                          },
+                                          {
+                                            main: '#f57c00',
+                                            light: '#FFF3E0',
+                                            dark: '#e65100',
+                                          },
+                                          {
+                                            main: '#00897b',
+                                            light: '#E0F2F1',
+                                            dark: '#00695c',
+                                          },
+                                          {
+                                            main: '#d32f2f',
+                                            light: '#FFEBEE',
+                                            dark: '#c62828',
+                                          },
+                                          {
+                                            main: '#5e35b1',
+                                            light: '#EDE7F6',
+                                            dark: '#4527a0',
+                                          },
+                                        ];
+                                        let hash = 0;
+                                        for (
+                                          let i = 0;
+                                          i < groupId.length;
+                                          i++
+                                        ) {
+                                          hash =
+                                            groupId.charCodeAt(i) +
+                                            ((hash << 5) - hash);
+                                        }
+                                        return colors[
+                                          Math.abs(hash) % colors.length
+                                        ];
+                                      };
+
+                                      const groupColor =
+                                        isGrouped && plan.planGroupId
+                                          ? getGroupColor(plan.planGroupId)
+                                          : null;
+
+                                      const isGroupActive =
+                                        isGrouped &&
+                                        plan.planGroupId === activeGroupId;
+
+                                      return (
+                                        <Card
+                                          key={plan.id}
+                                          elevation={isGrouped ? 3 : 2}
                                           sx={{
-                                            p: cardPadding,
-                                            '&:last-child': { pb: cardPadding },
+                                            '&:hover': {
+                                              boxShadow: isGrouped ? 6 : 4,
+                                              transform: 'translateY(-2px)',
+                                            },
+                                            transition: 'all 0.3s ease',
+                                            borderLeft: isGrouped
+                                              ? '6px solid'
+                                              : '4px solid',
+                                            borderColor:
+                                              groupColor?.main ||
+                                              getShiftBorderColor(plan.shift),
+                                            background: groupColor
+                                              ? `linear-gradient(to right, ${groupColor.light} 0%, ${groupColor.light} 8px, white 8px)`
+                                              : undefined,
+                                            position: 'relative',
+                                            // 그룹 활성화 시 점선 테두리
+                                            ...(isGroupActive && {
+                                              border: '3px dashed',
+                                              borderColor: groupColor?.main,
+                                              boxShadow: `0 0 12px ${groupColor?.main}40`,
+                                              transform: 'scale(1.01)',
+                                            }),
                                           }}
                                         >
-                                          <Box
+                                          <CardContent
                                             sx={{
-                                              display: 'flex',
-                                              justifyContent: 'space-between',
-                                              alignItems: 'flex-start',
+                                              p: cardPadding,
+                                              '&:last-child': {
+                                                pb: cardPadding,
+                                              },
                                             }}
                                           >
-                                            <Box sx={{ flex: 1 }}>
-                                              {/* 1줄: 품목코드, 품목명 */}
-                                              <Box
-                                                sx={{
-                                                  display: 'flex',
-                                                  alignItems: 'center',
-                                                  gap: 0.5,
-                                                  flexWrap: 'wrap',
-                                                }}
-                                              >
-                                                <Typography
-                                                  variant="body2"
-                                                  sx={{
-                                                    fontWeight: 600,
-                                                    fontSize: compactMode
-                                                      ? '0.85rem'
-                                                      : '1rem',
-                                                    color: 'text.primary',
-                                                  }}
-                                                >
-                                                  {plan.itemName}
-                                                  {(plan.itemDisplayCode ||
-                                                    plan.itemCode) && (
-                                                    <Typography
-                                                      component="span"
-                                                      variant="body2"
-                                                      sx={{
-                                                        ml: 1,
-                                                        color: 'primary.main',
-                                                        fontSize: compactMode
-                                                          ? '0.8rem'
-                                                          : '0.95rem',
-                                                        fontWeight: 500,
-                                                      }}
-                                                    >
-                                                      (
-                                                      {plan.itemDisplayCode ||
-                                                        plan.itemCode}
-                                                      )
-                                                    </Typography>
-                                                  )}
-                                                </Typography>
-                                              </Box>
-
-                                              {/* 2줄: 수량, 담당자, 근무구분, 거래처 */}
-                                              <Box
-                                                sx={{
-                                                  display: 'flex',
-                                                  gap: 0.5,
-                                                  mt: 0.25,
-                                                  flexWrap: 'wrap',
-                                                  alignItems: 'center',
-                                                }}
-                                              >
-                                                <Chip
-                                                  label={`${(
-                                                    plan.plannedQty ?? 0
-                                                  ).toLocaleString()}`}
-                                                  size="small"
-                                                  color="error"
-                                                  sx={{
-                                                    fontWeight: 600,
-                                                  }}
-                                                />
-                                                {plan.workerName && (
-                                                  <Chip
-                                                    label={plan.workerName}
-                                                    size="small"
-                                                    variant="outlined"
-                                                    sx={{
-                                                      borderColor:
-                                                        'primary.main',
-                                                      color: 'primary.main',
-                                                    }}
-                                                  />
-                                                )}
-                                                <Chip
-                                                  label={getShiftLabel(
-                                                    plan.shift,
-                                                  )}
-                                                  size="small"
-                                                  color={getShiftColor(
-                                                    plan.shift,
-                                                  )}
-                                                />
-                                                {plan.customerName && (
-                                                  <Chip
-                                                    label={
-                                                      plan.additionalCustomers &&
-                                                      plan.additionalCustomers
-                                                        .length > 0
-                                                        ? `${plan.customerName} 외${plan.additionalCustomers.length}`
-                                                        : plan.customerName
-                                                    }
-                                                    size="small"
-                                                    color="secondary"
-                                                    variant="outlined"
-                                                    sx={{
-                                                      cursor: plan
-                                                        .additionalCustomers
-                                                        ?.length
-                                                        ? 'pointer'
-                                                        : 'default',
-                                                    }}
-                                                    onClick={() => {
-                                                      if (
-                                                        plan.additionalCustomers &&
-                                                        plan.additionalCustomers
-                                                          .length > 0
-                                                      ) {
-                                                        alert(
-                                                          `거래처 목록:\n- ${
-                                                            plan.customerName
-                                                          }\n- ${plan.additionalCustomers.join(
-                                                            '\n- ',
-                                                          )}`,
-                                                        );
-                                                      }
-                                                    }}
-                                                  />
-                                                )}
-                                                {plan.orderNo && (
-                                                  <Chip
-                                                    label={`의뢰:${plan.orderNo}`}
-                                                    size="small"
-                                                    color="info"
-                                                    variant="outlined"
-                                                  />
-                                                )}
-                                              </Box>
-                                            </Box>
                                             <Box
                                               sx={{
                                                 display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: 0.5,
+                                                justifyContent: 'space-between',
+                                                alignItems: 'flex-start',
                                               }}
                                             >
-                                              <Tooltip title="수정">
-                                                <IconButton
-                                                  size="small"
-                                                  onClick={() =>
-                                                    handleOpenEditDialog(plan)
-                                                  }
+                                              <Box sx={{ flex: 1 }}>
+                                                {/* 1줄: 품목코드, 품목명 */}
+                                                <Box
                                                   sx={{
-                                                    bgcolor: 'info.light',
-                                                    color: 'white',
-                                                    '&:hover': {
-                                                      bgcolor: 'info.main',
-                                                    },
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 0.5,
+                                                    flexWrap: 'wrap',
                                                   }}
                                                 >
-                                                  <EditIcon fontSize="small" />
-                                                </IconButton>
-                                              </Tooltip>
-                                              <Tooltip title="삭제">
-                                                <IconButton
-                                                  size="small"
-                                                  onClick={() =>
-                                                    handleDelete(plan)
-                                                  }
+                                                  <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                      fontWeight: 600,
+                                                      fontSize: compactMode
+                                                        ? '0.85rem'
+                                                        : '1rem',
+                                                      color: 'text.primary',
+                                                    }}
+                                                  >
+                                                    {plan.itemName}
+                                                    {(plan.itemDisplayCode ||
+                                                      plan.itemCode) && (
+                                                      <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        sx={{
+                                                          ml: 1,
+                                                          color: 'primary.main',
+                                                          fontSize: compactMode
+                                                            ? '0.8rem'
+                                                            : '0.95rem',
+                                                          fontWeight: 500,
+                                                        }}
+                                                      >
+                                                        (
+                                                        {plan.itemDisplayCode ||
+                                                          plan.itemCode}
+                                                        )
+                                                      </Typography>
+                                                    )}
+                                                  </Typography>
+
+                                                  {isGrouped && (
+                                                    <Chip
+                                                      label={`🔗 ${groupSeq}/${groupTotal}`}
+                                                      size="small"
+                                                      variant="outlined"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveGroupId(
+                                                          activeGroupId ===
+                                                            plan.planGroupId
+                                                            ? null
+                                                            : plan.planGroupId ||
+                                                                null,
+                                                        );
+                                                      }}
+                                                      sx={{
+                                                        borderColor:
+                                                          groupColor?.main,
+                                                        color: groupColor?.dark,
+                                                        ml: 0.5,
+                                                        fontWeight: 700,
+                                                        backgroundColor:
+                                                          isGroupActive
+                                                            ? groupColor?.light
+                                                            : 'white',
+                                                        cursor: 'pointer',
+                                                        '&:hover': {
+                                                          backgroundColor:
+                                                            groupColor?.light,
+                                                        },
+                                                      }}
+                                                    />
+                                                  )}
+                                                </Box>
+
+                                                {/* 2줄: 수량, 담당자, 근무구분, 거래처 */}
+                                                <Box
                                                   sx={{
-                                                    bgcolor: 'error.light',
-                                                    color: 'white',
-                                                    '&:hover': {
-                                                      bgcolor: 'error.main',
-                                                    },
+                                                    display: 'flex',
+                                                    gap: 0.5,
+                                                    mt: 0.25,
+                                                    flexWrap: 'wrap',
+                                                    alignItems: 'center',
                                                   }}
                                                 >
-                                                  <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                              </Tooltip>
+                                                  <Chip
+                                                    label={`${(
+                                                      plan.plannedQty ?? 0
+                                                    ).toLocaleString()}`}
+                                                    size="small"
+                                                    color="error"
+                                                    sx={{
+                                                      fontWeight: 600,
+                                                    }}
+                                                  />
+                                                  {plan.workerName && (
+                                                    <Chip
+                                                      label={plan.workerName}
+                                                      size="small"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        borderColor:
+                                                          'primary.main',
+                                                        color: 'primary.main',
+                                                      }}
+                                                    />
+                                                  )}
+                                                  <Chip
+                                                    label={getShiftLabel(
+                                                      plan.shift,
+                                                    )}
+                                                    size="small"
+                                                    color={getShiftColor(
+                                                      plan.shift,
+                                                    )}
+                                                  />
+                                                  {plan.customerName && (
+                                                    <Chip
+                                                      label={
+                                                        plan.additionalCustomers &&
+                                                        plan.additionalCustomers
+                                                          .length > 0
+                                                          ? `${plan.customerName} 외${plan.additionalCustomers.length}`
+                                                          : plan.customerName
+                                                      }
+                                                      size="small"
+                                                      color="secondary"
+                                                      variant="outlined"
+                                                      sx={{
+                                                        cursor: plan
+                                                          .additionalCustomers
+                                                          ?.length
+                                                          ? 'pointer'
+                                                          : 'default',
+                                                      }}
+                                                      onClick={() => {
+                                                        if (
+                                                          plan.additionalCustomers &&
+                                                          plan
+                                                            .additionalCustomers
+                                                            .length > 0
+                                                        ) {
+                                                          alert(
+                                                            `거래처 목록:\n- ${
+                                                              plan.customerName
+                                                            }\n- ${plan.additionalCustomers.join(
+                                                              '\n- ',
+                                                            )}`,
+                                                          );
+                                                        }
+                                                      }}
+                                                    />
+                                                  )}
+                                                  {plan.orderNo && (
+                                                    <Chip
+                                                      label={`의뢰:${plan.orderNo}`}
+                                                      size="small"
+                                                      color="info"
+                                                      variant="outlined"
+                                                    />
+                                                  )}
+                                                </Box>
+                                              </Box>
+                                              <Box
+                                                sx={{
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: 0.5,
+                                                }}
+                                              >
+                                                <Tooltip title="수정">
+                                                  <IconButton
+                                                    size="small"
+                                                    onClick={() =>
+                                                      handleOpenEditDialog(plan)
+                                                    }
+                                                    sx={{
+                                                      bgcolor: 'info.light',
+                                                      color: 'white',
+                                                      '&:hover': {
+                                                        bgcolor: 'info.main',
+                                                      },
+                                                    }}
+                                                  >
+                                                    <EditIcon fontSize="small" />
+                                                  </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="삭제">
+                                                  <IconButton
+                                                    size="small"
+                                                    onClick={() =>
+                                                      handleDelete(plan)
+                                                    }
+                                                    sx={{
+                                                      bgcolor: 'error.light',
+                                                      color: 'white',
+                                                      '&:hover': {
+                                                        bgcolor: 'error.main',
+                                                      },
+                                                    }}
+                                                  >
+                                                    <DeleteIcon fontSize="small" />
+                                                  </IconButton>
+                                                </Tooltip>
+                                              </Box>
                                             </Box>
-                                          </Box>
-                                        </CardContent>
-                                      </Card>
-                                    ))}
+                                          </CardContent>
+                                        </Card>
+                                      );
+                                    })}
                                   </Stack>
                                 </Box>
                               </Collapse>

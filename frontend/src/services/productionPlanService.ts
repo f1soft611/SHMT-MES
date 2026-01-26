@@ -32,6 +32,10 @@ export interface ProductionPlan {
   optime?: string;
   opmanCode2?: string;
   optime2?: string;
+  // 생성일수/묶음 정보
+  createDays?: number;
+  planGroupId?: string;
+  groupSeq?: number;
 }
 
 export interface ProductionPlanMaster {
@@ -44,6 +48,10 @@ export interface ProductionPlanMaster {
   totalPlanQty?: number;
   remark?: string;
   useYn?: string;
+  // 생성일수/묶음 정보
+  createDays?: number;
+  planGroupId?: string;
+  totalGroupCount?: number;
 }
 
 export interface ProductionPlanRequest {

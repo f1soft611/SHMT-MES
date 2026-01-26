@@ -9,6 +9,7 @@ import egovframework.let.production.plan.domain.model.ProductionPlanVO;
 import egovframework.let.production.plan.domain.model.ProductionPlanReference;
 import egovframework.let.production.plan.domain.model.ProductionRequestDTO;
 import egovframework.let.production.plan.domain.model.ProductionRequestVO;
+import org.springframework.beans.BeanUtils;
 import egovframework.let.production.plan.domain.repository.ProductionPlanDAO;
 import egovframework.let.production.plan.service.EgovProductionPlanService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,30 +59,67 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception {
 		String planId = egovProdPlanIdgenService.getNextStringId();
 		master.setProdPlanId(planId);
-		
+		master.setPlanGroupId(planId);
+
 		// prodPlanDate 설정 (planDate와 동일하게)
 		master.setProdPlanDate(master.getPlanDate());
-		
-		// 총 계획수량 계산
-		BigDecimal totalQty = BigDecimal.ZERO;
-		for (ProductionPlan plan : planList) {
-			totalQty = totalQty.add(plan.getPlannedQty());
-		}
+
+		// 생성일수 기본값 처리
+		int createDays = master.getCreateDays() != null ? master.getCreateDays() : 1;
+		master.setCreateDays(createDays);
+		master.setTotalGroupCount(createDays);
+
+		// 원본 상세 1건 기준으로 총 계획수량 설정
+		ProductionPlan basePlan = planList.get(0);
+		BigDecimal totalQty = basePlan.getPlannedQty() == null ? BigDecimal.ZERO : basePlan.getPlannedQty();
 		master.setTotalPlanQty(totalQty);
-		
-		// 마스터 등록
+
+		// 일일 수량 계산 (정수로 계산, 마지막 건에 나머지 보정)
+		BigDecimal dailyQty = createDays > 0
+			? totalQty.divide(new BigDecimal(createDays), 0, RoundingMode.DOWN)
+			: totalQty;
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+		LocalDate startDate = LocalDate.parse(master.getPlanDate(), formatter);
+
+		// 마스터 등록 (여기서 selectKey로 prodPlanSeq가 설정됨)
 		productionPlanDAO.insertProductionPlanMaster(master);
-		
-		// 상세 등록
-		for (ProductionPlan plan : planList) {
-			plan.setFactoryCode(master.getFactoryCode());
-			plan.setProdPlanId(planId);
+
+		// 마스터 insert 후 prodPlanSeq를 사용하여 상세 레코드 생성
+		List<ProductionPlan> expandedPlans = new ArrayList<>();
+		BigDecimal accumulated = BigDecimal.ZERO;
+
+		for (int i = 0; i < createDays; i++) {
+			ProductionPlan plan = new ProductionPlan();
+			BeanUtils.copyProperties(basePlan, plan);
+
+			LocalDate currentDate = startDate.plusDays(i);
+			plan.setPlanDate(currentDate.format(formatter));
 			plan.setProdPlanDate(master.getProdPlanDate());
-			plan.setProdPlanSeq(master.getProdPlanSeq());
+			plan.setProdPlanSeq(master.getProdPlanSeq()); // 이제 selectKey로 설정된 값 사용
+			plan.setProdPlanId(planId);
+			plan.setFactoryCode(master.getFactoryCode());
+			plan.setPlanGroupId(planId);
+			plan.setGroupSeq(i + 1);
+			plan.setCreateDays(createDays);
 			plan.setOpmanCode(master.getOpmanCode());
+
+			// 마지막 건에 나머지 보정
+			if (i == createDays - 1) {
+				plan.setPlannedQty(totalQty.subtract(accumulated));
+			} else {
+				plan.setPlannedQty(dailyQty);
+				accumulated = accumulated.add(dailyQty);
+			}
+
+			expandedPlans.add(plan);
+		}
+
+		// 상세 등록 (확장된 N건)
+		for (ProductionPlan plan : expandedPlans) {
 			productionPlanDAO.insertProductionPlan(plan);
 		}
-		
+
 		// 주문연결(TPR301R) 저장 - references가 있는 경우
 		if (references != null && !references.isEmpty()) {
 			for (ProductionPlanReference ref : references) {
@@ -90,7 +132,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 				productionPlanDAO.insertProductionPlanReference(ref);
 			}
 		}
-		
+
 		return planId;
 	}
 
@@ -144,6 +186,9 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		BigDecimal totalQty = BigDecimal.ZERO;
 		for (ProductionPlan plan : planList) {
 			totalQty = totalQty.add(plan.getPlannedQty());
+			if (plan.getPlanGroupId() == null || plan.getPlanGroupId().isEmpty()) {
+				plan.setPlanGroupId(master.getPlanGroupId());
+			}
 		}
 		master.setTotalPlanQty(totalQty);
 		
@@ -236,6 +281,10 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.deliveryDate((String) row.get("deliveryDate"))
 						.customerCode((String) row.get("customerCode"))
 						.customerName((String) row.get("customerName"))
+						.planGroupId((String) row.get("planGroupId"))
+						.groupSeq(row.get("groupSeq") != null ? ((Number) row.get("groupSeq")).intValue() : null)
+						.createDays(row.get("createDays") != null ? ((Number) row.get("createDays")).intValue() : null)
+						.totalGroupCount(row.get("totalGroupCount") != null ? ((Number) row.get("totalGroupCount")).intValue() : null)
 						.remark((String) row.get("remark"))
 						.build();
 				

@@ -64,7 +64,7 @@ const getShiftDisplayName = (code?: string): string => {
 
 const formatShiftLabel = (
   code?: string,
-  shiftCodes?: CommonDetailCode[]
+  shiftCodes?: CommonDetailCode[],
 ): string => {
   if (!code) return '';
   const matched = shiftCodes?.find((c) => c.code === code);
@@ -83,6 +83,12 @@ const productionPlanSchema = yup.object({
     .required('계획수량은 필수입니다.')
     .min(1, '계획수량은 1 이상이어야 합니다.')
     .typeError('계획수량은 숫자여야 합니다.'),
+  createDays: yup
+    .number()
+    .default(1)
+    .min(1, '생성일수는 1 이상이어야 합니다.')
+    .max(30, '생성일수는 30일 이하로 입력해주세요.')
+    .typeError('생성일수는 숫자여야 합니다.'),
   equipmentId: yup.string().notRequired(),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
   equipmentName: yup.string(),
@@ -140,7 +146,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
   const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>(
-    []
+    [],
   );
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [productionReferences, setProductionReferences] = useState<any[]>([]);
@@ -152,11 +158,15 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ProductionPlanData>({
     resolver: yupResolver(productionPlanSchema) as any,
     defaultValues: formData,
   });
+
+  const watchCreateDays = watch('createDays', formData.createDays || 1);
+  const watchPlannedQty = watch('plannedQty', formData.plannedQty || 0);
 
   // formData가 변경될 때마다 폼을 리셋 (외부에서 값이 변경되었을 때 반영)
   useEffect(() => {
@@ -169,7 +179,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       try {
         const response = await commonCodeService.getCommonDetailCodeList(
           'COM006',
-          'Y'
+          'Y',
         );
         if (response.resultCode === 200 && response.result?.detailCodeList) {
           setShiftCodes(response.result.detailCodeList);
@@ -216,6 +226,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       itemDisplayCode: (item as any).itemCode || '',
       itemName: item.itemName || '',
       plannedQty: 1, // 기본값
+      createDays: 1,
       // 생산의뢰 정보 초기화
       orderNo: undefined,
       orderSeqno: undefined,
@@ -266,7 +277,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         (req.remainingQty !== undefined && req.remainingQty !== null
           ? req.remainingQty
           : req.orderQty || 0),
-      0
+      0,
     );
 
     // 거래처 정보 처리
@@ -290,6 +301,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       customerName: customerNames[0],
       additionalCustomers: uniqueCustomers.slice(1),
       deliveryDate: firstRequest.deliveryDate || '', // 납기일 추가
+      createDays: 1,
     };
 
     // react-hook-form의 setValue를 사용하여 각 필드 업데이트
@@ -714,6 +726,86 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                 )}
               />
 
+              {dialogMode === 'create' &&
+                selectedItem &&
+                selectedRequests.length === 0 && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      border: '1px solid #FFF3CD',
+                      bgcolor: '#FFFBEA',
+                    }}
+                  >
+                    <Stack spacing={2}>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        생성일수 (품목 직접 선택 시)
+                      </Typography>
+
+                      <Controller
+                        name="createDays"
+                        control={control}
+                        defaultValue={1}
+                        render={({ field }) => (
+                          <FormControl
+                            fullWidth
+                            size="small"
+                            error={!!errors.createDays}
+                          >
+                            <InputLabel>생성일수</InputLabel>
+                            <Select
+                              {...field}
+                              label="생성일수"
+                              disabled={dialogMode !== 'create'}
+                            >
+                              {[1, 2, 3, 5, 7, 10, 15, 20, 30].map((day) => (
+                                <MenuItem key={day} value={day}>
+                                  {day}일
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {errors.createDays && (
+                              <FormHelperText>
+                                {errors.createDays.message as string}
+                              </FormHelperText>
+                            )}
+                          </FormControl>
+                        )}
+                      />
+
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1,
+                          bgcolor: '#F5F5F5',
+                          border: '1px solid #E0E0E0',
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          생성 미리보기
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 700, mt: 0.5 }}
+                        >
+                          {watchCreateDays}개 계획 생성
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: 'block', mt: 0.5 }}
+                        >
+                          일일 수량:{' '}
+                          {Math.floor(
+                            (watchPlannedQty || 0) / (watchCreateDays || 1),
+                          )}
+                          개
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                )}
+
               {/* 납기일 */}
               <Controller
                 name="deliveryDate"
@@ -728,10 +820,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   ) {
                     displayValue = `${displayValue.substring(
                       0,
-                      4
+                      4,
                     )}-${displayValue.substring(4, 6)}-${displayValue.substring(
                       6,
-                      8
+                      8,
                     )}`;
                   }
 
@@ -764,7 +856,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         value={field.value || ''} // Ensure a valid value is passed
                         onChange={(e) => {
                           const selectedWorker = workplaceWorkers.find(
-                            (w) => w.workerCode === e.target.value
+                            (w) => w.workerCode === e.target.value,
                           );
                           field.onChange(e.target.value);
                           if (selectedWorker) {
@@ -786,7 +878,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                             {worker.position &&
                               ` - ${formatShiftLabel(
                                 worker.position,
-                                shiftCodes
+                                shiftCodes,
                               )}`}
                           </MenuItem>
                         ))}
@@ -827,7 +919,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         ))}
                         {field.value &&
                           !shiftCodes.some(
-                            (option) => option.code === field.value
+                            (option) => option.code === field.value,
                           ) && (
                             <MenuItem value={field.value}>
                               {formatShiftLabel(field.value, shiftCodes)}
