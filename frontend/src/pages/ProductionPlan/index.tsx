@@ -1675,10 +1675,6 @@ const ProductionPlan: React.FC = () => {
                                           ? getGroupColor(plan.planGroupId)
                                           : null;
 
-                                      const isFirstInGroup =
-                                        isGrouped && groupSeq === 1;
-                                      const isLastInGroup =
-                                        isGrouped && groupSeq === groupTotal;
                                       const isGroupActive =
                                         isGrouped &&
                                         plan.planGroupId === activeGroupId;
