@@ -1682,28 +1682,21 @@ const ProductionPlan: React.FC = () => {
                                       return (
                                         <Card
                                           key={plan.id}
-                                          elevation={isGrouped ? 3 : 2}
+                                          elevation={0}
                                           sx={{
                                             '&:hover': {
-                                              boxShadow: isGrouped ? 6 : 4,
                                               transform: 'translateY(-2px)',
                                             },
                                             transition: 'all 0.3s ease',
-                                            borderLeft: isGrouped
-                                              ? '6px solid'
-                                              : '4px solid',
+                                            borderLeft: '4px solid',
                                             borderColor:
                                               groupColor?.main ||
                                               getShiftBorderColor(plan.shift),
-                                            background: groupColor
-                                              ? `linear-gradient(to right, ${groupColor.light} 0%, ${groupColor.light} 8px, white 8px)`
-                                              : undefined,
                                             position: 'relative',
                                             // 그룹 활성화 시 점선 테두리
                                             ...(isGroupActive && {
                                               border: '3px dashed',
                                               borderColor: groupColor?.main,
-                                              boxShadow: `0 0 12px ${groupColor?.main}40`,
                                               transform: 'scale(1.01)',
                                             }),
                                           }}
