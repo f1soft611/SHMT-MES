@@ -49,6 +49,15 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "생산계획일자 (YYYYMMDD)")
 	private String planDate = "";
 
+	@Schema(description = "묶음 ID (생성일수 그룹)")
+	private String planGroupId = "";
+
+	@Schema(description = "묶음 내 순번")
+	private Integer groupSeq = 0;
+
+	@Schema(description = "생성일수")
+	private Integer createDays = 1;
+
 	@Schema(description = "품목코드")
 	private String itemCode = "";
 

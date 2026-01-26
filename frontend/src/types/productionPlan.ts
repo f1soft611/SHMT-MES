@@ -13,6 +13,11 @@ export interface ProductionPlanData {
   equipmentName?: string;
   shift?: string; // DAY / NIGHT 등
   remark?: string;
+  // 생성일수/묶음 정보
+  createDays?: number;
+  planGroupId?: string;
+  groupSeq?: number;
+  totalGroupCount?: number;
   // 생산의뢰 연동 정보
   orderNo?: string;
   orderSeqno?: number;

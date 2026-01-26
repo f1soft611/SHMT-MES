@@ -158,6 +158,26 @@ public class ProductionPlanWeeklyDTO {
         private String deliveryDate;
         
         /**
+         * 묶음 ID (생성일수 그룹)
+         */
+        private String planGroupId;
+        
+        /**
+         * 묶음 내 순번
+         */
+        private Integer groupSeq;
+        
+        /**
+         * 생성일수
+         */
+        private Integer createDays;
+        
+        /**
+         * 그룹 전체 건수
+         */
+        private Integer totalGroupCount;
+        
+        /**
          * 비고
          */
         private String remark;
