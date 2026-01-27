@@ -45,6 +45,8 @@ export interface ServiceProductionPlan {
   planGroupId?: string;
   groupSeq?: number;
   totalGroupCount?: number;
+  // 생산지시 상태
+  orderFlag?: string;
 }
 
 export interface WeeklyEquipmentPlanResponse {
@@ -121,6 +123,7 @@ export const toProductionPlanData = (
     planGroupId: plan.planGroupId,
     groupSeq: plan.groupSeq,
     totalGroupCount: plan.totalGroupCount,
+    orderFlag: plan.orderFlag,
   };
 };
 

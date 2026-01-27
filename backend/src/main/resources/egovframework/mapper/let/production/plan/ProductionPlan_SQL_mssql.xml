@@ -420,6 +420,7 @@
 			D.GROUP_SEQ AS groupSeq,
 			D.CREATE_DAYS AS createDays,
 			M.TOTAL_GROUP_COUNT AS totalGroupCount,
+			M.ORDER_FLAG AS orderFlag,
 			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
 			CASE 
 				WHEN C.CUSTOMER_COUNT > 1 THEN C.FIRST_CUSTOMER_NAME + ' 외 ' + CAST(C.CUSTOMER_COUNT - 1 AS VARCHAR) + '건'
@@ -696,6 +697,22 @@
 		<if test="dateTo != null and dateTo != ''">
 			AND T.DELIVERY_DATE &lt;= #{dateTo}
 		</if>
+	</select>
+
+	<!-- 생산계획에 연결된 생산지시 개수 조회 -->
+	<select id="ProductionPlanDAO.selectProductionOrderCount" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan" resultType="int">
+		SELECT COUNT(*)
+		FROM TPR504 O
+		WHERE O.FACTORY_CODE = #{factoryCode}
+		  AND O.PRODPLAN_ID = #{prodPlanId}
+	</select>
+
+	<!-- 생산계획에 등록된 생산실적 개수 조회 -->
+	<select id="ProductionPlanDAO.selectProductionResultCount" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan" resultType="int">
+		SELECT COUNT(*)
+		FROM TPR601 R
+		WHERE R.FACTORY_CODE = #{factoryCode}
+		  AND R.PRODPLAN_ID = #{prodPlanId}
 	</select>
 
 </mapper>

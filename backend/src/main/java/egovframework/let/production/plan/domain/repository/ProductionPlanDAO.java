@@ -217,4 +217,24 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 		return selectOne("ProductionPlanDAO.selectProductionRequestListCnt", searchVO);
 	}
 
+	/**
+	 * 생산계획에 연결된 생산지시 개수를 조회한다.
+	 * @param plan 생산계획 정보
+	 * @return 생산지시 개수
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int selectProductionOrderCount(ProductionPlanMaster master) throws Exception {
+		return selectOne("ProductionPlanDAO.selectProductionOrderCount", master);
+	}
+
+	/**
+	 * 생산계획에 등록된 생산실적 개수를 조회한다.
+	 * @param plan 생산계획 정보
+	 * @return 생산실적 개수
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int selectProductionResultCount(ProductionPlanMaster master) throws Exception {
+		return selectOne("ProductionPlanDAO.selectProductionResultCount", master);
+	}
+
 }
