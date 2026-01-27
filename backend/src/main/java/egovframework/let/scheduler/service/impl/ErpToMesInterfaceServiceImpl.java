@@ -670,6 +670,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			item.setSpec(rs.getString("Spec"));
 			item.setUnitSeq(rs.getInt("UnitSeq"));
 			item.setUnitName(rs.getString("UnitName"));
+			item.setAssetSeq(rs.getInt("AssetSeq"));
+			item.setAssetName(rs.getString("AssetName"));
 			item.setLastUserSeq(rs.getInt("LastUserSeq"));
 			item.setLastDateTime(rs.getTimestamp("LastDateTime"));
 			return item;

@@ -33,7 +33,7 @@
                      #{itemName},
                      #{spec},
                      #{unitSeq},
-                     CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE 'MATERIAL' END,
+                     CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE CONVERT(VARCHAR, #{assetSeq}) END,
                      #{assetName},
                      'Y',
                      '0',
@@ -50,7 +50,7 @@
             MATERIAL_NAME = #{itemName},
             MATERIAL_SPEC = #{spec},
             UNIT = #{unitSeq},
-            MATERIAL_FLAG = CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE 'MATERIAL' END,
+            MATERIAL_FLAG = CASE WHEN #{assetSeq} = 2 THEN 'PRODUCT' WHEN #{assetSeq} = 4 THEN 'HALF_PRODUCT' ELSE CONVERT(VARCHAR, #{assetSeq}) END,
             MATERIAL_FLAG_NAME = #{assetName},
             OPMAN_CODE2 = 'INTERFACE',
             OPTIME2 = GETDATE()
