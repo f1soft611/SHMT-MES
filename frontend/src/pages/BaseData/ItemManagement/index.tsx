@@ -462,7 +462,10 @@ const ItemManagement: React.FC = () => {
             >
               <MenuItem value="">전체</MenuItem>
               <MenuItem value="PRODUCT">제품</MenuItem>
-              <MenuItem value="MATERIAL">자재</MenuItem>
+              <MenuItem value="1">상품</MenuItem>
+              <MenuItem value="HALF_PRODUCT">반제품</MenuItem>
+              <MenuItem value="3">서비스</MenuItem>
+              <MenuItem value="6">원자재</MenuItem>
             </Select>
           </FormControl>
           <FormControl sx={{ minWidth: 120 }} size="small">
