@@ -229,19 +229,27 @@ public class EgovProductionPlanApiController {
 			@PathVariable("planNo") String planNo,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		// 마스터 정보 설정
-		ProductionPlanMaster master = new ProductionPlanMaster();
-		master.setProdPlanId(planNo);
-		master.setOpmanCode2(user.getUniqId());
+		try {
+			// 마스터 정보 설정
+			ProductionPlanMaster master = new ProductionPlanMaster();
+			master.setProdPlanId(planNo);
+			master.setOpmanCode2(user.getUniqId());
 
-		// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)
-		productionPlanService.deleteProductionPlan(master);
+			// 생산계획 삭제 (마스터 삭제 시 상세도 함께 삭제)
+			productionPlanService.deleteProductionPlan(master);
 
-		Map<String, Object> resultMap = new HashMap<>();
-		resultMap.put("message", "생산계획이 삭제되었습니다.");
-		resultMap.put("user", user);
+			Map<String, Object> resultMap = new HashMap<>();
+			resultMap.put("message", "생산계획이 삭제되었습니다.");
+			resultMap.put("user", user);
 
-		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+		} catch (RuntimeException e) {
+			// 비즈니스 로직 검증 에러 (생산지시/실적 존재 등)
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("message", e.getMessage());
+			errorMap.put("user", user);
+			return resultVoHelper.buildFromMap(errorMap, ResponseCode.BUSINESS_ERROR);
+		}
 	}
 
 	/**

@@ -178,6 +178,11 @@ public class ProductionPlanWeeklyDTO {
         private Integer totalGroupCount;
         
         /**
+         * 생산지시 상태 (ORDERED/PLANNED 등)
+         */
+        private String orderFlag;
+        
+        /**
          * 비고
          */
         private String remark;

@@ -55,7 +55,7 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
     .required('품목 코드는 필수입니다.')
     .matches(
       /^[A-Za-z0-9-_]+$/,
-      '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.'
+      '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.',
     )
     .max(50, '품목 코드는 최대 50자까지 입력 가능합니다.'),
   itemName: yup.string().required('품목명은 필수입니다.'),
@@ -146,7 +146,7 @@ const ItemManagement: React.FC = () => {
       const response = await itemService.getItemList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setItems(response.result.resultList);
@@ -253,15 +253,37 @@ const ItemManagement: React.FC = () => {
   };
 
   const getItemTypeLabel = (itemType: string) => {
-    return itemType === 'PRODUCT'
-      ? '제품'
-      : itemType === 'MATERIAL'
-      ? '자재'
-      : itemType;
+    switch (itemType) {
+      case 'PRODUCT':
+        return '제품';
+      case '1':
+        return '상품';
+      case 'HALF_PRODUCT':
+        return '반제품';
+      case '3':
+        return '서비스';
+      case '6':
+        return '원자재';
+      default:
+        return itemType;
+    }
   };
 
   const getItemTypeColor = (itemType: string) => {
-    return itemType === 'PRODUCT' ? 'primary' : 'default';
+    switch (itemType) {
+      case 'PRODUCT':
+        return 'primary';
+      case '1':
+        return 'success';
+      case 'HALF_PRODUCT':
+        return 'info';
+      case '3':
+        return 'warning';
+      case '6':
+        return 'secondary';
+      default:
+        return 'default';
+    }
   };
 
   const columns: GridColDef[] = [

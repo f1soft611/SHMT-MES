@@ -7,14 +7,6 @@ import {
   TextField,
   Typography,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Collapse,
   Card,
   CardContent,
   Tooltip,
@@ -25,24 +17,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Skeleton,
+  Collapse,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   Search as SearchIcon,
-  NavigateBefore as NavigateBeforeIcon,
-  NavigateNext as NavigateNextIcon,
-  ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
-  CalendarToday as CalendarTodayIcon,
   FilterList as FilterListIcon,
   ViewWeek as ViewWeekIcon,
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
   ViewCompact as ViewCompactIcon,
-  CameraAlt as CameraAltIcon,
   LocationOn as LocationOnIcon,
 } from '@mui/icons-material';
 import equipmentService from '../../services/equipmentService';
@@ -58,6 +41,8 @@ import {
   WeeklyEquipmentPlanResponse,
 } from '../../utils/productionPlanMapper';
 import PlanDialog from './components/PlanDialog';
+import WeekNavigator from './components/WeekNavigator';
+import WeeklyGrid from './components/WeeklyGrid';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 import html2canvas from 'html2canvas';
@@ -828,6 +813,25 @@ const ProductionPlan: React.FC = () => {
       return;
     }
 
+    // 1. 생산지시 여부 확인
+    if (plan.orderFlag === 'ORDERED') {
+      showToast({
+        message:
+          '생산지시가 완료된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.',
+        severity: 'error',
+      });
+      return;
+    }
+
+    // 2. 생산실적 여부 확인
+    if (plan.actualQty && plan.actualQty > 0) {
+      showToast({
+        message: '생산실적이 등록된 계획은 삭제할 수 없습니다.',
+        severity: 'error',
+      });
+      return;
+    }
+
     setConfirmDelete({ open: true, plan });
   };
 
@@ -846,13 +850,20 @@ const ProductionPlan: React.FC = () => {
         loadWeeklyPlans();
       } else {
         showToast({
-          message: '생산계획 삭제 실패: ' + response.message,
+          message: response.result.message || '생산계획 삭제에 실패했습니다.',
           severity: 'error',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      // 백엔드에서 반환된 에러 메시지 추출
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        '생산계획 삭제 중 오류가 발생했습니다.';
+
       showToast({
-        message: '생산계획 삭제 중 오류가 발생했습니다.',
+        message: errorMessage,
         severity: 'error',
       });
     } finally {
@@ -876,10 +887,6 @@ const ProductionPlan: React.FC = () => {
       .reduce((sum, p) => sum + p.plannedQty, 0);
   };
 
-  const equipmentColWidth = compactMode ? 200 : 250;
-  const dayColMinWidth = compactMode ? 140 : 180;
-  const cardPadding = compactMode ? 0.75 : 1.5;
-  const cellPadding = compactMode ? 0.75 : 1.5;
   const sectionGap = compactMode ? 1 : 2;
   const headerTitleVariant: 'h4' | 'h5' = compactMode ? 'h5' : 'h4';
   const headerPad = compactMode ? 1.5 : 2.5;
@@ -1248,709 +1255,44 @@ const ProductionPlan: React.FC = () => {
       </Collapse>
 
       {/* 주간 네비게이션 */}
-      <Card sx={{ mb: 1, boxShadow: 1 }}>
-        <CardContent
-          sx={{
-            pt: compactMode ? 1 : 1.5,
-            '&:last-child': { pb: compactMode ? 1 : 1.5 },
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={compactMode ? 1 : 1.5}
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Tooltip title="이전 주">
-              <IconButton
-                onClick={handlePrevWeek}
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' },
-                }}
-              >
-                <NavigateBeforeIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Box
-              sx={{ textAlign: 'center', minWidth: compactMode ? 260 : 350 }}
-            >
-              <Typography
-                variant={compactMode ? 'h6' : 'h5'}
-                sx={{ fontWeight: 700, color: 'primary.main' }}
-              >
-                {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-                {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.25 }}
-              >
-                월요일 - 일요일
-              </Typography>
-            </Box>
-
-            <Tooltip title="다음 주">
-              <IconButton
-                onClick={handleNextWeek}
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' },
-                }}
-              >
-                <NavigateNextIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Button
-              variant="contained"
-              color="warning"
-              startIcon={<CalendarTodayIcon />}
-              onClick={handleToday}
-            >
-              오늘
-            </Button>
-
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<CameraAltIcon />}
-              onClick={handleCapture}
-            >
-              캡쳐
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+      <WeekNavigator
+        currentWeekStart={currentWeekStart}
+        compactMode={compactMode}
+        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNextWeek}
+        onToday={handleToday}
+        onCapture={handleCapture}
+        formatDate={formatDate}
+        addDays={addDays}
+      />
 
       {/* 주간 그리드 */}
-      <Paper
-        ref={weeklyGridRef}
-        sx={{ flex: 1, overflow: 'hidden', boxShadow: 2 }}
-      >
-        <TableContainer sx={{ height: '100%', overflowX: 'auto' }}>
-          <Table stickyHeader size={compactMode ? 'small' : 'medium'}>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 3,
-                    width: equipmentColWidth,
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: compactMode ? '0.85rem' : '0.95rem',
-                    borderRight: '1px solid rgba(224, 224, 224, 1)',
-                    p: compactMode ? 0.75 : 1,
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ViewWeekIcon />
-                    설비
-                  </Box>
-                </TableCell>
-                {weekDays.map((day, dayIndex) => {
-                  if (!visibleDays[dayIndex]) return null;
-
-                  const isToday = isSameDay(day, getServerDate());
-                  const isWeekendDay = isWeekend(day);
-                  const dateStr = formatDate(day, 'YYYY-MM-DD');
-                  const totalPlans = getTotalPlansForDate(dateStr);
-                  const totalQty = getTotalQtyForDate(dateStr);
-
-                  return (
-                    <TableCell
-                      key={dateStr}
-                      align="center"
-                      sx={{
-                        minWidth: dayColMinWidth,
-                        bgcolor: isToday
-                          ? 'warning.main'
-                          : isWeekendDay
-                            ? 'grey.400'
-                            : 'primary.main',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        borderRight: '1px solid rgba(224, 224, 224, 1)',
-                        p: compactMode ? 0.75 : 1,
-                        fontSize: compactMode ? '0.85rem' : '0.95rem',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: compactMode ? 1 : 1.25,
-                          flexWrap: 'nowrap',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                          {formatDate(day, 'ddd')}요일
-                        </Typography>
-                        <Typography
-                          variant={compactMode ? 'subtitle1' : 'h6'}
-                          sx={{ fontWeight: 700, lineHeight: 1.1 }}
-                        >
-                          {formatDate(day, 'MM/DD')}
-                        </Typography>
-                        {totalPlans > 0 && (
-                          <Chip
-                            label={`${totalPlans}건`}
-                            size="small"
-                            color="error"
-                            sx={{
-                              bgcolor: 'rgba(255,255,255,0.9)',
-                              color: 'error.main',
-                              fontWeight: 600,
-                            }}
-                          />
-                        )}
-                        {totalPlans > 0 && (
-                          <Chip
-                            label={`${(totalQty ?? 0).toLocaleString()} 개`}
-                            size="small"
-                            sx={{
-                              bgcolor: 'rgba(255,255,255,0.9)',
-                              color: 'primary.main',
-                              fontWeight: 'bold',
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                // 스켈레톤 UI
-                Array.from({ length: 3 }).map((_, index) => (
-                  <TableRow key={`skeleton-${index}`}>
-                    <TableCell
-                      sx={{
-                        position: 'sticky',
-                        left: 0,
-                        zIndex: 2,
-                        bgcolor: 'white',
-                        borderRight: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Skeleton
-                          variant="circular"
-                          width={32}
-                          height={32}
-                          sx={{ mr: 1 }}
-                        />
-                        <Box sx={{ flex: 1 }}>
-                          <Skeleton variant="text" width="60%" />
-                          <Skeleton variant="text" width="40%" />
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    {weekDays.map((day, dayIndex) => {
-                      if (!visibleDays[dayIndex]) return null;
-                      return (
-                        <TableCell
-                          key={`skeleton-day-${dayIndex}`}
-                          sx={{
-                            verticalAlign: 'top',
-                            p: cellPadding,
-                            borderRight: '1px solid',
-                            borderColor: 'divider',
-                          }}
-                        >
-                          <Skeleton
-                            variant="rectangular"
-                            height={compactMode ? 80 : 120}
-                            sx={{ borderRadius: 1 }}
-                          />
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))
-              ) : equipments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
-                    <Box sx={{ opacity: 0.6 }}>
-                      <ViewWeekIcon
-                        sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
-                      />
-                      <Typography variant="h6" color="text.secondary">
-                        등록된 설비가 없습니다.
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        설비를 먼저 등록해주세요.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                equipments.map((equipment, index) => {
-                  const isExpanded = expandedEquipments.has(equipment.equipCd);
-                  return (
-                    <React.Fragment key={equipment.equipCd}>
-                      <TableRow
-                        sx={{
-                          '&:hover': { backgroundColor: 'action.hover' },
-                          bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
-                        }}
-                      >
-                        <TableCell
-                          sx={{
-                            position: 'sticky',
-                            left: 0,
-                            zIndex: 2,
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            borderRight: '1px solid',
-                            borderColor: 'divider',
-                            bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
-                          }}
-                          onClick={() => toggleEquipment(equipment.equipCd)}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <IconButton
-                              size="small"
-                              sx={{
-                                mr: 1,
-                                bgcolor: 'primary.main',
-                                color: 'white',
-                                '&:hover': { bgcolor: 'primary.dark' },
-                                width: 32,
-                                height: 32,
-                              }}
-                            >
-                              {isExpanded ? (
-                                <ExpandMoreIcon fontSize="small" />
-                              ) : (
-                                <ChevronRightIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                            <Box>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  fontWeight: 700,
-                                  color: 'text.primary',
-                                  lineHeight: 1.2,
-                                }}
-                              >
-                                {equipment.equipmentName}
-                              </Typography>
-                              <Chip
-                                label={equipment.equipCd}
-                                size="small"
-                                sx={{ mt: 0.25 }}
-                              />
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        {weekDays.map((day, dayIndex) => {
-                          if (!visibleDays[dayIndex]) return null;
-
-                          const dateStr = formatDate(day, 'YYYY-MM-DD');
-                          const dayPlans = getPlansForDateAndEquipment(
-                            dateStr,
-                            equipment.equipCd,
-                          );
-                          const isWeekendDay = isWeekend(day);
-
-                          return (
-                            <TableCell
-                              key={dateStr}
-                              sx={{
-                                verticalAlign: 'top',
-                                backgroundColor: isWeekendDay
-                                  ? 'grey.100'
-                                  : 'white',
-                                p: cellPadding,
-                                borderRight: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              <Collapse
-                                in={isExpanded}
-                                timeout="auto"
-                                unmountOnExit
-                              >
-                                <Box sx={{ minHeight: compactMode ? 60 : 100 }}>
-                                  <Button
-                                    fullWidth
-                                    size="small"
-                                    startIcon={<AddIcon />}
-                                    onClick={() =>
-                                      handleOpenCreateDialog(
-                                        dateStr,
-                                        equipment.equipCd,
-                                      )
-                                    }
-                                    variant="contained"
-                                    sx={{ mb: compactMode ? 0.75 : 1 }}
-                                  >
-                                    계획 추가
-                                  </Button>
-
-                                  <Stack spacing={compactMode ? 0.75 : 1}>
-                                    {dayPlans.map((plan) => {
-                                      const isGrouped =
-                                        !!plan.planGroupId &&
-                                        (plan.createDays ||
-                                          plan.totalGroupCount ||
-                                          1) > 1;
-                                      const groupSeq = plan.groupSeq || 1;
-                                      const groupTotal =
-                                        plan.totalGroupCount ||
-                                        plan.createDays ||
-                                        1;
-
-                                      // 그룹별 고유 색상 생성 (planGroupId 기반)
-                                      const getGroupColor = (
-                                        groupId: string,
-                                      ) => {
-                                        const colors = [
-                                          {
-                                            main: '#1976d2',
-                                            light: '#E3F2FD',
-                                            dark: '#1565c0',
-                                          },
-                                          {
-                                            main: '#9c27b0',
-                                            light: '#F3E5F5',
-                                            dark: '#7b1fa2',
-                                          },
-                                          {
-                                            main: '#f57c00',
-                                            light: '#FFF3E0',
-                                            dark: '#e65100',
-                                          },
-                                          {
-                                            main: '#00897b',
-                                            light: '#E0F2F1',
-                                            dark: '#00695c',
-                                          },
-                                          {
-                                            main: '#d32f2f',
-                                            light: '#FFEBEE',
-                                            dark: '#c62828',
-                                          },
-                                          {
-                                            main: '#5e35b1',
-                                            light: '#EDE7F6',
-                                            dark: '#4527a0',
-                                          },
-                                        ];
-                                        let hash = 0;
-                                        for (
-                                          let i = 0;
-                                          i < groupId.length;
-                                          i++
-                                        ) {
-                                          hash =
-                                            groupId.charCodeAt(i) +
-                                            ((hash << 5) - hash);
-                                        }
-                                        return colors[
-                                          Math.abs(hash) % colors.length
-                                        ];
-                                      };
-
-                                      const groupColor =
-                                        isGrouped && plan.planGroupId
-                                          ? getGroupColor(plan.planGroupId)
-                                          : null;
-
-                                      const isGroupActive =
-                                        isGrouped &&
-                                        plan.planGroupId === activeGroupId;
-
-                                      return (
-                                        <Card
-                                          key={plan.id}
-                                          elevation={0}
-                                          sx={{
-                                            '&:hover': {
-                                              transform: 'translateY(-2px)',
-                                            },
-                                            transition: 'all 0.3s ease',
-                                            borderLeft: '4px solid',
-                                            borderColor:
-                                              groupColor?.main ||
-                                              getShiftBorderColor(plan.shift),
-                                            position: 'relative',
-                                            // 그룹 활성화 시 점선 테두리
-                                            ...(isGroupActive && {
-                                              border: '3px dashed',
-                                              borderColor: groupColor?.main,
-                                              transform: 'scale(1.01)',
-                                            }),
-                                          }}
-                                        >
-                                          <CardContent
-                                            sx={{
-                                              p: cardPadding,
-                                              '&:last-child': {
-                                                pb: cardPadding,
-                                              },
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-start',
-                                              }}
-                                            >
-                                              <Box sx={{ flex: 1 }}>
-                                                {/* 1줄: 품목코드, 품목명 */}
-                                                <Box
-                                                  sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 0.5,
-                                                    flexWrap: 'wrap',
-                                                  }}
-                                                >
-                                                  <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                      fontWeight: 600,
-                                                      fontSize: compactMode
-                                                        ? '0.85rem'
-                                                        : '1rem',
-                                                      color: 'text.primary',
-                                                    }}
-                                                  >
-                                                    {plan.itemName}
-                                                    {(plan.itemDisplayCode ||
-                                                      plan.itemCode) && (
-                                                      <Typography
-                                                        component="span"
-                                                        variant="body2"
-                                                        sx={{
-                                                          ml: 1,
-                                                          color: 'primary.main',
-                                                          fontSize: compactMode
-                                                            ? '0.8rem'
-                                                            : '0.95rem',
-                                                          fontWeight: 500,
-                                                        }}
-                                                      >
-                                                        (
-                                                        {plan.itemDisplayCode ||
-                                                          plan.itemCode}
-                                                        )
-                                                      </Typography>
-                                                    )}
-                                                  </Typography>
-
-                                                  {isGrouped && (
-                                                    <Chip
-                                                      label={`🔗 ${groupSeq}/${groupTotal}`}
-                                                      size="small"
-                                                      variant="outlined"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveGroupId(
-                                                          activeGroupId ===
-                                                            plan.planGroupId
-                                                            ? null
-                                                            : plan.planGroupId ||
-                                                                null,
-                                                        );
-                                                      }}
-                                                      sx={{
-                                                        borderColor:
-                                                          groupColor?.main,
-                                                        color: groupColor?.dark,
-                                                        ml: 0.5,
-                                                        fontWeight: 700,
-                                                        backgroundColor:
-                                                          isGroupActive
-                                                            ? groupColor?.light
-                                                            : 'white',
-                                                        cursor: 'pointer',
-                                                        '&:hover': {
-                                                          backgroundColor:
-                                                            groupColor?.light,
-                                                        },
-                                                      }}
-                                                    />
-                                                  )}
-                                                </Box>
-
-                                                {/* 2줄: 수량, 담당자, 근무구분, 거래처 */}
-                                                <Box
-                                                  sx={{
-                                                    display: 'flex',
-                                                    gap: 0.5,
-                                                    mt: 0.25,
-                                                    flexWrap: 'wrap',
-                                                    alignItems: 'center',
-                                                  }}
-                                                >
-                                                  <Chip
-                                                    label={`${(
-                                                      plan.plannedQty ?? 0
-                                                    ).toLocaleString()}`}
-                                                    size="small"
-                                                    color="error"
-                                                    sx={{
-                                                      fontWeight: 600,
-                                                    }}
-                                                  />
-                                                  {plan.workerName && (
-                                                    <Chip
-                                                      label={plan.workerName}
-                                                      size="small"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        borderColor:
-                                                          'primary.main',
-                                                        color: 'primary.main',
-                                                      }}
-                                                    />
-                                                  )}
-                                                  <Chip
-                                                    label={getShiftLabel(
-                                                      plan.shift,
-                                                    )}
-                                                    size="small"
-                                                    color={getShiftColor(
-                                                      plan.shift,
-                                                    )}
-                                                  />
-                                                  {plan.customerName && (
-                                                    <Chip
-                                                      label={
-                                                        plan.additionalCustomers &&
-                                                        plan.additionalCustomers
-                                                          .length > 0
-                                                          ? `${plan.customerName} 외${plan.additionalCustomers.length}`
-                                                          : plan.customerName
-                                                      }
-                                                      size="small"
-                                                      color="secondary"
-                                                      variant="outlined"
-                                                      sx={{
-                                                        cursor: plan
-                                                          .additionalCustomers
-                                                          ?.length
-                                                          ? 'pointer'
-                                                          : 'default',
-                                                      }}
-                                                      onClick={() => {
-                                                        if (
-                                                          plan.additionalCustomers &&
-                                                          plan
-                                                            .additionalCustomers
-                                                            .length > 0
-                                                        ) {
-                                                          alert(
-                                                            `거래처 목록:\n- ${
-                                                              plan.customerName
-                                                            }\n- ${plan.additionalCustomers.join(
-                                                              '\n- ',
-                                                            )}`,
-                                                          );
-                                                        }
-                                                      }}
-                                                    />
-                                                  )}
-                                                  {plan.orderNo && (
-                                                    <Chip
-                                                      label={`의뢰:${plan.orderNo}`}
-                                                      size="small"
-                                                      color="info"
-                                                      variant="outlined"
-                                                    />
-                                                  )}
-                                                </Box>
-                                              </Box>
-                                              <Box
-                                                sx={{
-                                                  display: 'flex',
-                                                  flexDirection: 'column',
-                                                  gap: 0.5,
-                                                }}
-                                              >
-                                                <Tooltip title="수정">
-                                                  <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                      handleOpenEditDialog(plan)
-                                                    }
-                                                    sx={{
-                                                      bgcolor: 'info.light',
-                                                      color: 'white',
-                                                      '&:hover': {
-                                                        bgcolor: 'info.main',
-                                                      },
-                                                    }}
-                                                  >
-                                                    <EditIcon fontSize="small" />
-                                                  </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="삭제">
-                                                  <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                      handleDelete(plan)
-                                                    }
-                                                    sx={{
-                                                      bgcolor: 'error.light',
-                                                      color: 'white',
-                                                      '&:hover': {
-                                                        bgcolor: 'error.main',
-                                                      },
-                                                    }}
-                                                  >
-                                                    <DeleteIcon fontSize="small" />
-                                                  </IconButton>
-                                                </Tooltip>
-                                              </Box>
-                                            </Box>
-                                          </CardContent>
-                                        </Card>
-                                      );
-                                    })}
-                                  </Stack>
-                                </Box>
-                              </Collapse>
-                              {!isExpanded && dayPlans.length > 0 && (
-                                <Chip
-                                  label={`${dayPlans.length}건`}
-                                  size="small"
-                                  color="primary"
-                                />
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    </React.Fragment>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      <WeeklyGrid
+        weeklyGridRef={weeklyGridRef}
+        compactMode={compactMode}
+        loading={loading}
+        equipments={equipments}
+        weekDays={weekDays}
+        visibleDays={visibleDays}
+        expandedEquipments={expandedEquipments}
+        activeGroupId={activeGroupId}
+        plans={plans}
+        formatDate={formatDate}
+        isSameDay={isSameDay}
+        isWeekend={isWeekend}
+        getServerDate={getServerDate}
+        getShiftLabel={getShiftLabel}
+        getShiftColor={getShiftColor}
+        getShiftBorderColor={getShiftBorderColor}
+        getTotalPlansForDate={getTotalPlansForDate}
+        getTotalQtyForDate={getTotalQtyForDate}
+        getPlansForDateAndEquipment={getPlansForDateAndEquipment}
+        toggleEquipment={toggleEquipment}
+        handleOpenCreateDialog={handleOpenCreateDialog}
+        handleOpenEditDialog={handleOpenEditDialog}
+        handleDelete={handleDelete}
+        setActiveGroupId={setActiveGroupId}
+      />
 
       {/* 등록/수정 다이얼로그 */}
       <PlanDialog
@@ -1973,7 +1315,116 @@ const ProductionPlan: React.FC = () => {
         open={confirmDelete.open}
         onClose={() => setConfirmDelete({ open: false })}
         title="생산계획 삭제"
-        message="선택한 생산계획을 삭제하시겠습니까?"
+        message={
+          confirmDelete.plan ? (
+            <Box>
+              <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+                다음 생산계획을 삭제하시겠습니까?
+              </Typography>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  bgcolor: 'grey.50',
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                }}
+              >
+                <Stack spacing={1.5}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        minWidth: 80,
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      품목
+                    </Typography>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {confirmDelete.plan.itemName}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        {confirmDelete.plan.itemDisplayCode ||
+                          confirmDelete.plan.itemCode}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        minWidth: 80,
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      계획수량
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, color: 'primary.main' }}
+                    >
+                      {confirmDelete.plan.plannedQty.toLocaleString()}개
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        minWidth: 80,
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      계획일자
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {confirmDelete.plan.date}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        minWidth: 80,
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                      }}
+                    >
+                      설비
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {confirmDelete.plan.equipmentName ||
+                        confirmDelete.plan.equipmentCode}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 2,
+                  color: 'error.main',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                ⚠️ 삭제된 계획은 복구할 수 없습니다.
+              </Typography>
+            </Box>
+          ) : (
+            '선택한 생산계획을 삭제하시겠습니까?'
+          )
+        }
         confirmText="삭제"
         onConfirm={executeDelete}
       />

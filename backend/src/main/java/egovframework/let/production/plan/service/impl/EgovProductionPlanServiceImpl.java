@@ -207,6 +207,16 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Override
 	@Transactional
 	public void deleteProductionPlan(ProductionPlanMaster master) throws Exception {
+		
+		// 생산지시 확인
+		int orderCount = productionPlanDAO.selectProductionOrderCount(master);
+		System.out.println("생산지시 개수: " + orderCount);
+		if (orderCount > 0) {
+			throw new RuntimeException("생산지시가 등록된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.");
+		}
+		
+		System.out.println("========== 삭제 유효성 검증 통과 ==========");
+		
 		// 1. 참조 데이터 먼저 삭제 (TPR301R) - planId 기준으로 삭제
 		productionPlanDAO.deleteProductionPlanReferenceByPlanId(master);
 		
@@ -285,6 +295,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.groupSeq(row.get("groupSeq") != null ? ((Number) row.get("groupSeq")).intValue() : null)
 						.createDays(row.get("createDays") != null ? ((Number) row.get("createDays")).intValue() : null)
 						.totalGroupCount(row.get("totalGroupCount") != null ? ((Number) row.get("totalGroupCount")).intValue() : null)
+						.orderFlag((String) row.get("orderFlag"))
 						.remark((String) row.get("remark"))
 						.build();
 				
