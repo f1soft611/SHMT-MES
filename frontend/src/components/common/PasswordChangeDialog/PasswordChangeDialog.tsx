@@ -194,9 +194,6 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          취소
-        </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
@@ -204,6 +201,9 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
           color="primary"
         >
           {loading ? '변경 중...' : '변경'}
+        </Button>
+        <Button onClick={handleClose} disabled={loading}>
+          취소
         </Button>
       </DialogActions>
     </Dialog>
