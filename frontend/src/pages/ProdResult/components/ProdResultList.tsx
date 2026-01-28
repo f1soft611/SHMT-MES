@@ -51,7 +51,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                     params.api.setEditCellValue({
                         id: params.id,
                         field: params.field,
-                        value: v?.toDate() ?? null,
+                        value: v? v.format("YYYY-MM-DD HH:mm") : null,
                     });
                     params.api.stopCellEditMode({ id: params.id, field: params.field });
                 }}

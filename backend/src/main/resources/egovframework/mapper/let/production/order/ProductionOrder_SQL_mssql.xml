@@ -4,9 +4,9 @@
 
 	<!-- 생산계획 조회	-->
 	<select id="selectProdPlan"
-			parameterType="map"
-			resultType="map">
-		SELECT B.ORDER_FLAG,
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanSearchParam"
+			resultType="egovframework.let.production.order.domain.model.ProdPlanRow">
+		SELECT ISNULL(A.ORDER_FLAG, 'PLANNED') AS ORDER_FLAG,
 			   A.FACTORY_CODE,
 			   A.PRODPLAN_DATE,
 			   A.PRODPLAN_SEQ,
@@ -34,38 +34,30 @@
 			   A.OPMAN_CODE2,
 			   A.OPTIME2
 		FROM TPR301 A
-		INNER JOIN TPR301M B
-		ON A.FACTORY_CODE = B.FACTORY_CODE
-		AND A.PRODPLAN_DATE = B.PRODPLAN_DATE
-		AND A.PRODPLAN_SEQ = B.PRODPLAN_SEQ
-			LEFT JOIN TCO403 B1
-			ON A.ITEM_CODE = B1.MATERIAL_ID
+		LEFT JOIN TCO403 B1
+		ON A.ITEM_CODE = B1.MATERIAL_ID
 		LEFT JOIN TPR101 C
 		ON A.WORKCENTER_CODE = C.WORKCENTER_CODE
 		LEFT JOIN TPR151 D
 		ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
 		WHERE 1=1
-		    AND A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+		    AND CONVERT(date, A.PRODPLAN_DATE, 112) BETWEEN #{dateFrom} AND #{dateTo}
 			<if test="workplace != null and workplace != ''">
 				AND A.WORKCENTER_CODE = #{workplace}
 			</if>
-		ORDER BY PROD_DATE DESC
+		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
 	</select>
 
 	<!-- 생산계획 전체 건 수	-->
 	<select id="selectProdPlanCount"
-			parameterType="map"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanSearchParam"
 			resultType="int">
 		SELECT COUNT(*)
 		FROM TPR301 A
-		INNER JOIN TPR301M B
-		ON A.FACTORY_CODE = B.FACTORY_CODE
-		AND A.PRODPLAN_DATE = B.PRODPLAN_DATE
-		AND A.PRODPLAN_SEQ = B.PRODPLAN_SEQ
 		WHERE 1=1
-		AND A.PRODPLAN_DATE BETWEEN #{dateFrom} AND #{dateTo}
+		AND CONVERT(date, A.PRODPLAN_DATE, 112) BETWEEN #{dateFrom} AND #{dateTo}
 		<if test="workplace != null and workplace != ''">
 			AND A.WORKCENTER_CODE = #{workplace}
 		</if>
@@ -74,13 +66,14 @@
 
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"
-			parameterType="map"
-			resultType="map">
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
+			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
 		SELECT	ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
 			A.PRODPLAN_ID,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
-			A1.ORDER_FLAG,
+			A.PRODWORK_SEQ,
+			A.ORDER_FLAG,
 			A.PRODPLAN_DATE AS WORKDT_DATE,
 			A.ITEM_CODE AS ITEM_CODE_ID,
 			A2.MATERIAL_CODE AS ITEM_CODE,
@@ -142,16 +135,16 @@
 				ON F2.CODE_ID = 'COM007'
 				AND F1.UNIT = F2.CODE
 		WHERE 1=1
-		AND A.PRODPLAN_DATE = #{PRODPLAN_DATE}
-		AND A.PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		AND A.PRODPLAN_DATE = #{prodplanDate}
+		AND A.PRODPLAN_SEQ = #{prodplanSeq}
+		AND A.PRODWORK_SEQ = #{prodworkSeq}
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ
 	</select>
 
-
 	<!--	작업지시 조회 by planId-->
 	<select id="selectProdOrders"
-			parameterType="map"
-			resultType="map">
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
+			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
 		SELECT
 			ROW_NUMBER() OVER( ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ) AS IDX,
 			A.FACTORY_CODE,
@@ -177,6 +170,7 @@
 			A.ORDER_FLAG,
 			A.LOT_NO,
 			A.PROD_QTY AS ORDER_QTY,
+			A.BIGO,
 			ISNULL(A.OPMAN_CODE2, A.OPMAN_CODE) AS OPMAN_CODE2,
 			ISNULL(A.OPTIME2, A.OPTIME) AS OPTIME2,
 			(
@@ -208,8 +202,9 @@
 			LEFT JOIN TPR151 D1
 			ON D.EQUIP_SYS_CD = D1.EQUIP_SYS_CD
 		WHERE 1=1
-		  AND A.PRODPLAN_DATE = #{PRODPLAN_DATE}
-		  AND A.PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		  AND A.PRODPLAN_DATE = #{prodplanDate}
+		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
+		  AND A.PRODWORK_SEQ = #{prodworkSeq}
 		ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ;
 	</select>
 
@@ -230,17 +225,19 @@
 	</select>
 
 	<!-- 생산지시 INSERT 전 WORK_SEQ 값 가져오기	-->
-	<select id="selectProdOrderWorkSeq" parameterType="map" resultType="int">
+	<select id="selectProdOrderWorkSeq"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderInsertDto"
+			resultType="int">
 		SELECT COUNT(*)+1
 		FROM TPR504
 		WHERE FACTORY_CODE = '000001'
-		AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-		AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
 	</select>
 
 	<!-- 생산지시 INSERT	-->
 	<insert id="insertProductionOrder"
-			parameterType="map">
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderInsertDto">
 		INSERT INTO TPR504(
 			FACTORY_CODE,
 			PRODPLAN_DATE,
@@ -260,73 +257,78 @@
 			PROD_QTY,
 			OPMAN_CODE,
 			OPTIME,
-		    TPR504ID
+		    TPR504ID,
+		    BIGO
 		)
 		VALUES (
 			'000001',
-			#{PRODPLAN_DATE},
-			#{PRODPLAN_SEQ},
-			#{PRODWORK_SEQ},
-			#{ORDER_SEQ},
-			#{PRODPLAN_ID},
-			#{PRODORDER_ID},
-			#{NEW_WORKORDER_SEQ},
-			#{WORK_CODE},
-			#{WORKDT_DATE},
-			#{ITEM_CODE_ID},
-			#{PROD_CODE_ID},
-		    #{EQUIPMENT_CODE},
+			#{prodplanDate},
+			#{prodplanSeq},
+			#{prodworkSeq},
+			#{orderSeq},
+			#{prodplanId},
+			#{prodorderId},
+			#{newWorkorderSeq},
+			#{workCode},
+			#{workdtDate},
+			#{itemCodeId},
+			#{prodCodeId},
+		    #{equipmentCode},
 			'O',
-			#{LOT_NO},
-			#{ORDER_QTY},
-			#{OPMAN_CODE},
+			#{lotNo},
+			#{orderQty},
+			#{opmanCode},
 			GETDATE(),
-			#{PRODORDER_ID}
+			#{prodorderId},
+			#{bigo}
 		);
 	</insert>
 
 	<!-- TPR301M ORDER_FLAG UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
-	<update id="updateProdPlanOrderFlag" parameterType="map">
-		UPDATE TPR301M SET ORDER_FLAG = #{ORDER_FLAG}
+	<update id="updateProdPlanOrderFlag" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+		UPDATE TPR301 SET ORDER_FLAG = #{orderFlag}
 		WHERE FACTORY_CODE = '000001'
-		AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-		AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
+		AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
 	
 	<!-- 생산지시 삭제	-->
-	<delete id="deleteProductionOrder" parameterType="map">
+	<delete id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
 		DELETE FROM TPR504
 		WHERE FACTORY_CODE = '000001'
-		AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-		AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
 	</delete>
 
 	<!-- 해당 생산지시에 등록된 생산실적 확인 -->
 	<select id="selectProdResultCount"
-			parameterType="map"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto"
 			resultType="int">
 		SELECT COUNT(*)
 		FROM TPR601
 		WHERE FACTORY_CODE = '000001'
-		AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-		AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
+		AND PRODWORK_SEQ = #{prodworkSeq}
 	</select>
 
 
 	<!-- 생산지시 수정	-->
-	<update id="updateProductionOrder" parameterType="map">
-		UPDATE TPR504 SET WORKDT_DATE = #{WORKDT_DATE},
-						  PROD_QTY = #{ORDER_QTY},
-						  WORKORDER_SEQ = #{NEW_WORKORDER_SEQ},
-						  OPMAN_CODE2 = #{OPMAN_CODE},
+	<update id="updateProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderUpdateDto">
+		UPDATE TPR504 SET WORKDT_DATE = #{workdtDate},
+						  PROD_QTY = #{orderQty},
+						  WORKORDER_SEQ = #{newWorkorderSeq},
+						  BIGO = #{bigo},
+						  OPMAN_CODE2 = #{opmanCode},
 						  OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = '000001'
-		  AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-		  AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
-		  AND WORK_SEQ = #{ORDER_SEQ}
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+		  AND WORK_SEQ = #{orderSeq}
 	</update>
 
 </mapper>

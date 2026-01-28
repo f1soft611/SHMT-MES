@@ -11,11 +11,10 @@ import { WorkplaceWorker } from '../../../types/workplace';
 export function useProdResultDetail(parentRow: ProductionResultOrder) {
   const { showToast } = useToast();
 
+  const [saving, setSaving] = useState(false);
   const [rows, setRows] = useState<ProductionResultDetail[]>([]);
   const [loading, setLoading] = useState(false);
-  const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>(
-    []
-  );
+  const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>([]);
 
   const normalizeRows = (rows: ProductionResultDetail[]) =>
     rows.map((r) => ({
@@ -47,6 +46,7 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
   };
 
   const addRow = () => {
+    console.log(parentRow);
     setRows((prev) => [
       ...prev,
       {
@@ -83,16 +83,44 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
     ]);
   };
 
-  const processRowUpdate = (newRow: ProductionResultDetail) => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.TPR601ID === newRow.TPR601ID ? { ...newRow, __isModified: true } : r
-      )
+  const processRowUpdate = (
+      newRow: ProductionResultDetail,
+      oldRow: ProductionResultDetail
+  ) => {
+    const prod = Number(newRow.PROD_QTY ?? 0);
+    const good = Number(newRow.GOOD_QTY ?? 0);
+    const bad  = Number(newRow.BAD_QTY ?? 0);
+
+    let nextRow = { ...newRow };
+
+    // 양품 수정 → 불량 자동
+    if (newRow.GOOD_QTY !== oldRow.GOOD_QTY) {
+      nextRow.BAD_QTY = Math.max(prod - good, 0);
+    }
+    // 불량 수정 → 양품 자동
+    if (newRow.BAD_QTY !== oldRow.BAD_QTY) {
+      nextRow.GOOD_QTY = Math.max(prod - bad, 0);
+    }
+    // 생산수량 수정 → 불량 재계산
+    if (newRow.PROD_QTY !== oldRow.PROD_QTY) {
+      nextRow.GOOD_QTY = Math.max(prod - (nextRow.BAD_QTY ?? 0), 0);
+    }
+
+    nextRow.__isModified = true;
+
+    setRows(prev =>
+        prev.map(r =>
+            r.TPR601ID === nextRow.TPR601ID ? nextRow : r
+        )
     );
-    return newRow;
+
+    return nextRow;
   };
 
   const handleSave = async () => {
+    if (saving) return false;   // 중복 클릭 차단
+    setSaving(true);
+
     const newRows = rows.filter((r) => r.TPR601ID.startsWith('NEW-'));
     const modifiedRows = rows.filter(
       (r) => !r.TPR601ID.startsWith('NEW-') && r.__isModified
@@ -143,7 +171,7 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
           __isModified: false,
         }))
       );
-
+      await fetchDetails();
       return true;
     } catch (e) {
       console.error(e);
@@ -152,6 +180,8 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
         severity: 'error',
       });
       return false;
+    } finally {
+      setSaving(false);
     }
   };
 

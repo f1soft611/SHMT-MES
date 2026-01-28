@@ -6,9 +6,9 @@ import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
+import egovframework.let.production.order.domain.model.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
-import egovframework.let.production.order.domain.model.ProductionOrderVO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -110,18 +110,23 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/plans")
     public ResultVO getProdPlans(
-            @RequestParam Map<String, String> params,
+            @ModelAttribute ProdPlanSearchParam param,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> resultMap = productionOrderService.selectProdPlans(params);
+        param.setOffset(page * size);
+        param.setSize(size);
+
+        Map<String, Object> resultMap = productionOrderService.selectProdPlans(param);
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }
 
     /**
-     * 생산지시관리에서 폼목별 공정 흐름 조회
+     * 생산지시관리에서 지시 내려지기 전 등록된 폼목별 공정 흐름 조회
      */
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -129,11 +134,11 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/process")
     public ResultVO getFlowProcessByItem(
-            @RequestParam Map<String, Object> params,
+            @ModelAttribute ProdOrderSearchParam param,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> resultMap = productionOrderService.selectFlowProcessByPlanId(params);
+        Map<String, Object> resultMap = productionOrderService.selectFlowProcessByPlanId(param);
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
@@ -149,11 +154,11 @@ public class EgovProductionOrderApiController {
     })
     @GetMapping("/orders")
     public ResultVO getProdOrdersByPlanId(
-            @RequestParam Map<String, Object> params,
+            @ModelAttribute ProdOrderSearchParam param,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> resultMap = productionOrderService.selectProdOrdersByPlanId(params);
+        Map<String, Object> resultMap = productionOrderService.selectProdOrdersByPlanId(param);
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
@@ -169,7 +174,7 @@ public class EgovProductionOrderApiController {
     })
     @PostMapping
     public ResultVO createProductionOrders(
-            @RequestBody List<Map<String, Object>> orders,
+            @RequestBody List<ProdOrderInsertDto> orders,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
@@ -177,8 +182,9 @@ public class EgovProductionOrderApiController {
         resultMap.put("user", user);
 
         try {
-            for (Map<String,Object> order : orders) {
-                order.put("OPMAN_CODE", user.getUniqId());
+            // 로그인 사용자 세팅
+            for (ProdOrderInsertDto dto : orders) {
+                dto.setOpmanCode(user.getUniqId());
             }
 
             productionOrderService.insertProductionOrders(orders);
@@ -198,7 +204,7 @@ public class EgovProductionOrderApiController {
     })
     @PostMapping("/update")
     public ResultVO updateProductionOrders(
-            @RequestBody List<Map<String, Object>> orders,
+            @RequestBody List<ProdOrderUpdateDto> orders,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
@@ -206,8 +212,9 @@ public class EgovProductionOrderApiController {
         resultMap.put("user", user);
 
         try {
-            for (Map<String,Object> order : orders) {
-                order.put("OPMAN_CODE", user.getUniqId());
+            // 로그인 사용자 세팅
+            for (ProdOrderUpdateDto dto : orders) {
+                dto.setOpmanCode(user.getUniqId());
             }
 
             productionOrderService.updateProductionOrders(orders);
@@ -227,7 +234,7 @@ public class EgovProductionOrderApiController {
     })
     @PostMapping("/delete")
     public ResultVO deleteProductionOrders(
-            @RequestBody Map<String, Object> order,
+            @RequestBody ProdOrderDeleteDto order,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
@@ -239,8 +246,6 @@ public class EgovProductionOrderApiController {
         } catch (IllegalStateException e) {
             return resultVoHelper.buildFromMap(resultMap, ResponseCode.DELETE_ERROR, e.getMessage());
         }
-
-
 
     }
 

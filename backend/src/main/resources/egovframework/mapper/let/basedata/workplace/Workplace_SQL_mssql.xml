@@ -77,7 +77,7 @@
 			AND W.STATUS = #{status}
 		</if>
 		AND W.USE_YN = 'Y'
-		ORDER BY W.OPTIME DESC
+		ORDER BY W.WORKCENTER_CODE
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY

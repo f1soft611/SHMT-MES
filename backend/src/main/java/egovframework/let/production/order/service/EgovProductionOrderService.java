@@ -1,7 +1,7 @@
 package egovframework.let.production.order.service;
 
 
-import egovframework.let.production.order.domain.model.ProductionOrderVO;
+import egovframework.let.production.order.domain.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -35,20 +35,20 @@ public interface EgovProductionOrderService {
 	Map<String, Object> selectProductionOrderList(ProductionOrderVO productionOrderVO, String attrbFlag) throws Exception;
 
 
-	Map<String, Object> selectProdPlans(Map<String, String> params) throws Exception;
+	Map<String, Object> selectProdPlans(ProdPlanSearchParam param) throws Exception;
 
 
-	Map<String, Object>selectFlowProcessByPlanId(Map<String, Object> param) throws Exception;
-	Map<String, Object> selectProdOrdersByPlanId(Map<String, Object> param) throws Exception;
+	Map<String, Object> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception;
+	Map<String, Object> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception;
 
 
 	// 생산지시 저장
-	void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
+	void insertProductionOrders(List<ProdOrderInsertDto> prodOrderList) throws Exception;
 
 	// 생산지시 수정
-	void updateProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception;
+	void updateProductionOrders(List<ProdOrderUpdateDto> prodOrderList) throws Exception;
 
 	// 생산지시 삭제
-	void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception;
+	void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception;
 
 }
