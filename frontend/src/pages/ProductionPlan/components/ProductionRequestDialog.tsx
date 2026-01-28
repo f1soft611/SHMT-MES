@@ -87,7 +87,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   // 검색 조건 (실제 조회에 사용)
   const [searchParams, setSearchParams] = useState({
-    searchCnd: '1',
+    searchCnd: '4',
     searchWrd: '',
     dateFrom: '',
     dateTo: '',
@@ -96,7 +96,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   // 입력 필드용 상태 (화면 입력용)
   const [inputValues, setInputValues] = useState({
-    searchCnd: '1',
+    searchCnd: '4',
     searchWrd: '',
     dateFrom: '',
     dateTo: '',
@@ -376,14 +376,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
     setInputValues({
-      searchCnd: '1',
+      searchCnd: '4',
       searchWrd: '',
       dateFrom: '',
       dateTo: '',
       workplaceCode: workplaceCode || '',
     });
     setSearchParams({
-      searchCnd: '1',
+      searchCnd: '4',
       searchWrd: '',
       dateFrom: '',
       dateTo: '',
@@ -614,6 +614,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               <MenuItem value="1">품목코드</MenuItem>
               <MenuItem value="2">품목명</MenuItem>
               <MenuItem value="3">생산의뢰번호</MenuItem>
+              <MenuItem value="4">품목번호</MenuItem>
             </Select>
           </FormControl>
           <TextField

@@ -1,14 +1,9 @@
 package egovframework.let.production.order.domain.repository;
 
-import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
-import egovframework.let.cop.bbs.domain.model.Board;
-import egovframework.let.cop.bbs.domain.model.BoardVO;
-import egovframework.let.production.order.domain.model.ProductionOrder;
-import egovframework.let.production.order.domain.model.ProductionOrderVO;
+import egovframework.let.production.order.domain.model.*;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -45,33 +40,33 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     /**
      * 조건에 맞는 생산 계획 목록에 대한 전체 건수를 조회 한다.
      *
-     * @param searchVO
+     * @param param
      * @return
      * @throws Exception
      */
-    public int selectProdPlanCount(Map<String, Object> searchVO) throws Exception {
-        return (Integer)selectOne("ProductionOrderDAO.selectProdPlanCount", searchVO);
+    public int selectProdPlanCount(ProdPlanSearchParam param) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdPlanCount", param);
     }
 
     /**
      * 조건에 맞는 생산 계획 목록에 대한 전체 목록을 조회 한다.
      *
-     * @param searchVO
+     * @param param
      * @return
      * @throws Exception
      */
-    public List<Map<String, Object>> selectProdPlans(Map<String, Object> searchVO) throws Exception {
-        return selectList("ProductionOrderDAO.selectProdPlan", searchVO);
+    public List<ProdPlanRow> selectProdPlans(ProdPlanSearchParam param) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdPlan", param);
     }
 
     // 생산지시] 생산지시 등록되기 전 제품의 공정 가져오기
-    public List<Map<String, Object>> selectFlowProcessByPlanId(Map<String, Object> prodPlan) throws Exception {
-        return selectList("ProductionOrderDAO.selectFlowProcess", prodPlan);
+    public List<ProdOrderRow> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception {
+        return selectList("ProductionOrderDAO.selectFlowProcess", param);
     }
 
     // 생산지시] 생산지시 등록된 후 생산계획에 연결된 생산지시 조회
-    public List<Map<String, Object>> selectProdOrdersByPlanId(Map<String, Object> prodPlan) throws Exception {
-        return selectList("ProductionOrderDAO.selectProdOrders", prodPlan);
+    public List<ProdOrderRow> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception {
+        return selectList("ProductionOrderDAO.selectProdOrders", param);
     }
 
     // 생산지시] 생산지시 저장 전 nextId 가져오기
@@ -80,34 +75,34 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     }
 
     // 생산지시] 생산지시 저장 전 WORK_SEQ 가져오기
-    public int selectProdOrderWorkSeq(Map<String, Object> prodOrder) throws Exception {
-        return (Integer)selectOne("ProductionOrderDAO.selectProdOrderWorkSeq", prodOrder);
+    public int selectProdOrderWorkSeq(ProdOrderInsertDto dto) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdOrderWorkSeq", dto);
     }
 
     // 생산지시] 생산지시 저장
-    public void insertProductionOrder(Map<String, Object> prodOrder) throws Exception {
-        insert("ProductionOrderDAO.insertProductionOrder", prodOrder);
+    public void insertProductionOrder(ProdOrderInsertDto dto) throws Exception {
+        insert("ProductionOrderDAO.insertProductionOrder", dto);
     }
 
     // 생산지시] 생산지시 저장 -> 생산계획TPR301M ORDER FLAG UPDATE
     // 생산지시] 생산지시 삭제 -> 생산계획TPR301M ORDER FLAG UPDATE
-    public void updateProdPlanOrderFlag(Map<String, Object> prodOrder) throws Exception {
-        update("ProductionOrderDAO.updateProdPlanOrderFlag", prodOrder);
+    public void updateProdPlanOrderFlag(ProdPlanOrderFlagDto dto) {
+        update("ProductionOrderDAO.updateProdPlanOrderFlag", dto);
     }
 
     // 생산지시] 생산지시 삭제
-    public void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception {
-        delete("ProductionOrderDAO.deleteProductionOrder", prodOrder);
+    public void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception {
+        delete("ProductionOrderDAO.deleteProductionOrder", dto);
     }
 
     // 생산지시] 해당 지시에 등록된 생산실적 있는지 확인
-    public int selectProdResultCount(Map<String, Object> prodOrder) throws Exception {
-        return (Integer)selectOne("ProductionOrderDAO.selectProdResultCount", prodOrder);
+    public int selectProdResultCount(ProdOrderDeleteDto dto) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdResultCount", dto);
     }
 
     // 생산지시] 생산지시 수정
-    public void updateProductionOrder(Map<String, Object> prodOrder) throws Exception {
-        update("ProductionOrderDAO.updateProductionOrder", prodOrder);
+    public void updateProductionOrder(ProdOrderUpdateDto dto) throws Exception {
+        update("ProductionOrderDAO.updateProductionOrder", dto);
     }
 
 

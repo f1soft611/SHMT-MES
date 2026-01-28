@@ -6,6 +6,7 @@ import {
   DialogTitle,
   Button,
   TextField,
+  Chip,
   Box,
   Stack,
   Divider,
@@ -51,7 +52,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
         setLoading(true);
         setError('');
         const response = await itemService.getItemList(page, pageSize, {
-          searchCnd: '1', // 품목명 검색',
+          searchCnd: '1', // 품목번호 검색',
           searchWrd: actualSearchKeyword,
           useYn: 'Y',
         });
@@ -60,7 +61,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
           setItems(response.result.resultList);
           setTotalCount(
             response.result.paginationInfo?.totalRecordCount ||
-              response.result.resultList.length
+              response.result.resultList.length,
           );
         } else {
           setError('품목 목록을 불러오는데 실패했습니다.');
@@ -91,7 +92,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
 
     const selectedItemCode = String(Array.from(selectionModel.ids)[0]);
     const selectedItem = items.find(
-      (item) => item.itemCode === selectedItemCode
+      (item) => item.itemCode === selectedItemCode,
     );
     if (!selectedItem) {
       setError('선택한 품목을 찾을 수 없습니다.');
@@ -111,10 +112,44 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     onClose();
   };
 
+  const getItemTypeLabel = (itemType: string) => {
+    switch (itemType) {
+      case 'PRODUCT':
+        return '제품';
+      case '1':
+        return '상품';
+      case 'HALF_PRODUCT':
+        return '반제품';
+      case '3':
+        return '서비스';
+      case '6':
+        return '원자재';
+      default:
+        return itemType;
+    }
+  };
+
+  const getItemTypeColor = (itemType: string) => {
+    switch (itemType) {
+      case 'PRODUCT':
+        return 'primary';
+      case '1':
+        return 'success';
+      case 'HALF_PRODUCT':
+        return 'info';
+      case '3':
+        return 'warning';
+      case '6':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
   const columns: GridColDef[] = [
     {
       field: 'itemCode',
-      headerName: '품목코드',
+      headerName: '품목번호',
       width: 150,
       align: 'center',
       headerAlign: 'center',
@@ -131,12 +166,26 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       field: 'specification',
       headerName: '규격',
       width: 150,
-      align: 'center',
+      align: 'left',
       headerAlign: 'center',
       valueFormatter: (value) => value || '-',
     },
     {
-      field: 'unit',
+      field: 'itemType',
+      headerName: '품목타입',
+      width: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getItemTypeLabel(params.value || 'PRODUCT')}
+          color={getItemTypeColor(params.value || 'PRODUCT') as any}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'unitName',
       headerName: '단위',
       width: 100,
       align: 'center',
@@ -164,7 +213,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
           <Box sx={{ display: 'flex', gap: 1 }}>
             <TextField
               size="small"
-              placeholder="품목명으로 검색"
+              placeholder="품목번호로 검색"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onKeyDown={(e) => {

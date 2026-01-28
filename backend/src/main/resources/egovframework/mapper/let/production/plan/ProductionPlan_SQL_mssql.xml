@@ -612,7 +612,7 @@
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">
 					<!-- 품목코드 -->
-					AND (T.ITEM_CODE LIKE '%' + #{searchWrd} + '%' OR T.ITEM_NO LIKE '%' + #{searchWrd} + '%')
+					AND T.ITEM_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2' or searchCnd == 2">
 					<!-- 품목명 -->
@@ -621,6 +621,10 @@
 				<when test="searchCnd == '3' or searchCnd == 3">
 					<!-- 생산의뢰번호 -->
 					AND T.ORDER_NO LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '4' or searchCnd == 4">
+					<!-- 품목번호 -->
+					AND T.ITEM_NO LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>
@@ -678,7 +682,7 @@
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">
 					<!-- 품목코드 -->
-					AND (T.ITEM_CODE LIKE '%' + #{searchWrd} + '%' OR T.ITEM_NO LIKE '%' + #{searchWrd} + '%')
+					AND T.ITEM_CODE LIKE '%' + #{searchWrd} + '%'
 				</when>
 				<when test="searchCnd == '2' or searchCnd == 2">
 					<!-- 품목명 -->
@@ -687,6 +691,10 @@
 				<when test="searchCnd == '3' or searchCnd == 3">
 					<!-- 생산의뢰번호 -->
 					AND T.ORDER_NO LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '4' or searchCnd == 4">
+					<!-- 품목번호 -->
+					AND T.ITEM_NO LIKE '%' + #{searchWrd} + '%'
 				</when>
 			</choose>
 		</if>

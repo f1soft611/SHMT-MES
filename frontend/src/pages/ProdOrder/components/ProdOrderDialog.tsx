@@ -10,17 +10,20 @@ import {
     Remove as RemoveIcon,
 } from '@mui/icons-material';
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
+import {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
 
 interface Props {
     open: boolean;
-    plan: any | null;
-    rows: any[];
+    plan: ProdPlanRow | null;
+    rows: ProdOrderRow[];
+
     onClose: () => void;
     onSubmit: () => void;
     onDelete: () => void;
+
     onAddRow: (index: number) => void;
     onRemoveRow: (index: number) => void;
-    onProcessRowUpdate: (newRow: any) => any;
+    onProcessRowUpdate: (newRow: ProdOrderRow) => ProdOrderRow;
     canWrite: boolean;
 }
 
@@ -33,11 +36,12 @@ export default function ProdOrderDialog({
 }:Props){
 
     const columns: GridColDef[] =[
-        { field: 'PRODPLAN_ID'},
-        { field: 'PRODPLAN_DATE'},
-        { field: 'PRODPLAN_SEQ'},
-        { field: 'PRODORDER_ID'},
-        { field: 'ORDER_SEQ'},
+        { field: 'prodplanId'},
+        { field: 'prodplanDate'},
+        { field: 'prodplanSeq'},
+        { field: 'prodworkSeq'},
+        { field: 'prodorderId'},
+        { field: 'orderSeq'},
         {
             field: "add",
             headerName: "분할",
@@ -74,63 +78,63 @@ export default function ProdOrderDialog({
             },
         },
         {
-            field: "WORK_NAME",
+            field: "workName",
             headerName: "공정명",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "EQUIPMENT_CODE",
+            field: "equipmentCode",
             headerName: "설비코드",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "EQUIPMENT_NAME",
+            field: "equipmentName",
             headerName: "설비명",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "ITEM_CODE",
+            field: "itemCode",
             headerName: "아이템코드",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "PROD_CODE",
+            field: "prodCode",
             headerName: "생산품목코드",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "MATERIAL_NAME",
+            field: "materialName",
             headerName: "생산품목명",
             width: 150,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "MATERIAL_SPEC",
+            field: "materialSpec",
             headerName: "생산품목규격",
             width: 150,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "MATERIAL_UNIT",
+            field: "materialUnit",
             headerName: "단위",
             width: 50,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "ORDER_QTY",
+            field: "orderQty",
             headerName: "작업지시량",
             width: 100,
             headerAlign: "center",
@@ -139,14 +143,14 @@ export default function ProdOrderDialog({
             renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
-            field: "WORKDT_DATE",
+            field: "workdtDate",
             headerName: "시작일",
             width: 100,
             headerAlign: "center",
             align: "center",
             editable: true,
             renderCell: (params) => {
-                const v = params.row.WORKDT_DATE || params.row.PRODPLAN_DATE;
+                const v = params.row.workdtDate || params.row.prodplanDate;
                 if (!v) return "";
 
                 // 20251212 → 2025-12-12
@@ -155,14 +159,14 @@ export default function ProdOrderDialog({
             renderEditCell: (params) => {
                 const raw =
                     params.value ||
-                    params.row.WORKDT_DATE ||
-                    params.row.PRODPLAN_DATE ||
+                    params.row.workdtDate ||
+                    params.row.prodplanDate ||
                     "";
 
                 if (!params.value && raw) {
                     params.api.setEditCellValue({
                         id: params.id,
-                        field: "WORKDT_DATE",
+                        field: "workdtDate",
                         value: raw,
                     });
                 }
@@ -179,7 +183,7 @@ export default function ProdOrderDialog({
                         onChange={(e) => {
                             params.api.setEditCellValue({
                                 id: params.id,
-                                field: "WORKDT_DATE",
+                                field: "workdtDate",
                                 value: e.target.value.replace(/-/g, ""),
                             });
                         }}
@@ -188,9 +192,9 @@ export default function ProdOrderDialog({
             },
         },
         {
-            field: 'LAST_FLAG',
+            field: 'lastFlag',
             headerName: "최종공정",
-            width: 100,
+            width: 80,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => {
@@ -205,14 +209,22 @@ export default function ProdOrderDialog({
             },
         },
         {
-            field: 'OPMAN_CODE2',
+            field: 'bigo',
+            headerName: "비고",
+            width: 200,
+            headerAlign: "center",
+            align: "left",
+            editable: true,
+        },
+        {
+            field: 'opmanCode2',
             headerName: "최종수정자",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: 'OPTIME2',
+            field: 'optime2',
             headerName: "최종수정일시",
             width: 150,
             headerAlign: "center",
@@ -249,9 +261,9 @@ export default function ProdOrderDialog({
                     >
                         {/* 지시상태 */}
                         <Chip
-                            label={plan.ORDER_FLAG}
+                            label={plan.orderFlag}
                             size="small"
-                            color={plan.ORDER_FLAG === 'ORDERED' ? 'primary' : 'default'}
+                            color={plan.orderFlag === 'ORDERED' ? 'primary' : 'default'}
                         />
 
                         {/* 작업장 */}
@@ -260,7 +272,7 @@ export default function ProdOrderDialog({
                                 작업장
                             </Typography>
                             <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.WORKCENTER_NAME}
+                                {plan.workcenterName}
                             </Typography>
                         </Box>
 
@@ -276,7 +288,7 @@ export default function ProdOrderDialog({
                                 설비
                             </Typography>
                             <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.EQUIPMENT_NAME}({plan.EQUIP_SYS_CD})
+                                {plan.equipmentName}({plan.equipSysCd})
                             </Typography>
                         </Box>
 
@@ -292,7 +304,7 @@ export default function ProdOrderDialog({
                                 생산계획 ID
                             </Typography>
                             <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.PRODPLAN_ID}
+                                {plan.prodplanId}
                             </Typography>
                         </Box>
 
@@ -308,7 +320,7 @@ export default function ProdOrderDialog({
                                 생산계획일
                             </Typography>
                             <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {formatYmd(plan.PRODPLAN_DATE)}
+                                {formatYmd(plan.prodplanDate)}
                             </Typography>
                         </Box>
 
@@ -330,7 +342,7 @@ export default function ProdOrderDialog({
                             <Typography variant="caption" color="text.secondary">
                                 품목명
                             </Typography>
-                            <Tooltip title={plan.ITEM_NAME} arrow>
+                            <Tooltip title={plan.itemName} arrow>
                             <Typography
                                 fontWeight={600}
                                 sx={{
@@ -341,7 +353,7 @@ export default function ProdOrderDialog({
                                     fontSize: '0.9rem',
                                 }}
                             >
-                                {plan.ITEM_NAME}
+                                {plan.itemName}
                             </Typography>
                             </Tooltip>
                         </Box>
@@ -358,7 +370,7 @@ export default function ProdOrderDialog({
                                 계획량
                             </Typography>
                             <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.PROD_QTY?.toLocaleString()}
+                                {plan.prodQty?.toLocaleString()}
                             </Typography>
                         </Box>
                     </Box>
@@ -368,18 +380,19 @@ export default function ProdOrderDialog({
                     <DataGrid
                         columns={columns}
                         rows={rows}
-                        getRowId={(row) => row.IDX}
+                        getRowId={(row) => row.idx}
                         hideFooter
                         hideFooterPagination
                         hideFooterSelectedRowCount
                         rowHeight={35}
                         columnHeaderHeight={40}
                         columnVisibilityModel={{
-                            PRODPLAN_ID: false,
-                            PRODPLAN_DATE: false,
-                            PRODPLAN_SEQ: false,
-                            PRODORDER_ID: false,
-                            ORDER_SEQ: false,
+                            prodplanId: false,
+                            prodplanDate: false,
+                            prodplanSeq: false,
+                            prodworkSeq: false,
+                            prodorderId: false,
+                            orderSeq: false,
                         }}   // 화면에서만 숨김
                         processRowUpdate={onProcessRowUpdate}
                         isCellEditable={(params) => {
@@ -399,9 +412,9 @@ export default function ProdOrderDialog({
                     color="primary"
                     disabled={!canWrite}
                 >
-                    {plan?.ORDER_FLAG === 'ORDERED' ? '수정' : '저장'}
+                    {plan?.orderFlag === 'ORDERED' ? '수정' : '저장'}
                 </Button>
-                {plan?.ORDER_FLAG === 'ORDERED' && (
+                {plan?.orderFlag === 'ORDERED' && (
                     <Button
                         variant="contained"
                         color="error"

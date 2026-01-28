@@ -1,51 +1,232 @@
-import {useEffect, useState} from "react";
+import { useState} from "react";
 import {productionOrderService} from "../../../services/productionOrderService";
+import {
+    ProdOrderInsertDto,
+    ProdOrderRow,
+    ProdOrderUpdateDto,
+    ProdPlanRow
+} from "../../../types/productionOrder";
+import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
 
-interface ProdOrderRow {
-    // 필요한 필드들 선언 (없으면 최소한 빈 객체라도 허용)
-    [key: string]: any;
-}
+export function useProdOrder() {
 
 
-export function useProdOrder(selectedPlan: any | null) {
+    const { showToast } = useToast();
 
-    const [rows, setRows] = useState<ProdOrderRow[]>([]);
+    // 위 그리드 선택된 데이터
+    const [selectedPlan, setSelectedPlan] = useState<ProdPlanRow | null>(null);
+    const [localRows, setLocalRows] = useState<ProdOrderRow[]>([]);
     const [resultCnt, setResultCnt] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const fetchProdOrders = async (selectedPlan?: any) => {
+    const selectPlan = async (plan: ProdPlanRow) => {
+        setSelectedPlan(plan);
+        await fetchProdOrders(plan);
+    };
 
+    const toInsertDto = (row: ProdOrderRow, seq: number): ProdOrderInsertDto => ({
+        prodplanDate: row.prodplanDate,
+        prodplanSeq: row.prodplanSeq,
+        prodworkSeq: row.prodworkSeq,
+
+        prodplanId: row.prodplanId,
+        newWorkorderSeq: seq,
+
+        workCode: row.workCode,
+        workdtDate: row.workdtDate,
+
+        itemCodeId: row.itemCodeId,
+        prodCodeId: row.prodCodeId,
+        equipmentCode: row.equipmentCode,
+
+        lotNo: row.lotNo,
+        orderQty: row.orderQty,
+        bigo: row.bigo,
+    });
+
+    const toUpdateDto = (row: ProdOrderRow, seq: number): ProdOrderUpdateDto => ({
+        prodplanDate: row.prodplanDate,
+        prodplanSeq: row.prodplanSeq,
+        prodworkSeq: row.prodworkSeq,
+        orderSeq: row.orderSeq,
+
+        workdtDate: row.workdtDate,
+        orderQty: row.orderQty,
+        newWorkorderSeq: seq,
+
+        bigo: row.bigo,
+    });
+
+
+    const fetchProdOrders = async (plan: ProdPlanRow) => {
         try {
             setLoading(true);
             setError(null);
 
-            const status = selectedPlan.ORDER_FLAG;
+            const status: string = plan.orderFlag ?? "ORDERED";
+
             const response =
                 status === "PLANNED"
-                    ? await productionOrderService.getFlowProcessByPlanId(selectedPlan)
-                    : await productionOrderService.getProdOrdersByPlanId(selectedPlan);
-            setRows(response.result?.resultList ?? []);
+                    ? await productionOrderService.getFlowProcessByPlanId(plan)
+                    : await productionOrderService.getProdOrdersByPlanId(plan);
+
+            setLocalRows(
+                (response.result?.resultList ?? []).map(r => ({
+                    ...r,
+                    _isNew: false,
+                }))
+            );
             setResultCnt(response.result?.resultCnt ?? 0);
         } catch (err: any) {
             setError(err.message || "생산지시 조회 실패");
-            setRows([]);
+            setLocalRows([]);
+            setResultCnt(0);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (!selectedPlan) return;
-        fetchProdOrders(selectedPlan);
-    }, [selectedPlan]);
+
+    const save: () => Promise<{ changed: boolean }> = async () => {
+        try {
+
+            const indexed = localRows.map((row, i) => ({
+                row,
+                seq: i + 1,
+            }));
+
+            const insertRows: ProdOrderInsertDto[] = indexed
+            .filter(({ row }) => row._isNew || !row.prodorderId)
+            .map(({ row, seq }) => toInsertDto(row, seq));
+
+            const updateRows: ProdOrderUpdateDto[] = indexed
+            .filter(({ row }) => !row._isNew && row.prodorderId)
+            .map(({ row, seq }) => toUpdateDto(row, seq));
+
+            let changed = false;
+            let lastMessage = "저장되었습니다";
+
+            if (updateRows.length > 0) {
+                const { data } = await productionOrderService.updateProductionOrder(updateRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return { changed: false };
+                }
+                lastMessage = data.resultMessage;
+                changed = true;
+            }
+
+            if (insertRows.length > 0) {
+                const { data } = await productionOrderService.createProductionOrder(insertRows);
+                if (data.resultCode !== 200) {
+                    showToast({ message: data.resultMessage, severity: "error" });
+                    return { changed: false };
+                }
+                lastMessage = data.resultMessage;
+            }
+
+            showToast({
+                message: lastMessage,
+                severity: "success",
+            });
+            return { changed };
+
+        } catch (e) {
+            console.log(e);
+            showToast({
+                message: "저장 실패",
+                severity: "error",
+            });
+            return { changed: false };
+        }
+    };
+
+    const remove: () => Promise<{ deleted: boolean }> = async () => {
+        if (!selectedPlan) return { deleted: false };
+        try {
+            const deleteDto = {
+                prodplanDate: selectedPlan.prodplanDate,
+                prodplanSeq: selectedPlan.prodplanSeq,
+                prodworkSeq: selectedPlan.prodworkSeq,
+            };
+
+            const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+            if (data.resultCode !== 200) {
+                showToast({
+                    message: data.resultMessage,
+                    severity: "error",
+                });
+                return { deleted: false };
+            }
+
+            showToast({
+                message: data.resultMessage,
+                severity: "success",
+            });
+            return { deleted: true };
+
+        } catch (e) {
+            console.log(e)
+            showToast({
+                message: "삭제 요청 중 오류가 발생했습니다.",
+                severity: "error",
+            });
+            return { deleted: false };
+        }
+
+    }
+
+
+    const handleAddRow = (index: number) => {
+        setLocalRows(prev => {
+            const base = prev[index];   // 분할 기준 행
+
+            const newRow = {
+                ...base, // 전체 행 복사
+                prodorderId: '',
+                orderSeq: 0,
+                workorderSeq: 0,
+                idx: crypto.randomUUID(),
+                _isNew: true,
+            };
+
+            const copy = [...prev];
+            copy.splice(index + 1, 0, newRow);
+            return copy;
+        });
+    };
+
+    const handleRemoveRow  = (index: number) => {
+        setLocalRows(prev =>
+            prev.filter((_, i) => i !== index)
+        );
+    }
+
+
+    const handleProcessRowUpdate = (newRow: ProdOrderRow) => {
+        setLocalRows((prev) =>
+            prev.map((r) => (r.idx === newRow.idx ? newRow : r))
+        );
+        return newRow;
+    };
+
 
     return {
-        orderRows: rows,
+        selectedPlan,
+        orderRows: localRows,
         orderResultCnt: resultCnt,
         loading,
         error,
-        fetchProdOrders
+
+        selectPlan,
+        fetchProdOrders, // 필요하면 유지
+        save,
+        remove,
+
+        addRow: handleAddRow,
+        removeRow: handleRemoveRow,
+        updateRow: handleProcessRowUpdate,
     };
 }

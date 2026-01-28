@@ -53,7 +53,10 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   useEffect(() => {
     const fetchUnitCodes = async () => {
       try {
-        const response = await commonCodeService.getCommonDetailCodeList('COM007', 'Y');
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM007',
+          'Y',
+        );
         if (response.resultCode === 200 && response.result?.detailCodeList) {
           setUnitCodes(response.result.detailCodeList);
         }
@@ -126,7 +129,10 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
                   <InputLabel>품목타입</InputLabel>
                   <Select {...field} label="품목타입">
                     <MenuItem value="PRODUCT">제품</MenuItem>
-                    <MenuItem value="MATERIAL">자재</MenuItem>
+                    <MenuItem value="1">상품</MenuItem>
+                    <MenuItem value="HALF_PRODUCT">반제품</MenuItem>
+                    <MenuItem value="3">서비스</MenuItem>
+                    <MenuItem value="6">원자재</MenuItem>
                   </Select>
                 </FormControl>
               )}

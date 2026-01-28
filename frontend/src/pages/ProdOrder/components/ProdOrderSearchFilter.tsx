@@ -1,22 +1,17 @@
 import {
     Button, FormControl, InputLabel, MenuItem,
-    Paper, Stack, Typography
+    Paper, Stack, Typography, Select, TextField
 } from "@mui/material";
 import {
     Search as SearchIcon,
     FilterList as FilterListIcon,
 } from '@mui/icons-material';
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
 import {Workplace} from "../../../types/workplace";
+import {ProdPlanSearchParams} from "../../../types/productionOrder";
 
 interface Props {
     workplaces: Workplace[];
-    search: {
-        workplace: string;
-        dateFrom: string;
-        dateTo: string;
-    };
+    search: ProdPlanSearchParams;
     onChange: (name: string, value: string) => void;
     onSearch: () => void;
 }
