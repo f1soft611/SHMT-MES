@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import { productionOrderService } from '../../../services/productionOrderService';
+import {ProdPlanRow, ProdPlanSearchParams} from "../../../types/productionOrder";
 
 export function useProdPlan() {
   // 검색 조건
@@ -9,8 +10,7 @@ export function useProdPlan() {
   dateFrom.setDate(dateFrom.getDate() - 30);
   const dateFromStr = dateFrom.toISOString().slice(0, 10);
 
-  const [search, setSearch] = useState({
-    workplace: '',
+  const [search, setSearch] = useState<ProdPlanSearchParams>({
     dateFrom: dateFromStr,
     dateTo: today,
   });
@@ -20,7 +20,7 @@ export function useProdPlan() {
     pageSize: 10,
   });
 
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<ProdPlanRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [resultCnt, setResultCnt] = useState(0);
   const [searchTrigger, setSearchTrigger] = useState(0);
@@ -35,7 +35,7 @@ export function useProdPlan() {
         size: paginationModel.pageSize,
       });
       setRows(response.result.resultList);
-      setResultCnt(response.result.resultCnt);
+      setResultCnt(response.result.resultCnt ?? 0);
     } catch (err: any) {
       setRows([]);
       setResultCnt(0);

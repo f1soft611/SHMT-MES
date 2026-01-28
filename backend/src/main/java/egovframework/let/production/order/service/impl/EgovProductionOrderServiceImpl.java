@@ -1,17 +1,8 @@
 package egovframework.let.production.order.service.impl;
 
-import egovframework.com.cmm.LoginVO;
-import egovframework.com.cmm.service.EgovFileMngService;
-import egovframework.com.cmm.service.FileVO;
-import egovframework.let.cop.bbs.domain.model.Board;
-import egovframework.let.cop.bbs.domain.model.BoardVO;
-import egovframework.let.cop.bbs.domain.repository.BBSManageDAO;
-import egovframework.let.cop.bbs.dto.request.BbsManageDeleteBoardRequestDTO;
-import egovframework.let.cop.bbs.service.EgovBBSManageService;
-import egovframework.let.production.order.domain.model.ProductionOrderVO;
+import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.domain.repository.ProductionOrderDAO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
-import egovframework.let.utl.fcc.service.EgovDateUtil;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
@@ -19,8 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -77,17 +66,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdPlans(Map<String, String> params) throws Exception{
+	public Map<String, Object> selectProdPlans(ProdPlanSearchParam param) throws Exception{
 
-		int page = Integer.parseInt(params.getOrDefault("page", "0"));
-		int size = Integer.parseInt(params.getOrDefault("size", "10"));
-
-		Map<String, Object> dbParams = new HashMap<>(params);
-		dbParams.put("offset", page * size);
-		dbParams.put("size", size);
-
-		List<Map<String, Object>> list = productionOrderDAO.selectProdPlans(dbParams);
-		int resultCnt = productionOrderDAO.selectProdPlanCount(dbParams);
+		List<ProdPlanRow> list = productionOrderDAO.selectProdPlans(param);
+		int resultCnt = productionOrderDAO.selectProdPlanCount(param);
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("resultList", list);
@@ -101,8 +83,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectFlowProcessByPlanId(Map<String, Object> prodPlan) throws Exception{
-		List<Map<String, Object>> list = productionOrderDAO.selectFlowProcessByPlanId(prodPlan);
+	public Map<String, Object> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
+		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("resultList", list);
@@ -114,9 +96,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdOrdersByPlanId(Map<String, Object> param) throws Exception{
+	public Map<String, Object> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception{
 
-		List<Map<String, Object>> list = productionOrderDAO.selectProdOrdersByPlanId(param);
+		List<ProdOrderRow> list = productionOrderDAO.selectProdOrdersByPlanId(param);
 		Map<String, Object> result = new HashMap<>();
 		result.put("resultList", list);
 		return result;
@@ -128,21 +110,28 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	@Override
 	@Transactional
-	public void insertProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
-		for(Map<String, Object> prodOrder : prodOrderList){
+	public void insertProductionOrders(List<ProdOrderInsertDto> prodOrderList) throws Exception {
+		for (ProdOrderInsertDto dto : prodOrderList) {
 			try {
+				// 생산지시 ID 채번
 				String nextId = productionOrderDAO.selectProdOrderNextId();
-				prodOrder.put("PRODORDER_ID", nextId);
+				dto.setProdorderId(nextId);
 
-				int orderSeq = productionOrderDAO.selectProdOrderWorkSeq(prodOrder);
-				prodOrder.put("ORDER_SEQ", orderSeq);
+				// WORK_SEQ 채번
+				int orderSeq = productionOrderDAO.selectProdOrderWorkSeq(dto);
+				dto.setOrderSeq(orderSeq);
 
 				// DB insert
-				productionOrderDAO.insertProductionOrder(prodOrder);
+				productionOrderDAO.insertProductionOrder(dto);
 
-				// 생산계획TPR301M ORDER_FLAG UPDATE
-				prodOrder.put("ORDER_FLAG", "ORDERED");
-				productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+				// 생산계획TPR301 ORDER_FLAG UPDATE
+				ProdPlanOrderFlagDto flagDto = new ProdPlanOrderFlagDto();
+				flagDto.setProdplanDate(dto.getProdplanDate());
+				flagDto.setProdplanSeq(dto.getProdplanSeq());
+				flagDto.setProdworkSeq(dto.getProdworkSeq());
+				flagDto.setOrderFlag("ORDERED");
+				productionOrderDAO.updateProdPlanOrderFlag(flagDto);
+
 			} catch (Exception e){
 				Throwable cause = e.getCause();
 
@@ -163,18 +152,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	@Override
 	@Transactional
-	public void updateProductionOrders(List<Map<String, Object>> prodOrderList) throws Exception {
-		for(Map<String, Object> prodOrder : prodOrderList){
+	public void updateProductionOrders(List<ProdOrderUpdateDto> prodOrderList) throws Exception {
+		for(ProdOrderUpdateDto dto : prodOrderList){
 			try {
-				productionOrderDAO.updateProductionOrder(prodOrder);
+				productionOrderDAO.updateProductionOrder(dto);
 			} catch (Exception e){
 				Throwable cause = e.getCause();
 
 				if (cause instanceof com.microsoft.sqlserver.jdbc.SQLServerException) {
-					com.microsoft.sqlserver.jdbc.SQLServerException sqlEx =
-							(com.microsoft.sqlserver.jdbc.SQLServerException) cause;
-
-					throw new IllegalStateException(sqlEx.getMessage());
+					throw new IllegalStateException(cause.getMessage());
 				}
 
 				throw e;
@@ -188,20 +174,24 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	@Override
 	@Transactional
-	public void deleteProductionOrder(Map<String, Object> prodOrder) throws Exception {
+	public void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception {
 
 		// 삭제 전 등록된 생산실적이 있으면 삭제 안되게 처리
-		int cnt = productionOrderDAO.selectProdResultCount(prodOrder);
+		int cnt = productionOrderDAO.selectProdResultCount(dto);
 		if (cnt > 0) {
 			throw new IllegalStateException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.");
 		}
 
 		// 삭제
-		productionOrderDAO.deleteProductionOrder(prodOrder);
+		productionOrderDAO.deleteProductionOrder(dto);
 
-		// 생산계획TPR301M ORDER_FLAG UPDATE
-		prodOrder.put("ORDER_FLAG", "PLANNED");
-		productionOrderDAO.updateProdPlanOrderFlag(prodOrder);
+		// 생산계획TPR301 ORDER_FLAG UPDATE
+		ProdPlanOrderFlagDto flagDto = new ProdPlanOrderFlagDto();
+		flagDto.setProdplanDate(dto.getProdplanDate());
+		flagDto.setProdplanSeq(dto.getProdplanSeq());
+		flagDto.setProdworkSeq(dto.getProdworkSeq());
+		flagDto.setOrderFlag("PLANNED");
+		productionOrderDAO.updateProdPlanOrderFlag(flagDto);
 	}
 
 

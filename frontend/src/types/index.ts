@@ -46,12 +46,24 @@ export interface InterfaceLog {
 }
 
 // API 응답 타입
+// export interface ApiResponse<T> {
+//   success: boolean;
+//   data: T;
+//   message?: string;
+//   timestamp: string;
+// }
+
 export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  timestamp: string;
+  resultCode: number;
+  resultMessage: string;
+  result: T;
 }
+
+export interface PageResult<T> {
+  resultList: T[];
+  resultCnt?: number; // 선택적
+}
+
 
 // 페이지네이션 타입
 export interface PaginatedResponse<T> {

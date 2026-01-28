@@ -2,8 +2,9 @@ import { useFetchWorkplaces } from '../../../hooks/useFetchWorkplaces';
 import { useProdOrder } from './useProdOrder';
 import { useProdResultDialog } from './useProdResultDialog';
 import { useEffect, useState } from 'react';
+import {ProdPlanRow} from "../../../types/productionOrder";
 
-export function useProductionResult(rowData?: any) {
+export function useProductionResult(rowData: ProdPlanRow | null) {
   // 검색필터 작업장 fetch 공통 훅
   const wpfetchHook = useFetchWorkplaces();
 
@@ -29,12 +30,14 @@ export function useProductionResult(rowData?: any) {
     const formatDate = (v: string) =>
       `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`;
 
+    if (!rowData?.prodDate) return;
+
     const nextSearch = {
-      workplace: rowData.WORKCENTER_CODE,
+      workplace: rowData.workcenterCode,
       equipment: '',
-      dateFrom: formatDate(rowData.PROD_DATE),
-      dateTo: formatDate(rowData.PROD_DATE),
-      keyword: rowData.PRODPLAN_ID,
+      dateFrom: formatDate(rowData.prodDate),
+      dateTo: formatDate(rowData.prodDate),
+      keyword: rowData.prodplanId,
     };
 
     // 1) 검색필터 UI 세팅
@@ -43,8 +46,8 @@ export function useProductionResult(rowData?: any) {
     // 2) 실제 조회 파라미터 세팅 (조회 트리거)
     prodOrder.setSearchParams({
       ...nextSearch,
-      dateFrom: rowData.PROD_DATE,
-      dateTo: rowData.PROD_DATE,
+      dateFrom: rowData.prodDate,
+      dateTo: rowData.prodDate,
     });
 
     // 3) 첫 페이지로

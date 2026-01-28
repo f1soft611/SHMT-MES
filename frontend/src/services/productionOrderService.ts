@@ -1,33 +1,43 @@
 import apiClient from './api';
-import { ProductionOrder, ApiResponse, PaginatedResponse } from '../types';
+import {
+  ProductionOrder, ApiResponse, PaginatedResponse, PageResult,
+} from '../types';
+import {
+  ProdOrderDeleteDto, ProdOrderInsertDto,
+  ProdOrderRow,
+  ProdOrderSearchParam, ProdOrderUpdateDto,
+  ProdPlanPageResult,
+  ProdPlanRow,
+  ProdPlanSearchParams
+} from '../types/productionOrder';
 import { getMockProductionOrders } from './mockData';
 
-export interface ProductionOrderSearchParams {
-  page?: number;
-  size?: number;
-  status?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  keyword?: string;
-}
+// export interface ProductionOrderSearchParams {
+//   page?: number;
+//   size?: number;
+//   status?: string;
+//   dateFrom?: string;
+//   dateTo?: string;
+//   keyword?: string;
+// }
 
 export const productionOrderService = {
   // 생산계획 목록 조회
-  getProdPlans: async (params?: any) => {
-    const response = await apiClient.get('/api/production-orders/plans', {
-      params: params,   // ← 검색 조건을 쿼리 파라미터로 전달
-    });
+  getProdPlans: async (
+      params: ProdPlanSearchParams
+  ): Promise<ApiResponse<PageResult<ProdPlanRow>>> => {
+    const response = await apiClient.get<ApiResponse<ProdPlanPageResult<ProdPlanRow>>>('/api/production-orders/plans', { params,});
     return response.data;
   },
 
   // 생산계획 품목별 공정 조회
-  getFlowProcessByPlanId: async(params?: any) => {
+  getFlowProcessByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<PageResult<ProdOrderRow>>> => {
     const response = await apiClient.get('/api/production-orders/process', { params });
     return response.data;
   },
 
   // 생산계획별 생산지시 조회
-  getProdOrdersByPlanId: async (params?: any) => {
+  getProdOrdersByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<PageResult<ProdOrderRow>>> => {
     const response = await apiClient.get('/api/production-orders/orders', { params });
     return response.data;
   },
@@ -55,8 +65,8 @@ export const productionOrderService = {
         ApiResponse<PaginatedResponse<ProductionOrder>>
       >(`/production-orders?${params}`);
 
-      // 옵셔널 체이닝 사용
-      const data = response.data?.data ?? response.data;
+      const data = response.data.result;
+
 
       if (!data) {
         throw new Error('응답 데이터를 찾을 수 없습니다.');
@@ -71,27 +81,27 @@ export const productionOrderService = {
     }
   },
 
-  // 생산지시 목록 조회 (검색 매개변수 객체 사용)
-  searchProductionOrders: async (
-    searchParams: ProductionOrderSearchParams
-  ): Promise<PaginatedResponse<ProductionOrder>> => {
-    const { page = 0, size = 20, ...filters } = searchParams;
-    return productionOrderService.getProductionOrders(
-      page,
-      size,
-      filters.status,
-      filters.dateFrom,
-      filters.dateTo,
-      filters.keyword
-    );
-  },
+  // // 생산지시 목록 조회 (검색 매개변수 객체 사용)
+  // searchProductionOrders: async (
+  //   searchParams: ProductionOrderSearchParams
+  // ): Promise<PaginatedResponse<ProductionOrder>> => {
+  //   const { page = 0, size = 20, ...filters } = searchParams;
+  //   return productionOrderService.getProductionOrders(
+  //     page,
+  //     size,
+  //     filters.status,
+  //     filters.dateFrom,
+  //     filters.dateTo,
+  //     filters.keyword
+  //   );
+  // },
 
   // 생산지시 상세 조회
   getProductionOrder: async (id: string): Promise<ProductionOrder> => {
     const response = await apiClient.get<ApiResponse<ProductionOrder>>(
       `/production-orders/${id}`
     );
-    return response.data.data;
+    return response.data.result;
   },
 
   // 생산지시 상태 업데이트
@@ -103,7 +113,7 @@ export const productionOrderService = {
       `/production-orders/${id}/status`,
       { status }
     );
-    return response.data.data;
+    return response.data.result;
   },
 
   // ERP에서 생산지시 동기화
@@ -114,11 +124,11 @@ export const productionOrderService = {
   // getProductionOrdersByPlan:
 
   // 생산지시 저장
-  createProductionOrder: (data: any[]) => apiClient.post('/api/production-orders', data),
+  createProductionOrder: (data: ProdOrderInsertDto[]) => apiClient.post('/api/production-orders', data),
 
   // 생산지시 수정
-  updateProductionOrder: (data: any[]) => apiClient.post('/api/production-orders/update', data),
+  updateProductionOrder: (data: ProdOrderUpdateDto[]) => apiClient.post('/api/production-orders/update', data),
 
   // 생산지시 삭제
-  deleteProductionOrders: (data: any) => apiClient.post('/api/production-orders/delete', data),
+  deleteProductionOrders: (data: ProdOrderDeleteDto) => apiClient.post('/api/production-orders/delete', data),
 };

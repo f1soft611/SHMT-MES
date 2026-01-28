@@ -4,11 +4,12 @@ import {Box, Typography, Grid} from '@mui/material';
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
 import {useProductionResult} from "./hooks/useProductionResult";
 import ProdResultTable from "./components/ProdResultTable";
+import {ProdPlanRow} from "../../types/productionOrder";
 
 const ProductionResult: React.FC = () => {
 
     const location = useLocation();
-    const rowData = location.state?.rowData?? null; // 생산지시에서 넘어올때 사용하는 params
+    const rowData = location.state?.rowData as ProdPlanRow | null; // 생산지시에서 넘어올때 사용하는 params
 
     const rs = useProductionResult(rowData);
 

@@ -9,26 +9,28 @@ import {
     AssignmentAdd as AssignmentAddIcon,
     Input as InputIcon,
 } from "@mui/icons-material";
+import {ProdPlanRow} from "../../../types/productionOrder";
 
 interface Props {
-    rows: any[];
+    rows: ProdPlanRow[];
     loading: boolean;
-    onRowClick: (row: any) => void;
+    onRowClick: (row: ProdPlanRow) => void;
     paginationModel: GridPaginationModel;
     totalCount: number;
     onPaginationChange: (model: GridPaginationModel) => void;
 }
 
-function ProductionActionCell({ row }: { row: any }) {
-    const navigate = useNavigate();
-
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.stopPropagation();
-        navigate('/prod/results', {
-            state: { rowData: row },
-        });
-    };
-
+function ProductionActionCell({
+                                  row,
+                                  icon,
+                                  color = "primary",
+                                  onClick,
+                              }: {
+    row: ProdPlanRow;
+    icon: React.ReactNode;
+    color?: "primary" | "inherit" | "secondary" | "default";
+    onClick: (row: ProdPlanRow) => void;
+}) {
     return (
         <Box
             sx={{
@@ -39,19 +41,28 @@ function ProductionActionCell({ row }: { row: any }) {
             }}
         >
             <Stack direction="row" spacing={1}>
-                <IconButton size="small" color="primary" onClick={handleClick}>
-                    <InputIcon />
+                <IconButton
+                    size="small"
+                    color={color}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick(row);
+                    }}
+                >
+                    {icon}
                 </IconButton>
             </Stack>
         </Box>
     );
-};
+}
 
 const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange }: Props) => {
 
+    const navigate = useNavigate();
+
     const columns: GridColDef[] = [
         {
-            field: "ORDER_FLAG",
+            field: "orderFlag",
             headerName: "지시상태",
             width: 100,
             headerAlign: "center",
@@ -68,49 +79,56 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             },
         },
         {
-            field: "PRODPLAN_ID",
+            field: "orderGubun",
+            headerName: "의뢰구분",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "prodplanId",
             headerName: "지시번호",
             width: 140,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "WORKCENTER_NAME",
+            field: "workcenterName",
             headerName: "작업장",
-            width: 120,
+            width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "EQUIPMENT_NAME",
+            field: "equipmentName",
             headerName: "설비명",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "PRODPLAN_DATE",
-            headerName: "생산계획일",
+            field: "itemCode",
+            headerName: "품목코드",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "ITEM_CODE",
-            headerName: "품목코드",
-            width: 80,
-            headerAlign: "center",
-            align: "center",
-        },
-        {
-            field: "ITEM_NAME",
+            field: "itemName",
             headerName: "품목명",
             width: 250,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "PROD_QTY",
+            field: "prodplanDate",
+            headerName: "생산계획일",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "prodQty",
             headerName: "계획량",
             width: 70,
             headerAlign: "center",
@@ -118,14 +136,14 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
-            field: "LOT_NO",
+            field: "lotNo",
             headerName: "LOT_NO",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "BIGO",
+            field: "bigo",
             headerName: "비고",
             width: 200,
             headerAlign: "center",
@@ -138,29 +156,12 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '100%',
-                    }}
-                >
-                    <Stack direction="row" spacing={1}>
-                        <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRowClick(params.row);
-                            }}
-                        >
-                            <AssignmentAddIcon />
-                        </IconButton>
-
-                    </Stack>
-                </Box>
-            )
+                <ProductionActionCell
+                    row={params.row as ProdPlanRow}
+                    icon={<AssignmentAddIcon />}
+                    onClick={onRowClick}
+                />
+            ),
         },
         {
             field: "actionResult",
@@ -168,7 +169,17 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            renderCell: (params) => <ProductionActionCell row={params.row} />
+            renderCell: (params) => (
+                <ProductionActionCell
+                    row={params.row as ProdPlanRow}
+                    icon={<InputIcon />}
+                    onClick={(row) =>
+                        navigate("/prod/results", {
+                            state: { rowData: row },
+                        })
+                    }
+                />
+            ),
         },
     ];
 
@@ -188,7 +199,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                         columns={columns}
                         loading={loading}
                         disableRowSelectionOnClick
-                        getRowId={(row) => row.PRODPLAN_ID}
+                        getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
                         pagination
                         paginationMode="server"
                         rowCount={totalCount}
