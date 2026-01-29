@@ -66,6 +66,33 @@
 		<if test="useYn != null and useYn != ''">
 			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
 		</if>
+
+		<!-- 공정 등록 여부 -->
+		<if test="inProcessFlowYn != null">
+			<choose>
+				<!-- 1: 미등록 -->
+				<when test="inProcessFlowYn == 1">
+					AND NOT EXISTS (
+					SELECT 1
+					FROM TPR112 FI
+					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+					)
+				</when>
+
+				<!-- 2: 등록 -->
+				<when test="inProcessFlowYn == 2">
+					AND EXISTS (
+					SELECT 1
+					FROM TPR_FLOW_ITEM FI
+					FROM TPR112 FI
+					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+					)
+				</when>
+
+				<!-- 0: 전체 → 조건 없음 -->
+			</choose>
+		</if>
+
 		ORDER BY OPTIME DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
@@ -77,7 +104,7 @@
 			parameterType="egovframework.let.basedata.item.domain.model.ItemVO"
 			resultType="int">
 		SELECT COUNT(*) AS CNT
-		FROM TCO403
+		FROM TCO403 A
 		WHERE 1=1
 		AND FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
@@ -98,6 +125,30 @@
 		</if>
 		<if test="useYn != null and useYn != ''">
 			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
+		</if>
+		<!-- 공정 등록 여부 -->
+		<if test="inProcessFlowYn != null">
+			<choose>
+				<!-- 1: 미등록 -->
+				<when test="inProcessFlowYn == 1">
+					AND NOT EXISTS (
+					SELECT 1
+					FROM TPR112 FI
+					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+					)
+				</when>
+
+				<!-- 2: 등록 -->
+				<when test="inProcessFlowYn == 2">
+					AND EXISTS (
+					SELECT 1
+					FROM TPR112 FI
+					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+					)
+				</when>
+
+				<!-- 0: 전체 → 조건 없음 -->
+			</choose>
 		</if>
 		AND DELETE_FLAG != '1'
 	</select>

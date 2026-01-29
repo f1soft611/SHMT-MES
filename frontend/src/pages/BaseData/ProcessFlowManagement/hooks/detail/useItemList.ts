@@ -1,13 +1,8 @@
 import { GridRowId } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import { Item } from '../../../../../types/item';
+import { Item, ItemSearchParams, InProcessFlow } from '../../../../../types/item';
 import itemService from '../../../../../services/itemService';
 
-interface SearchParams {
-  searchCnd: string; // "0": 코드, "1": 이름
-  searchWrd: string;
-  useYn?: string;
-}
 
 export function useItemList() {
   /** 데이터 */
@@ -31,17 +26,19 @@ export function useItemList() {
   };
 
   /** 검색 - 입력용 */
-  const [searchDraft, setSearchDraft] = useState<SearchParams>({
+  const [searchDraft, setSearchDraft] = useState<ItemSearchParams>({
     searchCnd: '0',
     searchWrd: '',
     useYn: 'Y',
+    inProcessFlowYn: InProcessFlow.UNREGISTERED, // 기본: 미등록
   });
 
   /** 검색 - 실제 조회용 */
-  const [searchParams, setSearchParams] = useState<SearchParams>({
+  const [searchParams, setSearchParams] = useState<ItemSearchParams>({
     searchCnd: '0',
     searchWrd: '',
     useYn: 'Y',
+    inProcessFlowYn: InProcessFlow.UNREGISTERED, // 기본: 미등록
   });
 
   /** 선택 */
@@ -69,13 +66,19 @@ export function useItemList() {
   };
 
   /** 검색 조건 입력 */
-  const updateSearchDraft = (name: keyof SearchParams, value: string) => {
+  const updateSearchDraft = (name: keyof ItemSearchParams, value: string) => {
     setSearchDraft((prev) => ({ ...prev, [name]: value }));
   };
 
   /** 초기화 */
   const reset = () => {
-    const init = { searchCnd: '0', searchWrd: '', useYn: 'Y' };
+    const init: ItemSearchParams = {
+      searchCnd: '0',
+      searchWrd: '',
+      useYn: 'Y',
+      inProcessFlowYn: InProcessFlow.UNREGISTERED,
+    };
+
     setSearchDraft(init);
     setSearchParams(init);
     setPage(0);
