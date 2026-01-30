@@ -4,6 +4,7 @@ import {useProdOrder} from "./useProdOrder";
 import {useProdOrderDialog} from "./useProdOrderDialog";
 import {useFetchWorkplaces} from "../../../hooks/useFetchWorkplaces";
 import { ProdPlanRow } from "../../../types/productionOrder";
+import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
 
 
 export function useProductionOrder() {
@@ -44,6 +45,9 @@ export function useProductionOrder() {
 
     const workplaces = useFetchWorkplaces();
 
+    //  작업장 코드 기준 설비 자동 조회
+    const { equipments } = useFetchEquipments(prodPlan.search.workplace);
+
     // 생산계획 row 선택
     const handlePlanSelect = (row: ProdPlanRow) => {
         prodOrder.selectPlan(row);
@@ -81,6 +85,8 @@ export function useProductionOrder() {
         deleteOrder: dialog.deleteOrder,
 
         workplaces: workplaces.workplaces,
+        equipments,
+
         handlePlanSelect,
     };
 

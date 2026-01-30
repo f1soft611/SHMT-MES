@@ -1,5 +1,6 @@
 import apiClient from './api';
-import { Equipment, EquipmentSearchParams } from '../types/equipment';
+import {Equipment, EquipmentInfo, EquipmentSearchParams} from '../types/equipment';
+import {ApiResponse, PageResult} from "../types";
 
 /**
  * 설비 API 서비스
@@ -63,7 +64,7 @@ export const equipmentService = {
   /**
    * 작업장별 설비목록 조회
    */
-  getEquipmentsByWorkplaceId: async (workplaceId: string) => {
+  getEquipmentsByWorkplaceId: async (workplaceId: string): Promise<ApiResponse<PageResult<EquipmentInfo>>> => {
     const response = await apiClient.get(`/api/equipments/wokrplace/${workplaceId}`);
     return response.data;
   },

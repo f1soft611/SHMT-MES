@@ -2,8 +2,10 @@ package egovframework.let.basedata.equipment.service.impl;
 
 import egovframework.let.basedata.equipment.domain.model.Equipment;
 import egovframework.let.basedata.equipment.domain.model.EquipmentVO;
+import egovframework.let.basedata.equipment.domain.model.WorkcenterEquipRow;
 import egovframework.let.basedata.equipment.domain.repository.EquipmentDAO;
 import egovframework.let.basedata.equipment.service.EgovEquipmentService;
+import egovframework.let.common.dto.ListResult;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
@@ -117,14 +119,13 @@ public class EgovEquipmentServiceImpl extends EgovAbstractServiceImpl implements
 		int count = equipmentDAO.selectEquipmentCodeCheckForUpdate(params);
 		return count > 0;
 	}
-
 	/**
 	 * 작업장별 설비목록 리스트
 	 */
 	@Override
-	public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception {
-		List<Map<String, Object>> resultList = equipmentDAO.selectEquipmentListByWorkplaceCode(code);
-		return resultList;
+	public ListResult<WorkcenterEquipRow> selectEquipmentListByWorkplaceCode(String code) throws Exception {
+		List<WorkcenterEquipRow> list = equipmentDAO.selectEquipmentListByWorkplaceCode(code);
+		return new ListResult<>(list, 0);
 	}
 
 

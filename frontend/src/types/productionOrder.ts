@@ -8,9 +8,10 @@ export interface ProductionOrder {
 // [API] 생산계획 조회 파라미터
 // =======================
 export interface ProdPlanSearchParams {
+    workplace?: string;
+    equipment?: string;
     dateFrom: string;   // YYYYMMDD
     dateTo: string;     // YYYYMMDD
-    workplace?: string;
     page?: number;
     size?: number;
 }

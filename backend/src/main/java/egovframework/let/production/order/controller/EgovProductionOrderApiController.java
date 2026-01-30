@@ -5,6 +5,7 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
+import egovframework.let.common.dto.ListResult;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
 import egovframework.let.production.order.domain.model.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -119,8 +120,13 @@ public class EgovProductionOrderApiController {
         param.setOffset(page * size);
         param.setSize(size);
 
-        Map<String, Object> resultMap = productionOrderService.selectProdPlans(param);
+        ListResult<ProdPlanRow> data = productionOrderService.selectProdPlans(param);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", data.getResultList());
+        resultMap.put("resultCnt", data.getResultCnt());
         resultMap.put("user", user);
+
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }

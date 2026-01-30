@@ -54,6 +54,9 @@
 			<if test="workplace != null and workplace != ''">
 				AND A.WORKCENTER_CODE = #{workplace}
 			</if>
+			<if test="equipment != null and equipment != ''">
+				AND A.EQUIP_SYS_CD = #{equipment}
+			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
@@ -69,6 +72,9 @@
 		AND CONVERT(date, A.PRODPLAN_DATE, 112) BETWEEN #{dateFrom} AND #{dateTo}
 		<if test="workplace != null and workplace != ''">
 			AND A.WORKCENTER_CODE = #{workplace}
+		</if>
+		<if test="equipment != null and equipment != ''">
+			AND A.EQUIP_SYS_CD = #{equipment}
 		</if>
 	</select>
 

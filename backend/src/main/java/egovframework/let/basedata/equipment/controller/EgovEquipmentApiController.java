@@ -6,7 +6,9 @@ import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.let.basedata.equipment.domain.model.Equipment;
 import egovframework.let.basedata.equipment.domain.model.EquipmentVO;
+import egovframework.let.basedata.equipment.domain.model.WorkcenterEquipRow;
 import egovframework.let.basedata.equipment.service.EgovEquipmentService;
+import egovframework.let.common.dto.ListResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,7 +22,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -234,11 +235,10 @@ public class EgovEquipmentApiController {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
 
-        List<Map<String, Object>> resultList = equipmentService.selectEquipmentListByWorkplaceCode(wokrplaceId);
-        resultMap.put("resultList", resultList);
+        ListResult<WorkcenterEquipRow> result = equipmentService.selectEquipmentListByWorkplaceCode(wokrplaceId);
+        resultMap.put("resultList", result.getResultList());
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
-
 
 }

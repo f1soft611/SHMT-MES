@@ -2,6 +2,8 @@ package egovframework.let.basedata.equipment.service;
 
 import egovframework.let.basedata.equipment.domain.model.Equipment;
 import egovframework.let.basedata.equipment.domain.model.EquipmentVO;
+import egovframework.let.basedata.equipment.domain.model.WorkcenterEquipRow;
+import egovframework.let.common.dto.ListResult;
 
 import java.util.List;
 import java.util.Map;
@@ -87,5 +89,5 @@ public interface EgovEquipmentService {
 	/**
 	 * 작업장별 설비목록 리스트
 	 */
-	public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception;
+	ListResult<WorkcenterEquipRow> selectEquipmentListByWorkplaceCode(String code) throws Exception;
 }

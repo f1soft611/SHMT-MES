@@ -8,15 +8,17 @@ import {
 } from '@mui/icons-material';
 import {Workplace} from "../../../types/workplace";
 import {ProdPlanSearchParams} from "../../../types/productionOrder";
+import {EquipmentInfo} from "../../../types/equipment";
 
 interface Props {
     workplaces: Workplace[];
+    equipments: EquipmentInfo[];
     search: ProdPlanSearchParams;
     onChange: (name: string, value: string) => void;
     onSearch: () => void;
 }
 
-const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props) => {
+const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSearch }: Props) => {
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -62,9 +64,11 @@ const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>작업장</InputLabel>
                         <Select
-                            value={search.workplace}
+                            value={search.workplace ?? ''}
                             label="작업장"
-                            onChange={(e) => onChange('workplace', e.target.value)}
+                            onChange={(e) => {
+                                onChange('workplace', e.target.value);
+                            }}
                         >
                             <MenuItem value="">
                                 전체
@@ -72,6 +76,23 @@ const ProdOrderSearchFilter = ({ workplaces, search, onChange, onSearch }: Props
                             {workplaces.map(wp => (
                                 <MenuItem key={wp.workplaceCode} value={wp.workplaceCode}>
                                     {wp.workplaceName} ({wp.workplaceCode})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>설비</InputLabel>
+                        <Select
+                            value={search.equipment ?? ''}
+                            label="설비"
+                            onChange={(e) => onChange('equipment', e.target.value)}
+                            disabled={!search.workplace}   // 작업장 선택 전 비활성화
+                        >
+                            <MenuItem value="">전체</MenuItem>
+                            {equipments.map(eq => (
+                                <MenuItem key={eq.equipSysCd} value={eq.equipSysCd}>
+                                    {eq.equipmentName} ({eq.equipSysCd })
                                 </MenuItem>
                             ))}
                         </Select>
