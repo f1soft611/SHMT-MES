@@ -1,6 +1,6 @@
 import apiClient from './api';
 import {
-  ProductionOrder, ApiResponse, PaginatedResponse, PageResult,
+  ProductionOrder, ApiResponse, PaginatedResponse, ListResult,
 } from '../types';
 import {
   ProdOrderDeleteDto, ProdOrderInsertDto,
@@ -25,19 +25,19 @@ export const productionOrderService = {
   // 생산계획 목록 조회
   getProdPlans: async (
       params: ProdPlanSearchParams
-  ): Promise<ApiResponse<PageResult<ProdPlanRow>>> => {
+  ): Promise<ApiResponse<ListResult<ProdPlanRow>>> => {
     const response = await apiClient.get<ApiResponse<ProdPlanPageResult<ProdPlanRow>>>('/api/production-orders/plans', { params,});
     return response.data;
   },
 
   // 생산계획 품목별 공정 조회
-  getFlowProcessByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<PageResult<ProdOrderRow>>> => {
+  getFlowProcessByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<ListResult<ProdOrderRow>>> => {
     const response = await apiClient.get('/api/production-orders/process', { params });
     return response.data;
   },
 
   // 생산계획별 생산지시 조회
-  getProdOrdersByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<PageResult<ProdOrderRow>>> => {
+  getProdOrdersByPlanId: async (params: ProdOrderSearchParam ): Promise<ApiResponse<ListResult<ProdOrderRow>>> => {
     const response = await apiClient.get('/api/production-orders/orders', { params });
     return response.data;
   },
