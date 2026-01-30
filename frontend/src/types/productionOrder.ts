@@ -25,6 +25,11 @@ export interface ProdPlanPageResult<T> {
 // =======================
 export interface ProdPlanRow {
     orderFlag: string;
+    orderGubun: string;
+    orderGubunFlag: number;
+    orderNo?: string;
+    orderHistno?: string;
+    orderSeqno?: number;
     factoryCode: string;
     prodplanDate: string;     // YYYYMMDD
     prodplanSeq: number;
