@@ -59,11 +59,10 @@ export interface ApiResponse<T> {
   result: T;
 }
 
-export interface PageResult<T> {
+export interface ListResult<T> {
   resultList: T[];
   resultCnt?: number; // 선택적
 }
-
 
 // 페이지네이션 타입
 export interface PaginatedResponse<T> {

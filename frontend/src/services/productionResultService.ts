@@ -1,11 +1,17 @@
 import apiClient from './api';
-import {ProductionResultOrder, ProductionResultDetail} from "../types/productionResult";
+import {
+  ProdResultOrderRow,
+  ProductionResultDetail,
+  ProductionResultSearchParams,
+} from "../types/productionResult";
+import {ApiResponse, ListResult} from "../types";
 
 export const productionResultService = {  // 생산지시 목록 조회
 
   // 작업지시 목록 조회
-  getProdOrders: async (params?: any) => {
-    return (await apiClient.get('/api/production-results/orders', { params })).data;
+  getProdOrders: async (params?: ProductionResultSearchParams): Promise<ApiResponse<ListResult<ProdResultOrderRow>>> => {
+    const response = await apiClient.get('/api/production-results/orders', { params })
+    return response.data;
   },
 
   //생산실적 신규 등록
@@ -18,8 +24,9 @@ export const productionResultService = {  // 생산지시 목록 조회
   deleteProdResult: async(data: ProductionResultDetail) => await apiClient.post('/api/production-results/delete',data),
 
   // 생산실적 detail 조회
-  getProdResultDetails: async(data: ProductionResultOrder) => {
-    return (await apiClient.get('/api/production-results/details', { params: data, })).data;
+  getProdResultDetails: async(data: ProdResultOrderRow): Promise<ApiResponse<ListResult<ProductionResultDetail>>> => {
+    const response = await apiClient.get('/api/production-results/details', { params: data, });
+    return response.data;
   }
 
 

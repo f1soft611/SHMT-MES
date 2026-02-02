@@ -1,11 +1,14 @@
 package egovframework.let.production.order.service.impl;
 
+import egovframework.com.cmm.exception.DbExceptionTranslator;
+import egovframework.let.common.dto.ListResult;
 import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.domain.repository.ProductionOrderDAO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,16 +69,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdPlans(ProdPlanSearchParam param) throws Exception{
+	public ListResult<ProdPlanRow> selectProdPlans(ProdPlanSearchParam param) throws Exception{
 
 		List<ProdPlanRow> list = productionOrderDAO.selectProdPlans(param);
 		int resultCnt = productionOrderDAO.selectProdPlanCount(param);
 
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", list);
-		result.put("resultCnt", resultCnt);
-
-		return result;
+		return new ListResult<>(list, resultCnt);
 	}
 
 	/**
@@ -83,12 +82,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
+	public ListResult<ProdOrderRow> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
 		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
-
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", list);
-		return result;
+		return new ListResult<>(list, 0);
 	}
 
 	/**
@@ -96,12 +92,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception{
+	public ListResult<ProdOrderRow> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception{
 
 		List<ProdOrderRow> list = productionOrderDAO.selectProdOrdersByPlanId(param);
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", list);
-		return result;
+		return new ListResult<>(list, 0);
 	}
 
 
@@ -111,8 +105,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	@Override
 	@Transactional
 	public void insertProductionOrders(List<ProdOrderInsertDto> prodOrderList) throws Exception {
-		for (ProdOrderInsertDto dto : prodOrderList) {
-			try {
+
+		try{
+			for (ProdOrderInsertDto dto : prodOrderList) {
 				// 생산지시 ID 채번
 				String nextId = productionOrderDAO.selectProdOrderNextId();
 				dto.setProdorderId(nextId);
@@ -131,21 +126,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				flagDto.setProdworkSeq(dto.getProdworkSeq());
 				flagDto.setOrderFlag("ORDERED");
 				productionOrderDAO.updateProdPlanOrderFlag(flagDto);
-
-			} catch (Exception e){
-				Throwable cause = e.getCause();
-
-				if (cause instanceof com.microsoft.sqlserver.jdbc.SQLServerException) {
-					com.microsoft.sqlserver.jdbc.SQLServerException sqlEx =
-							(com.microsoft.sqlserver.jdbc.SQLServerException) cause;
-
-					throw new IllegalStateException(sqlEx.getMessage());
-				}
-
-				throw e;
 			}
+		} catch (DataAccessException e) {
+			throw DbExceptionTranslator.translate(e);
 		}
 	}
+
 
 	/**
 	 * 생산지시 수정

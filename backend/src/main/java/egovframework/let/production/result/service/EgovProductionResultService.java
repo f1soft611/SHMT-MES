@@ -1,10 +1,9 @@
 package egovframework.let.production.result.service;
 
-import egovframework.com.cmm.LoginVO;
-import egovframework.let.production.plan.domain.model.*;
+import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 생산계획 관리를 위한 서비스 인터페이스
@@ -26,31 +25,29 @@ public interface EgovProductionResultService {
 
     /**
      * 생산지시 목록을 조회한다.
-     * @param searchVO 검색 조건
-     * @param user 사용자 VO
+     * @param dto 검색 조건
      * @return 작업지시 목록과 총 건수
      * @throws Exception
      */
-    Map<String, Object> selectProductionOrderList(Map<String, String> searchVO, LoginVO user) throws Exception;
+    ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception;
 
     // 생산실적 TPR601 등록
-    void insertProductionResult(List<Map<String, Object>> resultList) throws Exception;
+    void insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception;
 
     // 생산실적 수정
-    void updateProductionResult(List<Map<String, Object>> resultList) throws Exception;
+    void updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception;
 
     // 생산실적 삭제
-    void deleteProductionResult(Map<String, Object> result) throws Exception;
+    void deleteProductionResult(ProdResultDeleteDto dto) throws Exception;
 
 
     /**
      * 생산실적 detail 목록을 조회한다.
-     * @param searchVO 검색 조건
-     * @param user 사용자 VO
+     * @param dto 검색 조건
      * @return 생산지시 detail 목록
      * @throws Exception
      */
-    Map<String, Object> selectProductionResultDetailList(Map<String, Object> searchVO, LoginVO user) throws Exception;
+    ListResult<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception;
 
 
 }

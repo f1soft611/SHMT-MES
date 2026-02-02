@@ -33,10 +33,10 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     if (!rowData?.prodDate) return;
 
     const nextSearch = {
-      workplace: rowData.workcenterCode,
-      equipment: '',
       dateFrom: formatDate(rowData.prodDate),
       dateTo: formatDate(rowData.prodDate),
+      workplace: rowData.workcenterCode,
+      equipment: '',
       keyword: rowData.prodplanId,
     };
 

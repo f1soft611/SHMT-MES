@@ -31,6 +31,7 @@ const ProdOrder: React.FC = () => {
             {/* 검색 영역 */}
             <ProdOrderSearchFilter
                 workplaces={prodOrder.workplaces}
+                equipments={prodOrder.equipments}
                 search={prodOrder.search}
                 onChange={prodOrder.handleSearchChange}
                 onSearch={prodOrder.handleSearch} />

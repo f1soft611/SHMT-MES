@@ -98,8 +98,8 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loadin
                         >
                             <MenuItem value="">전체</MenuItem>
                             {equipments.map(eq => (
-                                <MenuItem key={eq.EQUIP_SYS_CD} value={eq.EQUIP_SYS_CD}>
-                                    {eq.EQUIPMENT_NAME} ({eq.EQUIP_SYS_CD})
+                                <MenuItem key={eq.equipSysCd} value={eq.equipSysCd}>
+                                    {eq.equipmentName} ({eq.equipSysCd})
                                 </MenuItem>
                             ))}
                         </Select>

@@ -84,6 +84,16 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             width: 100,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => {
+                const gbnFlag = params.row.orderGubunFlag === 0;
+                return (
+                    <Chip
+                        label={params.value}
+                        color={gbnFlag ? 'secondary' : 'info'}
+                        size="small"
+                    />
+                );
+            },
         },
         {
             field: "prodplanId",

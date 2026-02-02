@@ -396,6 +396,7 @@ export default function ProdOrderDialog({
                         }}   // 화면에서만 숨김
                         processRowUpdate={onProcessRowUpdate}
                         isCellEditable={(params) => {
+                            if (params.field === 'bigo') return true;
                             // RST_CNT > 0 이면 전체 편집 불가
                             return params.row.RST_CNT <= 0;
                         }}

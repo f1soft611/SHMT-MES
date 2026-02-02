@@ -1,20 +1,16 @@
 package egovframework.let.production.result.service.impl;
 
-import egovframework.com.cmm.LoginVO;
-import egovframework.let.production.result.domain.model.ProductionResult;
+import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.domain.repository.ProductionResultDAO;
 import egovframework.let.production.result.service.EgovProductionResultService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.text.StringEscapeUtils;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.transaction.Transactional;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 생산계획 관리를 위한 서비스 구현 클래스
@@ -42,52 +38,46 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 //	private EgovIdGnrService egovProdPlanIdgenService;
 
 	@Override
-	public Map<String, Object> selectProductionOrderList(Map<String, String> searchVO, LoginVO user) throws Exception {
+	public ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception {
 
-		int page = Integer.parseInt(searchVO.getOrDefault("page", "0"));
-		int size = Integer.parseInt(searchVO.getOrDefault("size", "10"));
 
-		Map<String, Object> dbParams = new HashMap<>(searchVO);
-		dbParams.put("offset", page * size);
-		dbParams.put("size", size);
+		List<ProdResultOrderRow> list = productionResultDAO.selectProductionOrderList(dto);
+		int resultCnt = productionResultDAO.selectProductionOrderListCount(dto);
 
-		List<Map<String, Object>> resultList = productionResultDAO.selectProductionOrderList(dbParams);
-		int totalCount = productionResultDAO.selectProductionOrderListCount(dbParams);
-
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", resultList );
-		result.put("totalCount", String.valueOf(totalCount));
-		result.put("user", user);
-
-		return result;
+		return new ListResult<>(list, resultCnt);
 	}
 
 	@Override
 	@Transactional
-	public void insertProductionResult(List<Map<String, Object>> resultList) throws Exception {
-		for(Map<String, Object> resultMap : resultList){
-			String tpr601Id = String.valueOf(resultMap.get("TPR601ID"));
+	public void insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception {
+		for(ProdResultInsertDto dto : resultList){
+			String tpr601Id = dto.getTpr601Id();
 			if (tpr601Id.toLowerCase().startsWith("new-")) {
 				// 저장일자의 max TPR601ID 값 가져오기
 				String nextId = productionResultDAO.selectProdResultNextId();
-				resultMap.put("TPR601ID", nextId);
+				dto.setTpr601Id(nextId);
 
 				// prod_seq 값 가져오기
-				Integer prod_seq = productionResultDAO.selectProdSeq(resultMap);
-				resultMap.put("PROD_SEQ", prod_seq);
+				Integer prodSeq = productionResultDAO.selectProdSeq(dto);
+				dto.setProdSeq(prodSeq);
 
 				// TPR601 저장
-				productionResultDAO.insertProductionResult(resultMap);
+				productionResultDAO.insertProductionResult(dto);
 
 				// TPR601W 저장
-				saveProductionResultWorkers(resultMap);
+				saveProductionResultWorkers(dto);
 
 
 				// TPR601M 저장
 
+
 				// TPR504 ORDER_FLAG UPDATE
-//				resultMap.put("ORDER_FLAG", 'P');
-//				productionResultDAO.updateProdOrderOrderFlag(resultMap);
+//				ProdResultOrderFlagDto flagDto = new ProdResultOrderFlagDto();
+//				flagDto.setOrderFlag("X");
+//				flagDto.setProdplanDate(dto.getProdplanDate());
+//				flagDto.setProdplanSeq(dto.getProdplanSeq());
+//				flagDto.setFactoryCode(dto.getFactoryCode());
+//				productionResultDAO.updateProdOrderOrderFlag(flagDto);
 			}
 
 		}
@@ -95,15 +85,15 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	@Override
 	@Transactional
-	public void updateProductionResult(List<Map<String, Object>> resultList) throws Exception {
-		for(Map<String, Object> resultMap : resultList){
+	public void updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception {
+		for(ProdResultUpdateDto  dto : resultList){
 
 			// TPR601 UPDATE
-			productionResultDAO.updateProductionResult(resultMap);
+			productionResultDAO.updateProductionResult(dto);
 
 			// TPR601W DELETE ALL -> INSERT
-			productionResultDAO.deleteProductionResultWorker(resultMap);
-			saveProductionResultWorkers(resultMap);
+			productionResultDAO.deleteProductionResultWorker(dto);
+			saveProductionResultWorkers(dto);
 
 
 			// TPR601M DELETE ALL -> INSERT
@@ -113,61 +103,56 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	// 생산실적 삭제
 	@Override
 	@Transactional
-	public void deleteProductionResult(Map<String, Object> result) throws Exception {
+	public void deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
 
 		// 1. 실적별 작업자 삭제 TPR601W
-		productionResultDAO.deleteProductionResultWorker(result);
+		productionResultDAO.deleteProductionResultWorker(dto);
 
 		// 2. 실적별 투입자재 삭제 TPR601M
-		productionResultDAO.deleteProductionResultMaterial(result);
+//		productionResultDAO.deleteProductionResultMaterial(dto); // todo
 
 		// 3. 실적 삭제 TPR601
-		productionResultDAO.deleteProductionResult(result);
+		productionResultDAO.deleteProductionResult(dto);
 
 	}
-
 
 
 
 	@Override
-	public Map<String, Object> selectProductionResultDetailList(Map<String, Object> searchVO, LoginVO user) throws Exception {
+	public ListResult<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception {
+		List<ProdResultRow> list = productionResultDAO.selectProductionResultDetailList(dto);
 
-		List<Map<String, Object>> resultList = productionResultDAO.selectProductionResultDetailList(searchVO);
-
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", resultList );
-		result.put("user", user);
-
-		return result;
+		return new ListResult<>(list, 0);
 	}
 
 
-	// 작업자 저장 공통 로직
-	@SuppressWarnings("unchecked")
-	private void saveProductionResultWorkers(Map<String, Object> resultMap) throws Exception {
+	private void saveProductionResultWorkers(ProdResultDetailParent parent) throws Exception {
 
-		List<Object> workers = (List<Object>) resultMap.get("WORKER");
+		List<String> workers = parent.getWorkerCodes();
 		if (workers == null || workers.isEmpty()) return;
 
-		for (Object worker : workers) {
-			Map<String, Object> workerMap = new HashMap<>();
-			workerMap.put("TPR601ID", resultMap.get("TPR601ID"));
-			workerMap.put("WORKER_CODE", worker);
-			workerMap.put("PRODPLAN_DATE", resultMap.get("PRODPLAN_DATE"));
-			workerMap.put("PRODPLAN_SEQ", resultMap.get("PRODPLAN_SEQ"));
-			workerMap.put("PRODWORK_SEQ", resultMap.get("PRODWORK_SEQ"));
-			workerMap.put("WORK_SEQ", resultMap.get("WORK_SEQ"));
-			workerMap.put("PROD_SEQ", resultMap.get("PROD_SEQ"));
-			workerMap.put("ITEM_CODE", resultMap.get("PROD_CODE_ID"));
+		for (String workerCode : workers) {
+			ProdResultWorkerDto dto = new ProdResultWorkerDto();
 
-			String nextWorkerId = productionResultDAO.selectProdResultWorkerNextId();
-			workerMap.put("TPR601WID", nextWorkerId);
+			// key 복사
+			dto.setFactoryCode(parent.getFactoryCode());
+			dto.setProdplanDate(parent.getProdplanDate());
+			dto.setProdplanSeq(parent.getProdplanSeq());
+			dto.setProdworkSeq(parent.getProdworkSeq());
+			dto.setWorkSeq(parent.getWorkSeq());
+			dto.setProdSeq(parent.getProdSeq());
 
-			Integer workerSeq = productionResultDAO.selectProdResultWorkerSeq(resultMap);
-			workerMap.put("WORKER_SEQ", workerSeq);
+			dto.setTpr601Id(parent.getTpr601Id());
+			dto.setWorkerCode(workerCode);
 
-			productionResultDAO.insertProductionResultWorker(workerMap);
+			// 채번
+			dto.setTpr601wId(productionResultDAO.selectProdResultWorkerNextId());
+			dto.setWorkerSeq(productionResultDAO.selectProdResultWorkerSeq(dto));
+
+			productionResultDAO.insertProductionResultWorker(dto);
 		}
+
+
 	}
 
 }
