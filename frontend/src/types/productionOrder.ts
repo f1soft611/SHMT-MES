@@ -8,9 +8,10 @@ export interface ProductionOrder {
 // [API] 생산계획 조회 파라미터
 // =======================
 export interface ProdPlanSearchParams {
+    workplace?: string;
+    equipment?: string;
     dateFrom: string;   // YYYYMMDD
     dateTo: string;     // YYYYMMDD
-    workplace?: string;
     page?: number;
     size?: number;
 }
@@ -25,6 +26,11 @@ export interface ProdPlanPageResult<T> {
 // =======================
 export interface ProdPlanRow {
     orderFlag: string;
+    orderGubun: string;
+    orderGubunFlag: number;
+    orderNo?: string;
+    orderHistno?: string;
+    orderSeqno?: number;
     factoryCode: string;
     prodplanDate: string;     // YYYYMMDD
     prodplanSeq: number;

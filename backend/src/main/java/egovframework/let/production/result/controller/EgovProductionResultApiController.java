@@ -4,7 +4,8 @@ import egovframework.com.cmm.LoginVO;
 import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
-import egovframework.let.production.plan.domain.model.ProductionPlanVO;
+import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.service.EgovProductionResultService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,9 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -69,10 +68,20 @@ public class EgovProductionResultApiController {
 	})
 	@GetMapping("/orders")
 	public ResultVO selectProductionOrderList(
-			@RequestParam Map<String, String> searchVO,
+			@ModelAttribute ProdResultSearchDto searchVO,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		Map<String, Object> resultMap = productionResultService.selectProductionOrderList(searchVO, user);
+		searchVO.setOffset(page * size);
+		searchVO.setSize(size);
+
+		ListResult<ProdResultOrderRow> data = productionResultService.selectProductionOrderList(searchVO);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("resultList", data.getResultList());
+		resultMap.put("resultCnt", data.getResultCnt());
+		resultMap.put("user", user);
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
@@ -97,11 +106,11 @@ public class EgovProductionResultApiController {
 	})
 	@PostMapping
 	public ResultVO insertProductionResult(
-			@RequestBody List<Map<String, Object>> details,
+			@RequestBody List<ProdResultInsertDto> details,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		for (Map<String, Object> detail : details) {
-			detail.put("OPMAN_CODE", user.getUniqId());
+		for (ProdResultInsertDto detail : details) {
+			detail.setOpmanCode(user.getUniqId());
 		}
 
 		productionResultService.insertProductionResult(details);
@@ -133,16 +142,17 @@ public class EgovProductionResultApiController {
 	})
 	@PostMapping("/update")
 	public ResultVO updateProductionResult(
-			@RequestBody List<Map<String, Object>> details,
+			@RequestBody List<ProdResultUpdateDto> details,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("user", user);
 
 		try {
-			for (Map<String, Object> detail : details) {
-				detail.put("OPMAN_CODE", user.getUniqId());
+			for (ProdResultUpdateDto detail : details) {
+				detail.setFactoryCode(user.getUniqId());
 			}
+
 			productionResultService.updateProductionResult(details);
 			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 수정이 완료되었습니다.");
 
@@ -171,26 +181,21 @@ public class EgovProductionResultApiController {
 	})
 	@PostMapping("/delete")
 	public ResultVO deleteProductionResult(
-			@RequestBody Map<String, Object> detail,
+			@RequestBody ProdResultDeleteDto detail,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		System.out.println("controller -> check");
+		productionResultService.deleteProductionResult(detail);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("user", user);
 
-		try {
-			productionResultService.deleteProductionResult(detail);
-			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 삭제가 완료되었습니다.");
-		} catch (IllegalStateException e) {
-			return resultVoHelper.buildFromMap(resultMap, ResponseCode.DELETE_ERROR, e.getMessage());
-		}
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 삭제가 완료되었습니다.");
 	}
 
 	/**
 	 * 생산실적 detail 목록을 조회한다.
 	 *
-	 * @param searchVO 검색 조건
+	 * @param dto 검색 조건
 	 * @param user 사용자 정보
 	 * @return ResultVO
 	 * @throws Exception
@@ -207,10 +212,14 @@ public class EgovProductionResultApiController {
 	})
 	@GetMapping("/details")
 	public ResultVO selectProductionResultDetailList(
-			@RequestParam Map<String, Object> searchVO,
+			@ModelAttribute ProdResultDto dto,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		Map<String, Object> resultMap = productionResultService.selectProductionResultDetailList(searchVO, user);
+		ListResult<ProdResultRow> data = productionResultService.selectProductionResultDetailList(dto);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("resultList", data.getResultList());
+		resultMap.put("user", user);
 
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}

@@ -21,10 +21,21 @@ export interface Item {
   updDt?: string;
 }
 
+export const InProcessFlow = {
+  ALL: 0,
+  UNREGISTERED: 1,
+  REGISTERED: 2,
+} as const;
+
+export type InProcessFlowFilter =
+    typeof InProcessFlow[keyof typeof InProcessFlow];
+
+
 export interface ItemSearchParams {
   searchCnd?: string;
   searchWrd?: string;
   itemType?: string;
   useYn?: string;
+  inProcessFlowYn?: InProcessFlowFilter;
   pageIndex?: number;
 }

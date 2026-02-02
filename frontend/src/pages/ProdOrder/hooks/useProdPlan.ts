@@ -11,6 +11,8 @@ export function useProdPlan() {
   const dateFromStr = dateFrom.toISOString().slice(0, 10);
 
   const [search, setSearch] = useState<ProdPlanSearchParams>({
+    workplace: '',
+    equipment: '',
     dateFrom: dateFromStr,
     dateTo: today,
   });

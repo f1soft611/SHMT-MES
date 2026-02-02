@@ -2,6 +2,7 @@ package egovframework.let.basedata.equipment.domain.repository;
 
 import egovframework.let.basedata.equipment.domain.model.Equipment;
 import egovframework.let.basedata.equipment.domain.model.EquipmentVO;
+import egovframework.let.basedata.equipment.domain.model.WorkcenterEquipRow;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -107,7 +108,7 @@ public class EquipmentDAO extends EgovAbstractMapper {
     /**
      * 작업장별 설비목록 리스트
      */
-    public List<Map<String, Object>> selectEquipmentListByWorkplaceCode(String code) throws Exception {
+    public List<WorkcenterEquipRow> selectEquipmentListByWorkplaceCode(String code) throws Exception {
         return selectList("EquipmentDAO.selectEquipmentListByWorkplaceCode", code);
     }
 }

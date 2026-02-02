@@ -1,97 +1,120 @@
 /**
  * 생산실적 타입 정의
  */
-export interface ProductionResultOrder {
-    ORDER_NO?: string;
-    ORDER_SEQNO?: string;
-    ORDER_HISTNO?: string;
-    CUSTOMER_CODE?: string;
-    CUSTOMER_NAME?: string;
+export interface ProdResultOrderRow {
+    // === 수주 정보 ===
+    orderNo?: string;
+    orderSeqNo?: string;
+    orderHistNo?: string;
+    customerCode?: string;
+    customerName?: string;
 
-    FACTORY_CODE: string;
+    // === 기본 키 ===
+    factoryCode: string;
+    prodplanId: string;
+    prodplanDate: string;   // YYYYMMDD
+    prodplanSeq: number;
+    prodworkSeq: number;
+    workSeq: number;
+    prodSeq: number;
 
-    PRODPLAN_ID: string;
-    PRODPLAN_DATE: string;   // YYYYMMDD
-    PRODPLAN_SEQ: number;
-    PRODWORK_SEQ: number;
-    WORK_SEQ: number;
-    PROD_SEQ: number;
+    // === 작업  ===
+    workdtDate: string;
 
-    WORKDT_DATE: string; // 작업시작예정일
+    // === 작업장 / 공정 ===
+    workcenterCode: string;
+    workcenterName: string;
 
-    WORKCENTER_CODE: string;
-    WORKCENTER_NAME: string;
+    workCode: string;
+    workName: string;
 
-    WORK_CODE: string;
-    WORK_NAME: string;
+    // === 품목 ===
+    itemCode: string;
+    itemName: string;
 
-    ITEM_CODE: string;
-    ITEM_NAME: string;
+    prodCode: string;
+    prodName: string;
+    prodSpec: string;
 
-    PROD_CODE: string;
-    PROD_NAME: string;
-    PROD_SPEC: string;
+    // === 설비 ===
+    equipSysCd: string;
+    equipSysCdNm: string;
 
-    EQUIP_SYS_CD: string;
-    EQUIP_SYS_CD_NM: string;
+    // === 수량 ===
+    prodQty: number;
+    goodQty: number | null;
+    badQty: number | null;
+    rcvQty: number | null;
 
-    PROD_QTY: number;        // BigDecimal → number
-    GOOD_QTY: number | null;
-    BAD_QTY: number | null;
-    RCV_QTY: number | null;
+    // === 지시 / 상태 ===
+    workorderSeq: number | null;
+    orderFlag: string;
 
-    WORKORDER_SEQ: number | null;
+    // === 작업자 / 시간 ===
+    opmanCode: string;
+    optime: string;
+    opmanCode2: string;
+    optime2: string;
 
-    ORDER_FLAG: string;
-
-    OPMANCODE: string;
-    OPTIME: string;
-
-    OPMANCODE2: string;
-    OPTIME2: string;
-
-    TPR601ID: string;
-    TPR504ID: string;
+    // === 참조 ID ===
+    tpr601Id: string;
+    tpr504Id: string;
 }
 
 /**
- *
+ * 생산실적 Detail Row
  */
 export interface ProductionResultDetail {
-    id: string;
-    FACTORY_CODE: string;
 
-    PRODPLAN_ID: string;
-    PRODPLAN_DATE: string;   // YYYYMMDD
-    PRODPLAN_SEQ: number;
-    PRODWORK_SEQ: number;
-    WORK_SEQ: number;
-    PROD_SEQ: number;
+    // === PK / FK ===
+    factoryCode: string;
+    prodplanDate: string;   // YYYYMMDD
+    prodplanSeq: number;
+    prodworkSeq: number;
+    workSeq: number;
+    prodSeq: number;
 
-    WORKDT_DATE: string; // 작업시작예정일
-    PROD_STIME: string;
-    PROD_ETIME: string;
+    // === 기준 정보 ===
+    itemCode: string;
+    workCode: string;
+    orderFlag?: string;
 
-    ITEM_CODE: string;
 
-    WORK_CODE: string;
+    workdtDate: string; // 작업시작예정일
 
-    PROD_QTY: number;        // BigDecimal → number
-    GOOD_QTY: number | null;
-    BAD_QTY: number | null;
-    RCV_QTY: number | null;
+    // === 작업 시간 ===
+    prodStime: string;
+    prodEtime: string;
 
-    ORDER_FLAG: string;
+    // === 수량 ===
+    prodQty: number;
+    goodQty: number | null;
+    badQty: number | null;
+    rcvQty: number | null;
 
-    WORKER: string[] | string;
-    INPUTMATERIAL: string;
+    // === 지시 / 연동 ===
+    workorderSeq: number | null;
+    erpSendFlag: string | null;
+    erpRsltIdx: number | null;
 
-    TPR504ID: string;
-    TPR601ID: string;
-    TPR601WID: string;
-    TPR601MID: string;
+    worker: string[] | string;
+    inputMaterial: string;
 
+    // === 작업자 / 시간 ===
+    opmanCode: string;
+    optime: string;
+    opmanCode2: string | null;
+    optime2: string | null;
+
+    // === 참조 ID ===
+    tpr601Id: string;
+    tpr504Id: string;
+    prodplanId: string;
+
+    // === 프론트 전용 (선택)
+    id?: string;
     __isModified?: boolean;
+
 }
 
 /**
@@ -102,3 +125,50 @@ export interface ProductionResultMaterial {
 }
 
 
+/**
+ * 생산실적 작업지시 조회 검색 조건
+ * (/api/production-results/orders)
+ */
+export interface ProductionResultSearchParams {
+    // 기간
+    dateFrom?: string;   // YYYYMMDD
+    dateTo?: string;     // YYYYMMDD
+
+    // 작업장 / 설비
+    workplace?: string;  // WORKCENTER_CODE
+    equipment?: string;  // EQUIP_SYS_CD
+
+    // 키워드 (품목명, 공정명, 설비명, 계획ID 등 서버에서 통합 처리)
+    keyword?: string;
+
+    // 페이징 (컨트롤러에서 offset 계산)
+    page?: number;
+    size?: number;
+}
+
+export interface ProductionResultSearchForm {
+    workplace: string;
+    equipment: string;
+    dateFrom: string;
+    dateTo: string;
+    keyword: string;
+}
+
+/**
+ * 생산실적
+ */
+export interface ProdResultRow {
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

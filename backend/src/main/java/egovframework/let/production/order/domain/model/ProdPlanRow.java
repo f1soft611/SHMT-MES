@@ -16,6 +16,21 @@ public class ProdPlanRow implements Serializable {
     /** 지시구분 */
     private String orderFlag;
 
+    /** 수주번호 */
+    private String orderNo;
+
+    /** 수주이력번호 */
+    private String orderHistno;
+
+    /** 수주순번 */
+    private Integer orderSeqno;
+
+    /** 수주구분 (수주 / 재고) */
+    private String orderGubun;
+
+    /** 수주구분 플래그 (수주:0, 재고:1) */
+    private Integer orderGubunFlag;
+
     /** 공장코드 */
     private String factoryCode;
 

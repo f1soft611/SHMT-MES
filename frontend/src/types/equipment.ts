@@ -41,10 +41,10 @@ export interface EquipmentSearchParams {
  * 요약 설비 타입
  */
 export interface EquipmentInfo {
-  EQUIP_SYS_CD?: string;
-  EQUIPMENT_NAME?: string;
-  WORKCENTER_CODE: string;
-  WORKCENTER_NAME?: string;
-  WORK_CODE?: string;
-  WORK_NAME?: string;
+  equipSysCd?: string;
+  equipmentName?: string;
+  workcenterCode: string;
+  workcenterName?: string;
+  workCode?: string;
+  workName?: string;
 }

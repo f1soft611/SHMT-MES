@@ -2,10 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { EquipmentInfo } from '../types/equipment';
 import equipmentService from '../services/equipmentService';
 
-export function useFetchEquipments(workplaceId: string) {
+export function useFetchEquipments(workplaceId?: string) {
   const [equipments, setEquipments] = useState<EquipmentInfo[]>([]);
 
   const fetchEquipments = useCallback(async () => {
+
+    if (!workplaceId) {
+      setEquipments([]);
+      return;
+    }
     try {
       const response = await equipmentService.getEquipmentsByWorkplaceId(
         workplaceId
