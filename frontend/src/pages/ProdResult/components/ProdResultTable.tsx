@@ -10,13 +10,13 @@ import {
     KeyboardArrowUp,
 } from "@mui/icons-material";
 import {
-    ProductionResultOrder,
+    ProdResultOrderRow,
     ProductionResultDetail
 } from "../../../types/productionResult";
 import ProdResultList from "./ProdResultList";
 
 interface Props {
-    rows: ProductionResultOrder[];
+    rows: ProdResultOrderRow[];
     rowCount: number;
     pagination: {
         page: number;
@@ -101,7 +101,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                     </TableRow>
                                 ) : (
                                     rows.map((row) => (
-                                        <ProdResultRow key={row.TPR504ID} row={row} />
+                                        <ProdResultRow key={row.tpr504Id} row={row} />
                                     ))
                                 )}
                             </TableBody>
@@ -125,7 +125,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
     );
 }
 
-function ProdResultRow({ row }: { row: ProductionResultOrder }) {
+function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
     const [open, setOpen] = useState(false);
     const detailRef = useRef<DetailGridRef>(null);
 
@@ -171,41 +171,41 @@ function ProdResultRow({ row }: { row: ProductionResultOrder }) {
                     {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.ORDER_NO}
+                    {row.orderNo}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <EllipsisCell value={row.CUSTOMER_NAME ?? ""} />
+                    <EllipsisCell value={row.customerName ?? ""} />
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.PRODPLAN_ID}
+                    {row.prodplanId}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <EllipsisCell value={row.ITEM_NAME}/>
+                    <EllipsisCell value={row.itemName}/>
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <EllipsisCell value={row.WORK_NAME}/>
+                    <EllipsisCell value={row.workName}/>
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.EQUIP_SYS_CD}
+                    {row.equipSysCd}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.EQUIP_SYS_CD_NM}
+                    {row.equipSysCdNm}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.PROD_CODE}
+                    {row.prodCode}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <EllipsisCell value={row.PROD_NAME}/>
+                    <EllipsisCell value={row.prodName}/>
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    <EllipsisCell value={row.PROD_SPEC}/>
+                    <EllipsisCell value={row.prodSpec}/>
                 </TableCell>
                 <TableCell align="right" sx={{ padding: "0 2px" }}>
-                    {row.PROD_QTY.toLocaleString()}
+                    {row.prodQty.toLocaleString()}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.WORKDT_DATE
-                        ? dayjs(row.WORKDT_DATE).format("YYYY-MM-DD")
+                    {row.workdtDate
+                        ? dayjs(row.workdtDate).format("YYYY-MM-DD")
                         : ""}
                 </TableCell>
             </TableRow>

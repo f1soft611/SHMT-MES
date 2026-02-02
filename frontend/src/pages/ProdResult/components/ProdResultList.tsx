@@ -15,7 +15,7 @@ import {
 import {
     Delete as DeleteIcon
 } from "@mui/icons-material";
-import {ProductionResultOrder, ProductionResultDetail} from "../../../types/productionResult";
+import {ProductionResultDetail, ProdResultOrderRow} from "../../../types/productionResult";
 import { useProdResultDetail } from "../hooks/useProdResultDetail";
 
 export interface DetailGridRef {
@@ -25,7 +25,7 @@ export interface DetailGridRef {
 }
 
 interface Props {
-    parentRow: ProductionResultOrder;
+    parentRow: ProdResultOrderRow;
 }
 
 const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => {
@@ -70,7 +70,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
 
     const columns: GridColDef[] = [
         {
-            field: "PROD_STIME",
+            field: "prodStime",
             headerName: "작업시작시간",
             width: 200,
             headerAlign: 'center',
@@ -80,7 +80,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                 value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
             renderEditCell: (params) => <DateTimeEditCell {...params} />,
         },
-        { field: "PROD_ETIME",
+        { field: "prodEtime",
             headerName: "작업종료시간",
             type: "dateTime",
             width: 200,
@@ -91,20 +91,20 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                 value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
             renderEditCell: (params) => <DateTimeEditCell {...params} />,
         },
-        { field: "PROD_QTY", headerName: "생산수량", type: "number", width: 120,
+        { field: "prodQty", headerName: "생산수량", type: "number", width: 120,
             headerAlign: 'center',
             align: 'right', editable: true },
-        { field: "GOOD_QTY", headerName: "양품수량", type: "number", width: 120,
+        { field: "goodQty", headerName: "양품수량", type: "number", width: 120,
             headerAlign: 'center',
             align: 'right', editable: true },
-        { field: "BAD_QTY", headerName: "불량수량", type: "number", width: 120,
+        { field: "badQty", headerName: "불량수량", type: "number", width: 120,
             headerAlign: 'center',
             align: 'right', editable: true },
-        { field: "RCV_QTY", headerName: "인수수량", type: "number", width: 120,
+        { field: "rcvQty", headerName: "인수수량", type: "number", width: 120,
             headerAlign: 'center',
             align: 'right', editable: true },
         {
-            field: "WORKER",
+            field: "worker",
             headerName: "작업자",
             width: 150,
             headerAlign: 'center',
@@ -212,7 +212,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
             <DataGrid
                 rows={details.rows}
                 columns={columns}
-                getRowId={(row) => row.TPR601ID}
+                getRowId={(row) => `${row.factoryCode}-${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq}-${row.prodSeq}`}
                 autoHeight
                 hideFooter
                 rowHeight={35}

@@ -82,12 +82,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
+	public ListResult<ProdOrderRow> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
 		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
-
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", list);
-		return result;
+		return new ListResult<>(list, 0);
 	}
 
 	/**
@@ -95,12 +92,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 *
 	 */
 	@Override
-	public Map<String, Object> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception{
+	public ListResult<ProdOrderRow> selectProdOrdersByPlanId(ProdOrderSearchParam param) throws Exception{
 
 		List<ProdOrderRow> list = productionOrderDAO.selectProdOrdersByPlanId(param);
-		Map<String, Object> result = new HashMap<>();
-		result.put("resultList", list);
-		return result;
+		return new ListResult<>(list, 0);
 	}
 
 

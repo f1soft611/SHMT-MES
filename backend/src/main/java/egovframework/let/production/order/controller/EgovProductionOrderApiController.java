@@ -144,7 +144,9 @@ public class EgovProductionOrderApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> resultMap = productionOrderService.selectFlowProcessByPlanId(param);
+        ListResult<ProdOrderRow> data = productionOrderService.selectFlowProcessByPlanId(param);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", data.getResultList());
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
@@ -164,8 +166,12 @@ public class EgovProductionOrderApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        Map<String, Object> resultMap = productionOrderService.selectProdOrdersByPlanId(param);
+        ListResult<ProdOrderRow> data = productionOrderService.selectProdOrdersByPlanId(param);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("resultList", data.getResultList());
         resultMap.put("user", user);
+
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 
     }

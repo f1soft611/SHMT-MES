@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
-  ProductionResultOrder,
+  ProdResultOrderRow,
   ProductionResultDetail,
 } from '../../../types/productionResult';
 import { productionResultService } from '../../../services/productionResultService';
 import workplaceService from '../../../services/workplaceService';
 import { WorkplaceWorker } from '../../../types/workplace';
 
-export function useProdResultDetail(parentRow: ProductionResultOrder) {
+export function useProdResultDetail(parentRow: ProdResultOrderRow) {
   const { showToast } = useToast();
 
   const [saving, setSaving] = useState(false);
@@ -19,9 +19,9 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
   const normalizeRows = (rows: ProductionResultDetail[]) =>
     rows.map((r) => ({
       ...r,
-      WORKER:
-        typeof r.WORKER === 'string' && r.WORKER.length > 0
-          ? r.WORKER.split(',')
+      worker:
+        typeof r.worker === 'string' && r.worker.length > 0
+          ? r.worker.split(',')
           : [],
     }));
 
@@ -29,9 +29,7 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
     setLoading(true);
 
     try {
-      const response = await productionResultService.getProdResultDetails(
-        parentRow
-      );
+      const response = await productionResultService.getProdResultDetails(parentRow);
       const list = response.result?.resultList ?? [];
       setRows(normalizeRows(list));
     } catch (e) {
@@ -46,38 +44,49 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
   };
 
   const addRow = () => {
-    console.log(parentRow);
+    // console.log(parentRow);
     setRows((prev) => [
       ...prev,
       {
         id: `NEW-${Date.now()}`,
-        FACTORY_CODE: parentRow.FACTORY_CODE,
-        PRODPLAN_ID: parentRow.PRODPLAN_ID,
-        PRODPLAN_DATE: parentRow.PRODPLAN_DATE,
-        PRODPLAN_SEQ: parentRow.PRODPLAN_SEQ,
-        PRODWORK_SEQ: parentRow.PRODWORK_SEQ,
-        WORK_SEQ: parentRow.WORK_SEQ,
-        PROD_SEQ: parentRow.PROD_SEQ,
 
-        WORKDT_DATE: parentRow.WORKDT_DATE,
-        PROD_STIME: '',
-        PROD_ETIME: '',
+        factoryCode: parentRow.factoryCode,
+        prodplanId: parentRow.prodplanId,
+        prodplanDate: parentRow.prodplanDate,
+        prodplanSeq: parentRow.prodplanSeq,
+        prodworkSeq: parentRow.prodworkSeq,
+        workSeq: parentRow.workSeq,
+        prodSeq: parentRow.prodSeq,
 
-        ITEM_CODE: parentRow.ITEM_CODE,
-        WORK_CODE: parentRow.WORK_CODE,
+        workdtDate: parentRow.workdtDate,
+        prodStime: '',
+        prodEtime: '',
 
-        PROD_QTY: 0,
-        GOOD_QTY: 0,
-        BAD_QTY: 0,
-        RCV_QTY: 0,
-        ORDER_FLAG: parentRow.ORDER_FLAG,
-        WORKER: [],
-        INPUTMATERIAL: '',
+        itemCode: parentRow.itemCode,
+        workCode: parentRow.workCode,
+        orderFlag: '',
 
-        TPR504ID: parentRow.TPR504ID,
-        TPR601ID: parentRow.TPR601ID ?? `NEW-${Date.now()}`,
-        TPR601WID: 'new',
-        TPR601MID: 'new',
+        prodQty: 0,
+        goodQty: 0,
+        badQty: 0,
+        rcvQty: 0,
+
+        opmanCode: '',
+        optime: '',
+        opmanCode2: null,
+        optime2: null,
+
+        workorderSeq: null,
+        erpSendFlag: null,
+        erpRsltIdx: null,
+
+        worker: [],
+        inputMaterial: '',
+
+        tpr504Id: parentRow.tpr504Id,
+        tpr601Id: `NEW-${Date.now()}`,
+        // tpr601wId: 'new',
+        // tpr601mId: 'new',
         __isModified: true,
       },
     ]);
@@ -87,30 +96,30 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
       newRow: ProductionResultDetail,
       oldRow: ProductionResultDetail
   ) => {
-    const prod = Number(newRow.PROD_QTY ?? 0);
-    const good = Number(newRow.GOOD_QTY ?? 0);
-    const bad  = Number(newRow.BAD_QTY ?? 0);
+    const prod = Number(newRow.prodQty ?? 0);
+    const good = Number(newRow.goodQty ?? 0);
+    const bad  = Number(newRow.badQty ?? 0);
 
     let nextRow = { ...newRow };
 
     // 양품 수정 → 불량 자동
-    if (newRow.GOOD_QTY !== oldRow.GOOD_QTY) {
-      nextRow.BAD_QTY = Math.max(prod - good, 0);
+    if (newRow.goodQty !== oldRow.goodQty) {
+      nextRow.badQty = Math.max(prod - good, 0);
     }
     // 불량 수정 → 양품 자동
-    if (newRow.BAD_QTY !== oldRow.BAD_QTY) {
-      nextRow.GOOD_QTY = Math.max(prod - bad, 0);
+    if (newRow.badQty !== oldRow.badQty) {
+      nextRow.goodQty = Math.max(prod - bad, 0);
     }
     // 생산수량 수정 → 불량 재계산
-    if (newRow.PROD_QTY !== oldRow.PROD_QTY) {
-      nextRow.GOOD_QTY = Math.max(prod - (nextRow.BAD_QTY ?? 0), 0);
+    if (newRow.prodQty !== oldRow.prodQty) {
+      nextRow.goodQty = Math.max(prod - (nextRow.badQty ?? 0), 0);
     }
 
     nextRow.__isModified = true;
 
     setRows(prev =>
         prev.map(r =>
-            r.TPR601ID === nextRow.TPR601ID ? nextRow : r
+            r.tpr601Id === nextRow.tpr601Id ? nextRow : r
         )
     );
 
@@ -121,9 +130,11 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
     if (saving) return false;   // 중복 클릭 차단
     setSaving(true);
 
-    const newRows = rows.filter((r) => r.TPR601ID.startsWith('NEW-'));
+    console.log(rows)
+
+    const newRows = rows.filter((r) => r.tpr601Id.startsWith('NEW-'));
     const modifiedRows = rows.filter(
-      (r) => !r.TPR601ID.startsWith('NEW-') && r.__isModified
+      (r) => !r.tpr601Id.startsWith('NEW-') && r.__isModified
     );
 
     if (newRows.length === 0 && modifiedRows.length === 0) {
@@ -187,8 +198,8 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
 
   const handleDeleteRow = async (row: ProductionResultDetail) => {
     // 신규 추가 행 → 바로 제거
-    if (row.TPR601ID.startsWith('NEW-')) {
-      setRows((prev) => prev.filter((r) => r.TPR601ID !== row.TPR601ID));
+    if (row.tpr601Id.startsWith('NEW-')) {
+      setRows((prev) => prev.filter((r) => r.tpr601Id !== row.tpr601Id));
       return;
     }
 
@@ -207,7 +218,7 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
       lastMessage = data.resultMessage;
 
       // 화면에서도 제거
-      setRows((prev) => prev.filter((r) => r.TPR601ID !== row.TPR601ID));
+      setRows((prev) => prev.filter((r) => r.tpr601Id !== row.tpr601Id));
 
       showToast({
         message: lastMessage,
@@ -225,7 +236,7 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
   const fetchWorkers = async () => {
     try {
       const response = await workplaceService.getWorkplaceWorkers(
-        parentRow.WORKCENTER_CODE
+        parentRow.workcenterCode
       );
       if (response.resultCode === 200) {
         setWorkplaceWorkers(response.result?.resultList ?? []);
@@ -245,10 +256,10 @@ export function useProdResultDetail(parentRow: ProductionResultOrder) {
   }));
 
   useEffect(() => {
-    if (!parentRow?.WORKCENTER_CODE) return;
+    if (!parentRow?.workcenterCode) return;
     fetchWorkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parentRow.WORKCENTER_CODE]);
+  }, [parentRow.workcenterCode]);
 
   return {
     rows,
