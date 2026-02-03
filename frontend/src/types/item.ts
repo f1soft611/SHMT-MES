@@ -12,6 +12,7 @@ export interface Item {
   unitName?: string;
   stockQty?: string;
   safetyStock?: string;
+  productionPerCycle?: string;
   remark?: string;
   interfaceYn?: string;
   useYn?: string;
@@ -28,8 +29,7 @@ export const InProcessFlow = {
 } as const;
 
 export type InProcessFlowFilter =
-    typeof InProcessFlow[keyof typeof InProcessFlow];
-
+  (typeof InProcessFlow)[keyof typeof InProcessFlow];
 
 export interface ItemSearchParams {
   searchCnd?: string;

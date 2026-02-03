@@ -736,6 +736,15 @@ const ProductionPlan: React.FC = () => {
           return;
         }
 
+        if (formData.orderFlag === 'ORDERED') {
+          showToast({
+            message:
+              '생산지시가 완료된 계획은 수정할 수 없습니다. 먼저 생산지시를 취소해주세요.',
+            severity: 'error',
+          });
+          return;
+        }
+
         const requestData: ProductionPlanRequest = {
           master: {
             planNo: formData.planNo,
@@ -787,7 +796,31 @@ const ProductionPlan: React.FC = () => {
             message: '생산계획이 수정되었습니다.',
             severity: 'success',
           });
-          loadWeeklyPlans();
+          const dateChanged =
+            !!data.date && !!formData.date && data.date !== formData.date;
+          if (dateChanged) {
+            const targetDate = new Date(data.date);
+            if (!isNaN(targetDate.getTime())) {
+              const newWeekStart = getMonday(targetDate);
+              if (!isSameDay(newWeekStart, currentWeekStart)) {
+                setCurrentWeekStart(newWeekStart);
+                try {
+                  sessionStorage.setItem(
+                    SESSION_KEY_WEEK_START,
+                    newWeekStart.toISOString(),
+                  );
+                } catch (error) {
+                  // Error saving week start to sessionStorage
+                }
+              } else {
+                loadWeeklyPlans();
+              }
+            } else {
+              loadWeeklyPlans();
+            }
+          } else {
+            loadWeeklyPlans();
+          }
           handleCloseDialog();
         } else {
           showToast({

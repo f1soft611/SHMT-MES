@@ -59,7 +59,7 @@ interface ServerTimeResponse {
 export const syncServerTime = async (): Promise<void> => {
   // 이미 동기화 중이면 중복 실행 방지
   if (isSyncing) {
-    console.log('서버 시간 동기화가 이미 진행 중입니다.');
+    // console.log('서버 시간 동기화가 이미 진행 중입니다.');
     return;
   }
 
@@ -67,9 +67,9 @@ export const syncServerTime = async (): Promise<void> => {
   if (lastFailedSyncTime) {
     const timeSinceLastFailure = Date.now() - lastFailedSyncTime;
     if (timeSinceLastFailure < RETRY_DELAY) {
-      console.log(
-        `서버 시간 동기화 재시도 대기 중... (${Math.ceil((RETRY_DELAY - timeSinceLastFailure) / 1000)}초 후 재시도 가능)`,
-      );
+      // console.log(
+      //   `서버 시간 동기화 재시도 대기 중... (${Math.ceil((RETRY_DELAY - timeSinceLastFailure) / 1000)}초 후 재시도 가능)`,
+      // );
       return;
     }
   }

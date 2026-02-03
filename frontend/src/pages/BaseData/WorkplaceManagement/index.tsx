@@ -67,7 +67,7 @@ const WorkplaceManagement: React.FC = () => {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedWorkplace, setSelectedWorkplace] = useState<Workplace | null>(
-    null
+    null,
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -122,7 +122,7 @@ const WorkplaceManagement: React.FC = () => {
       const response = await workplaceService.getWorkplaceList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setWorkplaces(response.result.resultList);
@@ -301,12 +301,12 @@ const WorkplaceManagement: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
     },
-    {
-      field: 'proCnt',
-      headerName: '공정 수',
-      align: 'center',
-      headerAlign: 'center',
-    },
+    // {
+    //   field: 'proCnt',
+    //   headerName: '공정 수',
+    //   align: 'center',
+    //   headerAlign: 'center',
+    // },
     {
       field: 'regDt',
       headerName: '등록일',

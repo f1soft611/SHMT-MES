@@ -13,6 +13,7 @@
 		<result property="unitName" column="UNIT_NAME"/>
 		<result property="stockQty" column="STOCK_QTY"/>
 		<result property="safetyStock" column="SAFETY_STOCK"/>
+		<result property="productionPerCycle" column="PRODUCTION_PER_CYCLE"/>
 		<result property="remark" column="ETC"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
 		<result property="useYn" column="DELETE_FLAG"/>
@@ -33,8 +34,7 @@
 		UNIT,
 		ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
 		STOCK_QTY,
-		SAFETY_STOCK,
-		ETC,
+		SAFETY_STOCK,		ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,		ETC,
 		INTERFACE_YN,
 		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
 		OPMAN_CODE,
@@ -164,6 +164,7 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
+			ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,
 			ETC,
 			INTERFACE_YN,
 			CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
@@ -186,6 +187,7 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
+			PRODUCTION_PER_CYCLE,
 			ETC,
 			INTERFACE_YN,
 			DELETE_FLAG,
@@ -201,6 +203,7 @@
 					 #{unit},
 					 ISNULL(#{stockQty}, '0'),
 					 ISNULL(#{safetyStock}, '0'),
+					 ISNULL(#{productionPerCycle}, '0'),
 					 #{remark},
 					 ISNULL(#{interfaceYn}, 'N'),
 					 CASE WHEN ISNULL(#{useYn}, 'N') = 'Y' THEN '0' ELSE '1' END,
@@ -219,6 +222,7 @@
 			UNIT = #{unit},
 			STOCK_QTY = #{stockQty},
 			SAFETY_STOCK = #{safetyStock},
+			PRODUCTION_PER_CYCLE = #{productionPerCycle},
 			ETC = #{remark},
 			INTERFACE_YN = #{interfaceYn},
 			DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,

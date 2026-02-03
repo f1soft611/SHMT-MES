@@ -63,8 +63,7 @@ const EquipmentDetailDialog: React.FC<EquipmentDetailDialogProps> = ({
                 <TextField
                   {...field}
                   fullWidth
-                  required
-                  label="설비 코드"
+                  label="설비 코드 (미입력시 설비ID 자동설정)"
                   disabled={dialogMode === 'edit'}
                   error={!!errors.equipCd}
                   helperText={errors.equipCd?.message}

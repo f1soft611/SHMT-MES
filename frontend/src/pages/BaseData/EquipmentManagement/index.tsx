@@ -37,7 +37,7 @@ import { useToast } from '../../../components/common/Feedback/ToastProvider';
 const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
   equipmentId: yup.string(),
   equipSysCd: yup.string(),
-  equipCd: yup.string().required('설비 코드는 필수입니다.'),
+  equipCd: yup.string(),
   equipSpec: yup.string(),
   equipStruct: yup.string(),
   useFlag: yup.string().required('사용 여부는 필수입니다.'),
@@ -46,35 +46,7 @@ const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
   manager2Code: yup.string(),
   opmanCode: yup.string(),
   opman2Code: yup.string(),
-  plcAddress: yup
-    .string()
-    .test(
-      'is-valid-ip-port',
-      '올바른 IP:Port 형식이 아닙니다. (예: 192.168.1.1:502)',
-      (value) => {
-        if (!value) return true; // 빈 값 허용
-
-        // IP:Port 형식 검증
-        const ipPortRegex =
-          /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?::(\d+))?$/;
-        const match = value.match(ipPortRegex);
-
-        if (!match) return false;
-
-        // IP 주소 검증 (0-255)
-        const ipValid = match.slice(1, 5).every((octet) => {
-          const num = parseInt(octet, 10);
-          return num >= 0 && num <= 255;
-        });
-
-        // 포트 번호 검증 (1-65535)
-        const portValid =
-          !match[5] ||
-          (parseInt(match[5], 10) >= 1 && parseInt(match[5], 10) <= 65535);
-
-        return ipValid && portValid;
-      }
-    ),
+  plcAddress: yup.string(),
   location: yup.string(),
   statusFlag: yup.string().required('상태는 필수입니다.'),
   optime2: yup.string(),
@@ -164,7 +136,7 @@ const EquipmentManagement: React.FC = () => {
       const response = await equipmentService.getEquipmentList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setEquipments(response.result.resultList);
@@ -233,6 +205,11 @@ const EquipmentManagement: React.FC = () => {
 
   const handleSave = async (data: Equipment) => {
     try {
+      // 설비 코드가 입력되지 않았으면 설비ID를 사용
+      if (!data.equipCd && data.equipmentId) {
+        data.equipCd = data.equipmentId;
+      }
+
       if (dialogMode === 'create') {
         const result = await equipmentService.createEquipment(data);
         if (result.resultCode === 200) {

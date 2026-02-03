@@ -45,7 +45,7 @@ import { useToast } from '../../../components/common/Feedback/ToastProvider';
 // 공정 등록 유효성 검사 스키마
 const processSchema: yup.ObjectSchema<Process> = yup.object({
   processId: yup.string(),
-  processCode: yup.string().required('공정 코드는 필수입니다.'),
+  processCode: yup.string(),
   processName: yup.string().required('공정명은 필수입니다.'),
   description: yup.string(),
   processType: yup.string(),
@@ -93,6 +93,7 @@ const ProcessManagement: React.FC = () => {
     control: processControl,
     handleSubmit: handleProcessSubmit,
     reset: resetProcessForm,
+    setValue: processSetValue,
     formState: { errors: processErrors },
   } = useForm<Process>({
     resolver: yupResolver(processSchema),
@@ -128,7 +129,7 @@ const ProcessManagement: React.FC = () => {
       const response = await processService.getProcessList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setProcesses(response.result.resultList);
@@ -153,7 +154,7 @@ const ProcessManagement: React.FC = () => {
       try {
         const response = await commonCodeService.getCommonDetailCodeList(
           'COM008',
-          'Y'
+          'Y',
         );
 
         // result가 배열인지 확인
@@ -233,6 +234,11 @@ const ProcessManagement: React.FC = () => {
 
   const handleSave = async (data: Process) => {
     try {
+      // 공정 코드가 입력되지 않았으면 공정ID를 사용
+      if (!data.processCode && data.processId) {
+        data.processCode = data.processId;
+      }
+
       if (dialogMode === 'create') {
         const result = await processService.createProcess(data);
         if (result.resultCode === 200) {
@@ -537,8 +543,7 @@ const ProcessManagement: React.FC = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    required
-                    label="공정 코드"
+                    label="공정 코드 (미입력시 공정ID 자동설정)"
                     disabled={dialogMode === 'edit'}
                     error={!!processErrors.processCode}
                     helperText={processErrors.processCode?.message}
@@ -574,7 +579,20 @@ const ProcessManagement: React.FC = () => {
                 render={({ field }) => (
                   <FormControl fullWidth>
                     <InputLabel>ERP 공정 매핑</InputLabel>
-                    <Select {...field} label="ERP 공정 매핑">
+                    <Select
+                      {...field}
+                      label="ERP 공정 매핑"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        // ERP 공정 선택 시 MES 공정명을 ERP 공정명으로 변경
+                        const selectedCode = erpProcessCodes.find(
+                          (code) => code.code === e.target.value,
+                        );
+                        if (selectedCode && selectedCode.codeNm) {
+                          processSetValue('processName', selectedCode.codeNm);
+                        }
+                      }}
+                    >
                       <MenuItem value="">선택 없음</MenuItem>
                       {erpProcessCodes.map((code) => (
                         <MenuItem key={code.code} value={code.code}>

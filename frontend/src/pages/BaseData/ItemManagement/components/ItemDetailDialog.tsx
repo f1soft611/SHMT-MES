@@ -204,6 +204,29 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
           </Stack>
           <Stack direction="row" spacing={2}>
             <Controller
+              name="productionPerCycle"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="가공 1회당 생산량"
+                  value={formatNumber(field.value)}
+                  onChange={(e) => {
+                    const value = removeCommas(e.target.value);
+                    if (/^\d*$/.test(value)) {
+                      field.onChange(value);
+                    }
+                  }}
+                  inputProps={{
+                    inputMode: 'numeric',
+                    pattern: '[0-9,]*',
+                    style: { textAlign: 'right' },
+                  }}
+                />
+              )}
+            />
+            <Controller
               name="useYn"
               control={control}
               render={({ field }) => (

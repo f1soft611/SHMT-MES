@@ -74,6 +74,12 @@ public class EgovEquipmentServiceImpl extends EgovAbstractServiceImpl implements
 		String equipmentId = egovEquipmentIdGnrService.getNextStringId();
 		equipment.setEquipmentId(equipmentId);
 		equipment.setEquipSysCd(equipmentId);
+		
+		// 설비 코드가 입력되지 않았으면 설비ID를 설정
+		if (equipment.getEquipCd() == null || equipment.getEquipCd().trim().isEmpty()) {
+			equipment.setEquipCd(equipmentId);
+		}
+		
 		equipmentDAO.insertEquipment(equipment);
 	}
 

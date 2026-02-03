@@ -5,7 +5,7 @@
 export interface Equipment {
   equipmentId?: string;
   equipSysCd?: string;
-  equipCd: string;
+  equipCd?: string;
   equipSpec?: string;
   equipStruct?: string;
   useFlag?: string;
@@ -35,7 +35,6 @@ export interface EquipmentSearchParams {
   pageIndex?: number;
   pageUnit?: number;
 }
-
 
 /**
  * 요약 설비 타입

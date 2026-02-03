@@ -317,7 +317,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
               </TableRow>
             ) : (
               equipments.map((equipment, index) => {
-                const isExpanded = expandedEquipments.has(equipment.equipCd);
+                const isExpanded = expandedEquipments.has(
+                  equipment.equipCd || '',
+                );
                 return (
                   <React.Fragment key={equipment.equipCd}>
                     <TableRow
@@ -337,7 +339,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                           borderColor: 'divider',
                           bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
                         }}
-                        onClick={() => toggleEquipment(equipment.equipCd)}
+                        onClick={() => toggleEquipment(equipment.equipCd || '')}
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <IconButton
@@ -382,7 +384,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                         const dateStr = formatDate(day, 'YYYY-MM-DD');
                         const dayPlans = getPlansForDateAndEquipment(
                           dateStr,
-                          equipment.equipCd,
+                          equipment.equipCd || '',
                         );
                         const isWeekendDay = isWeekend(day);
 

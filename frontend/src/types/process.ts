@@ -4,7 +4,7 @@
 
 export interface Process {
   processId?: string;
-  processCode: string;
+  processCode?: string;
   processName: string;
   description?: string;
   processType?: string;
