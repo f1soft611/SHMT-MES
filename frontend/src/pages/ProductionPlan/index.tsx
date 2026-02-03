@@ -446,9 +446,45 @@ const ProductionPlan: React.FC = () => {
     if (!weeklyGridRef.current) return;
 
     try {
-      const canvas = await html2canvas(weeklyGridRef.current, {
+      const grid = weeklyGridRef.current as HTMLDivElement;
+      const tableContainer = grid.querySelector(
+        '.MuiTableContainer-root',
+      ) as HTMLDivElement | null;
+
+      const originalGridOverflow = grid.style.overflow;
+      const originalContainerOverflowX = tableContainer?.style.overflowX;
+      const originalContainerOverflowY = tableContainer?.style.overflowY;
+      const originalContainerHeight = tableContainer?.style.height;
+      const originalContainerMaxHeight = tableContainer?.style.maxHeight;
+      const originalScrollLeft = tableContainer?.scrollLeft || 0;
+      const originalScrollTop = tableContainer?.scrollTop || 0;
+
+      if (tableContainer) {
+        tableContainer.style.overflowX = 'visible';
+        tableContainer.style.overflowY = 'visible';
+        tableContainer.style.height = 'auto';
+        tableContainer.style.maxHeight = 'none';
+        tableContainer.scrollLeft = 0;
+        tableContainer.scrollTop = 0;
+      }
+
+      const canvas = await html2canvas(grid, {
         logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: grid.scrollWidth || grid.offsetWidth,
+        windowHeight: grid.scrollHeight || grid.offsetHeight,
       } as any);
+
+      if (tableContainer) {
+        tableContainer.style.overflowX = originalContainerOverflowX || '';
+        tableContainer.style.overflowY = originalContainerOverflowY || '';
+        tableContainer.style.height = originalContainerHeight || '';
+        tableContainer.style.maxHeight = originalContainerMaxHeight || '';
+        tableContainer.scrollLeft = originalScrollLeft;
+        tableContainer.scrollTop = originalScrollTop;
+      }
+      grid.style.overflow = originalGridOverflow || '';
 
       // 캡쳐된 이미지를 다운로드
       const link = document.createElement('a');
