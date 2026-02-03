@@ -10,9 +10,6 @@ import {
   Card,
   CardContent,
   Tooltip,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
   FormControl,
   InputLabel,
   Select,
@@ -24,7 +21,6 @@ import {
   FilterList as FilterListIcon,
   ViewWeek as ViewWeekIcon,
   Refresh as RefreshIcon,
-  Visibility as VisibilityIcon,
   ViewCompact as ViewCompactIcon,
   LocationOn as LocationOnIcon,
 } from '@mui/icons-material';
@@ -49,11 +45,13 @@ import html2canvas from 'html2canvas';
 import { getServerDate } from '../../utils/dateUtils';
 
 // localStorage 키 상수
-const STORAGE_KEY_DAY_FILTER = 'productionPlan_visibleDays';
-const STORAGE_KEY_LAST_DATE = 'productionPlan_lastAccessDate';
+const STORAGE_KEY_VIEW_DAYS = 'productionPlan_viewDays';
 // sessionStorage 키 상수
 const SESSION_KEY_WEEK_START = 'productionPlan_weekStart';
 const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
+
+const VIEW_DAYS_OPTIONS = [7, 14, 21, 28];
+const DEFAULT_VIEW_DAYS = 14;
 
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
@@ -225,98 +223,22 @@ const ProductionPlan: React.FC = () => {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const weeklyGridRef = useRef<HTMLDivElement>(null);
 
-  // 기본 3일 표시 (어제, 오늘, 내일)를 위한 함수
-  const getDefault3DaysFilter = (): boolean[] => {
-    const today = getServerDate();
-    const todayDayOfWeek = today.getDay(); // 0(일) ~ 6(토)
-    const mondayBasedDay = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1; // 0(월) ~ 6(일)
-
-    const filter = [false, false, false, false, false, false, false];
-
-    // 어제 (월요일일 때 일요일로 wrap)
-    const yesterday = mondayBasedDay - 1;
-    if (yesterday >= 0) {
-      filter[yesterday] = true;
-    } else {
-      filter[6] = true; // 일요일
-    }
-
-    // 오늘
-    filter[mondayBasedDay] = true;
-
-    // 내일 (일요일일 때 월요일로 wrap)
-    const tomorrow = mondayBasedDay + 1;
-    if (tomorrow < 7) {
-      filter[tomorrow] = true;
-    } else {
-      filter[0] = true; // 월요일
-    }
-
-    return filter;
-  };
-
-  // localStorage에 필터 저장하는 헬퍼 함수
-  const saveFilterToStorage = (filter: boolean[]) => {
+  const loadViewDaysFromStorage = (): number => {
     try {
-      const currentDate = formatDate(getServerDate(), 'YYYY-MM-DD');
-      localStorage.setItem(STORAGE_KEY_DAY_FILTER, JSON.stringify(filter));
-      localStorage.setItem(STORAGE_KEY_LAST_DATE, currentDate);
-    } catch (error) {
-      // Error saving filter to localStorage
-    }
-  };
-
-  // 날짜가 변경되었는지 확인하고 필터 초기화하는 함수
-  const checkAndResetIfDateChanged = (): boolean[] | null => {
-    try {
-      const lastAccessDate = localStorage.getItem(STORAGE_KEY_LAST_DATE);
-      const currentDate = formatDate(getServerDate(), 'YYYY-MM-DD');
-
-      // 날짜가 변경되었으면 기본 3일로 초기화
-      if (lastAccessDate && lastAccessDate !== currentDate) {
-        const default3Days = getDefault3DaysFilter();
-        saveFilterToStorage(default3Days);
-        return default3Days;
+      const saved = localStorage.getItem(STORAGE_KEY_VIEW_DAYS);
+      const parsed = Number(saved);
+      if (VIEW_DAYS_OPTIONS.includes(parsed)) {
+        return parsed;
       }
     } catch (error) {
-      // Error checking date change
+      // Error loading view days from localStorage
     }
-    return null;
+    return DEFAULT_VIEW_DAYS;
   };
 
-  // localStorage에서 저장된 필터 로드 또는 기본값 사용
-  const loadVisibleDaysFromStorage = (): boolean[] => {
-    try {
-      // 날짜 변경 확인
-      const resetFilter = checkAndResetIfDateChanged();
-      if (resetFilter) {
-        return resetFilter;
-      }
-
-      // 저장된 필터 로드
-      const saved = localStorage.getItem(STORAGE_KEY_DAY_FILTER);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length === 7) {
-          return parsed;
-        }
-      }
-
-      // 첫 방문이거나 데이터가 없으면 기본 3일로 초기화
-      const default3Days = getDefault3DaysFilter();
-      saveFilterToStorage(default3Days);
-      return default3Days;
-    } catch (error) {
-      // Error loading day filter from localStorage
-      return getDefault3DaysFilter();
-    }
-  };
-
-  // 요일별 표시 상태 (월~일) - lazy initialization
-  const [visibleDays, setVisibleDays] = useState<boolean[]>(() =>
-    loadVisibleDaysFromStorage(),
+  const [viewDays, setViewDays] = useState<number>(() =>
+    loadViewDaysFromStorage(),
   );
-  const [showDayFilter, setShowDayFilter] = useState(false);
 
   const loadEquipments = useCallback(async () => {
     try {
@@ -384,7 +306,7 @@ const ProductionPlan: React.FC = () => {
     if (!selectedWorkplace) return;
 
     const weekStart = currentWeekStart;
-    const weekEnd = addDays(currentWeekStart, 6);
+    const weekEnd = addDays(currentWeekStart, viewDays - 1);
 
     setLoading(true);
     try {
@@ -438,11 +360,11 @@ const ProductionPlan: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentWeekStart, selectedWorkplace, showToast]);
+  }, [currentWeekStart, selectedWorkplace, showToast, viewDays]);
 
   useEffect(() => {
     loadWorkplaces();
-    // 날짜 변경 체크는 컴포넌트 마운트 시 loadVisibleDaysFromStorage()에서 자동으로 수행됨
+    // 작업장 목록 로드
   }, [loadWorkplaces]);
 
   useEffect(() => {
@@ -479,28 +401,16 @@ const ProductionPlan: React.FC = () => {
     setExpandedEquipments(newExpanded);
   };
 
-  const toggleDayVisibility = (dayIndex: number) => {
-    const newVisibleDays = [...visibleDays];
-    newVisibleDays[dayIndex] = !newVisibleDays[dayIndex];
-    setVisibleDays(newVisibleDays);
-    saveFilterToStorage(newVisibleDays);
-  };
-
-  const toggleAllDays = (visible: boolean) => {
-    const newVisibleDays = visibleDays.map(() => visible);
-    setVisibleDays(newVisibleDays);
-    saveFilterToStorage(newVisibleDays);
-  };
-
-  const getWeekDays = (): Date[] => {
+  const getRangeDays = (start: Date, length: number): Date[] => {
     const days: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      days.push(addDays(currentWeekStart, i));
+    for (let i = 0; i < length; i++) {
+      days.push(addDays(start, i));
     }
     return days;
   };
 
-  const weekDays = getWeekDays();
+  const weekDays = getRangeDays(currentWeekStart, viewDays);
+  const visibleDays = weekDays.map(() => true);
 
   const handleNextWeek = () => {
     const newDate = addDays(currentWeekStart, 7);
@@ -543,7 +453,10 @@ const ProductionPlan: React.FC = () => {
       // 캡쳐된 이미지를 다운로드
       const link = document.createElement('a');
       const weekStart = formatDate(currentWeekStart, 'YYYY-MM-DD');
-      const weekEnd = formatDate(addDays(currentWeekStart, 6), 'YYYY-MM-DD');
+      const weekEnd = formatDate(
+        addDays(currentWeekStart, viewDays - 1),
+        'YYYY-MM-DD',
+      );
       link.download = `생산계획_${weekStart}~${weekEnd}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
@@ -1084,6 +997,31 @@ const ProductionPlan: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>보기 기간</InputLabel>
+              <Select
+                label="보기 기간"
+                value={viewDays}
+                onChange={(e) => {
+                  const nextValue = Number(e.target.value);
+                  setViewDays(nextValue);
+                  try {
+                    localStorage.setItem(
+                      STORAGE_KEY_VIEW_DAYS,
+                      String(nextValue),
+                    );
+                  } catch (error) {
+                    // Error saving view days to localStorage
+                  }
+                }}
+              >
+                {VIEW_DAYS_OPTIONS.map((days) => (
+                  <MenuItem key={days} value={days}>
+                    {days}일
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Tooltip title={compactMode ? '기본 모드' : 'Compact 모드'}>
               <IconButton
                 onClick={() => setCompactMode((prev) => !prev)}
@@ -1096,20 +1034,6 @@ const ProductionPlan: React.FC = () => {
                 }}
               >
                 <ViewCompactIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="요일 표시 설정">
-              <IconButton
-                onClick={() => setShowDayFilter(!showDayFilter)}
-                sx={{
-                  bgcolor: showDayFilter ? 'warning.main' : 'grey.100',
-                  color: showDayFilter ? 'white' : 'text.secondary',
-                  '&:hover': {
-                    bgcolor: showDayFilter ? 'warning.dark' : 'grey.200',
-                  },
-                }}
-              >
-                <VisibilityIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="검색 필터">
@@ -1147,86 +1071,7 @@ const ProductionPlan: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* 요일 표시 설정 패널 */}
-      <Collapse in={showDayFilter}>
-        <Card sx={{ mb: 1, boxShadow: 1 }}>
-          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                fontWeight: 600,
-              }}
-            >
-              <VisibilityIcon color="warning" />
-              요일 표시 설정
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={compactMode ? 1.5 : 2}
-              alignItems="center"
-              flexWrap="wrap"
-            >
-              <FormGroup row>
-                {['월', '화', '수', '목', '금', '토', '일'].map(
-                  (day, index) => (
-                    <FormControlLabel
-                      key={day}
-                      control={
-                        <Checkbox
-                          checked={visibleDays[index]}
-                          onChange={() => toggleDayVisibility(index)}
-                          color="primary"
-                        />
-                      }
-                      label={`${day}요일`}
-                    />
-                  ),
-                )}
-              </FormGroup>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    const default3Days = getDefault3DaysFilter();
-                    setVisibleDays(default3Days);
-                    saveFilterToStorage(default3Days);
-                  }}
-                  color="info"
-                >
-                  기본 3일
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(true)}
-                >
-                  전체 표시
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => toggleAllDays(false)}
-                >
-                  전체 숨김
-                </Button>
-              </Box>
-            </Stack>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: compactMode ? 1 : 1.5, display: 'block' }}
-            >
-              💡 선택한 요일 설정은 자동으로 저장되며, 다음날이 되면 기본
-              3일(어제, 오늘, 내일)로 자동 초기화됩니다.
-            </Typography>
-          </CardContent>
-        </Card>
-      </Collapse>
+      {/* 연속 보기 기간은 상단 '보기 기간' 셀렉터에서 변경 */}
 
       {/* 검색 영역 */}
       <Collapse in={showSearchPanel}>
@@ -1290,6 +1135,7 @@ const ProductionPlan: React.FC = () => {
       {/* 주간 네비게이션 */}
       <WeekNavigator
         currentWeekStart={currentWeekStart}
+        viewDays={viewDays}
         compactMode={compactMode}
         onPrevWeek={handlePrevWeek}
         onNextWeek={handleNextWeek}
