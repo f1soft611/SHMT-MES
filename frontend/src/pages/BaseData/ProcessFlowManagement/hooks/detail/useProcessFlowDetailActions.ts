@@ -19,7 +19,7 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
                 const processes = payload.processes;
                 // seq 검사
                 const hasEmptySeq = processes.some(
-                    (p) => !p.seq || p.seq.trim() === ""
+                    (p) => p.seq === null || p.seq === undefined
                 );
                 if (hasEmptySeq) {
                     return { ok: false, reason: "공정 순서를 입력해주세요" };

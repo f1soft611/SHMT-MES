@@ -101,7 +101,7 @@ export function useProcessFlowMainDialog() {
     const buildSubmitHandler = (onSubmit: (data: ProcessFlow, mode: "create" | "edit") => Promise<boolean>) =>
         handleSubmit(async (data) => {
             const success = await onSubmit(data, dialogMode);
-            console.log(success)
+            // console.log(success)
         });
 
 

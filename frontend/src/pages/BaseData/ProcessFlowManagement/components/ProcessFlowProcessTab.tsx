@@ -1,19 +1,10 @@
 import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid';
 import {
-  Button,
-  Stack,
-  Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Grid,
-  Radio,
-  Chip,
+  Button,  Stack,  Box,  FormControl,  InputLabel,  Select,
+  MenuItem,  TextField,  Grid,  Radio,  Chip, Typography,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Process } from '../../../../types/process';
+import {ProcessType} from '../../../../types/process';
 import { useProcessFlowDetailContext } from '../hooks/detail/useProcessFlowDetailContext';
 import { useDetailProcessTab } from '../hooks/detail/useDetailProcessTab';
 import { useProcessList } from '../hooks/detail/useProcessList';
@@ -60,13 +51,20 @@ export default function ProcessFlowProcessTab() {
     {
       field: 'processCode',
       headerName: '공정 코드',
-      flex: 1,
+      width: 100,
       headerAlign: 'center',
       align: 'center',
     },
     {
       field: 'processName',
-      headerName: '공정 이름',
+      headerName: 'MES공정 이름',
+      flex: 1,
+      headerAlign: 'center',
+      align: 'center',
+    },
+    {
+      field: 'processERPName',
+      headerName: 'ERP공정 이름',
       flex: 1,
       headerAlign: 'center',
       align: 'center',
@@ -123,25 +121,8 @@ export default function ProcessFlowProcessTab() {
       width: 80,
       headerAlign: 'center',
       align: 'center',
+      type: 'number',
       editable: true,
-      renderCell: (params) => (
-        <TextField
-          size="small"
-          value={params.row.seq ?? ''}
-          onChange={(e) => {
-            const value = e.target.value;
-            const rid = params.row.flowProcessId ?? params.row.flowRowId;
-
-            setFlowProcessRows((prev) =>
-              prev.map((p) =>
-                (p.flowProcessId ?? p.flowRowId) === rid
-                  ? { ...p, seq: value }
-                  : p,
-              ),
-            );
-          }}
-        />
-      ),
     },
     {
       field: 'lastFlag',
@@ -214,10 +195,22 @@ export default function ProcessFlowProcessTab() {
 
       <Grid container spacing={1} direction="row">
         <Grid size={{ xs: 5.0 }} sx={{ overflow: 'hidden' }}>
+          <Box
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderBottom: '1px solid #e0e0e0',
+                backgroundColor: '#fafafa',
+              }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              전체공정
+            </Typography>
+          </Box>
           <DataGrid
             rows={processRows}
             columns={leftColumns}
-            getRowId={(row: Process) => row.processId || row.processCode || ''}
+            getRowId={(row: ProcessType) => row.processId}
             pagination
             paginationMode="server"
             rowCount={totalCount}
@@ -279,6 +272,18 @@ export default function ProcessFlowProcessTab() {
           </Box>
         </Grid>
         <Grid size={{ xs: 6 }}>
+          <Box
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderBottom: '1px solid #e0e0e0',
+                backgroundColor: '#fafafa',
+              }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              적용된 공정
+            </Typography>
+          </Box>
           <DataGrid
             rows={flowProcessRows}
             columns={rightColumns}

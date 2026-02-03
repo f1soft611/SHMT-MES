@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { GridRowId, GridRowModel } from '@mui/x-data-grid';
 import { useToast } from '../../../../../components/common/Feedback/ToastProvider';
 import { ProcessFlowProcess } from '../../../../../types/processFlow';
-import { Process } from '../../../../../types/process';
+import {ProcessType} from '../../../../../types/process';
 
 interface Props {
   flowProcessRows: ProcessFlowProcess[];
@@ -24,7 +24,7 @@ export function useDetailProcessTab({
   /** 오른쪽으로 추가 */
   const addProcess = (
     selectedLeft: GridRowId[],
-    processRows: Process[],
+    processRows: ProcessType[],
     processFlowId: string,
     processFlowCode: string,
   ) => {
@@ -37,7 +37,7 @@ export function useDetailProcessTab({
 
     // 왼쪽에서 선택된 공정 중 설비연동(Y) 개수
     const selectedLeftLinked = processRows
-      .filter((p) => p.processCode && selectedLeft.includes(p.processCode))
+      .filter((p) => p.processId && selectedLeft.includes(p.processId))
       .filter((p) => p.equipmentIntegrationYn === 'Y').length;
 
     if (currentLinked + selectedLeftLinked > 1) {
@@ -50,11 +50,13 @@ export function useDetailProcessTab({
     }
 
     setFlowProcessRows((prev) => {
-      const existCodes = new Set(prev.map((p) => p.flowProcessCode));
+      const existIds = new Set(
+          prev.map((p) => p.flowProcessId).filter(Boolean)
+      );
 
       const newRows: ProcessFlowProcess[] = processRows
-        .filter((p) => p.processCode && selectedLeft.includes(p.processCode))
-        .filter((p) => p.processCode && !existCodes.has(p.processCode))
+        .filter((p) => p.processId  && selectedLeft.includes(p.processId ))
+        .filter((p) => p.processId  && !existIds.has(p.processId ))
         .map((p) => ({
           flowRowId: crypto.randomUUID(),
           flowProcessId: null,
