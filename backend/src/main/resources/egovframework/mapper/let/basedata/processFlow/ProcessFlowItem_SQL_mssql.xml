@@ -77,7 +77,7 @@
             #{flowItemCode},
             #{flowItemCodeId},
             GETDATE(),
-            'test'
+            #{regUserId}
         )
     </insert>
 

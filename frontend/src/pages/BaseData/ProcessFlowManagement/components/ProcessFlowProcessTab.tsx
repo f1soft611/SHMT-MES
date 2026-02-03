@@ -199,7 +199,8 @@ export default function ProcessFlowProcessTab() {
               sx={{
                 px: 1.5,
                 py: 0.75,
-                borderBottom: '1px solid #e0e0e0',
+                border: '1px solid #e0e0e0',
+                // borderBottom: '1px solid #e0e0e0',
                 backgroundColor: '#fafafa',
               }}
           >
@@ -276,7 +277,8 @@ export default function ProcessFlowProcessTab() {
               sx={{
                 px: 1.5,
                 py: 0.75,
-                borderBottom: '1px solid #e0e0e0',
+                border: '1px solid #e0e0e0',
+                // borderBottom: '1px solid #e0e0e0',
                 backgroundColor: '#fafafa',
               }}
           >

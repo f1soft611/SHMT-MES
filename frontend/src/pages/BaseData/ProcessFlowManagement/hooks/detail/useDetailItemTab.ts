@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
 import { ProcessFlowItem } from '../../../../../types/processFlow';
-import { Item } from '../../../../../types/item';
+import {ItemType} from '../../../../../types/item';
 import processFlowService from "../../../../../services/processFlowService";
 import {useToast} from "../../../../../components/common/Feedback/ToastProvider";
 
@@ -22,7 +22,7 @@ export function useDetailItemTab({ flowItemRows, setFlowItemRows }: Props) {
   /** 오른쪽으로 추가 */
   const addItems = (
     leftSelected: GridRowId[],
-    itemRows: Item[],
+    itemRows: ItemType[],
     processFlowId: string,
     processFlowCode: string
   ) => {
@@ -32,17 +32,17 @@ export function useDetailItemTab({ flowItemRows, setFlowItemRows }: Props) {
       const existCodes = new Set(prev.map((r) => r.flowItemCode));
 
       const newList: ProcessFlowItem[] = itemRows
-        .filter((it) => leftSelected.includes(it.itemCode))
-        .filter((it) => !existCodes.has(it.itemCode))
+        .filter((it) => leftSelected.includes(it.itemId))
+        .filter((it) => !existCodes.has(it.itemId))
         .map((it) => ({
           flowRowId: crypto.randomUUID(),
-          flowItemId: null,
+          flowItemId: 'new-',
 
           processFlowId,
           processFlowCode,
 
           flowItemCode: it.itemCode,
-          flowItemCodeId: it.itemId ?? '',
+          flowItemCodeId: it.itemId,
           flowItemName: it.itemName,
           specification: it.specification ?? '',
           unit: it.unit ?? '',

@@ -44,18 +44,32 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
                     lastFlag: p.lastFlag,
                 }));
 
-                await processFlowService.createFlowProcesses(
+                const {data} = await processFlowService.createFlowProcesses(
                     selectedFlow.processFlowId,
                     processList
                 );
+
+                if (data.resultCode !== 200){
+                    return {ok: false, reason: data.resultMessage};
+                }
             }
 
             // 품목 저장
             if ("items" in payload) {
                 const items = payload.items;
 
-                const itemList = items.map((it: ProcessFlowItem) => ({
-                    flowItemId: it.flowItemId ?? null,
+                // ✅ 신규 항목만 추림
+                const newItems = items.filter(
+                    (it: ProcessFlowItem) => it.flowItemId === 'new-'
+                );
+
+                // 신규가 없으면 저장 API 호출 안 함
+                if (newItems.length === 0) {
+                    return { ok: true };
+                }
+
+                const itemList = newItems.map((it: ProcessFlowItem) => ({
+                    flowItemId:  null,
                     flowItemCode: it.flowItemCode,
                     flowItemCodeId: it.flowItemCodeId,
                     flowItemName: it.flowItemName,
@@ -65,10 +79,14 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
                     processFlowCode: selectedFlow.processFlowCode,
                 }));
 
-                await processFlowService.createFlowItems(
+                const { data } = await processFlowService.createFlowItems(
                     selectedFlow.processFlowId,
                     itemList
                 );
+
+                if (data.resultCode !== 200){
+                    return {ok: false, reason: data.resultMessage};
+                }
             }
 
             return { ok: true, reason: "저장 성공" };
