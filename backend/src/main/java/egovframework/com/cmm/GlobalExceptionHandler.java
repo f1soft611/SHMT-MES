@@ -14,6 +14,7 @@ public class GlobalExceptionHandler {
     public Map<String, Object> handleBizException(BizException e) {
         Map<String, Object> res = new HashMap<>();
         res.put("resultCode", "FAIL");
+        res.put("resultMessage", e.getMessage());
         res.put("message", e.getMessage());
         return res;
     }

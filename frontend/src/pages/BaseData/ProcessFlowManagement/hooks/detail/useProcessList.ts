@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Process } from '../../../../../types/process';
+import {ProcessType} from '../../../../../types/process';
 import { GridRowId } from '@mui/x-data-grid';
 import processService from '../../../../../services/processService';
 
@@ -11,7 +11,7 @@ interface SearchParams {
 
 export function useProcessList() {
   /** 데이터 */
-  const [rows, setRows] = useState<Process[]>([]);
+  const [rows, setRows] = useState<ProcessType[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
   /** 페이징 */

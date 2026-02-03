@@ -141,7 +141,7 @@ public class EgovProcessFlowApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        // ✅ 수정자 정보 세팅
+        // 수정자 정보 세팅
         processFlow.setUpdUserId(user.getUniqId());
         processFlow.setProcessFlowId(processFlowId);
 
@@ -269,8 +269,9 @@ public class EgovProcessFlowApiController {
     ) throws Exception {
         // 사용자 ID 세팅
         for (ProcessFlowItem it : itemList) {
-            it.setRegUserId(user.getId());
+            it.setRegUserId(user.getUniqId());
         }
+
         processFlowService.createProcessFlowItem(processFlowId, itemList);
 
         Map<String, Object> resultMap = new HashMap<>();
