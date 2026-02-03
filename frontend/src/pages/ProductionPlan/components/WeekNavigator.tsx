@@ -18,6 +18,7 @@ import {
 
 interface WeekNavigatorProps {
   currentWeekStart: Date;
+  viewDays: number;
   compactMode: boolean;
   onPrevWeek: () => void;
   onNextWeek: () => void;
@@ -29,6 +30,7 @@ interface WeekNavigatorProps {
 
 const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   currentWeekStart,
+  viewDays,
   compactMode,
   onPrevWeek,
   onNextWeek,
@@ -70,14 +72,14 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
               sx={{ fontWeight: 700, color: 'primary.main' }}
             >
               {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-              {formatDate(addDays(currentWeekStart, 6), 'MM월 DD일')}
+              {formatDate(addDays(currentWeekStart, viewDays - 1), 'MM월 DD일')}
             </Typography>
             <Typography
               variant="caption"
               color="text.secondary"
               sx={{ mt: 0.25 }}
             >
-              월요일 - 일요일
+              연속 {viewDays}일 보기
             </Typography>
           </Box>
 
