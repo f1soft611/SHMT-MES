@@ -103,6 +103,7 @@
 		    PLAN_GROUP_ID,
 		    GROUP_SEQ,
 		    CREATE_DAYS,
+			ORDER_FLAG,
 			OPMAN_CODE,
 			OPTIME
 		) VALUES (
@@ -131,6 +132,7 @@
 			#{planGroupId},
 			#{groupSeq},
 			#{createDays},
+			'PLANNED',
 			#{opmanCode},
 			GETDATE()
 		)
@@ -320,6 +322,7 @@
 			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
+			PROD_DATE = #{planDate},
 			DELIVERY_DATE = #{deliveryDate},
 			BIGO = #{remark},
 			OPMAN_CODE2 = #{opmanCode2},
@@ -420,7 +423,7 @@
 			D.GROUP_SEQ AS groupSeq,
 			D.CREATE_DAYS AS createDays,
 			M.TOTAL_GROUP_COUNT AS totalGroupCount,
-			M.ORDER_FLAG AS orderFlag,
+			D.ORDER_FLAG AS orderFlag,
 			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
 			CASE 
 				WHEN C.CUSTOMER_COUNT > 1 THEN C.FIRST_CUSTOMER_NAME + ' 외 ' + CAST(C.CUSTOMER_COUNT - 1 AS VARCHAR) + '건'
