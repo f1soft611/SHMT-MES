@@ -136,8 +136,8 @@ export default function ProcessFlowProcessTab() {
               prev.map((p) =>
                 (p.flowProcessId ?? p.flowRowId) === rid
                   ? { ...p, seq: value }
-                  : p
-              )
+                  : p,
+              ),
             );
           }}
         />
@@ -170,7 +170,7 @@ export default function ProcessFlowProcessTab() {
       leftSelected,
       processRows,
       processFlow.processFlowId!,
-      processFlow.processFlowCode!
+      processFlow.processFlowCode!,
     );
 
     setLeftSelected([]);
@@ -217,7 +217,7 @@ export default function ProcessFlowProcessTab() {
           <DataGrid
             rows={processRows}
             columns={leftColumns}
-            getRowId={(row: Process) => row.processCode}
+            getRowId={(row: Process) => row.processId || row.processCode || ''}
             pagination
             paginationMode="server"
             rowCount={totalCount}

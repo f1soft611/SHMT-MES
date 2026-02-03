@@ -56,13 +56,13 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   const [openUserDialog, setOpenUserDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editingWorker, setEditingWorker] = useState<WorkplaceWorker | null>(
-    null
+    null,
   );
 
   const fetchWorkers = useCallback(async () => {
     try {
       const response = await workplaceService.getWorkplaceWorkers(
-        workplace.workplaceCode!
+        workplace.workplaceCode!,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setWorkers(response.result.resultList);
@@ -77,6 +77,13 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
   }, [fetchWorkers]);
 
   const handleUserSelect = async (user: User) => {
+    const existingWorkerIds = new Set(
+      workers.map((worker) => worker.workerId || worker.workerCode),
+    );
+    if (existingWorkerIds.has(user.mberId)) {
+      showSnackbar('이미 등록된 작업자입니다.', 'error');
+      return;
+    }
     const newWorker: WorkplaceWorker = {
       workplaceId: workplace.workplaceId!,
       workplaceCode: workplace.workplaceCode!,
@@ -90,12 +97,69 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
     try {
       await workplaceService.addWorkplaceWorker(
         workplace.workplaceId!,
-        newWorker
+        newWorker,
       );
       showSnackbar('작업자가 추가되었습니다.', 'success');
       fetchWorkers();
     } catch (error) {
       console.error('Failed to add worker:', error);
+      showSnackbar('작업자 추가에 실패했습니다.', 'error');
+    }
+  };
+
+  const handleMultiUserSelect = async (users: User[]) => {
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      let skipCount = 0;
+      const existingWorkerIds = new Set(
+        workers.map((worker) => worker.workerId || worker.workerCode),
+      );
+
+      for (const user of users) {
+        try {
+          if (existingWorkerIds.has(user.mberId)) {
+            skipCount++;
+            continue;
+          }
+          const newWorker: WorkplaceWorker = {
+            workplaceId: workplace.workplaceId!,
+            workplaceCode: workplace.workplaceCode!,
+            workerId: user.mberId,
+            workerCode: user.mberId,
+            workerName: user.mberNm,
+            position: '',
+            role: 'MEMBER',
+          };
+
+          await workplaceService.addWorkplaceWorker(
+            workplace.workplaceId!,
+            newWorker,
+          );
+          existingWorkerIds.add(user.mberId);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to add worker ${user.mberNm}:`, error);
+          failCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        showSnackbar(
+          `${successCount}명의 작업자가 추가되었습니다.${skipCount > 0 ? ` (중복 제외: ${skipCount}명)` : ''}${failCount > 0 ? ` (실패: ${failCount}명)` : ''}`,
+          failCount > 0 ? 'error' : 'success',
+        );
+        fetchWorkers();
+      } else {
+        showSnackbar(
+          skipCount > 0
+            ? '이미 등록된 작업자는 제외되었습니다.'
+            : '작업자 추가에 실패했습니다.',
+          'error',
+        );
+      }
+    } catch (error) {
+      console.error('Failed to add workers:', error);
       showSnackbar('작업자 추가에 실패했습니다.', 'error');
     }
   };
@@ -112,7 +176,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
       await workplaceService.updateWorkplaceWorker(
         workplace.workplaceCode!,
         editingWorker.workerCode!,
-        editingWorker
+        editingWorker,
       );
       showSnackbar('작업자 정보가 수정되었습니다.', 'success');
       setOpenEditDialog(false);
@@ -129,7 +193,7 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
       try {
         await workplaceService.removeWorkplaceWorker(
           workplace.workplaceCode!,
-          workplaceWorkerCode
+          workplaceWorkerCode,
         );
         showSnackbar('작업자가 제외되었습니다.', 'success');
         fetchWorkers();
@@ -289,7 +353,9 @@ const WorkplaceWorkerTab: React.FC<WorkplaceWorkerTabProps> = ({
         open={openUserDialog}
         onClose={() => setOpenUserDialog(false)}
         onSelect={handleUserSelect}
+        onMultiSelect={handleMultiUserSelect}
         title="작업자 선택"
+        multiSelect={true}
       />
 
       {/* 작업자 수정 다이얼로그 */}

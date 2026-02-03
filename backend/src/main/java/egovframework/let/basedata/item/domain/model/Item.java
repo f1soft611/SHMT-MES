@@ -63,6 +63,9 @@ public class Item implements Serializable {
 	@Schema(description = "안전 재고")
 	private String safetyStock = "";
 
+	@Schema(description = "가공 1회당 생산량")
+	private String productionPerCycle = "";
+
 	@Schema(description = "비고")
 	private String remark = "";
 

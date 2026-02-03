@@ -13,7 +13,13 @@ import {
   MenuItem,
   Box,
 } from '@mui/material';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridPaginationModel,
+  GridRowId,
+  GridRowSelectionModel,
+} from '@mui/x-data-grid';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { User, userService } from '../../../services/admin/userService';
 
@@ -21,7 +27,9 @@ interface UserSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   onSelect: (user: User) => void;
+  onMultiSelect?: (users: User[]) => void;
   title?: string;
+  multiSelect?: boolean;
 }
 
 /**
@@ -32,11 +40,19 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
   open,
   onClose,
   onSelect,
+  onMultiSelect,
   title = '사용자 선택',
+  multiSelect = false,
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] =
+    useState<GridRowSelectionModel>({
+      type: 'include',
+      ids: new Set<GridRowId>(),
+    });
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 10,
@@ -92,14 +108,23 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
   };
 
   const handleSelect = () => {
-    if (selectedUser) {
-      onSelect(selectedUser);
-      handleClose();
+    if (multiSelect) {
+      if (selectedUsers.length > 0 && onMultiSelect) {
+        onMultiSelect(selectedUsers);
+        handleClose();
+      }
+    } else {
+      if (selectedUser) {
+        onSelect(selectedUser);
+        handleClose();
+      }
     }
   };
 
   const handleClose = () => {
     setSelectedUser(null);
+    setSelectedUsers([]);
+    setRowSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setInputValues({
       searchCnd: '2',
       searchWrd: '',
@@ -196,7 +221,23 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
             pageSizeOptions={[5, 10, 25]}
             rowCount={totalCount}
             paginationMode="server"
-            onRowClick={(params) => setSelectedUser(params.row)}
+            checkboxSelection={multiSelect}
+            rowSelectionModel={multiSelect ? rowSelectionModel : undefined}
+            onRowClick={(params) => {
+              if (!multiSelect) {
+                setSelectedUser(params.row as User);
+              }
+            }}
+            onRowSelectionModelChange={(newModel) => {
+              if (multiSelect) {
+                setRowSelectionModel(newModel);
+                const ids = Array.from(newModel.ids ?? new Set<GridRowId>());
+                const selected = users.filter((user) =>
+                  ids.includes(user.uniqId as GridRowId),
+                );
+                setSelectedUsers(selected);
+              }
+            }}
             sx={{
               // border: 'none',
               '& .MuiDataGrid-cell:focus': {
@@ -217,12 +258,8 @@ const UserSelectionDialog: React.FC<UserSelectionDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={handleSelect}
-          variant="contained"
-          disabled={!selectedUser}
-        >
-          선택
+        <Button onClick={handleSelect} variant="contained">
+          선택 ({multiSelect ? selectedUsers.length : selectedUser ? 1 : 0})
         </Button>
         <Button onClick={handleClose}>취소</Button>
       </DialogActions>

@@ -87,6 +87,12 @@ public class EgovProcessServiceImpl extends EgovAbstractServiceImpl implements E
 	public void insertProcess(Process process) throws Exception {
 		String processId = egovProcessIdGnrService.getNextStringId();
 		process.setProcessId(processId);
+		
+		// 공정 코드가 입력되지 않았으면 공정ID를 설정
+		if (process.getProcessCode() == null || process.getProcessCode().trim().isEmpty()) {
+			process.setProcessCode(processId);
+		}
+		
 		processDAO.insertProcess(process);
 	}
 
