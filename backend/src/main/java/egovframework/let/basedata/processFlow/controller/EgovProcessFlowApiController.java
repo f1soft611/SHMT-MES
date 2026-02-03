@@ -280,6 +280,42 @@ public class EgovProcessFlowApiController {
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
 
+    /**
+     * 공정흐름별 제품 삭제
+     */
+    @Operation(
+            summary = "공정흐름별 제품 삭제",
+            description = "선택한 공정흐름에 대한 제품 목록을 삭제한다",
+            security = {@SecurityRequirement(name = "Authorization")},
+            tags = {"EgovProcessFlowApiController"}
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/item/delete")
+    public ResultVO deleteProcessFlowItem(
+            @RequestBody List<ProcessFlowItem> itemList,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+        // 방어 코드
+        if (itemList == null || itemList.isEmpty()) {
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("message", "삭제할 항목이 없습니다.");
+            resultMap.put("user", user);
+            return resultVoHelper.buildFromMap(resultMap, ResponseCode.BUSINESS_ERROR, "삭제할 항목이 없습니다.");
+        }
+
+        // 삭제 실행 (flowItemId 기준)
+        processFlowService.deleteProcessFlowItem(itemList);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("message", "공정흐름별 품목이 저장되었습니다.");
+        resultMap.put("user", user);
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
 
     /**
      * 공정흐름별 품목 목록 조회

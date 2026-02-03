@@ -44,5 +44,7 @@ public interface EgovProcessFlowService {
 	void deleteProcessFlow(String processFlowId) throws Exception;
 
 	void createProcessFlowProcess(String processFlowId, List<ProcessFlowProcess> processList) throws Exception;
+
 	void createProcessFlowItem(String processFlowId, List<ProcessFlowItem> itemList) throws Exception;
+	void deleteProcessFlowItem(List<ProcessFlowItem> itemList) throws Exception;
 }
