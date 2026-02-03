@@ -15,6 +15,21 @@ export interface Process {
   sortOrder?: number;
 }
 
+export interface ProcessType {
+  processId: string;
+  processCode?: string;
+  processName: string;
+  description?: string;
+  processType?: string;
+  erpProcessMapping?: string;
+  equipmentIntegrationYn?: string;
+  status?: string;
+  useYn?: string;
+  sortOrder?: number;
+}
+
+
+
 export interface WorkplaceProcess {
   workplaceProcessId?: string;
   workplaceId: string;

@@ -1,12 +1,12 @@
 import { GridRowId } from '@mui/x-data-grid';
 import { useEffect, useState } from 'react';
-import { Item, ItemSearchParams, InProcessFlow } from '../../../../../types/item';
+import {ItemSearchParams, InProcessFlow, ItemType} from '../../../../../types/item';
 import itemService from '../../../../../services/itemService';
 
 
 export function useItemList() {
   /** 데이터 */
-  const [rows, setRows] = useState<Item[]>([]);
+  const [rows, setRows] = useState<ItemType[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
   /** 페이징 */
@@ -27,7 +27,7 @@ export function useItemList() {
 
   /** 검색 - 입력용 */
   const [searchDraft, setSearchDraft] = useState<ItemSearchParams>({
-    searchCnd: '0',
+    searchCnd: '1',
     searchWrd: '',
     useYn: 'Y',
     inProcessFlowYn: InProcessFlow.UNREGISTERED, // 기본: 미등록
@@ -35,7 +35,7 @@ export function useItemList() {
 
   /** 검색 - 실제 조회용 */
   const [searchParams, setSearchParams] = useState<ItemSearchParams>({
-    searchCnd: '0',
+    searchCnd: '1',
     searchWrd: '',
     useYn: 'Y',
     inProcessFlowYn: InProcessFlow.UNREGISTERED, // 기본: 미등록

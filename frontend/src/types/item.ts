@@ -22,6 +22,31 @@ export interface Item {
   updDt?: string;
 }
 
+/**
+ * 품목 관련 타입 정의
+ *
+ * 공정 흐름 관리 화면의 품목 리스트 및 선택용
+ */
+export interface ItemType {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  itemType?: string;
+  specification?: string;
+  unit?: string;
+  unitName?: string;
+  stockQty?: string;
+  safetyStock?: string;
+  productionPerCycle?: string;
+  remark?: string;
+  interfaceYn?: string;
+  useYn?: string;
+  regUserId?: string;
+  regDt?: string;
+  updUserId?: string;
+  updDt?: string;
+}
+
 export const InProcessFlow = {
   ALL: 0,
   UNREGISTERED: 1,

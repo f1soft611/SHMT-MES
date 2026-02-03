@@ -107,7 +107,7 @@ export default function ProcessFlowDetailDialog({
     },[open, initialTab]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
             <ProcessFlowDetailProvider processFlow={selectedFlow}>
                 <DialogTitle>공정흐름 상세 관리</DialogTitle>
 

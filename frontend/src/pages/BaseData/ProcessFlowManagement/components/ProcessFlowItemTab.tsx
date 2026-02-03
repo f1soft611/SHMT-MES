@@ -1,17 +1,10 @@
 import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid';
 import {
-  Button,
-  Stack,
-  Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Grid,
+  Button, Stack, Box, FormControl, InputLabel,
+  Select, MenuItem, TextField, Grid, Typography,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Item } from '../../../../types/item';
+import {ItemType} from '../../../../types/item';
 import { useProcessFlowDetailContext } from '../hooks/detail/useProcessFlowDetailContext';
 import { useDetailItemTab } from '../hooks/detail/useDetailItemTab';
 import { useItemList } from '../hooks/detail/useItemList';
@@ -171,10 +164,23 @@ export default function ProcessFlowItemTab() {
 
       <Grid container spacing={1} direction="row">
         <Grid size={{ xs: 5.5 }} sx={{ overflow: 'hidden' }}>
+          <Box
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                border: '1px solid #e0e0e0',
+                // borderBottom: '1px solid #e0e0e0',
+                backgroundColor: '#fafafa',
+              }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              전체 제품
+            </Typography>
+          </Box>
           <DataGrid
             rows={itemRows}
             columns={leftColumns}
-            getRowId={(row: Item) => row.itemCode}
+            getRowId={(row: ItemType) => row.itemId}
             pagination
             paginationMode="server"
             rowCount={totalCount}
@@ -241,6 +247,19 @@ export default function ProcessFlowItemTab() {
           </Box>
         </Grid>
         <Grid size={{ xs: 5.5 }} sx={{ overflow: 'hidden' }}>
+          <Box
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                border: '1px solid #e0e0e0',
+                // borderBottom: '1px solid #e0e0e0',
+                backgroundColor: '#fafafa',
+              }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              적용된 제품
+            </Typography>
+          </Box>
           <DataGrid
             rows={flowItemRows}
             columns={rightColumns}
