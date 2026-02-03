@@ -96,6 +96,15 @@ public interface EgovProductionPlanService {
 	Map<String, Object> selectWeeklyProductionPlans(ProductionPlanVO searchVO) throws Exception;
 
 	/**
+	 * 월별 생산계획 대비 실적 현황을 조회한다.
+	 * @param yearMonth 조회 연월 (YYYYMM)
+	 * @param user 사용자 VO
+	 * @return 월별 집계 결과
+	 * @throws Exception
+	 */
+	Map<String, Object> selectMonthlyPlanResult(String yearMonth, LoginVO user) throws Exception;
+
+	/**
 	 * 생산의뢰(TSA308) 목록을 조회한다.
 	 * @param searchVO 검색 조건
 	 * @param user 사용자 VO

@@ -5,6 +5,9 @@ import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
+import egovframework.let.production.plan.domain.model.ProductionPlanMonthlyDailyRow;
+import egovframework.let.production.plan.domain.model.ProductionPlanMonthlyOrderSummary;
+import egovframework.let.production.plan.domain.model.ProductionPlanMonthlyResultRow;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
 import egovframework.let.production.plan.domain.model.ProductionPlanReference;
 import egovframework.let.production.plan.domain.model.ProductionRequestDTO;
@@ -23,8 +26,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.YearMonth;
 
 /**
  * 생산계획 관리를 위한 서비스 구현 클래스
@@ -329,5 +334,232 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		map.put("resultCnt", String.valueOf(totCnt));
 
 		return map;
+	}
+
+	/**
+	 * 월별 생산계획 대비 실적 현황을 조회한다.
+	 */
+	@Override
+	public Map<String, Object> selectMonthlyPlanResult(String yearMonth, LoginVO user) throws Exception {
+		DateTimeFormatter ymFormatter = DateTimeFormatter.ofPattern("yyyyMM");
+		YearMonth ym = YearMonth.parse(yearMonth, ymFormatter);
+		String startDate = ym.atDay(1).format(DateTimeFormatter.BASIC_ISO_DATE);
+		String endDate = ym.atEndOfMonth().format(DateTimeFormatter.BASIC_ISO_DATE);
+
+		ProductionPlanVO searchVO = new ProductionPlanVO();
+		searchVO.setFactoryCode(user.getFactoryCode());
+		searchVO.setStartDate(startDate);
+		searchVO.setEndDate(endDate);
+
+		List<ProductionPlanMonthlyDailyRow> dailyRows = productionPlanDAO.selectMonthlyPlanDailyList(searchVO);
+		List<ProductionPlanMonthlyOrderSummary> orderSummaries = productionPlanDAO.selectMonthlyOrderSummaryList(searchVO);
+
+		Map<String, ProductionPlanMonthlyOrderSummary> orderMap = new HashMap<>();
+		for (ProductionPlanMonthlyOrderSummary summary : orderSummaries) {
+			orderMap.put(summary.getWorkplaceCode(), summary);
+		}
+
+		int daysInMonth = ym.lengthOfMonth();
+		Map<String, WorkplaceMonthlyAggregate> workplaceMap = new LinkedHashMap<>();
+
+		for (ProductionPlanMonthlyDailyRow row : dailyRows) {
+			String workplaceCode = row.getWorkplaceCode();
+			WorkplaceMonthlyAggregate aggregate = workplaceMap.computeIfAbsent(
+				workplaceCode,
+				k -> new WorkplaceMonthlyAggregate(workplaceCode, row.getWorkplaceName(), daysInMonth)
+			);
+
+			if (row.getPlanDate() != null && row.getPlanDate().length() >= 8) {
+				int day = Integer.parseInt(row.getPlanDate().substring(6, 8));
+				aggregate.addPlan(day, defaultNumber(row.getPlanQty()));
+				aggregate.addActual(day, defaultNumber(row.getActualQty()));
+			}
+		}
+
+		List<ProductionPlanMonthlyResultRow> resultList = new ArrayList<>();
+		for (WorkplaceMonthlyAggregate aggregate : workplaceMap.values()) {
+			ProductionPlanMonthlyOrderSummary summary = orderMap.get(aggregate.workplaceCode);
+			BigDecimal orderQty = summary != null ? defaultNumber(summary.getOrderQty()) : BigDecimal.ZERO;
+			BigDecimal backlogQty = summary != null ? defaultNumber(summary.getBacklogQty()) : BigDecimal.ZERO;
+			BigDecimal totalPlan = aggregate.getTotalPlan();
+			BigDecimal totalActual = aggregate.getTotalActual();
+
+			BigDecimal monthTarget = orderQty.compareTo(BigDecimal.ZERO) > 0 ? orderQty : totalPlan;
+			BigDecimal monthPlan = totalPlan;
+
+			ProductionPlanMonthlyResultRow planRow = buildResultRow(
+				aggregate,
+				"PLAN",
+				"계획",
+				monthTarget,
+				monthPlan,
+				backlogQty,
+				backlogQty,
+				aggregate.planDays,
+				aggregate.getWeekTotals(aggregate.planDays),
+				totalPlan
+			);
+
+			ProductionPlanMonthlyResultRow actualRow = buildResultRow(
+				aggregate,
+				"ACTUAL",
+				"실적",
+				monthTarget,
+				monthPlan,
+				backlogQty,
+				backlogQty,
+				aggregate.actualDays,
+				aggregate.getWeekTotals(aggregate.actualDays),
+				totalActual
+			);
+
+			ProductionPlanMonthlyResultRow rateRow = buildResultRow(
+				aggregate,
+				"RATE",
+				"달성률",
+				monthTarget,
+				monthPlan,
+				backlogQty,
+				backlogQty,
+				aggregate.getRateDays(),
+				aggregate.getRateWeekTotals(),
+				safePercent(totalActual, totalPlan)
+			);
+
+			resultList.add(planRow);
+			resultList.add(actualRow);
+			resultList.add(rateRow);
+		}
+
+		Map<String, Object> map = new HashMap<>();
+		map.put("resultList", resultList);
+		map.put("resultCnt", resultList.size());
+		map.put("yearMonth", yearMonth);
+		return map;
+	}
+
+	private ProductionPlanMonthlyResultRow buildResultRow(
+			WorkplaceMonthlyAggregate aggregate,
+			String rowType,
+			String rowTypeName,
+			BigDecimal monthTarget,
+			BigDecimal monthPlan,
+			BigDecimal orderBacklog,
+			BigDecimal nextMonthCarry,
+			List<BigDecimal> days,
+			List<BigDecimal> weekTotals,
+			BigDecimal total
+	) {
+		ProductionPlanMonthlyResultRow row = new ProductionPlanMonthlyResultRow();
+		row.setWorkplaceCode(aggregate.workplaceCode);
+		row.setWorkplaceName(aggregate.workplaceName);
+		row.setRowType(rowType);
+		row.setRowTypeName(rowTypeName);
+		row.setMonthTarget(monthTarget);
+		row.setMonthPlan(monthPlan);
+		row.setOrderBacklog(orderBacklog);
+		row.setNextMonthCarry(nextMonthCarry);
+		row.setDays(days);
+		row.setWeekTotals(weekTotals);
+		row.setTotal(total);
+		return row;
+	}
+
+	private BigDecimal safePercent(BigDecimal actual, BigDecimal plan) {
+		if (plan == null || plan.compareTo(BigDecimal.ZERO) == 0) {
+			return BigDecimal.ZERO;
+		}
+		return actual
+			.multiply(new BigDecimal("100"))
+			.divide(plan, 0, RoundingMode.HALF_UP);
+	}
+
+	private BigDecimal defaultNumber(BigDecimal value) {
+		return value != null ? value : BigDecimal.ZERO;
+	}
+
+	private class WorkplaceMonthlyAggregate {
+		private final String workplaceCode;
+		private final String workplaceName;
+		private final List<BigDecimal> planDays;
+		private final List<BigDecimal> actualDays;
+
+		private WorkplaceMonthlyAggregate(String workplaceCode, String workplaceName, int daysInMonth) {
+			this.workplaceCode = workplaceCode;
+			this.workplaceName = workplaceName;
+			this.planDays = initDays(daysInMonth);
+			this.actualDays = initDays(daysInMonth);
+		}
+
+		private void addPlan(int day, BigDecimal qty) {
+			int index = day - 1;
+			if (index >= 0 && index < planDays.size()) {
+				planDays.set(index, planDays.get(index).add(qty));
+			}
+		}
+
+		private void addActual(int day, BigDecimal qty) {
+			int index = day - 1;
+			if (index >= 0 && index < actualDays.size()) {
+				actualDays.set(index, actualDays.get(index).add(qty));
+			}
+		}
+
+		private List<BigDecimal> initDays(int daysInMonth) {
+			List<BigDecimal> days = new ArrayList<>();
+			for (int i = 0; i < daysInMonth; i++) {
+				days.add(BigDecimal.ZERO);
+			}
+			return days;
+		}
+
+		private BigDecimal getTotalPlan() {
+			return sum(planDays);
+		}
+
+		private BigDecimal getTotalActual() {
+			return sum(actualDays);
+		}
+
+		private BigDecimal sum(List<BigDecimal> list) {
+			BigDecimal total = BigDecimal.ZERO;
+			for (BigDecimal value : list) {
+				total = total.add(defaultNumber(value));
+			}
+			return total;
+		}
+
+		private List<BigDecimal> getWeekTotals(List<BigDecimal> days) {
+			List<BigDecimal> totals = new ArrayList<>();
+			int[] boundaries = new int[] {7, 14, 21, 28, days.size()};
+			int start = 0;
+			for (int boundary : boundaries) {
+				BigDecimal total = BigDecimal.ZERO;
+				for (int i = start; i < Math.min(boundary, days.size()); i++) {
+					total = total.add(defaultNumber(days.get(i)));
+				}
+				totals.add(total);
+				start = boundary;
+			}
+			return totals;
+		}
+
+		private List<BigDecimal> getRateDays() {
+			List<BigDecimal> rates = new ArrayList<>();
+			for (int i = 0; i < planDays.size(); i++) {
+				rates.add(safePercent(actualDays.get(i), planDays.get(i)));
+			}
+			return rates;
+		}
+
+		private List<BigDecimal> getRateWeekTotals() {
+			List<BigDecimal> planTotals = getWeekTotals(planDays);
+			List<BigDecimal> actualTotals = getWeekTotals(actualDays);
+			List<BigDecimal> rateTotals = new ArrayList<>();
+			for (int i = 0; i < planTotals.size(); i++) {
+				rateTotals.add(safePercent(actualTotals.get(i), planTotals.get(i)));
+			}
+			return rateTotals;
+		}
 	}
 }

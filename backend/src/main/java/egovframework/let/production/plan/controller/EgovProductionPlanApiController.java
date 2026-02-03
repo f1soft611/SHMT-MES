@@ -293,6 +293,35 @@ public class EgovProductionPlanApiController {
 	}
 
 	/**
+	 * 월별 생산계획 대비 실적 현황을 조회한다.
+	 *
+	 * @param yearMonth 조회 연월 (YYYYMM)
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "월별 생산계획 대비 실적 현황 조회",
+			description = "월별 생산계획 수량과 실적수량을 집계하여 달성률을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping(value = "/production-plans/monthly-result")
+	public ResultVO selectMonthlyPlanResult(
+			@RequestParam("yearMonth") String yearMonth,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		Map<String, Object> resultMap = productionPlanService.selectMonthlyPlanResult(yearMonth, user);
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
 	 * 생산의뢰(TSA308) 목록을 조회한다.
 	 *
 	 * @param searchVO 검색 조건

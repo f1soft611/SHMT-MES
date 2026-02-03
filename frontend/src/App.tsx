@@ -22,6 +22,7 @@ import ItemManagement from './pages/BaseData/ItemManagement';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrder from './pages/ProdOrder';
 import ProductionResult from './pages/ProdResult';
+import ProdPlanResult from './pages/ProdPlanResult';
 import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
@@ -106,8 +107,12 @@ function App() {
                             element={<ProductionOrder />}
                           />
                           <Route
-                              path={URL.PRODUCTION_RESULTS}
-                              element={<ProductionResult />}
+                            path={URL.PRODUCTION_RESULTS}
+                            element={<ProductionResult />}
+                          />
+                          <Route
+                            path={URL.PROD_PLAN_RESULT}
+                            element={<ProdPlanResult />}
                           />
                           {/* <Route
                           path={URL.INTERFACE}
