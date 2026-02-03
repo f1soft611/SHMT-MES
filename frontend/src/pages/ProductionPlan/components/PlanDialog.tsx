@@ -145,7 +145,12 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 }) => {
   const isOrderedPlan =
     dialogMode === 'edit' && formData.orderFlag === 'ORDERED';
-  const canEditPlanDate = dialogMode === 'edit' && !isOrderedPlan;
+  const isGroupedPlan =
+    dialogMode === 'edit' &&
+    !!formData.planGroupId &&
+    (formData.totalGroupCount ?? formData.createDays ?? 1) > 1;
+  const canEditPlanDate =
+    dialogMode === 'edit' && !isOrderedPlan && !isGroupedPlan;
   const canEditPlan = dialogMode === 'create' || !isOrderedPlan;
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
@@ -633,15 +638,21 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       value={
                         dialogMode === 'create' ? selectedDate : field.value
                       }
-                      disabled={dialogMode === 'create'}
+                      disabled={dialogMode === 'create' || !canEditPlanDate}
                       InputLabelProps={{ shrink: true }}
                       InputProps={{ readOnly: !canEditPlanDate }}
                       onChange={(e) => {
+                        if (!canEditPlanDate) return;
                         field.onChange(e.target.value);
                         onBatchChange({ date: e.target.value });
                       }}
                       error={!!errors.date}
-                      helperText={errors.date?.message}
+                      helperText={
+                        errors.date?.message ||
+                        (isGroupedPlan && dialogMode === 'edit'
+                          ? '그룹 생산계획은 계획일을 변경할 수 없습니다.'
+                          : '')
+                      }
                     />
                   )}
                 />
