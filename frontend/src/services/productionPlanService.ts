@@ -95,6 +95,14 @@ const productionPlanService = {
     const response = await api.get('/api/production-plans/weekly', { params });
     return response.data;
   },
+
+  // 월별 생산계획 대비 실적 현황 조회
+  getMonthlyPlanResult: async (params: { yearMonth: string }) => {
+    const response = await api.get('/api/production-plans/monthly-result', {
+      params,
+    });
+    return response.data;
+  },
 };
 
 export default productionPlanService;

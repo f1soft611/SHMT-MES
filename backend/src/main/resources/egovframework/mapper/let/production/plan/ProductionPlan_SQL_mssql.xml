@@ -726,4 +726,44 @@
 		  AND R.PRODPLAN_ID = #{prodPlanId}
 	</select>
 
+	<!-- 월별 생산계획/실적 일자별 집계 조회 -->
+	<select id="ProductionPlanDAO.selectMonthlyPlanDailyList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultType="egovframework.let.production.plan.domain.model.ProductionPlanMonthlyDailyRow">
+		SELECT
+			A.WORKCENTER_CODE AS workplaceCode,
+			W.WORKCENTER_NAME AS workplaceName,
+			A.PRODPLAN_DATE AS planDate,
+			SUM(ISNULL(A.PROD_QTY, 0)) AS planQty,
+			SUM(ISNULL(R.PROD_QTY, 0)) AS actualQty
+		FROM TPR301 A
+		LEFT JOIN TPR101 W
+			ON A.WORKCENTER_CODE = W.WORKCENTER_CODE
+		LEFT JOIN TPR601 R
+			ON A.FACTORY_CODE = R.FACTORY_CODE
+			AND A.PRODPLAN_DATE = R.PRODPLAN_DATE
+			AND A.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+			AND A.PRODWORK_SEQ = R.PRODWORK_SEQ
+		WHERE A.FACTORY_CODE = #{factoryCode}
+		  AND A.PRODPLAN_DATE &gt;= #{startDate}
+		  AND A.PRODPLAN_DATE &lt;= #{endDate}
+		GROUP BY A.WORKCENTER_CODE, W.WORKCENTER_NAME, A.PRODPLAN_DATE
+		ORDER BY A.WORKCENTER_CODE, A.PRODPLAN_DATE
+	</select>
+
+	<!-- 월별 수주/잔량 집계 조회 -->
+	<select id="ProductionPlanDAO.selectMonthlyOrderSummaryList" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanVO" resultType="egovframework.let.production.plan.domain.model.ProductionPlanMonthlyOrderSummary">
+		SELECT
+			A.WORKCENTER_CODE AS workplaceCode,
+			SUM(ISNULL(R.ORDER_QTY, 0)) AS orderQty,
+			SUM(ISNULL(R.ORDER_QTY, 0) - ISNULL(R.WORKDT_QTY, 0)) AS backlogQty
+		FROM TPR301R R
+		JOIN TPR301 A
+			ON A.FACTORY_CODE = R.FACTORY_CODE
+			AND A.PRODPLAN_DATE = R.PRODPLAN_DATE
+			AND A.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+		WHERE A.FACTORY_CODE = #{factoryCode}
+		  AND A.PRODPLAN_DATE &gt;= #{startDate}
+		  AND A.PRODPLAN_DATE &lt;= #{endDate}
+		GROUP BY A.WORKCENTER_CODE
+	</select>
+
 </mapper>

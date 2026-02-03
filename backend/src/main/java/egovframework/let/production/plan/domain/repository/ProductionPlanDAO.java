@@ -2,6 +2,8 @@ package egovframework.let.production.plan.domain.repository;
 
 import egovframework.let.production.plan.domain.model.ProductionPlan;
 import egovframework.let.production.plan.domain.model.ProductionPlanMaster;
+import egovframework.let.production.plan.domain.model.ProductionPlanMonthlyDailyRow;
+import egovframework.let.production.plan.domain.model.ProductionPlanMonthlyOrderSummary;
 import egovframework.let.production.plan.domain.model.ProductionPlanVO;
 import egovframework.let.production.plan.domain.model.ProductionRequestDTO;
 import egovframework.let.production.plan.domain.model.ProductionRequestVO;
@@ -193,6 +195,26 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	 */
 	public List<Object> selectWeeklyProductionPlansByWorkplace(ProductionPlanVO searchVO) throws Exception {
 		return (List<Object>) selectList("ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace", searchVO);
+	}
+
+	/**
+	 * 월별 생산계획/실적 일자별 집계를 조회한다.
+	 * @param searchVO 검색 조건 (factoryCode, startDate, endDate)
+	 * @return 일자별 집계 목록
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public List<ProductionPlanMonthlyDailyRow> selectMonthlyPlanDailyList(ProductionPlanVO searchVO) throws Exception {
+		return selectList("ProductionPlanDAO.selectMonthlyPlanDailyList", searchVO);
+	}
+
+	/**
+	 * 월별 수주/잔량 집계를 조회한다.
+	 * @param searchVO 검색 조건 (factoryCode, startDate, endDate)
+	 * @return 수주/잔량 집계 목록
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public List<ProductionPlanMonthlyOrderSummary> selectMonthlyOrderSummaryList(ProductionPlanVO searchVO) throws Exception {
+		return selectList("ProductionPlanDAO.selectMonthlyOrderSummaryList", searchVO);
 	}
 
 	/**

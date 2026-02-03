@@ -11,6 +11,7 @@ const URL = {
   PRODUCTION_PLAN: '/prod/plan', //생산계획 수립
   PRODUCTION_ORDERS: '/prod/orders', //생산지시
   PRODUCTION_RESULTS: '/prod/results', //생산실적
+  PROD_PLAN_RESULT: '/prod/plan-result', //생산계획 대비 실적 현황
   ERROR: '/error', //오류 페이지
   NOT_FOUND: '/not-found', //페이지를 찾을 수 없음
 
