@@ -47,6 +47,9 @@ export const processFlowService = {
     createFlowItems: (processFlowId: string, data: any[]) =>
         apiClient.post(`/api/processflow/${processFlowId}/item`, data),
 
+    deleteFlowItems: (data: { flowItemId: string }[]) =>
+        apiClient.post(`/api/processflow/item/delete`, data),
+
     // 공정흐름별 품목
     getProcessFlowItem: async (processFlowId: string) => {
         const response = await apiClient.get(`/api/processflow/${processFlowId}/item`);

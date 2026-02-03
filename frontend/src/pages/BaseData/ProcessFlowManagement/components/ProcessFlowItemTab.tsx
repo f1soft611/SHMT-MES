@@ -15,6 +15,7 @@ import { Item } from '../../../../types/item';
 import { useProcessFlowDetailContext } from '../hooks/detail/useProcessFlowDetailContext';
 import { useDetailItemTab } from '../hooks/detail/useDetailItemTab';
 import { useItemList } from '../hooks/detail/useItemList';
+import ConfirmDialog from "../../../../components/common/Feedback/ConfirmDialog";
 
 export default function ProcessFlowItemTab() {
   //  공정흐름 기준
@@ -41,7 +42,17 @@ export default function ProcessFlowItemTab() {
   } = useItemList();
 
   // 우측 등록 공정
-  const { rightSelected, setRightSelected, addItems, removeItems } =
+  const {
+    rightSelected,
+    setRightSelected,
+    addItems,
+    // removeItems
+    requestRemoveItems,
+    confirmRemoveItems,
+    cancelRemoveItems,
+    openConfirm,
+
+  } =
     useDetailItemTab({
       flowItemRows,
       setFlowItemRows,
@@ -221,7 +232,7 @@ export default function ProcessFlowItemTab() {
               sx={{ my: 0.5 }}
               variant="outlined"
               size="small"
-              onClick={removeItems}
+              onClick={requestRemoveItems}
               disabled={rightSelected.length === 0}
               aria-label="move selected left"
             >
@@ -257,6 +268,17 @@ export default function ProcessFlowItemTab() {
           />
         </Grid>
       </Grid>
+
+
+      <ConfirmDialog
+          open={openConfirm}
+          title="삭제 확인"
+          message="선택한 품목을 공정흐름에서 삭제하시겠습니까?"
+          confirmText="삭제"
+          cancelText="취소"
+          onConfirm={confirmRemoveItems}
+          onClose={cancelRemoveItems}
+      />
     </>
   );
 }
