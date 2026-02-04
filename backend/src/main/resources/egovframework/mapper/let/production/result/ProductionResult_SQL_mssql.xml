@@ -79,7 +79,10 @@
                 OR A.PRODPLAN_ID    LIKE '%' + #{keyword} + '%'
             )
         </if>
-        ORDER BY ORDER_NO, ORDER_SEQNO, ORDER_HISTNO, A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, A.WORK_SEQ, A.WORKDT_DATE DESC
+        ORDER BY ORDER_NO, ORDER_SEQNO, ORDER_HISTNO
+               , A.PRODPLAN_DATE, A.PRODPLAN_SEQ
+               , CAST(A.PRODWORK_SEQ AS INT)
+               , CAST(A.WORK_SEQ AS INT), A.WORKDT_DATE DESC
         OFFSET #{offset} ROWS
         FETCH NEXT #{size} ROWS ONLY
     </select>

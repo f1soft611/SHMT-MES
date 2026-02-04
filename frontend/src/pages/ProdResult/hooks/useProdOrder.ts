@@ -14,7 +14,7 @@ export function useProdOrder() {
   const dateFrom = new Date();
   dateFrom.setDate(dateFrom.getDate() - 7);
 
-  // 입력용 검색조건
+  // 화면 입력용 검색 조건
   const [search, setSearch] = useState<ProductionResultSearchForm>({
     dateFrom: dateFrom.toISOString().slice(0, 10),
     dateTo: today,
@@ -23,10 +23,14 @@ export function useProdOrder() {
     keyword: '', //통합검색
   });
 
-  // 실제 검색용 파라미터
+  /**
+   * 실제 API 호출에 사용하는 검색 파라미터
+   * - 검색 버튼 클릭 시에만 세팅됨
+   * - 자동 조회 방지 목적
+   */
   const [searchParams, setSearchParams] = useState<ProductionResultSearchForm | null>(null);
 
-  // 테이블 페이징
+  // 페이징
   const [pagination, setPagination] = useState({
     page: 0,
     pageSize: 20,
@@ -37,7 +41,10 @@ export function useProdOrder() {
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // API 호출
+
+  /** ======================
+   *  생산지시 목록 조회 API
+   *  ====================== */
   const fetchList = async () => {
     setLoading(true);
     try {
@@ -53,9 +60,7 @@ export function useProdOrder() {
       const rows = list.map((r: any) => ({
         ...r,
         PROD_QTY: Number(r.PROD_QTY ?? 0),
-
       }));
-
 
       setRows(rows);
       setRowCount(response.result?.resultCnt ?? 0);
@@ -71,19 +76,33 @@ export function useProdOrder() {
     }
   };
 
+  /** ======================
+   *  페이지 변경
+   *  ====================== */
   const handlePageChange = (page: number) => {
     setPagination((prev) => ({ ...prev, page }));
   };
 
+  /** ======================
+   *  페이지 사이즈 변경
+   *  ====================== */
   const handlePageSizeChange = (pageSize: number) => {
     setPagination({ page: 0, pageSize });
   };
 
+  /** ======================
+   *  검색 조건 변경
+   *  ====================== */
   const handleSearchChange = (name: string, value: string) => {
     setSearch((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 검색 버튼
+  /** ======================
+   *  검색 버튼 클릭
+   *  - 날짜 포맷 변환 (YYYY-MM-DD → YYYYMMDD)
+   *  - 검색 파라미터 확정
+   *  - 페이지 초기화
+   *  ====================== */
   const handleSearch = () => {
     setLoading(true);
     const toYYYYMMDD = (v: string) => v.replaceAll('-', '');
@@ -95,7 +114,13 @@ export function useProdOrder() {
     setPagination((prev) => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
   };
 
-  // 페이지 변경 시 + 검색버튼 누를 시 자동 fetch
+
+  /** ======================
+   *  조회 트리거
+   *  - 검색 실행
+   *  - 페이지 변경
+   *  - 페이지 사이즈 변경
+   *  ====================== */
   useEffect(() => {
     if (!searchParams) return;
     fetchList();
@@ -109,10 +134,12 @@ export function useProdOrder() {
     handleSearchChange,
     handleSearch,
 
+    // 결과
     rows,
     rowCount,
     loading,
 
+    // 페이징
     pagination,
     setPagination,
     handlePageChange,

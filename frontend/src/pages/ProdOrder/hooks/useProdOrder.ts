@@ -14,18 +14,27 @@ export function useProdOrder() {
 
     const { showToast } = useToast();
 
-    // 위 그리드 선택된 데이터
+    // 위 그리드 선택된 생산계획
     const [selectedPlan, setSelectedPlan] = useState<ProdPlanRow | null>(null);
+
+    // 생산지시 로컬 그리드 데이터
     const [localRows, setLocalRows] = useState<ProdOrderRow[]>([]);
     const [resultCnt, setResultCnt] = useState(0);
+
+    // 상태관리
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // 생산계획 선택
     const selectPlan = async (plan: ProdPlanRow) => {
         setSelectedPlan(plan);
         await fetchProdOrders(plan);
     };
 
+
+    /** ======================
+     *  신규 저장 DTO 변환
+     *  ====================== */
     const toInsertDto = (row: ProdOrderRow, seq: number): ProdOrderInsertDto => ({
         prodplanDate: row.prodplanDate,
         prodplanSeq: row.prodplanSeq,
@@ -46,6 +55,10 @@ export function useProdOrder() {
         bigo: row.bigo,
     });
 
+
+    /** ======================
+     *  수정 DTO 변환
+     *  ====================== */
     const toUpdateDto = (row: ProdOrderRow, seq: number): ProdOrderUpdateDto => ({
         prodplanDate: row.prodplanDate,
         prodplanSeq: row.prodplanSeq,
@@ -59,7 +72,11 @@ export function useProdOrder() {
         bigo: row.bigo,
     });
 
-
+    /** ======================
+     *  생산지시 조회
+     *  - PLANNED  : 공정 흐름 기준 조회
+     *  - ORDERED  : 실제 생산지시 조회
+     *  ====================== */
     const fetchProdOrders = async (plan: ProdPlanRow) => {
         try {
             setLoading(true);
@@ -88,7 +105,11 @@ export function useProdOrder() {
         }
     };
 
-
+    /** ======================
+     *  생산지시 저장
+     *  - 신규(insert)
+     *  - 수정(update)
+     *  ====================== */
     const save: () => Promise<{ changed: boolean }> = async () => {
         try {
 
@@ -108,6 +129,7 @@ export function useProdOrder() {
             let changed = false;
             let lastMessage = "저장되었습니다";
 
+            // 수정row
             if (updateRows.length > 0) {
                 const { data } = await productionOrderService.updateProductionOrder(updateRows);
                 if (data.resultCode !== 200) {
@@ -118,6 +140,7 @@ export function useProdOrder() {
                 changed = true;
             }
 
+            // 신규 row
             if (insertRows.length > 0) {
                 const { data } = await productionOrderService.createProductionOrder(insertRows);
                 if (data.resultCode !== 200) {
@@ -125,6 +148,7 @@ export function useProdOrder() {
                     return { changed: false };
                 }
                 lastMessage = data.resultMessage;
+                changed = true;
             }
 
             showToast({
@@ -143,6 +167,10 @@ export function useProdOrder() {
         }
     };
 
+
+    /** ======================
+     *  생산지시 삭제
+     *  ====================== */
     const remove: () => Promise<{ deleted: boolean }> = async () => {
         if (!selectedPlan) return { deleted: false };
         try {
@@ -178,7 +206,9 @@ export function useProdOrder() {
 
     }
 
-
+    /** ======================
+     *  행 분할 (신규 행 추가)
+     *  ====================== */
     const handleAddRow = (index: number) => {
         setLocalRows(prev => {
             const base = prev[index];   // 분할 기준 행
@@ -198,13 +228,18 @@ export function useProdOrder() {
         });
     };
 
+    /** ======================
+     *  행 삭제 (로컬)
+     *  ====================== */
     const handleRemoveRow  = (index: number) => {
         setLocalRows(prev =>
             prev.filter((_, i) => i !== index)
         );
     }
 
-
+    /** ======================
+     *  셀 수정 반영
+     *  ====================== */
     const handleProcessRowUpdate = (newRow: ProdOrderRow) => {
         setLocalRows((prev) =>
             prev.map((r) => (r.idx === newRow.idx ? newRow : r))
@@ -215,13 +250,15 @@ export function useProdOrder() {
 
     return {
         selectedPlan,
+
         orderRows: localRows,
         orderResultCnt: resultCnt,
         loading,
         error,
 
         selectPlan,
-        fetchProdOrders, // 필요하면 유지
+        fetchProdOrders,
+
         save,
         remove,
 
