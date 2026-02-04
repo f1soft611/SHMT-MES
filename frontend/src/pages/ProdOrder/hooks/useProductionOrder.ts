@@ -20,20 +20,20 @@ export function useProductionOrder() {
 
             await prodPlan.fetchProdPlan();
 
-            if (prodOrder.selectedPlan) {
-                const refreshed = prodPlan.planRows.find(
-                    p =>
-                        p.prodplanId === prodOrder.selectedPlan!.prodplanId &&
-                        p.prodplanSeq === prodOrder.selectedPlan!.prodplanSeq
-                );
-
-                if (refreshed) {
-                    await prodOrder.selectPlan({
-                        ...refreshed,
-                        orderFlag: "ORDERED",
-                    });
-                }
-            }
+            // if (prodOrder.selectedPlan) {
+            //     const refreshed = prodPlan.planRows.find(
+            //         p =>
+            //             p.prodplanId === prodOrder.selectedPlan!.prodplanId &&
+            //             p.prodplanSeq === prodOrder.selectedPlan!.prodplanSeq
+            //     );
+            //
+            //     if (refreshed) {
+            //         await prodOrder.selectPlan({
+            //             ...refreshed,
+            //             orderFlag: "ORDERED",
+            //         });
+            //     }
+            // }
         },
         async () => {
             const { deleted } = await prodOrder.remove();

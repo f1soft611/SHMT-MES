@@ -125,6 +125,7 @@ export function useProdOrder() {
                     return { changed: false };
                 }
                 lastMessage = data.resultMessage;
+                changed = true;
             }
 
             showToast({
