@@ -23,31 +23,37 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     dialog.openDialog();
   };
 
-  // 생산지시에서 넘어오는경우 rowData !== null
+
+  /** ======================
+   *  생산지시에서 넘어오는경우 rowData !== null
+   *  - 검색 조건 자동 세팅
+   *  - 즉시 조회 실행
+   *  ====================== */
   useEffect(() => {
     if (!rowData) return;
 
+    // YYYYMMDD → YYYY-MM-DD
     const formatDate = (v: string) =>
       `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`;
 
     if (!rowData?.prodDate) return;
 
     const nextSearch = {
-      dateFrom: formatDate(rowData.prodDate),
-      dateTo: formatDate(rowData.prodDate),
+      dateFrom: formatDate(rowData.prodplanDate),
+      dateTo: formatDate(rowData.prodplanDate),
       workplace: rowData.workcenterCode,
       equipment: '',
       keyword: rowData.prodplanId,
     };
 
-    // 1) 검색필터 UI 세팅
+    // 1) 검색필터 UI 세팅 (화면 표시용)
     prodOrder.setSearch((prev) => ({ ...prev, ...nextSearch }));
 
     // 2) 실제 조회 파라미터 세팅 (조회 트리거)
     prodOrder.setSearchParams({
       ...nextSearch,
-      dateFrom: rowData.prodDate,
-      dateTo: rowData.prodDate,
+      dateFrom: rowData.prodplanDate,
+      dateTo: rowData.prodplanDate,
     });
 
     // 3) 첫 페이지로

@@ -11,11 +11,17 @@ import { WorkplaceWorker } from '../../../types/workplace';
 export function useProdResultDetail(parentRow: ProdResultOrderRow) {
   const { showToast } = useToast();
 
-  const [saving, setSaving] = useState(false);
+  // 상태관리
+  const [saving, setSaving] = useState(false); // 저장 중 여부 (중복 저장 방지)
   const [rows, setRows] = useState<ProductionResultDetail[]>([]);
   const [loading, setLoading] = useState(false);
   const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>([]);
 
+
+  /** ======================
+   *  조회 결과 정규화
+   *  - worker: "A,B" → ["A","B"]
+   *  ====================== */
   const normalizeRows = (rows: ProductionResultDetail[]) =>
     rows.map((r) => ({
       ...r,
@@ -25,6 +31,9 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
           : [],
     }));
 
+  /** ======================
+   *  실적 상세 조회
+   *  ====================== */
   const fetchDetails = async () => {
     setLoading(true);
 
@@ -43,6 +52,10 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     }
   };
 
+
+  /** ======================
+   *  신규 실적 행 추가
+   *  ====================== */
   const addRow = () => {
     // console.log(parentRow);
     setRows((prev) => [
@@ -84,14 +97,17 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
         inputMaterial: '',
 
         tpr504Id: parentRow.tpr504Id,
-        tpr601Id: `NEW-${Date.now()}`,
-        // tpr601wId: 'new',
-        // tpr601mId: 'new',
-        __isModified: true,
+        tpr601Id: `NEW-${Date.now()}`, // 신규 식별자
+        __isModified: true, // 저장 대상 플래그
       },
     ]);
   };
 
+  /** ======================
+   *  행 수정 처리
+   *  - 양품/불량 자동 계산
+   *  - 수정 플래그 설정
+   *  ====================== */
   const processRowUpdate = (
       newRow: ProductionResultDetail,
       oldRow: ProductionResultDetail
@@ -126,11 +142,15 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     return nextRow;
   };
 
+
+  /** ======================
+   *  저장 처리
+   *  - 신규 / 수정 분리
+   *  - 변경사항 없으면 중단
+   *  ====================== */
   const handleSave = async () => {
     if (saving) return false;   // 중복 클릭 차단
     setSaving(true);
-
-    console.log(rows)
 
     const newRows = rows.filter((r) => r.tpr601Id.startsWith('NEW-'));
     const modifiedRows = rows.filter(
@@ -148,6 +168,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     let lastMessage = '저장되었습니다';
 
     try {
+      // 수정 먼저
       if (modifiedRows.length > 0) {
         const { data } = await productionResultService.updateProdResult(
           modifiedRows
@@ -159,6 +180,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
         lastMessage = data.resultMessage;
       }
 
+      // 신규
       if (newRows.length > 0) {
         const { data } = await productionResultService.createProdResult(
           newRows
@@ -196,6 +218,9 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     }
   };
 
+  /** ======================
+   *  실적 행 삭제
+   *  ====================== */
   const handleDeleteRow = async (row: ProductionResultDetail) => {
     // 신규 추가 행 → 바로 제거
     if (row.tpr601Id.startsWith('NEW-')) {
@@ -233,6 +258,9 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     }
   };
 
+  /** ======================
+   *  작업자 목록 조회
+   *  ====================== */
   const fetchWorkers = async () => {
     try {
       const response = await workplaceService.getWorkplaceWorkers(
@@ -250,11 +278,17 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     }
   };
 
+  /** ======================
+   *  작업자 선택 옵션
+   *  ====================== */
   const workerOptions = workplaceWorkers.map((w) => ({
     value: w.workerCode,
     label: w.workerName,
   }));
 
+  /** ======================
+   *  작업장 변경 시 작업자 재조회
+   *  ====================== */
   useEffect(() => {
     if (!parentRow?.workcenterCode) return;
     fetchWorkers();
@@ -266,9 +300,11 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     setRows,
     addRow,
     loading,
+
     processRowUpdate,
     handleSave,
     handleDeleteRow,
+
     fetchDetails,
     workerOptions,
   };
