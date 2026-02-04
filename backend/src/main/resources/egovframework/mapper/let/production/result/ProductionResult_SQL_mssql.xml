@@ -266,12 +266,12 @@
             resultType="int">
         SELECT COUNT(*)+1
         FROM TPR601W
-        WHERE FACTORY_CODE = #{FACTORY_CODE}
-          AND PRODPLAN_DATE = #{PRODPLAN_DATE}
-          AND PRODPLAN_SEQ = #{PRODPLAN_SEQ}
-          AND PRODWORK_SEQ = #{PRODWORK_SEQ}
-          AND WORK_SEQ = #{WORK_SEQ}
-          AND PROD_SEQ = #{PROD_SEQ}
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND PRODPLAN_DATE = #{prodplanDate}
+          AND PRODPLAN_SEQ = #{prodplanSeq}
+          AND PRODWORK_SEQ = #{prodworkSeq}
+          AND WORK_SEQ = #{workSeq}
+          AND PROD_SEQ = #{prodSeq}
     </select>
 
     <!-- 생산실적 작업자 TPR601W 저장   -->
@@ -352,7 +352,7 @@
                            AND X.WORK_SEQ      = A.WORK_SEQ
                            AND X.PROD_SEQ      = A.PROD_SEQ
                          FOR XML PATH(''), TYPE
-                   ).value('.', 'varchar(max)'), 1, 1, '') AS WORKER
+                   ).value('.', 'varchar(max)'), 1, 1, '') AS workerCodes
         FROM TPR601 A
         WHERE A.FACTORY_CODE = '000001'
         AND A.PRODPLAN_DATE = #{prodplanDate}

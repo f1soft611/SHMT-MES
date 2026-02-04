@@ -97,7 +97,7 @@ export interface ProductionResultDetail {
     erpSendFlag: string | null;
     erpRsltIdx: number | null;
 
-    worker: string[] | string;
+    workerCodes: string[];
     inputMaterial: string;
 
     // === 작업자 / 시간 ===
