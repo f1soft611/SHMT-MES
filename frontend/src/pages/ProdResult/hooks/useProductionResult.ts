@@ -33,8 +33,8 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     if (!rowData?.prodDate) return;
 
     const nextSearch = {
-      dateFrom: formatDate(rowData.prodDate),
-      dateTo: formatDate(rowData.prodDate),
+      dateFrom: formatDate(rowData.prodplanDate),
+      dateTo: formatDate(rowData.prodplanDate),
       workplace: rowData.workcenterCode,
       equipment: '',
       keyword: rowData.prodplanId,
@@ -46,8 +46,8 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     // 2) 실제 조회 파라미터 세팅 (조회 트리거)
     prodOrder.setSearchParams({
       ...nextSearch,
-      dateFrom: rowData.prodDate,
-      dateTo: rowData.prodDate,
+      dateFrom: rowData.prodplanDate,
+      dateTo: rowData.prodplanDate,
     });
 
     // 3) 첫 페이지로
