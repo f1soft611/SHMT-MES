@@ -24,7 +24,7 @@ const ProdOrder: React.FC = () => {
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h5">생산지시 관리_newV</Typography>
+                    <Typography variant="h5">생산지시 관리</Typography>
                 </Box>
             </Box>
 
