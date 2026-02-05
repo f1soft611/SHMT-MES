@@ -12,6 +12,7 @@ export interface ProdPlanSearchParams {
     equipment?: string;
     dateFrom: string;   // YYYYMMDD
     dateTo: string;     // YYYYMMDD
+    orderFlag?:string;
     page?: number;
     size?: number;
 }
@@ -92,6 +93,7 @@ export interface ProdOrderRow {
     lotNo: string;
     orderQty: number;
     bigo: string;
+    lasgFlag:string;
     opmanCode2: string;
     optime2: number;
     rstCnt: number;

@@ -401,7 +401,7 @@ export default function ProdOrderDialog({
                             return params.row.RST_CNT <= 0;
                         }}
                         sx={{
-                            fontSize: '0.8rem',                 // 기본 폰트
+                            fontSize: 13,                 // 기본 폰트
                         }}
                     />
                 </Box>

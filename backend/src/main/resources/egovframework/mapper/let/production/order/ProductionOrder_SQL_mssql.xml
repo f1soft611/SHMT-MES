@@ -57,6 +57,9 @@
 			<if test="equipment != null and equipment != ''">
 				AND A.EQUIP_SYS_CD = #{equipment}
 			</if>
+			<if test="orderFlag != null and orderFlag != ''">
+				AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
+			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
@@ -76,6 +79,9 @@
 		<if test="equipment != null and equipment != ''">
 			AND A.EQUIP_SYS_CD = #{equipment}
 		</if>
+		<if test="orderFlag != null and orderFlag != ''">
+			AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
+		</if>
 	</select>
 
 
@@ -83,7 +89,8 @@
 	<select id="selectFlowProcess"
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
 			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
-		SELECT	ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
+		SELECT
+		    ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
 			A.PRODPLAN_ID,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
@@ -161,14 +168,12 @@
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
 			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
 		SELECT
-			ROW_NUMBER() OVER( ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ) AS IDX,
+			A.PRODORDER_ID AS IDX,
 			A.FACTORY_CODE,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
 			A.PRODWORK_SEQ,
 			A.WORK_SEQ AS ORDER_SEQ,
-			A.PRODPLAN_ID,
-			A.PRODORDER_ID,
 			A.WORKORDER_SEQ,
 			A.WORK_CODE,
 			B.WORK_NAME,
@@ -188,6 +193,8 @@
 			A.BIGO,
 			ISNULL(A.OPMAN_CODE2, A.OPMAN_CODE) AS OPMAN_CODE2,
 			ISNULL(A.OPTIME2, A.OPTIME) AS OPTIME2,
+			A.PRODPLAN_ID,
+			A.PRODORDER_ID,
 			(
 			    SELECT COUNT(*)
 				FROM TPR601 X

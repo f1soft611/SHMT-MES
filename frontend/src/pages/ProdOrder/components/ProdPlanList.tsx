@@ -1,15 +1,18 @@
 import React from "react";
 import { useNavigate } from 'react-router-dom';
-import {DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import {DataGrid, GridColDef, GridPaginationModel, GridRowId, GridToolbarContainer} from '@mui/x-data-grid';
 import {
     Box, Stack,
-    Card, CardHeader, CardContent, CardActions, IconButton, Chip,
+    Card, CardHeader, CardContent, CardActions, IconButton, Chip, Button,
 } from '@mui/material';
 import {
     AssignmentAdd as AssignmentAddIcon,
     Input as InputIcon,
+    Save as SaveIcon,
+    Delete as DeleteIcon,
 } from "@mui/icons-material";
 import {ProdPlanRow} from "../../../types/productionOrder";
+import {useSameFlagSelection} from "../hooks/useSameFlagSelection";
 
 interface Props {
     rows: ProdPlanRow[];
@@ -21,11 +24,11 @@ interface Props {
 }
 
 function ProductionActionCell({
-                                  row,
-                                  icon,
-                                  color = "primary",
-                                  onClick,
-                              }: {
+    row,
+    icon,
+    color = "primary",
+    onClick,
+}: {
     row: ProdPlanRow;
     icon: React.ReactNode;
     color?: "primary" | "inherit" | "secondary" | "default";
@@ -56,9 +59,62 @@ function ProductionActionCell({
     );
 }
 
+function BulkSaveToolbar() {
+    return (
+        <GridToolbarContainer sx={{
+            px: 1.5,
+            py: 0.75,
+            borderBottom: '1px solid #e0e0e0',
+            // backgroundColor: '#fafafa',
+        }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                }}
+            >
+                {/* 타이틀 (왼쪽) */}
+                <Box sx={{ fontSize: 16, fontWeight: 600 }}>
+                    생산계획 목록
+                </Box>
+
+                {/* 버튼 영역 (오른쪽) */}
+                <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+                    <Button
+                        startIcon={<SaveIcon />}
+                        variant="contained"
+                        size="small"
+                    >
+                        일괄 지시
+                    </Button>
+                    <Button
+                        startIcon={<DeleteIcon />}
+                        variant="contained"
+                        size="small"
+                        color="error"
+                    >
+                        일괄 취소
+                    </Button>
+                </Box>
+            </Box>
+        </GridToolbarContainer>
+    );
+}
+
 const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange }: Props) => {
 
     const navigate = useNavigate();
+
+    const {
+        selectionModel,
+        selectedRows,
+        onSelectionChange,
+        clear,
+    } = useSameFlagSelection(
+        rows,
+        row => row.prodplanDate + row.prodplanSeq + row.prodworkSeq
+    );
 
     const columns: GridColDef[] = [
         {
@@ -196,30 +252,40 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
     return(
         <Card sx={{boxShadow: 2 }}>
             {/* 타이틀 */}
-            <CardHeader sx={{ p: 1, }}
-                        title="생산계획 목록"
-                        titleTypographyProps={{
-                            fontSize: 16,
-                        }}
-            />
+            {/*<CardHeader sx={{ p: 1, }}*/}
+            {/*            title="생산계획 목록"*/}
+            {/*            titleTypographyProps={{*/}
+            {/*                fontSize: 16,*/}
+            {/*            }}*/}
+            {/*/>*/}
             <CardContent sx={{ p: 0 }}>
                 <Box sx={{ height: 550 }}>
                     <DataGrid
                         rows={rows}
                         columns={columns}
                         loading={loading}
+                        checkboxSelection
                         disableRowSelectionOnClick
+                        rowSelectionModel={selectionModel}
+                        onRowSelectionModelChange={onSelectionChange}
                         getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
+                        
+                        showToolbar
+                        slots={{
+                            toolbar: BulkSaveToolbar,
+                        }}
+
                         pagination
                         paginationMode="server"
                         rowCount={totalCount}
                         pageSizeOptions={[10, 20, 50]}
                         paginationModel={paginationModel}
                         onPaginationModelChange={onPaginationChange}
-                        rowHeight={35}
-                        columnHeaderHeight={40}
+                        rowHeight={30}
+                        columnHeaderHeight={35}
+
                         sx={{
-                            fontSize: 14,
+                            fontSize: 12.5,
                             "& .MuiDataGrid-cell": {
                                 padding: "0 2px",     // 셀 패딩 축소
                             },

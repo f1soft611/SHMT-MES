@@ -16,6 +16,7 @@ export function useProdPlan() {
     equipment: '',
     dateFrom: dateFromStr,
     dateTo: today,
+    orderFlag: 'PLANNED'
   });
 
   // 페이징
