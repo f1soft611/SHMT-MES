@@ -13,6 +13,7 @@ import {
 } from "@mui/icons-material";
 import {ProdPlanRow} from "../../../types/productionOrder";
 import {useSameFlagSelection} from "../hooks/useSameFlagSelection";
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface Props {
     rows: ProdPlanRow[];
@@ -185,6 +186,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             width: 250,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => decodeHtml(params.value ?? ''),
         },
         {
             field: "prodplanDate",

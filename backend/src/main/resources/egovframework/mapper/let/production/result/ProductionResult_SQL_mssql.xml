@@ -33,6 +33,7 @@
             , A.LOT_NO
             , A.ERP_SEND_FLAG
             , A.ERP_WORKDT_IDX
+            , A.BIGO
             , A.OPMAN_CODE
             , A.OPTIME
             , A.OPMAN_CODE2

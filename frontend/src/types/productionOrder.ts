@@ -93,7 +93,7 @@ export interface ProdOrderRow {
     lotNo: string;
     orderQty: number;
     bigo: string;
-    lasgFlag:string;
+    lastFlag:string;
     opmanCode2: string;
     optime2: number;
     rstCnt: number;

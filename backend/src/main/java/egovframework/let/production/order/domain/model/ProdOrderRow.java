@@ -28,7 +28,7 @@ public class ProdOrderRow implements Serializable {
     private String prodorderId;
     private Integer workorderSeq;
 
-    private String lasgFlag;
+    private String lastFlag;
 
     private String workCode;
     private String workName;

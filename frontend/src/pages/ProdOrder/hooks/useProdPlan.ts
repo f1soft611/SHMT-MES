@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import { productionOrderService } from '../../../services/productionOrderService';
 import {ProdPlanRow, ProdPlanSearchParams} from "../../../types/productionOrder";
+import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
 export function useProdPlan() {
+
+  const { showToast } = useToast();
   // 검색 조건
   const today = new Date().toISOString().slice(0, 10);
   const dateFrom = new Date();
@@ -44,13 +47,20 @@ export function useProdPlan() {
     try {
       setLoading(true);
 
-      const response = await productionOrderService.getProdPlans({
+      const data = await productionOrderService.getProdPlans({
         ...search,
         page: paginationModel.page,
         size: paginationModel.pageSize,
       });
-      setRows(response.result.resultList);
-      setResultCnt(response.result.resultCnt ?? 0);
+
+      if(data.resultCode !== 200){
+        showToast({ message: data.resultMessage, severity: 'error' });
+        return;
+      }
+
+      setRows(data.result.resultList);
+      setResultCnt(data.result.resultCnt ?? 0);
+
     } catch (err: any) {
       // 조회실패 초기화
       setRows([]);

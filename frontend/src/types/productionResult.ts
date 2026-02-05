@@ -49,6 +49,7 @@ export interface ProdResultOrderRow {
     // === 지시 / 상태 ===
     workorderSeq: number | null;
     orderFlag: string;
+    bigo: string;
 
     // === 작업자 / 시간 ===
     opmanCode: string;

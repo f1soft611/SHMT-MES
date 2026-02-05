@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material';
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface Props {
     open: boolean;
@@ -215,6 +216,7 @@ export default function ProdOrderDialog({
             headerAlign: "center",
             align: "left",
             editable: true,
+            renderCell: (params) => decodeHtml(params.value ?? ''),
         },
         {
             field: 'opmanCode2',
