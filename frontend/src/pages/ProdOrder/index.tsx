@@ -44,7 +44,8 @@ const ProdOrder: React.FC = () => {
                 onRowClick={prodOrder.handlePlanSelect}
 
                 paginationModel={prodOrder.paginationModel}
-                onPaginationChange={prodOrder.handlePaginationChange} />
+                onPaginationChange={prodOrder.handlePaginationChange}
+                onReload={prodOrder.fetchProdPlan}/>
 
 
             <ProdOrderDialog

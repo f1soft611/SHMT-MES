@@ -51,7 +51,7 @@ public class ProdOrderRow implements Serializable {
     private String orderFlag;
     private String lotNo;
 
-    private BigDecimal orderQty;     // PROD_QTY
+    private int orderQty;     // PROD_QTY
 
     private String bigo;
 
@@ -59,4 +59,5 @@ public class ProdOrderRow implements Serializable {
     private String optime2;
 
     private Integer rstCnt;           // 실적 건수
+    private Integer tpr110dSeq;
 }

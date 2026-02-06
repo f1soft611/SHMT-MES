@@ -44,4 +44,22 @@ public class GlobalExceptionHandler {
         res.put("resultMessage", msg);
         return res;
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public Map<String, Object> handleIllegalStateException(IllegalStateException e) {
+        Map<String, Object> res = new HashMap<>();
+        res.put("resultCode", "FAIL");
+        res.put("message", e.getMessage());
+        res.put("resultMessage", e.getMessage());
+        return res;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Map<String, Object> handleException(Exception e) {
+        Map<String, Object> res = new HashMap<>();
+        res.put("resultCode", "FAIL");
+        res.put("message", "서버 처리 중 오류가 발생했습니다.");
+        res.put("resultMessage", "서버 처리 중 오류가 발생했습니다.");
+        return res;
+    }
 }

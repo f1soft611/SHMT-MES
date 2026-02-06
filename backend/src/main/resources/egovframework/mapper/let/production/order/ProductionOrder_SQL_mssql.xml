@@ -120,7 +120,8 @@
 			'' AS OPTIME2,
 			0 AS RST_CNT,
 			'' AS PRODORDER_ID,
-			0 AS ORDER_SEQ
+			0 AS ORDER_SEQ,
+			D.SEQ AS TPR110D_SEQ
 		FROM TPR301 A
 		    LEFT JOIN TPR301M A1
 			ON A.FACTORY_CODE = A1.FACTORY_CODE
@@ -204,7 +205,8 @@
 				  AND A.PRODPLAN_SEQ = X.PRODPLAN_SEQ
 				  AND A.PRODWORK_SEQ = X.PRODWORK_SEQ
 				  AND A.WORK_SEQ = X.WORK_SEQ
-			) AS RST_CNT
+			) AS RST_CNT,
+		    A.TPR110D_SEQ
 		FROM TPR504 A
 			LEFT JOIN TCO403 A1
 			ON A.ITEM_CODE = A1.MATERIAL_ID
@@ -231,6 +233,7 @@
 			LEFT JOIN TPR110D E1
 			ON E.WORK_ORDER = E1.WORK_ORDER
 			AND A.WORK_CODE = E1.WORK_CODE
+			AND A.TPR110D_SEQ = E1.SEQ
 		WHERE 1=1
 		  AND A.PRODPLAN_DATE = #{prodplanDate}
 		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
@@ -289,7 +292,8 @@
 			OPMAN_CODE,
 			OPTIME,
 		    TPR504ID,
-		    BIGO
+		    BIGO,
+		    TPR110D_SEQ
 		)
 		VALUES (
 			'000001',
@@ -311,7 +315,8 @@
 			#{opmanCode},
 			GETDATE(),
 			#{prodorderId},
-			#{bigo}
+			#{bigo},
+			#{tpr110dSeq}
 		);
 	</insert>
 
@@ -362,5 +367,17 @@
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 		  AND WORK_SEQ = #{orderSeq}
 	</update>
+
+	<!-- 주어진 키로 지시가 등록되어있는지 확인	-->
+	<select id="selectProdPlanOrderedCount"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto"
+			resultType="int">
+		SELECT COUNT(*)
+		FROM TPR504
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+		  AND PRODWORK_SEQ  = #{prodworkSeq}
+	</select>
 
 </mapper>

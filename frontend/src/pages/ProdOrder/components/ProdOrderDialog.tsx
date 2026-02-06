@@ -12,6 +12,8 @@ import {
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
 import { decodeHtml } from '../../../utils/stringUtils';
+import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 interface Props {
     open: boolean;
@@ -43,6 +45,7 @@ export default function ProdOrderDialog({
         { field: 'prodworkSeq'},
         { field: 'prodorderId'},
         { field: 'orderSeq'},
+        { field: 'tpr110dSeq'},
         {
             field: "add",
             headerName: "분할",
@@ -140,8 +143,8 @@ export default function ProdOrderDialog({
             width: 100,
             headerAlign: "center",
             align: "right",
+            type: "number",
             editable: true,
-            renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
             field: "workdtDate",
@@ -153,42 +156,48 @@ export default function ProdOrderDialog({
             renderCell: (params) => {
                 const v = params.row.workdtDate || params.row.prodplanDate;
                 if (!v) return "";
-
-                // 20251212 → 2025-12-12
                 return `${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;
             },
             renderEditCell: (params) => {
-                const raw =
+                const base =
                     params.value ||
                     params.row.workdtDate ||
-                    params.row.prodplanDate ||
-                    "";
+                    params.row.prodplanDate;
 
-                if (!params.value && raw) {
-                    params.api.setEditCellValue({
-                        id: params.id,
-                        field: "workdtDate",
-                        value: raw,
-                    });
-                }
-
-                const formatted =
-                    raw && raw.length === 8
-                        ? `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
-                        : "";
+                const value = base ? dayjs(base, 'YYYYMMDD') : null;
 
                 return (
-                    <input
-                        type="date"
-                        value={formatted}
-                        onChange={(e) => {
-                            params.api.setEditCellValue({
-                                id: params.id,
-                                field: "workdtDate",
-                                value: e.target.value.replace(/-/g, ""),
-                            });
-                        }}
-                    />
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            value={value}
+                            format="YYYY-MM-DD"
+                            onChange={(newValue) => {
+                                params.api.setEditCellValue({
+                                    id: params.id,
+                                    field: 'workdtDate',
+                                    value: newValue ? newValue.format('YYYYMMDD') : null,
+                                });
+                            }}
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    variant: 'outlined',
+                                    sx: {
+                                        // 입력 글씨 크기
+                                        '& .MuiInputBase-root': {
+                                            fontSize: '8px !important',
+                                        },
+                                        '& .MuiInputAdornment-root': {
+                                            marginLeft: 0,
+                                        },
+                                        // 달력 아이콘 크기
+                                        '& .MuiInputAdornment-root svg': {
+                                            fontSize: 14,
+                                        },
+                                    },
+                                },
+                            }} />
+                    </LocalizationProvider>
                 );
             },
         },
@@ -395,12 +404,13 @@ export default function ProdOrderDialog({
                             prodworkSeq: false,
                             prodorderId: false,
                             orderSeq: false,
+                            tpr110dSeq: false,
                         }}   // 화면에서만 숨김
                         processRowUpdate={onProcessRowUpdate}
                         isCellEditable={(params) => {
                             if (params.field === 'bigo') return true;
-                            // RST_CNT > 0 이면 전체 편집 불가
-                            return params.row.RST_CNT <= 0;
+                            // rstCnt > 0 이면 전체 편집 불가
+                            return params.row.rstCnt <= 0;
                         }}
                         sx={{
                             fontSize: 13,                 // 기본 폰트

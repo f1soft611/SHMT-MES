@@ -52,6 +52,7 @@ export function useProdOrder() {
         lotNo: row.lotNo,
         orderQty: row.orderQty,
         bigo: row.bigo,
+        tpr110dSeq: row.tpr110dSeq,
     });
 
 
@@ -92,7 +93,6 @@ export function useProdOrder() {
                 showToast({ message: data.resultMessage, severity: 'error' });
                 return;
             }
-
             setLocalRows(
                 (data.result?.resultList ?? []).map(r => ({
                     ...r,

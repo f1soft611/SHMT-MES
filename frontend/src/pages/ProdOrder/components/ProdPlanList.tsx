@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from 'react-router-dom';
-import {DataGrid, GridColDef, GridPaginationModel, GridRowId, GridToolbarContainer} from '@mui/x-data-grid';
+import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer, GridToolbarProps} from '@mui/x-data-grid';
 import {
     Box, Stack,
-    Card, CardHeader, CardContent, CardActions, IconButton, Chip, Button,
+    Card, CardContent, CardActions, IconButton, Chip, Button,
 } from '@mui/material';
 import {
     AssignmentAdd as AssignmentAddIcon,
@@ -11,9 +11,11 @@ import {
     Save as SaveIcon,
     Delete as DeleteIcon,
 } from "@mui/icons-material";
-import {ProdPlanRow} from "../../../types/productionOrder";
+import {ProdPlanKeyDto, ProdPlanRow} from "../../../types/productionOrder";
 import {useSameFlagSelection} from "../hooks/useSameFlagSelection";
 import { decodeHtml } from '../../../utils/stringUtils';
+import {productionOrderService} from "../../../services/productionOrderService";
+import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
 interface Props {
     rows: ProdPlanRow[];
@@ -22,6 +24,7 @@ interface Props {
     paginationModel: GridPaginationModel;
     totalCount: number;
     onPaginationChange: (model: GridPaginationModel) => void;
+    onReload: () => void;
 }
 
 function ProductionActionCell({
@@ -60,7 +63,12 @@ function ProductionActionCell({
     );
 }
 
-function BulkSaveToolbar() {
+function BulkSaveToolbar({
+                             onBulkOrder,
+                         }: {
+    onBulkOrder: () => void;
+}) {
+
     return (
         <GridToolbarContainer sx={{
             px: 1.5,
@@ -86,6 +94,7 @@ function BulkSaveToolbar() {
                         startIcon={<SaveIcon />}
                         variant="contained"
                         size="small"
+                        onClick={onBulkOrder}
                     >
                         일괄 지시
                     </Button>
@@ -103,8 +112,11 @@ function BulkSaveToolbar() {
     );
 }
 
-const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange }: Props) => {
 
+
+const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange, onReload }: Props) => {
+
+    const { showToast } = useToast();
     const navigate = useNavigate();
 
     const {
@@ -116,6 +128,37 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         rows,
         row => row.prodplanDate + row.prodplanSeq + row.prodworkSeq
     );
+
+    const handleBulkOrder = async () => {
+        if (selectedRows.length === 0) return;
+
+        const targets = selectedRows.filter(
+            row => row.orderFlag !== 'ORDERED'
+        );
+
+        if (targets.length === 0) return;
+
+        const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+        }));
+        const response = await productionOrderService.bulkCreateProductionOrders(payload);
+        if (response.data.resultCode !== 200){
+            showToast({
+                message: response.data.resultMessage ?? "저장 실패",
+                severity: "error",
+            });
+            return;
+        }
+
+        showToast({
+            message: response.data.resultMessage ?? "저장 성공",
+            severity: "success",
+        });
+        clear();
+        onReload();
+    };
 
     const columns: GridColDef[] = [
         {
@@ -253,13 +296,6 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
 
     return(
         <Card sx={{boxShadow: 2 }}>
-            {/* 타이틀 */}
-            {/*<CardHeader sx={{ p: 1, }}*/}
-            {/*            title="생산계획 목록"*/}
-            {/*            titleTypographyProps={{*/}
-            {/*                fontSize: 16,*/}
-            {/*            }}*/}
-            {/*/>*/}
             <CardContent sx={{ p: 0 }}>
                 <Box sx={{ height: 550 }}>
                     <DataGrid
@@ -274,7 +310,9 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                         
                         showToolbar
                         slots={{
-                            toolbar: BulkSaveToolbar,
+                            toolbar: () => (
+                                <BulkSaveToolbar onBulkOrder={handleBulkOrder} />
+                            ),
                         }}
 
                         pagination
