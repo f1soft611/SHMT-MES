@@ -1,9 +1,9 @@
-import React from "react";
+import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
 import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer, GridToolbarProps} from '@mui/x-data-grid';
 import {
     Box, Stack,
-    Card, CardContent, CardActions, IconButton, Chip, Button,
+    Card, CardContent, CardActions, IconButton, Chip, Button, CircularProgress,
 } from '@mui/material';
 import {
     AssignmentAdd as AssignmentAddIcon,
@@ -64,9 +64,10 @@ function ProductionActionCell({
 }
 
 function BulkSaveToolbar({
-                             onBulkOrder,
+                             onBulkOrder,onBulkCancel,
                          }: {
     onBulkOrder: () => void;
+    onBulkCancel: () => void;
 }) {
 
     return (
@@ -103,6 +104,7 @@ function BulkSaveToolbar({
                         variant="contained"
                         size="small"
                         color="error"
+                        onClick={onBulkCancel}
                     >
                         일괄 취소
                     </Button>
@@ -118,6 +120,8 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
 
     const { showToast } = useToast();
     const navigate = useNavigate();
+
+    const [bulkLoading, setBulkLoading] = useState(false);
 
     const {
         selectionModel,
@@ -143,22 +147,93 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
         }));
-        const response = await productionOrderService.bulkCreateProductionOrders(payload);
-        if (response.data.resultCode !== 200){
+
+        try {
+            setBulkLoading(true);
+            const response = await productionOrderService.bulkCreateProductionOrders(payload);
+            if (response.data.resultCode !== 200){
+                showToast({
+                    message: response.data.resultMessage ?? "저장 실패",
+                    severity: "error",
+                });
+                return;
+            }
+
             showToast({
-                message: response.data.resultMessage ?? "저장 실패",
+                message: response.data.resultMessage ?? "저장 성공",
+                severity: "success",
+            });
+            clear();
+            onReload();
+        } catch (e){
+            showToast({
+                message: "서버 오류가 발생했습니다.",
                 severity: "error",
+            });
+        } finally {
+            setBulkLoading(false);
+        }
+
+
+    };
+
+    const handleBulkCancel = async () => {
+        if (selectedRows.length === 0){
+            showToast({
+                message: "대상을 선택해주세요.",
+                severity: "warning",
             });
             return;
         }
+        // 이미 지시된 것만 취소 대상
+        const targets = selectedRows.filter(
+            row => row.orderFlag === 'ORDERED'
+        );
 
-        showToast({
-            message: response.data.resultMessage ?? "저장 성공",
-            severity: "success",
-        });
-        clear();
-        onReload();
-    };
+        if (targets.length === 0) {
+            showToast({
+                message: "취소할 생산지시가 없습니다.",
+                severity: "warning",
+            });
+            clear();
+            return;
+        }
+
+        const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+        }));
+
+        try {
+            setBulkLoading(true);
+            const response = await productionOrderService.bulkCancelProductionOrders(payload);
+
+            if (response.data.resultCode !== 200) {
+                showToast({
+                    message: response.data.resultMessage ?? "취소 실패",
+                    severity: "error",
+                });
+                return;
+            }
+
+            showToast({
+                message: response.data.resultMessage ?? "취소 성공",
+                severity: "success",
+            });
+
+            clear();
+            onReload();
+        } catch (e) {
+            showToast({
+                message: "서버 오류가 발생했습니다.",
+                severity: "error",
+            });
+        } finally {
+            setBulkLoading(false);
+        }
+
+    }
 
     const columns: GridColDef[] = [
         {
@@ -296,7 +371,22 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
 
     return(
         <Card sx={{boxShadow: 2 }}>
-            <CardContent sx={{ p: 0 }}>
+            <CardContent sx={{ p: 0, position: 'relative' }}>
+                {bulkLoading && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            zIndex: 10,
+                            backgroundColor: 'rgba(255,255,255,0.6)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <CircularProgress size={48} />
+                    </Box>
+                )}
                 <Box sx={{ height: 550 }}>
                     <DataGrid
                         rows={rows}
@@ -311,7 +401,10 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                         showToolbar
                         slots={{
                             toolbar: () => (
-                                <BulkSaveToolbar onBulkOrder={handleBulkOrder} />
+                                <BulkSaveToolbar
+                                    onBulkOrder={handleBulkOrder}
+                                    onBulkCancel={handleBulkCancel}
+                                />
                             ),
                         }}
 

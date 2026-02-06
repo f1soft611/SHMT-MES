@@ -268,7 +268,24 @@ public class EgovProductionOrderApiController {
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS );
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산계획 일괄지시 성공" );
+    }
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/bulk-cancel")
+    public ResultVO bulkCancelProductionOrders(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        productionOrderService.bulkCancelProductionOrders(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소 성공" );
     }
 
 

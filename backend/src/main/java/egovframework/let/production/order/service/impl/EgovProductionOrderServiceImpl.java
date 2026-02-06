@@ -199,6 +199,39 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	}
 
+	@Override
+	@Transactional
+	public void bulkCancelProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
+		if (plans == null || plans.isEmpty()) return;
+
+		for (ProdPlanKeyDto plan : plans) {
+			// 1. 생산실적 존재 여부 확인
+			ProdOrderDeleteDto dto = new ProdOrderDeleteDto();
+			dto.setProdplanDate(plan.getProdplanDate());
+			dto.setProdplanSeq(plan.getProdplanSeq());
+			dto.setProdworkSeq(plan.getProdworkSeq());
+			int cnt = productionOrderDAO.selectProdResultCount(dto);
+			if (cnt > 0) {
+				throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.<br>" +
+						"key: "+plan.getProdplanDate()+","+plan.getProdplanSeq()+","+plan.getProdworkSeq());
+			}
+
+			// 2. 생산지시 삭제
+			productionOrderDAO.deleteProductionOrder(dto);
+
+			// 3. 생산계획 order_flag 갱신 TPR301.ORDER_FLAG = PLANNED
+			updatePlanOrderFlag(
+					plan.getProdplanDate(),
+					plan.getProdplanSeq(),
+					plan.getProdworkSeq(),
+					"PLANNED"
+			);
+
+
+		}
+
+	}
+
 
 
 	private boolean isAlreadyOrdered(ProdPlanKeyDto plan) throws Exception {
