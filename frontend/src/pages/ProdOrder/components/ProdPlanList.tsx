@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
-import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer, GridToolbarProps} from '@mui/x-data-grid';
+import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer} from '@mui/x-data-grid';
 import {
     Box, Stack,
     Card, CardContent, CardActions, IconButton, Chip, Button, CircularProgress,
