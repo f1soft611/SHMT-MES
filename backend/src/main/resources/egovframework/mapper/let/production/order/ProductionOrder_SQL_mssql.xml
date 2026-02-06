@@ -57,6 +57,9 @@
 			<if test="equipment != null and equipment != ''">
 				AND A.EQUIP_SYS_CD = #{equipment}
 			</if>
+			<if test="orderFlag != null and orderFlag != ''">
+				AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
+			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
@@ -76,6 +79,9 @@
 		<if test="equipment != null and equipment != ''">
 			AND A.EQUIP_SYS_CD = #{equipment}
 		</if>
+		<if test="orderFlag != null and orderFlag != ''">
+			AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
+		</if>
 	</select>
 
 
@@ -83,7 +89,8 @@
 	<select id="selectFlowProcess"
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
 			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
-		SELECT	ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
+		SELECT
+		    ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
 			A.PRODPLAN_ID,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
@@ -113,7 +120,8 @@
 			'' AS OPTIME2,
 			0 AS RST_CNT,
 			'' AS PRODORDER_ID,
-			0 AS ORDER_SEQ
+			0 AS ORDER_SEQ,
+			D.SEQ AS TPR110D_SEQ
 		FROM TPR301 A
 		    LEFT JOIN TPR301M A1
 			ON A.FACTORY_CODE = A1.FACTORY_CODE
@@ -161,14 +169,12 @@
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
 			resultType="egovframework.let.production.order.domain.model.ProdOrderRow">
 		SELECT
-			ROW_NUMBER() OVER( ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ) AS IDX,
+			A.PRODORDER_ID AS IDX,
 			A.FACTORY_CODE,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
 			A.PRODWORK_SEQ,
 			A.WORK_SEQ AS ORDER_SEQ,
-			A.PRODPLAN_ID,
-			A.PRODORDER_ID,
 			A.WORKORDER_SEQ,
 			A.WORK_CODE,
 			B.WORK_NAME,
@@ -186,8 +192,11 @@
 			A.LOT_NO,
 			A.PROD_QTY AS ORDER_QTY,
 			A.BIGO,
+			E1.LAST_FLAG,
 			ISNULL(A.OPMAN_CODE2, A.OPMAN_CODE) AS OPMAN_CODE2,
 			ISNULL(A.OPTIME2, A.OPTIME) AS OPTIME2,
+			A.PRODPLAN_ID,
+			A.PRODORDER_ID,
 			(
 			    SELECT COUNT(*)
 				FROM TPR601 X
@@ -196,7 +205,8 @@
 				  AND A.PRODPLAN_SEQ = X.PRODPLAN_SEQ
 				  AND A.PRODWORK_SEQ = X.PRODWORK_SEQ
 				  AND A.WORK_SEQ = X.WORK_SEQ
-			) AS RST_CNT
+			) AS RST_CNT,
+		    A.TPR110D_SEQ
 		FROM TPR504 A
 			LEFT JOIN TCO403 A1
 			ON A.ITEM_CODE = A1.MATERIAL_ID
@@ -216,6 +226,14 @@
 
 			LEFT JOIN TPR151 D1
 			ON D.EQUIP_SYS_CD = D1.EQUIP_SYS_CD
+
+			LEFT JOIN TPR112 E
+			ON E.PROD_CODE_ID = A.ITEM_CODE
+
+			LEFT JOIN TPR110D E1
+			ON E.WORK_ORDER = E1.WORK_ORDER
+			AND A.WORK_CODE = E1.WORK_CODE
+			AND A.TPR110D_SEQ = E1.SEQ
 		WHERE 1=1
 		  AND A.PRODPLAN_DATE = #{prodplanDate}
 		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
@@ -274,7 +292,8 @@
 			OPMAN_CODE,
 			OPTIME,
 		    TPR504ID,
-		    BIGO
+		    BIGO,
+		    TPR110D_SEQ
 		)
 		VALUES (
 			'000001',
@@ -296,7 +315,8 @@
 			#{opmanCode},
 			GETDATE(),
 			#{prodorderId},
-			#{bigo}
+			#{bigo},
+			#{tpr110dSeq}
 		);
 	</insert>
 
@@ -347,5 +367,17 @@
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 		  AND WORK_SEQ = #{orderSeq}
 	</update>
+
+	<!-- 주어진 키로 지시가 등록되어있는지 확인	-->
+	<select id="selectProdPlanOrderedCount"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto"
+			resultType="int">
+		SELECT COUNT(*)
+		FROM TPR504
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+		  AND PRODWORK_SEQ  = #{prodworkSeq}
+	</select>
 
 </mapper>

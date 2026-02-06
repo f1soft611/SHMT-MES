@@ -105,6 +105,9 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         update("ProductionOrderDAO.updateProductionOrder", dto);
     }
 
-
+    // 생산지시] key로 이미 등록되어있는지 확인
+    public int selectProdPlanOrderedCount(ProdPlanKeyDto dto) throws Exception {
+        return (Integer)selectOne("ProductionOrderDAO.selectProdPlanOrderedCount", dto);
+    }
 
 }

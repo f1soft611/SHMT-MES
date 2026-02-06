@@ -88,7 +88,6 @@ public class EgovProductionResultApiController {
 
 	/**
 	 * 생산실적을 등록한다
-	 *
 	 * @param details 생산실적 등록 요청 정보
 	 * @param user 사용자 정보
 	 * @return ResultVO
@@ -124,7 +123,6 @@ public class EgovProductionResultApiController {
 
 	/**
 	 * 생산실적을 수정한다
-	 *
 	 * @param details 생산실적 수정 요청 정보
 	 * @param user 사용자 정보
 	 * @return ResultVO

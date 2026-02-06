@@ -104,7 +104,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
             headerAlign: 'center',
             align: 'right', editable: true },
         {
-            field: "worker",
+            field: "workerCodes",
             headerName: "작업자",
             width: 150,
             headerAlign: 'center',
@@ -128,20 +128,32 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                 return `${labels[0]} 외 ${labels.length - 1}명`;
             },
             renderEditCell: (params) => {
-                const value = Array.isArray(params.value) ? params.value : [];
+                const value: string[] = Array.isArray(params.value) ? params.value : [];
 
                 return (
                     <Select
                         multiple
                         fullWidth
                         value={value}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                e.stopPropagation(); // 🔥 DataGrid로 안 넘어가게
+                            }
+                        }}
                         onChange={(e) =>
                             params.api.setEditCellValue({
                                 id: params.id,
                                 field: params.field,
-                                value: e.target.value,
+                                value: e.target.value as string[],
                             })
                         }
+                        onClose={() => {
+                            params.api.stopCellEditMode({
+                                id: params.id,
+                                field: params.field,
+                            });
+                        }}
                         renderValue={(selected) =>
                             details.workerOptions
                             .filter(o => selected.includes(o.value))
@@ -212,7 +224,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
             <DataGrid
                 rows={details.rows}
                 columns={columns}
-                getRowId={(row) => `${row.factoryCode}-${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq}-${row.prodSeq}`}
+                getRowId={(row) => row.tpr601Id}
                 autoHeight
                 hideFooter
                 rowHeight={35}

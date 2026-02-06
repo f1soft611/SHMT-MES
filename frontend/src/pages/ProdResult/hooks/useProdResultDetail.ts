@@ -22,13 +22,14 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
    *  조회 결과 정규화
    *  - worker: "A,B" → ["A","B"]
    *  ====================== */
-  const normalizeRows = (rows: ProductionResultDetail[]) =>
+  const normalizeRows = (rows: any[]): ProductionResultDetail[] =>
     rows.map((r) => ({
       ...r,
-      worker:
-        typeof r.worker === 'string' && r.worker.length > 0
-          ? r.worker.split(',')
-          : [],
+      workerCodes: Array.isArray(r.workerCodes)
+          ? r.workerCodes
+          : r.workerCodes
+              ? r.workerCodes.split(',')
+              : [],
     }));
 
   /** ======================
@@ -93,7 +94,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
         erpSendFlag: null,
         erpRsltIdx: null,
 
-        worker: [],
+        workerCodes: [],
         inputMaterial: '',
 
         tpr504Id: parentRow.tpr504Id,
@@ -116,7 +117,11 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
     const good = Number(newRow.goodQty ?? 0);
     const bad  = Number(newRow.badQty ?? 0);
 
-    let nextRow = { ...newRow };
+    // 기존 row를 기준으로 시작
+    let nextRow: ProductionResultDetail = {
+      ...oldRow,
+      ...newRow, // newRow가 가진 값만 덮어씀 (workerCodes 포함)
+    };
 
     // 양품 수정 → 불량 자동
     if (newRow.goodQty !== oldRow.goodQty) {
@@ -282,7 +287,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
    *  작업자 선택 옵션
    *  ====================== */
   const workerOptions = workplaceWorkers.map((w) => ({
-    value: w.workerCode,
+    value: w.workerCode.trim(),
     label: w.workerName,
   }));
 

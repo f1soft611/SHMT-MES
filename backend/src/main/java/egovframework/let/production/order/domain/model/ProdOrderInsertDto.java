@@ -26,4 +26,5 @@ public class ProdOrderInsertDto {
 
     private String opmanCode;
     private String bigo;
+    private Integer tpr110dSeq;
 }

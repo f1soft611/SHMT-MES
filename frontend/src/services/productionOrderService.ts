@@ -5,7 +5,7 @@ import {
 import {
   ProdOrderDeleteDto, ProdOrderInsertDto,
   ProdOrderRow,
-  ProdOrderSearchParam, ProdOrderUpdateDto,
+  ProdOrderSearchParam, ProdOrderUpdateDto, ProdPlanKeyDto,
   ProdPlanPageResult,
   ProdPlanRow,
   ProdPlanSearchParams
@@ -131,4 +131,10 @@ export const productionOrderService = {
 
   // 생산지시 삭제
   deleteProductionOrders: (data: ProdOrderDeleteDto) => apiClient.post('/api/production-orders/delete', data),
+
+  // 생산지시 일괄 저장
+  bulkCreateProductionOrders: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/bulk', data),
+
+  // 생산지시 일괄 취소
+  bulkCancelProductionOrders: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/bulk-cancel', data),
 };

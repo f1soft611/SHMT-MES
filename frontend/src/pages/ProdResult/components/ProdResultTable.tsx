@@ -14,6 +14,7 @@ import {
     ProductionResultDetail
 } from "../../../types/productionResult";
 import ProdResultList from "./ProdResultList";
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface Props {
     rows: ProdResultOrderRow[];
@@ -85,6 +86,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                     <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>생산품목명</TableCell>
                                     <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산품목규격</TableCell>
                                     <TableCell width={80} align="center" sx={{ padding: "0 2px" }}>작업지시량</TableCell>
+                                    <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>비고</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>작업시작일</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -92,7 +94,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                 {rows.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={13}
+                                            colSpan={14}
                                             align="center"
                                             sx={{ height: 80, color: 'text.secondary' }}
                                         >
@@ -144,18 +146,21 @@ function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
         toggleOpen();
     };
 
-    const EllipsisCell = ({ value }: { value: string }) => (
-        <Box
-            sx={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-            }}
-            title={value}
-        >
-            {value}
-        </Box>
-    );
+    const EllipsisCell = ({ value }: { value: string }) => {
+        const text = decodeHtml(value);
+        return (
+            <Box
+                sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                }}
+                title={text}
+            >
+                {text}
+            </Box>
+        );
+    }
 
 
     return (
@@ -204,6 +209,9 @@ function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
                     {row.prodQty.toLocaleString()}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
+                    <EllipsisCell value={row.bigo}/>
+                </TableCell>
+                <TableCell align="center" sx={{ padding: "0 2px" }}>
                     {row.workdtDate
                         ? dayjs(row.workdtDate).format("YYYY-MM-DD")
                         : ""}
@@ -212,7 +220,7 @@ function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
 
             {/* 디테일 행 */}
             <TableRow>
-                <TableCell colSpan={13} sx={{ p: 0 }}>
+                <TableCell colSpan={14} sx={{ p: 0 }}>
                     <Collapse in={open} timeout="auto">
                         <Box sx={{ ml:'100px', backgroundColor: '#ddd' }}>
                             <ProdResultList

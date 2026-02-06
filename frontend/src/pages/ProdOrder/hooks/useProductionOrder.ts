@@ -71,6 +71,7 @@ export function useProductionOrder() {
         search: prodPlan.search,
         handleSearch: prodPlan.handleSearch,
         handleSearchChange: prodPlan.handleSearchChange,
+        fetchProdPlan: prodPlan.fetchProdPlan,
 
         // order
         selectedPlan: prodOrder.selectedPlan,

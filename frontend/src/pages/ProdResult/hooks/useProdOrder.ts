@@ -54,6 +54,7 @@ export function useProdOrder() {
         size: pagination.pageSize,
       };
       const response = await productionResultService.getProdOrders(params);
+
       const list = response.result?.resultList ?? [];
 
       // 숫자 필드 정규화

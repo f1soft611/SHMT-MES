@@ -40,6 +40,7 @@ public class ProdResultOrderRow {
 
     private String orderFlag;
     private Integer workorderSeq;
+    private String bigo;
 
     private String erpSendFlag;
     private Integer erpWorkdtIdx;
