@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import dayjs from "dayjs";
 import {
     Chip, IconButton, Box,
@@ -14,6 +14,7 @@ import {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
 import { decodeHtml } from '../../../utils/stringUtils';
 import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 
 interface Props {
     open: boolean;
@@ -37,6 +38,8 @@ export default function ProdOrderDialog({
     onAddRow, onRemoveRow,
     onProcessRowUpdate, canWrite
 }:Props){
+
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     const columns: GridColDef[] =[
         { field: 'prodplanId'},
@@ -251,198 +254,218 @@ export default function ProdOrderDialog({
     };
 
     return(
-        <Dialog open={open} maxWidth="xl" fullWidth>
-            <DialogTitle>
-                생산지시 등록
-            </DialogTitle>
-            <DialogContent dividers={true}>
-                {/* 선택된 생산계획 요약 */}
-                {plan && (
-                    <Box
-                        sx={{
-                            mb: 1.5,
-                            px: 2,
-                            py: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 3,
-                            backgroundColor: 'action.hover',
-                            borderRadius: 1,
-                        }}
-                    >
-                        {/* 지시상태 */}
-                        <Chip
-                            label={plan.orderFlag}
-                            size="small"
-                            color={plan.orderFlag === 'ORDERED' ? 'primary' : 'default'}
-                        />
-
-                        {/* 작업장 */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                작업장
-                            </Typography>
-                            <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.workcenterName}
-                            </Typography>
-                        </Box>
-
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 0.3, opacity: 1 }}
-                        />
-
-                        {/* 설비명 */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                설비
-                            </Typography>
-                            <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.equipmentName}({plan.equipSysCd})
-                            </Typography>
-                        </Box>
-
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 0.3, opacity: 1 }}
-                        />
-
-                        {/* 생산계획 ID */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                생산계획 ID
-                            </Typography>
-                            <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.prodplanId}
-                            </Typography>
-                        </Box>
-
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 0.3, opacity: 1 }}
-                        />
-
-                        {/* 생산계획일 */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                생산계획일
-                            </Typography>
-                            <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {formatYmd(plan.prodplanDate)}
-                            </Typography>
-                        </Box>
-
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 0.3, opacity: 1 }}
-                        />
-
-                        {/* 품목명 */}
+        <>
+            <Dialog open={open} maxWidth="xl" fullWidth>
+                <DialogTitle>
+                    생산지시 등록
+                </DialogTitle>
+                <DialogContent dividers={true}>
+                    {/* 선택된 생산계획 요약 */}
+                    {plan && (
                         <Box
                             sx={{
+                                mb: 1.5,
+                                px: 2,
+                                py: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 1,
-                                minWidth: 0, // ellipsis 필수
+                                gap: 3,
+                                backgroundColor: 'action.hover',
+                                borderRadius: 1,
                             }}
                         >
-                            <Typography variant="caption" color="text.secondary">
-                                품목명
-                            </Typography>
-                            <Tooltip title={plan.itemName} arrow>
-                            <Typography
-                                fontWeight={600}
+                            {/* 지시상태 */}
+                            <Chip
+                                label={plan.orderFlag}
+                                size="small"
+                                color={plan.orderFlag === 'ORDERED' ? 'primary' : 'default'}
+                            />
+
+                            {/* 작업장 */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    작업장
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.workcenterName}
+                                </Typography>
+                            </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* 설비명 */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    설비
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.equipmentName}({plan.equipSysCd})
+                                </Typography>
+                            </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* 생산계획 ID */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    생산계획 ID
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.prodplanId}
+                                </Typography>
+                            </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* 생산계획일 */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    생산계획일
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {formatYmd(plan.prodplanDate)}
+                                </Typography>
+                            </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* 품목명 */}
+                            <Box
                                 sx={{
-                                    maxWidth: 220,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    fontSize: '0.9rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    minWidth: 0, // ellipsis 필수
                                 }}
                             >
-                                {plan.itemName}
-                            </Typography>
-                            </Tooltip>
-                        </Box>
+                                <Typography variant="caption" color="text.secondary">
+                                    품목명
+                                </Typography>
+                                <Tooltip title={plan.itemName} arrow>
+                                    <Typography
+                                        fontWeight={600}
+                                        sx={{
+                                            maxWidth: 220,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            fontSize: '0.9rem',
+                                        }}
+                                    >
+                                        {plan.itemName}
+                                    </Typography>
+                                </Tooltip>
+                            </Box>
 
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={{ mx: 0.3, opacity: 1 }}
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* 계획량 */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    계획량
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.prodQty?.toLocaleString()}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
+
+                    <Box sx={{ height: 400}}>
+                        <DataGrid
+                            columns={columns}
+                            rows={rows}
+                            getRowId={(row) => row.idx}
+                            hideFooter
+                            hideFooterPagination
+                            hideFooterSelectedRowCount
+                            rowHeight={35}
+                            columnHeaderHeight={40}
+                            columnVisibilityModel={{
+                                prodplanId: false,
+                                prodplanDate: false,
+                                prodplanSeq: false,
+                                prodworkSeq: false,
+                                prodorderId: false,
+                                orderSeq: false,
+                                tpr110dSeq: false,
+                            }}   // 화면에서만 숨김
+                            processRowUpdate={onProcessRowUpdate}
+                            isCellEditable={(params) => {
+                                if (params.field === 'bigo') return true;
+                                // rstCnt > 0 이면 전체 편집 불가
+                                return params.row.rstCnt <= 0;
+                            }}
+                            sx={{
+                                fontSize: 13,                 // 기본 폰트
+                            }}
                         />
-
-                        {/* 계획량 */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                                계획량
-                            </Typography>
-                            <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                {plan.prodQty?.toLocaleString()}
-                            </Typography>
-                        </Box>
                     </Box>
-                )}
-
-                <Box sx={{ height: 400}}>
-                    <DataGrid
-                        columns={columns}
-                        rows={rows}
-                        getRowId={(row) => row.idx}
-                        hideFooter
-                        hideFooterPagination
-                        hideFooterSelectedRowCount
-                        rowHeight={35}
-                        columnHeaderHeight={40}
-                        columnVisibilityModel={{
-                            prodplanId: false,
-                            prodplanDate: false,
-                            prodplanSeq: false,
-                            prodworkSeq: false,
-                            prodorderId: false,
-                            orderSeq: false,
-                            tpr110dSeq: false,
-                        }}   // 화면에서만 숨김
-                        processRowUpdate={onProcessRowUpdate}
-                        isCellEditable={(params) => {
-                            if (params.field === 'bigo') return true;
-                            // rstCnt > 0 이면 전체 편집 불가
-                            return params.row.rstCnt <= 0;
-                        }}
-                        sx={{
-                            fontSize: 13,                 // 기본 폰트
-                        }}
-                    />
-                </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button
-                    onClick={onSubmit}
-                    variant="contained"
-                    color="primary"
-                    disabled={!canWrite}
-                >
-                    {plan?.orderFlag === 'ORDERED' ? '수정' : '저장'}
-                </Button>
-                {plan?.orderFlag === 'ORDERED' && (
+                </DialogContent>
+                <DialogActions>
                     <Button
+                        onClick={onSubmit}
                         variant="contained"
-                        color="error"
+                        color="primary"
                         disabled={!canWrite}
-                        onClick={() => {
-                            if (window.confirm('이미 생성된 생산지시를 삭제하시겠습니까?')) {
-                                onDelete();
-                            }
-                        }}
                     >
-                        삭제
+                        {plan?.orderFlag === 'ORDERED' ? '수정' : '저장'}
                     </Button>
-                )}
-                <Button onClick={onClose}>취소</Button>
-            </DialogActions>
-        </Dialog>
+                    {plan?.orderFlag === 'ORDERED' && (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            disabled={!canWrite}
+                            onClick={() => setDeleteConfirmOpen(true)}
+                        >
+                            삭제
+                        </Button>
+                    )}
+                    <Button onClick={onClose}>취소</Button>
+                </DialogActions>
+            </Dialog>
+
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                title="생산지시 취소"
+                message={
+                    <>
+                        이미 생성된 <b>생산지시를 삭제</b>하시겠습니까?
+                        <br />
+                        <span style={{ color: '#888', fontSize: 13 }}>
+                            ※ 생산실적이 등록된 지시는 취소할 수 없습니다.
+                        </span>
+                    </>
+                }
+                confirmText="삭제"
+                cancelText="닫기"
+                onClose={() => setDeleteConfirmOpen(false)}
+                onConfirm={async () => {
+                    setDeleteConfirmOpen(false);
+                    await onDelete();
+                }}
+            />
+        </>
+
     )
 }

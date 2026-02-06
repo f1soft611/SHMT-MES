@@ -16,6 +16,7 @@ import {useSameFlagSelection} from "../hooks/useSameFlagSelection";
 import { decodeHtml } from '../../../utils/stringUtils';
 import {productionOrderService} from "../../../services/productionOrderService";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 
 interface Props {
     rows: ProdPlanRow[];
@@ -122,6 +123,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
     const navigate = useNavigate();
 
     const [bulkLoading, setBulkLoading] = useState(false);
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
     const {
         selectionModel,
@@ -177,14 +179,19 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
 
     };
 
-    const handleBulkCancel = async () => {
-        if (selectedRows.length === 0){
+    const onClickBulkCancel = () => {
+        if (selectedRows.length === 0) {
             showToast({
                 message: "대상을 선택해주세요.",
                 severity: "warning",
             });
             return;
         }
+
+        setCancelConfirmOpen(true);
+    };
+
+    const handleBulkCancel = async () => {
         // 이미 지시된 것만 취소 대상
         const targets = selectedRows.filter(
             row => row.orderFlag === 'ORDERED'
@@ -370,70 +377,95 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
     ];
 
     return(
-        <Card sx={{boxShadow: 2 }}>
-            <CardContent sx={{ p: 0, position: 'relative' }}>
-                {bulkLoading && (
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            inset: 0,
-                            zIndex: 10,
-                            backgroundColor: 'rgba(255,255,255,0.6)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <CircularProgress size={48} />
+        <>
+            <Card sx={{boxShadow: 2 }}>
+                <CardContent sx={{ p: 0, position: 'relative' }}>
+                    {bulkLoading && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                zIndex: 10,
+                                backgroundColor: 'rgba(255,255,255,0.6)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <CircularProgress size={48} />
+                        </Box>
+                    )}
+                    <Box sx={{ height: 550 }}>
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            loading={loading}
+                            checkboxSelection
+                            disableRowSelectionOnClick
+                            rowSelectionModel={selectionModel}
+                            onRowSelectionModelChange={onSelectionChange}
+                            getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
+
+                            showToolbar
+                            slots={{
+                                toolbar: () => (
+                                    <BulkSaveToolbar
+                                        onBulkOrder={handleBulkOrder}
+                                        onBulkCancel={onClickBulkCancel}
+                                    />
+                                ),
+                            }}
+
+                            pagination
+                            paginationMode="server"
+                            rowCount={totalCount}
+                            pageSizeOptions={[10, 20, 50]}
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={onPaginationChange}
+                            rowHeight={30}
+                            columnHeaderHeight={35}
+
+                            sx={{
+                                fontSize: 12.5,
+                                "& .MuiDataGrid-cell": {
+                                    padding: "0 2px",     // 셀 패딩 축소
+                                },
+                                '& .MuiDataGrid-cell:focus': {
+                                    outline: 'none',
+                                },
+                                '& .MuiDataGrid-row:hover': {
+                                    backgroundColor: 'action.hover',
+                                },
+                            }}
+                        />
                     </Box>
-                )}
-                <Box sx={{ height: 550 }}>
-                    <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        loading={loading}
-                        checkboxSelection
-                        disableRowSelectionOnClick
-                        rowSelectionModel={selectionModel}
-                        onRowSelectionModelChange={onSelectionChange}
-                        getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
-                        
-                        showToolbar
-                        slots={{
-                            toolbar: () => (
-                                <BulkSaveToolbar
-                                    onBulkOrder={handleBulkOrder}
-                                    onBulkCancel={handleBulkCancel}
-                                />
-                            ),
-                        }}
+                </CardContent>
+                <CardActions sx={{ display: 'none' }} />
+            </Card>
 
-                        pagination
-                        paginationMode="server"
-                        rowCount={totalCount}
-                        pageSizeOptions={[10, 20, 50]}
-                        paginationModel={paginationModel}
-                        onPaginationModelChange={onPaginationChange}
-                        rowHeight={30}
-                        columnHeaderHeight={35}
+            <ConfirmDialog
+                open={cancelConfirmOpen}
+                title="생산지시 일괄 취소"
+                message={
+                    <>
+                        선택한 생산지시를 <b>일괄 취소</b>하시겠습니까?
+                        <br />
+                        <span style={{ color: '#888', fontSize: 13 }}>
+                ※ 생산실적이 등록된 지시는 취소할 수 없습니다.
+            </span>
+                    </>
+                }
+                confirmText="일괄 취소"
+                cancelText="닫기"
+                loading={bulkLoading}
+                onClose={() => setCancelConfirmOpen(false)}
+                onConfirm={async () => {
+                    setCancelConfirmOpen(false);
+                    await handleBulkCancel();
+                }}
+            />
+        </>
 
-                        sx={{
-                            fontSize: 12.5,
-                            "& .MuiDataGrid-cell": {
-                                padding: "0 2px",     // 셀 패딩 축소
-                            },
-                            '& .MuiDataGrid-cell:focus': {
-                                outline: 'none',
-                            },
-                            '& .MuiDataGrid-row:hover': {
-                                backgroundColor: 'action.hover',
-                            },
-                        }}
-                    />
-                </Box>
-            </CardContent>
-            <CardActions sx={{ display: 'none' }} />
-        </Card>
     )
 }
 

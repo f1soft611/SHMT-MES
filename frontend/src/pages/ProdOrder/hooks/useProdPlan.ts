@@ -25,7 +25,7 @@ export function useProdPlan() {
   // 페이징
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
 
   // 조회 결과 state
