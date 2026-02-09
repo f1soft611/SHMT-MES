@@ -193,18 +193,14 @@ public class EgovProductionOrderApiController {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
 
-        try {
-            // 로그인 사용자 세팅
-            for (ProdOrderInsertDto dto : orders) {
-                dto.setOpmanCode(user.getUniqId());
-            }
-
-            productionOrderService.insertProductionOrders(orders);
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 등록이 완료되었습니다.");
-
-        } catch (IllegalStateException e) {
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
+        // 로그인 사용자 세팅
+        for (ProdOrderInsertDto dto : orders) {
+            dto.setOpmanCode(user.getUniqId());
         }
+
+        productionOrderService.insertProductionOrders(orders);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 등록이 완료되었습니다.");
+
     }
 
     /**
@@ -223,18 +219,14 @@ public class EgovProductionOrderApiController {
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
 
-        try {
-            // 로그인 사용자 세팅
-            for (ProdOrderUpdateDto dto : orders) {
-                dto.setOpmanCode(user.getUniqId());
-            }
-
-            productionOrderService.updateProductionOrders(orders);
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 수정이 완료되었습니다.");
-
-        } catch (IllegalStateException e) {
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
+        // 로그인 사용자 세팅
+        for (ProdOrderUpdateDto dto : orders) {
+            dto.setOpmanCode(user.getUniqId());
         }
+
+        productionOrderService.updateProductionOrders(orders);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 수정이 완료되었습니다.");
+
     }
 
 
@@ -252,13 +244,48 @@ public class EgovProductionOrderApiController {
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
-        try {
-            productionOrderService.deleteProductionOrder(order);
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 삭제가 완료되었습니다.");
-        } catch (IllegalStateException e) {
-            return resultVoHelper.buildFromMap(resultMap, ResponseCode.DELETE_ERROR, e.getMessage());
+        productionOrderService.deleteProductionOrder(order);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 삭제가 완료되었습니다.");
+
+    }
+
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/bulk")
+    public ResultVO bulkCreateProductionOrders(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
         }
 
+        productionOrderService.bulkCreateProductionOrders(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산계획 일괄지시 성공" );
+    }
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "저장 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/bulk-cancel")
+    public ResultVO bulkCancelProductionOrders(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        productionOrderService.bulkCancelProductionOrders(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소 성공" );
     }
 
 

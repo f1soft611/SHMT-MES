@@ -12,6 +12,7 @@ export interface ProdPlanSearchParams {
     equipment?: string;
     dateFrom: string;   // YYYYMMDD
     dateTo: string;     // YYYYMMDD
+    orderFlag?:string;
     page?: number;
     size?: number;
 }
@@ -92,9 +93,11 @@ export interface ProdOrderRow {
     lotNo: string;
     orderQty: number;
     bigo: string;
+    lastFlag:string;
     opmanCode2: string;
     optime2: number;
     rstCnt: number;
+    tpr110dSeq:number;
 
     // ===== UI 전용 필드 =====
     _isNew?: boolean;
@@ -122,6 +125,7 @@ export interface ProdOrderInsertDto {
 
     opmanCode?: string;
     bigo?: string;
+    tpr110dSeq: number;
 }
 
 export interface ProdOrderUpdateDto {
@@ -145,3 +149,13 @@ export interface ProdOrderDeleteDto {
 }
 
 export type OrderFlag = "PLANNED" | "ORDERED";
+
+
+// =======================
+// [API] 생산계획 일괄 생산지시 Key DTO
+// =======================
+export interface ProdPlanKeyDto {
+    prodplanDate: string;   // YYYYMMDD
+    prodplanSeq: number;
+    prodworkSeq: number;
+}
