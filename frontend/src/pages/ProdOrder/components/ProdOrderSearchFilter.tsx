@@ -69,6 +69,15 @@ const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSea
                             onChange={(e) => {
                                 onChange('workplace', e.target.value);
                             }}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        '& .MuiMenuItem-root': {
+                                            fontSize: 13,
+                                        },
+                                    },
+                                },
+                            }}
                         >
                             <MenuItem value="">
                                 전체
@@ -88,6 +97,15 @@ const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSea
                             label="설비"
                             onChange={(e) => onChange('equipment', e.target.value)}
                             disabled={!search.workplace}   // 작업장 선택 전 비활성화
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        '& .MuiMenuItem-root': {
+                                            fontSize: 13,
+                                        },
+                                    },
+                                },
+                            }}
                         >
                             <MenuItem value="">전체</MenuItem>
                             {equipments.map(eq => (
@@ -112,6 +130,18 @@ const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSea
                         onChange={(e) => onChange('dateTo', e.target.value)}
                         InputLabelProps={{ shrink: true }}
                     />
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                        <InputLabel>지시상태</InputLabel>
+                        <Select
+                            value={search.orderFlag}
+                            label="지시상태"
+                            onChange={(e) => onChange('orderFlag', e.target.value)}
+                        >
+                            <MenuItem value="" sx={{ fontSize: 13 }}>전체</MenuItem>
+                            <MenuItem value="ORDERED" sx={{ fontSize: 13 }} >지시 완료</MenuItem>
+                            <MenuItem value="PLANNED" sx={{ fontSize: 13 }}>계획 상태</MenuItem>
+                        </Select>
+                    </FormControl>
                     <Button
                         variant="contained"
                         color="primary"

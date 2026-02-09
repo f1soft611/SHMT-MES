@@ -24,7 +24,7 @@ const ProductionResult: React.FC = () => {
                 }}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h5">생산실적 관리_newV</Typography>
+                    <Typography variant="h5">생산실적 관리</Typography>
                 </Box>
             </Box>
 

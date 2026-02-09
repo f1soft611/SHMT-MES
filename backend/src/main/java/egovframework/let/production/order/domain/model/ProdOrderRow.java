@@ -15,7 +15,7 @@ public class ProdOrderRow implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Integer idx;
+    private String idx;
 
     private String factoryCode;
 
@@ -27,6 +27,8 @@ public class ProdOrderRow implements Serializable {
     private String prodplanId;
     private String prodorderId;
     private Integer workorderSeq;
+
+    private String lastFlag;
 
     private String workCode;
     private String workName;
@@ -49,7 +51,7 @@ public class ProdOrderRow implements Serializable {
     private String orderFlag;
     private String lotNo;
 
-    private BigDecimal orderQty;     // PROD_QTY
+    private int orderQty;     // PROD_QTY
 
     private String bigo;
 
@@ -57,4 +59,5 @@ public class ProdOrderRow implements Serializable {
     private String optime2;
 
     private Integer rstCnt;           // 실적 건수
+    private Integer tpr110dSeq;
 }

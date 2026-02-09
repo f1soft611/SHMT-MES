@@ -23,6 +23,9 @@ public class ProdPlanSearchParam implements Serializable {
     /** 설비 코드 */
     private String equipment;
 
+    /** 지시 상태 */
+    private String orderFlag;
+
     /** 페이징 offset */
     private int offset;
 

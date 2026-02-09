@@ -48,7 +48,7 @@ export default function ProcessFlowDialog({
                                     <InputLabel>작업장</InputLabel>
                                     <Select
                                         {...field}
-                                        label="작업장"                                    >
+                                        label="작업장">
                                         {workplaces.map((wp) => (
                                             <MenuItem key={wp.workplaceId} value={wp.workplaceCode}>
                                                 {wp.workplaceName}

@@ -48,6 +48,5 @@ public class ProdResultRow implements Serializable {
     private String tpr504Id;
 
     // === 추가 컬럼 (TPR601W 집계) ===
-    /** 작업자 코드 목록 (comma separated) */
-    private String worker;
+    private String workerCodes;
 }

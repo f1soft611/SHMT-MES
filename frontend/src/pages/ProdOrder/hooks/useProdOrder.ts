@@ -11,7 +11,6 @@ import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
 export function useProdOrder() {
 
-
     const { showToast } = useToast();
 
     // 위 그리드 선택된 생산계획
@@ -53,6 +52,7 @@ export function useProdOrder() {
         lotNo: row.lotNo,
         orderQty: row.orderQty,
         bigo: row.bigo,
+        tpr110dSeq: row.tpr110dSeq,
     });
 
 
@@ -84,18 +84,22 @@ export function useProdOrder() {
 
             const status: string = plan.orderFlag ?? "ORDERED";
 
-            const response =
+            const data =
                 status === "PLANNED"
                     ? await productionOrderService.getFlowProcessByPlanId(plan)
                     : await productionOrderService.getProdOrdersByPlanId(plan);
 
+            if (data.resultCode !== 200){
+                showToast({ message: data.resultMessage, severity: 'error' });
+                return;
+            }
             setLocalRows(
-                (response.result?.resultList ?? []).map(r => ({
+                (data.result?.resultList ?? []).map(r => ({
                     ...r,
                     _isNew: false,
                 }))
             );
-            setResultCnt(response.result?.resultCnt ?? 0);
+            setResultCnt(data.result?.resultCnt ?? 0);
         } catch (err: any) {
             setError(err.message || "생산지시 조회 실패");
             setLocalRows([]);
