@@ -15,6 +15,8 @@ import {
   Select,
   MenuItem,
   Collapse,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -46,6 +48,7 @@ import { getServerDate } from '../../utils/dateUtils';
 
 // localStorage 키 상수
 const STORAGE_KEY_VIEW_DAYS = 'productionPlan_viewDays';
+const STORAGE_KEY_SELECTED_WEEKDAYS = 'productionPlan_selectedWeekdays';
 // sessionStorage 키 상수
 const SESSION_KEY_WEEK_START = 'productionPlan_weekStart';
 const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
@@ -236,8 +239,30 @@ const ProductionPlan: React.FC = () => {
     return DEFAULT_VIEW_DAYS;
   };
 
+  const loadSelectedWeekdaysFromStorage = (): number[] => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SELECTED_WEEKDAYS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((d) => typeof d === 'number' && d >= 0 && d <= 6)
+        ) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      // Error loading selected weekdays from localStorage
+    }
+    return [0, 1, 2, 3, 4, 5, 6]; // 기본값: 모든 요일 선택
+  };
+
   const [viewDays, setViewDays] = useState<number>(() =>
     loadViewDaysFromStorage(),
+  );
+
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>(() =>
+    loadSelectedWeekdaysFromStorage(),
   );
 
   const loadEquipments = useCallback(async () => {
@@ -410,7 +435,32 @@ const ProductionPlan: React.FC = () => {
   };
 
   const weekDays = getRangeDays(currentWeekStart, viewDays);
-  const visibleDays = weekDays.map(() => true);
+  const visibleDays = weekDays.map((day) =>
+    selectedWeekdays.includes(day.getDay()),
+  );
+
+  const handleWeekdayToggle = (
+    event: React.MouseEvent<HTMLElement>,
+    newWeekdays: number[],
+  ) => {
+    if (newWeekdays.length === 0) {
+      // 최소 1개는 선택되어야 함
+      showToast({
+        message: '최소 1개의 요일을 선택해야 합니다.',
+        severity: 'warning',
+      });
+      return;
+    }
+    setSelectedWeekdays(newWeekdays);
+    try {
+      localStorage.setItem(
+        STORAGE_KEY_SELECTED_WEEKDAYS,
+        JSON.stringify(newWeekdays),
+      );
+    } catch (error) {
+      // Error saving selected weekdays to localStorage
+    }
+  };
 
   const handleNextWeek = () => {
     const newDate = addDays(currentWeekStart, 7);
@@ -1058,6 +1108,58 @@ const ProductionPlan: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+            <ToggleButtonGroup
+              size="small"
+              value={selectedWeekdays}
+              onChange={handleWeekdayToggle}
+              aria-label="요일 선택"
+              sx={{
+                bgcolor: 'white',
+                '& .MuiToggleButton-root': {
+                  px: 1,
+                  py: 0.5,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  minWidth: 32,
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    borderColor: 'primary.main',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                  },
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value={1} aria-label="월요일">
+                월
+              </ToggleButton>
+              <ToggleButton value={2} aria-label="화요일">
+                화
+              </ToggleButton>
+              <ToggleButton value={3} aria-label="수요일">
+                수
+              </ToggleButton>
+              <ToggleButton value={4} aria-label="목요일">
+                목
+              </ToggleButton>
+              <ToggleButton value={5} aria-label="금요일">
+                금
+              </ToggleButton>
+              <ToggleButton value={6} aria-label="토요일">
+                토
+              </ToggleButton>
+              <ToggleButton value={0} aria-label="일요일">
+                일
+              </ToggleButton>
+            </ToggleButtonGroup>
             <Tooltip title={compactMode ? '기본 모드' : 'Compact 모드'}>
               <IconButton
                 onClick={() => setCompactMode((prev) => !prev)}
