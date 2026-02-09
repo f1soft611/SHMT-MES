@@ -16,7 +16,10 @@ import {
   Box,
   Typography,
   Chip,
+  Paper,
+  PaperProps,
 } from '@mui/material';
+import Draggable from 'react-draggable';
 import {
   Link as LinkIcon,
   Inventory as InventoryIcon,
@@ -160,6 +163,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [productionReferences, setProductionReferences] = useState<any[]>([]);
   const [shiftCodes, setShiftCodes] = useState<CommonDetailCode[]>([]);
+  const draggableRef = React.useRef<HTMLDivElement>(null);
 
   // react-hook-form 설정
   const {
@@ -334,15 +338,43 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     onClose();
   };
 
+  // 드래그 가능한 Paper 컴포넌트
+  const DraggablePaper = (props: PaperProps) => {
+    return (
+      <Draggable
+        nodeRef={draggableRef}
+        handle="#draggable-dialog-title"
+        cancel={'[class*="MuiDialogContent-root"]'}
+      >
+        <Paper {...props} ref={draggableRef} />
+      </Draggable>
+    );
+  };
+
   return (
     <>
-      <Dialog open={open} onClose={handleDialogClose} maxWidth="md" fullWidth>
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          // backdrop 클릭이나 ESC 키로는 닫히지 않도록
+          if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+            return;
+          }
+          handleDialogClose();
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperComponent={DraggablePaper}
+        aria-labelledby="draggable-dialog-title"
+      >
         <DialogTitle
+          id="draggable-dialog-title"
           sx={{
             bgcolor: 'primary.main',
             color: 'white',
             fontWeight: 700,
             fontSize: '1.25rem',
+            cursor: 'move',
           }}
         >
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}

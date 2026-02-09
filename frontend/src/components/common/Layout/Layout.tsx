@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Drawer,
@@ -32,13 +32,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
+  // 데스크톱 사이드바 토글 상태 (localStorage에서 초기값 로드)
+  const [desktopOpen, setDesktopOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? saved === 'true' : true;
+  });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // 사이드바 상태를 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', String(desktopOpen));
+  }, [desktopOpen]);
+
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setDesktopOpen(!desktopOpen);
+    }
   };
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -70,8 +84,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <AppBar
           position="fixed"
           sx={{
-            width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-            ml: { md: `${DRAWER_WIDTH}px` },
+            width: {
+              xs: '100%',
+              md: desktopOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
+            },
+            ml: {
+              xs: 0,
+              md: desktopOpen ? `${DRAWER_WIDTH}px` : 0,
+            },
+            transition: theme.transitions.create(['width', 'margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
           }}
         >
           <Toolbar>
@@ -79,7 +103,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               color="inherit"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { md: 'none' } }}
+              sx={{ mr: 2 }}
             >
               <MenuIcon />
             </IconButton>
@@ -143,22 +167,57 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         <Box
           component="nav"
-          sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+          sx={{
+            width: {
+              xs: 0,
+              md: desktopOpen ? DRAWER_WIDTH : 0,
+            },
+            flexShrink: { md: 0 },
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          }}
         >
-          <Drawer
-            variant={isMobile ? 'temporary' : 'permanent'}
-            open={isMobile ? mobileOpen : true}
-            onClose={handleDrawerToggle}
-            ModalProps={{ keepMounted: true }}
-            sx={{
-              '& .MuiDrawer-paper': {
-                boxSizing: 'border-box',
+          {/* 모바일용 임시 Drawer */}
+          {isMobile && (
+            <Drawer
+              variant="temporary"
+              open={mobileOpen}
+              onClose={handleDrawerToggle}
+              ModalProps={{ keepMounted: true }}
+              sx={{
+                '& .MuiDrawer-paper': {
+                  boxSizing: 'border-box',
+                  width: DRAWER_WIDTH,
+                },
+              }}
+            >
+              <Sidebar />
+            </Drawer>
+          )}
+
+          {/* 데스크톱용 Persistent Drawer - 부드러운 애니메이션 */}
+          {!isMobile && (
+            <Drawer
+              variant="persistent"
+              open={desktopOpen}
+              sx={{
                 width: DRAWER_WIDTH,
-              },
-            }}
-          >
-            <Sidebar />
-          </Drawer>
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                  boxSizing: 'border-box',
+                  width: DRAWER_WIDTH,
+                  transition: theme.transitions.create('transform', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+                },
+              }}
+            >
+              <Sidebar />
+            </Drawer>
+          )}
         </Box>
 
         <Box
@@ -166,7 +225,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           sx={{
             flexGrow: 1,
             p: 3,
-            width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+            width: {
+              xs: '100%',
+              md: desktopOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
+            },
+            transition: theme.transitions.create(['width', 'margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
           }}
         >
           <Toolbar />
