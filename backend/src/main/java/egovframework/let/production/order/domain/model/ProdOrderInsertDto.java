@@ -15,9 +15,11 @@ public class ProdOrderInsertDto {
     private int newWorkorderSeq;
 
     private String workCode;
+    private Integer workCodeId;
     private String workdtDate;
 
     private Integer itemCodeId;
+    private Integer itemUnitId;
     private Integer prodCodeId;
     private String equipmentCode;
 
@@ -26,5 +28,6 @@ public class ProdOrderInsertDto {
 
     private String opmanCode;
     private String bigo;
+    private Integer customerCode;
     private Integer tpr110dSeq;
 }

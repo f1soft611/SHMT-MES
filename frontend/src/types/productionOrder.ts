@@ -78,12 +78,14 @@ export interface ProdOrderRow {
     prodorderId: string;
     workorderSeq: number;
     workCode: string;
+    workCodeId: number;
     workName: string;
     equipmentCode: string;
     equipmentName: string;
     workdtDate: string;
     itemCodeId: string;
     itemCode: string;
+    itemUnitId: number;
     prodCodeId: string;
     prodCode: string;
     materialName: string;
@@ -94,6 +96,7 @@ export interface ProdOrderRow {
     orderQty: number;
     bigo: string;
     lastFlag:string;
+    customerCode:number;
     opmanCode2: string;
     optime2: number;
     rstCnt: number;
@@ -114,17 +117,20 @@ export interface ProdOrderInsertDto {
     newWorkorderSeq: number;
 
     workCode: string;
+    workCodeId: number;
     workdtDate: string;
 
     itemCodeId: string;
+    itemUnitId: number;
     prodCodeId: string;
     equipmentCode?: string;
 
     lotNo?: string;
     orderQty: number;
 
-    opmanCode?: string;
+    customerCode:number;
     bigo?: string;
+    opmanCode?: string;
     tpr110dSeq: number;
 }
 

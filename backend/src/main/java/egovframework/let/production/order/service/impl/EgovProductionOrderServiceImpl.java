@@ -133,7 +133,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// ERP IF DTO 수집 (A)
 			ErpIFProdOrderDto erpDto = convertInsertToIfDto(dto);
 			erpIfList.add(erpDto);
-
 		}
 
 		// ERP IF 배치 전송
@@ -362,6 +361,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			dto.setOrderSeq(productionOrderDAO.selectProdOrderWorkSeq(dto));
 			// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
 			dto.setNewWorkorderSeq(plan.getProdworkSeq());
+
+			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
+			dto.setWorkCodeId(row.getWorkCodeId());
+			dto.setItemUnitId(row.getItemUnitId());
+
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
 
@@ -413,8 +417,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setProdPlanSeq(src.getProdplanSeq());
 		dto.setWorkCenterSeq(1);
 		dto.setGoodItemSeq(src.getItemCodeId());
-		dto.setProcSeq(0); //dto.setProcSeq(src.getOrderSeq());
-		dto.setProdUnitSeq(0);
+		dto.setProcSeq(src.getWorkCodeId());
+		dto.setProdUnitSeq(src.getItemUnitId());
 
 		dto.setOrderQty(src.getOrderQty());
 

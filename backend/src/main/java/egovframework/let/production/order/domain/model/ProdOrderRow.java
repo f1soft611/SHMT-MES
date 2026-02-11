@@ -32,6 +32,7 @@ public class ProdOrderRow implements Serializable {
 
     private String workCode;
     private String workName;
+    private Integer workCodeId;
 
     private String equipmentCode;
     private String equipmentName;
@@ -40,6 +41,7 @@ public class ProdOrderRow implements Serializable {
 
     private Integer itemCodeId;
     private String itemCode;
+    private Integer itemUnitId;
 
     private Integer prodCodeId;
     private String prodCode;
@@ -47,6 +49,7 @@ public class ProdOrderRow implements Serializable {
     private String materialName;
     private String materialSpec;
     private String materialUnit;
+    private Integer materialUnitId;
 
     private String orderFlag;
     private String lotNo;
@@ -54,6 +57,8 @@ public class ProdOrderRow implements Serializable {
     private int orderQty;     // PROD_QTY
 
     private String bigo;
+
+    private Integer customerCode;
 
     private String opmanCode2;
     private String optime2;
