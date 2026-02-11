@@ -38,10 +38,10 @@ public class ProdOrderRow implements Serializable {
 
     private String workdtDate;
 
-    private String itemCodeId;
+    private Integer itemCodeId;
     private String itemCode;
 
-    private String prodCodeId;
+    private Integer prodCodeId;
     private String prodCode;
 
     private String materialName;

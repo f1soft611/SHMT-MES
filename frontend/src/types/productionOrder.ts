@@ -155,6 +155,7 @@ export type OrderFlag = "PLANNED" | "ORDERED";
 // [API] 생산계획 일괄 생산지시 Key DTO
 // =======================
 export interface ProdPlanKeyDto {
+    prodplanId: string;
     prodplanDate: string;   // YYYYMMDD
     prodplanSeq: number;
     prodworkSeq: number;

@@ -28,7 +28,6 @@ public interface EgovProductionOrderService {
 	/**
 	 * 조건에 맞는 생산 지시 목록을 조회 한다.
 	 * @return
-	 * 
 	 * @param productionOrderVO
 	 * @param attrbFlag
 	 * @exception Exception Exception

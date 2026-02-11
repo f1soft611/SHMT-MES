@@ -5,7 +5,10 @@ import egovframework.let.common.dto.ListResult;
 import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.domain.repository.ProductionOrderDAO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
+import egovframework.let.production.order.service.ErpIFProdOrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.javassist.runtime.DotClass;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
@@ -30,17 +33,19 @@ import java.util.*;
  *
  * </pre>
  */
+@Slf4j
 @Service("EgovProductionOrderService")
 @RequiredArgsConstructor
 public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl implements EgovProductionOrderService {
 
 	private final ProductionOrderDAO productionOrderDAO;
+	private final ErpIFProdOrderService erpIfService;
 
 	@Resource(name = "egovProdOrderIdGnrService")
 	private EgovIdGnrService egovProdOrderIdGnrService;
 
 	/**
-	 * 조건에 맞는 게시물 목록을 조회 한다.
+	 * 조건에 맞는 생산지시 목록을 조회 한다.
 	 *
 	 * @see egovframework.let.production.order.service.EgovProductionOrderService#selectProductionOrderList(ProductionOrderVO, String) (ProductionOrderVO, String)
 	 */
@@ -65,6 +70,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시관리에서 생산계획 조회시 사용
+	 * 메인 리스트
 	 *
 	 */
 	@Override
@@ -78,6 +84,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시관리에서 품목별 공정 조회시
+	 * DIALOG 리스트 (지시 전)
 	 *
 	 */
 	@Override
@@ -88,6 +95,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시관리에서 생산id별 생산지시 조회
+	 * DIALOG 리스트 (지시 후)
 	 *
 	 */
 	@Override
@@ -100,10 +108,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시 저장
+	 * MES 생산지시 저장
+	 * ERP IF 데이터 전송
+	 * 생산계획 ORDER_FLAG = ORDERED UPDATE
 	 */
 	@Override
 	@Transactional
 	public void insertProductionOrders(List<ProdOrderInsertDto> prodOrderList) throws Exception {
+
+		List<ErpIFProdOrderDto> erpIfList = new ArrayList<>();
 
 		for (ProdOrderInsertDto dto : prodOrderList) {
 			// 생산지시 ID 채번
@@ -117,11 +130,28 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// DB insert
 			productionOrderDAO.insertProductionOrder(dto);
 
-			// 생산계획TPR301 ORDER_FLAG UPDATE
+			// ERP IF DTO 수집 (A)
+			ErpIFProdOrderDto erpDto = convertInsertToIfDto(dto);
+			erpIfList.add(erpDto);
+
+		}
+
+		// ERP IF 배치 전송
+		try {
+			erpIfService.sendProdOrderBatchToErp(erpIfList);
+		} catch (Exception e) {
+			// MES 트랜잭션 영향 X
+			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
+		}
+
+
+		// 생산계획TPR301 ORDER_FLAG UPDATE
+		if (!prodOrderList.isEmpty()) {
+			ProdOrderInsertDto first = prodOrderList.get(0);
 			updatePlanOrderFlag(
-					dto.getProdplanDate(),
-					dto.getProdplanSeq(),
-					dto.getProdworkSeq(),
+					first.getProdplanDate(),
+					first.getProdplanSeq(),
+					first.getProdworkSeq(),
 					"ORDERED"
 			);
 		}
@@ -142,6 +172,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시 삭제
+	 * TPR504.DELETE_FLAG = 1 UPDATE
+	 * ERP IF
+	 * 생산계획 ORDER_FLAG = PLANNED UPDATE
 	 */
 	@Override
 	@Transactional
@@ -153,6 +186,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.");
 		}
 
+		// ERP IF 전송
+		try {
+			ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
+			erpIfService.sendProdOrderToErp(erpDto);
+		} catch (Exception e) {
+			// MES 트랜잭션 영향 주면 안 됨
+			log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq(), e);
+		}
 		// 삭제
 		productionOrderDAO.deleteProductionOrder(dto);
 
@@ -165,6 +206,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		);
 	}
 
+
+	/**
+	 * 선택한 여러 생산계획에 대해 생산지시를 일괄 생성
+	 * 이미 지시된 계획은 제외
+	 * MES 생산지시 저장
+	 * ERP IF
+	 * 생산계획 ORDER_FLAG = ORDERED UPDATE
+	 */
 	@Override
 	@Transactional
 	public void bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
@@ -185,7 +234,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			}
 
 			// 3. 생산지시 저장
-			createProductionOrders(plan, targets);
+			List<ErpIFProdOrderDto> ifList = createProductionOrders(plan, targets);
+			erpIfService.sendProdOrderBatchToErp(ifList);
 
 			// 4. 생산계획 order_flag 갱신 TPR301.ORDER_FLAG = ORDERED
 			updatePlanOrderFlag(
@@ -199,6 +249,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	}
 
+
+	/**
+	 * 선택한 여러 생산계획의 생산지시를 일괄 취소(삭제)
+	 * 생산실적 존재 시 전체 취소 불가
+	 * ERP IF
+	 * TPR504.DELETE_FLAG = 1
+	 * 생산계획 ORDER_FLAG = PLANNED
+	 */
 	@Override
 	@Transactional
 	public void bulkCancelProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
@@ -212,8 +270,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			dto.setProdworkSeq(plan.getProdworkSeq());
 			int cnt = productionOrderDAO.selectProdResultCount(dto);
 			if (cnt > 0) {
-				throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.<br>" +
-						"key: "+plan.getProdplanDate()+","+plan.getProdplanSeq()+","+plan.getProdworkSeq());
+				throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다. \n" +
+						"생산지시번호 : "+plan.getProdplanId());
 			}
 
 			// 2. 생산지시 삭제
@@ -226,18 +284,21 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					plan.getProdworkSeq(),
 					"PLANNED"
 			);
-
-
 		}
 
 	}
 
 
-
+	/**
+	 * 해당 생산계획이 이미 생산지시 되었는지 여부 확인
+	 */
 	private boolean isAlreadyOrdered(ProdPlanKeyDto plan) throws Exception {
 		return productionOrderDAO.selectProdPlanOrderedCount(plan) > 0;
 	}
 
+	/**
+	 * 생산계획 기준으로 생산지시 생성 대상 공정 목록을 조회
+	 */
 	private List<ProdOrderRow> findInsertTargets(ProdPlanKeyDto plan) throws Exception {
 
 		ProdOrderSearchParam param = new ProdOrderSearchParam();
@@ -249,6 +310,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		return list != null ? list : Collections.emptyList();
 	}
 
+	/**
+	 * 생산계획 + 공정 정보를 기반으로 생산지시 INSERT DTO를 생성한다.
+	 */
 	private ProdOrderInsertDto mapToInsertDto(
 			ProdPlanKeyDto plan,
 			ProdOrderRow row
@@ -277,21 +341,40 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		return dto;
 	}
 
-	private void createProductionOrders(
+	/**
+	 * 생산계획 기준으로 여러 공정에 대한 생산지시를 생성하고
+	 * ERP IF 전송용 DTO 목록을 반환한다.
+	 */
+	private List<ErpIFProdOrderDto> createProductionOrders(
 			ProdPlanKeyDto plan,
 			List<ProdOrderRow> targets
 	) throws Exception {
 
+		List<ErpIFProdOrderDto> erpIfList = new ArrayList<>();
+
 		for (ProdOrderRow row : targets) {
+
 			ProdOrderInsertDto dto = mapToInsertDto(plan, row);
-
+			// 생산지시 ID 채번
 			dto.setProdorderId(productionOrderDAO.selectProdOrderNextId());
+			// WORK_SEQ 채번
 			dto.setOrderSeq(productionOrderDAO.selectProdOrderWorkSeq(dto));
-
+			// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
+			dto.setNewWorkorderSeq(plan.getProdworkSeq());
+			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
+
+			// ERP IF DTO 수집 (A)
+			erpIfList.add(convertInsertToIfDto(dto));
 		}
+		return erpIfList;
 	}
 
+
+	/**
+	 * 생산계획(TPR301)의 ORDER_FLAG 값을 갱신한다.
+	 * (PLANNED / ORDERED)
+	 */
 	private void updatePlanOrderFlag(
 			String prodplanDate,
 			int prodplanSeq,
@@ -307,5 +390,80 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		productionOrderDAO.updateProdPlanOrderFlag(flagDto);
 	}
+
+	/**
+	 * 생산지시 INSERT 정보를 ERP IF (A) 전송용 DTO로 변환한다.
+	 */
+	private ErpIFProdOrderDto convertInsertToIfDto(ProdOrderInsertDto src) {
+		ErpIFProdOrderDto dto = new ErpIFProdOrderDto();
+
+		dto.setWorkingTag("A");
+		dto.setRegEmpId("SYSTEM");
+
+		dto.setMesIfKey(src.getProdorderId());
+
+		dto.setWorkOrderSeq(src.getProdworkSeq());
+		dto.setWorkOrderSerl(src.getProdworkSeq());
+
+		dto.setFactUnit(1);
+		dto.setWorkOrderNo(src.getProdorderId());
+		dto.setWorkOrderDate(src.getProdplanDate());
+
+		dto.setProdPlanSeq(src.getProdplanSeq());
+		dto.setWorkCenterSeq(1);
+		dto.setGoodItemSeq(src.getItemCodeId());
+		dto.setProcSeq(0); //dto.setProcSeq(src.getOrderSeq());
+		dto.setProdUnitSeq(0);
+
+		dto.setOrderQty(src.getOrderQty());
+
+		dto.setDeptSeq(0);
+		dto.setEmpSeq(0);
+		dto.setProcRev("");
+		dto.setRemark(src.getBigo());
+
+		return dto;
+	}
+
+	/**
+	 * 생산지시 DELETE 정보를 ERP IF (D) 전송용 DTO로 변환한다.
+	 */
+	private ErpIFProdOrderDto convertDeleteToIfDto(ProdOrderDeleteDto src) {
+
+		ErpIFProdOrderDto dto = new ErpIFProdOrderDto();
+
+		// 처리구분
+		dto.setWorkingTag("D");
+
+		// 등록자
+		dto.setRegEmpId("SYSTEM");
+
+		// MES 연동키
+		dto.setMesIfKey(src.getProdorderId());
+
+		dto.setWorkOrderSeq(src.getProdworkSeq());
+		dto.setWorkOrderSerl(src.getProdworkSeq());
+
+		// 기본값
+		dto.setFactUnit(1);
+		dto.setWorkOrderNo(src.getProdorderId());
+		dto.setWorkOrderDate(src.getProdplanDate()); // YYYYMMDD
+
+		dto.setProdPlanSeq(src.getProdplanSeq());
+		dto.setWorkCenterSeq(1);          // 고정 or 매핑
+		dto.setGoodItemSeq(0);
+		dto.setProcSeq(0);
+		dto.setProdUnitSeq(0);
+
+		dto.setOrderQty(0);
+
+		dto.setDeptSeq(0);
+		dto.setEmpSeq(0);
+		dto.setProcRev("");
+		dto.setRemark("");
+
+		return dto;
+	}
+
 
 }

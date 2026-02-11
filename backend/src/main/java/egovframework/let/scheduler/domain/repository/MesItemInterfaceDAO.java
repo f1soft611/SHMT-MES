@@ -26,7 +26,7 @@ public class MesItemInterfaceDAO extends EgovAbstractMapper {
 
 	/**
 	 * MES 품목 테이블에 품목 정보 존재 여부 확인
-	 * @param itemSeq 품목코드
+	 * @param item 품목코드
 	 * @return 존재 개수
 	 * @throws Exception
 	 */

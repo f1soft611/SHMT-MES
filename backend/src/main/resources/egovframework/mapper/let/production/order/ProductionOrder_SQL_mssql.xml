@@ -161,7 +161,7 @@
 		AND A.PRODPLAN_DATE = #{prodplanDate}
 		AND A.PRODPLAN_SEQ = #{prodplanSeq}
 		AND A.PRODWORK_SEQ = #{prodworkSeq}
-		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ
+		ORDER BY A.PRODPLAN_DATE, CAST(A.PRODPLAN_SEQ AS INT), CAST(A.PRODWORK_SEQ AS INT), CAST(D.SEQ AS INT), CAST(D.WORK_SEQ AS INT)
 	</select>
 
 	<!--	작업지시 조회 by planId-->
@@ -238,7 +238,8 @@
 		  AND A.PRODPLAN_DATE = #{prodplanDate}
 		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
 		  AND A.PRODWORK_SEQ = #{prodworkSeq}
-		ORDER BY PRODPLAN_DATE, PRODPLAN_SEQ, PRODWORK_SEQ, WORKORDER_SEQ;
+		  AND ISNULL(A.DELETE_FLAG, 0) != 1
+		ORDER BY PRODPLAN_DATE, CAST(PRODPLAN_SEQ AS INT), CAST(PRODWORK_SEQ AS INT), CAST(WORKORDER_SEQ AS INT);
 	</select>
 
 	<!-- 생산지시 TPR504 NextId 가져오기    -->
@@ -333,13 +334,15 @@
 
 	
 	<!-- 생산지시 삭제	-->
-	<delete id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
-		DELETE FROM TPR504
+	<update id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
+		UPDATE TPR504 SET DELETE_FLAG = 1,
+		                  OPTIME2 = GETDATE(),
+		                  OPMAN_CODE2 = #{opmanCode}
 		WHERE FACTORY_CODE = '000001'
 		AND PRODPLAN_DATE = #{prodplanDate}
 		AND PRODPLAN_SEQ = #{prodplanSeq}
 		AND PRODWORK_SEQ = #{prodworkSeq}
-	</delete>
+	</update>
 
 	<!-- 해당 생산지시에 등록된 생산실적 확인 -->
 	<select id="selectProdResultCount"
@@ -378,6 +381,7 @@
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 		  AND PRODWORK_SEQ  = #{prodworkSeq}
+		  AND ISNULL(DELETE_FLAG, 0) != 1
 	</select>
 
 </mapper>

@@ -17,8 +17,8 @@ public class ProdOrderInsertDto {
     private String workCode;
     private String workdtDate;
 
-    private String itemCodeId;
-    private String prodCodeId;
+    private Integer itemCodeId;
+    private Integer prodCodeId;
     private String equipmentCode;
 
     private String lotNo;
