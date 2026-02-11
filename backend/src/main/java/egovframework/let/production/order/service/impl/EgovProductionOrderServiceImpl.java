@@ -268,6 +268,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			dto.setProdplanDate(plan.getProdplanDate());
 			dto.setProdplanSeq(plan.getProdplanSeq());
 			dto.setProdworkSeq(plan.getProdworkSeq());
+			dto.setOpmanCode(plan.getOpmanCode());
 			int cnt = productionOrderDAO.selectProdResultCount(dto);
 			if (cnt > 0) {
 				throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다. \n" +
