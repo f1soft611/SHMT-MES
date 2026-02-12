@@ -54,7 +54,7 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           onClose={handleClose}
           severity={severity}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ width: '100%',whiteSpace: 'pre-line' }}
         >
           {message}
         </Alert>

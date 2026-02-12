@@ -11,6 +11,7 @@ import {ProdPlanSearchParams} from "../../../types/productionOrder";
 import {EquipmentInfo} from "../../../types/equipment";
 
 interface Props {
+    loading: boolean;
     workplaces: Workplace[];
     equipments: EquipmentInfo[];
     search: ProdPlanSearchParams;
@@ -18,7 +19,7 @@ interface Props {
     onSearch: () => void;
 }
 
-const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSearch }: Props) => {
+const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChange, onSearch }: Props) => {
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -147,6 +148,7 @@ const ProdOrderSearchFilter = ({ workplaces, equipments, search, onChange, onSea
                         color="primary"
                         startIcon={<SearchIcon/>}
                         onClick={onSearch}
+                        disabled={loading}
                     >
                         검색
                     </Button>
