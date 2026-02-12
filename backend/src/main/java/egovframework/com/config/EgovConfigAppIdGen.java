@@ -2033,7 +2033,7 @@ public class EgovConfigAppIdGen {
 				.build();
 	}
 
-	/** 생산계획 ID Generation  Config
+	/** 생산계획 마스터 ID Generation Config (TPR301M)
 	 * @return
 	 */
 	@Bean(destroyMethod = "destroy")
@@ -2048,6 +2048,26 @@ public class EgovConfigAppIdGen {
 				.setTable("IDS")
 				.setTableName("TPR301M")
 				.setPreFix("PL" + dateStr)
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
+	/** 생산계획 상세 ID Generation Config (TPR301)
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovProdPlanDetailIdGnrService() {
+		// 계획상세번호 생성 (날짜 + 시퀀스)
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		String dateStr = sdf.format(new Date());
+
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR301")
+				.setPreFix("PLD" + dateStr)
 				.setCipers(4)
 				.setFillChar('0')
 				.build();

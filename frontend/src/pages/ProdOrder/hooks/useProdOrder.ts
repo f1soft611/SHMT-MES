@@ -43,15 +43,18 @@ export function useProdOrder() {
         newWorkorderSeq: seq,
 
         workCode: row.workCode,
+        workCodeId: row.workCodeId,
         workdtDate: row.workdtDate,
 
         itemCodeId: row.itemCodeId,
+        itemUnitId: row.itemUnitId,
         prodCodeId: row.prodCodeId,
         equipmentCode: row.equipmentCode,
 
         lotNo: row.lotNo,
         orderQty: row.orderQty,
         bigo: row.bigo,
+        customerCode: row.customerCode,
         tpr110dSeq: row.tpr110dSeq,
     });
 

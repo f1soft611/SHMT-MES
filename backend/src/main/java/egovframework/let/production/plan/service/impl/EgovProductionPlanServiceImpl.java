@@ -56,6 +56,9 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Resource(name = "egovProdPlanIdGnrService")
 	private EgovIdGnrService egovProdPlanIdgenService;
 
+	@Resource(name = "egovProdPlanDetailIdGnrService")
+	private EgovIdGnrService egovProdPlanDetailIdgenService;
+
 	/**
 	 * 생산계획을 등록한다. (마스터 + 상세 트랜잭션 처리)
 	 */
@@ -98,11 +101,15 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			ProductionPlan plan = new ProductionPlan();
 			BeanUtils.copyProperties(basePlan, plan);
 
+			// TPR301용 별도 ID 생성 (PLD로 시작)
+			String planDetailId = egovProdPlanDetailIdgenService.getNextStringId();
+
 			LocalDate currentDate = startDate.plusDays(i);
 			plan.setPlanDate(currentDate.format(formatter));
 			plan.setProdPlanDate(master.getProdPlanDate());
 			plan.setProdPlanSeq(master.getProdPlanSeq()); // 이제 selectKey로 설정된 값 사용
-			plan.setProdPlanId(planId);
+			plan.setProdPlanId(planId); // TPR301M의 ID (PL)
+			plan.setProdPlanDetailId(planDetailId); // TPR301 전용 ID (PLD)
 			plan.setFactoryCode(master.getFactoryCode());
 			plan.setPlanGroupId(planId);
 			plan.setGroupSeq(i + 1);

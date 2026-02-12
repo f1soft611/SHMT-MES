@@ -40,6 +40,9 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "생산계획ID")
 	private String prodPlanId = "";
 
+	@Schema(description = "생산계획상세ID (PLD)")
+	private String prodPlanDetailId = "";
+
 	@Schema(description = "생산계획일자 (YYYYMMDD)")
 	private String prodPlanDate = "";
 

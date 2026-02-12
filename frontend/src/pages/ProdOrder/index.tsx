@@ -30,6 +30,7 @@ const ProdOrder: React.FC = () => {
 
             {/* 검색 영역 */}
             <ProdOrderSearchFilter
+                loading={prodOrder.planLoading}
                 workplaces={prodOrder.workplaces}
                 equipments={prodOrder.equipments}
                 search={prodOrder.search}
