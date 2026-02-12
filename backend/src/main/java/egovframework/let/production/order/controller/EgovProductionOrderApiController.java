@@ -230,8 +230,6 @@ public class EgovProductionOrderApiController {
     }
 
 
-
-
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "저장 성공"),
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
@@ -244,6 +242,9 @@ public class EgovProductionOrderApiController {
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
+
+        // 삭제를 물리삭제 -> DELETE_FLAG = 1 로 변경하면서 변경자 ID 필요
+        order.setOpmanCode(user.getUniqId());
         productionOrderService.deleteProductionOrder(order);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 삭제가 완료되었습니다.");
 
@@ -263,7 +264,6 @@ public class EgovProductionOrderApiController {
         for (ProdPlanKeyDto dto : plans) {
             dto.setOpmanCode(user.getUniqId());
         }
-
         productionOrderService.bulkCreateProductionOrders(plans);
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -281,6 +281,9 @@ public class EgovProductionOrderApiController {
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
+        }
         productionOrderService.bulkCancelProductionOrders(plans);
 
         Map<String, Object> resultMap = new HashMap<>();

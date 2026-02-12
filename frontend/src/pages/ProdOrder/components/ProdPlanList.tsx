@@ -145,6 +145,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         if (targets.length === 0) return;
 
         const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanId: row.prodplanId,
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
@@ -191,6 +192,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         setCancelConfirmOpen(true);
     };
 
+    // 일괄 취소
     const handleBulkCancel = async () => {
         // 이미 지시된 것만 취소 대상
         const targets = selectedRows.filter(
@@ -206,7 +208,10 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             return;
         }
 
+        console.log(targets);
+
         const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanId: row.prodplanId,
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,

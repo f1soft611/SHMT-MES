@@ -84,15 +84,15 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         insert("ProductionOrderDAO.insertProductionOrder", dto);
     }
 
-    // 생산지시] 생산지시 저장 -> 생산계획TPR301M ORDER FLAG UPDATE
-    // 생산지시] 생산지시 삭제 -> 생산계획TPR301M ORDER FLAG UPDATE
+    // 생산지시] 생산지시 저장 -> 생산계획TPR301 ORDER FLAG UPDATE
+    // 생산지시] 생산지시 삭제 -> 생산계획TPR301 ORDER FLAG UPDATE
     public void updateProdPlanOrderFlag(ProdPlanOrderFlagDto dto) {
         update("ProductionOrderDAO.updateProdPlanOrderFlag", dto);
     }
 
     // 생산지시] 생산지시 삭제
     public void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception {
-        delete("ProductionOrderDAO.deleteProductionOrder", dto);
+        update("ProductionOrderDAO.deleteProductionOrder", dto);
     }
 
     // 생산지시] 해당 지시에 등록된 생산실적 있는지 확인
@@ -109,5 +109,4 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     public int selectProdPlanOrderedCount(ProdPlanKeyDto dto) throws Exception {
         return (Integer)selectOne("ProductionOrderDAO.selectProdPlanOrderedCount", dto);
     }
-
 }
