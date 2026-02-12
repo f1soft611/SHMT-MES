@@ -407,8 +407,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setMesIfKey(src.getProdorderId());
 
-		dto.setWorkOrderSeq(src.getProdworkSeq());
-		dto.setWorkOrderSerl(src.getProdworkSeq());
+		dto.setWorkOrderSeq(0);
+		dto.setWorkOrderSerl(0);
 
 		dto.setFactUnit(1);
 		dto.setWorkOrderNo(src.getProdorderId());
