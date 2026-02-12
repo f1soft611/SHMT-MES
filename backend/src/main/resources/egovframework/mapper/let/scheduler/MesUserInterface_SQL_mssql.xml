@@ -24,7 +24,8 @@
             EMPLYR_STTUS_CODE,
             GROUP_ID,
             SBSCRB_DE,
-            EMP_SEQ
+            EMP_SEQ,
+            DEPT_SEQ,
         ) VALUES (
             'ERP' + CONVERT(VARCHAR(20), #{empSeq}),
             '000001',
@@ -38,6 +39,7 @@
             2,
             GETDATE(),
             #{empSeq},
+            #{deptSeq},
         )
     </insert>
 
