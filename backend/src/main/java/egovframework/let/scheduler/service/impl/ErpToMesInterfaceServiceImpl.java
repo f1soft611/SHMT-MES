@@ -4,12 +4,15 @@ import egovframework.let.scheduler.domain.model.ErpCustomer;
 import egovframework.let.scheduler.domain.model.ErpEmployee;
 import egovframework.let.scheduler.domain.model.ErpItem;
 import egovframework.let.scheduler.domain.model.ErpProductionRequest;
+import egovframework.let.scheduler.domain.model.ErpWorkCenter;
 import egovframework.let.scheduler.domain.repository.MesCustInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesUserInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesItemInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesProdReqInterfaceDAO;
 import egovframework.let.scheduler.service.ErpToMesInterfaceService;
 import egovframework.let.utl.sim.service.EgovFileScrty;
+import egovframework.let.basedata.commoncode.domain.model.CommonDetailCode;
+import egovframework.let.basedata.commoncode.domain.repository.CommonDetailCodeDAO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,10 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		// MES 제품별공정별소요자재(TCO501) 인터페이스 DAO
 		@Autowired
 		private egovframework.let.scheduler.domain.repository.MesTPDROUItemProcMatInterfaceDAO mesTPDROUItemProcMatInterfaceDAO;
+	
+	// 공통코드 상세 DAO
+	@Autowired
+	private CommonDetailCodeDAO commonDetailCodeDAO;
 
 	/**
 	 * ERP 시스템의 사원 정보를 MES 시스템으로 연동
@@ -902,6 +909,143 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			item.setLastUserSeq(rs.getInt("LastUserSeq"));
 			item.setLastDateTime(rs.getTimestamp("LastDateTime"));
 			return item;
+		}
+	}
+
+	/**
+	 * ERP 시스템의 워크센터 정보를 MES 공통코드(COM010)으로 연동
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+	public void syncWorkCenters(String fromDate, String toDate) throws Exception {
+		log.info("=== ERP 워크센터 정보 연동 시작 ===");
+
+		int insertCount = 0;
+		int updateCount = 0;
+		int errorCount = 0;
+		Exception lastError = null;
+
+		try {
+			// 1. ERP 시스템에서 워크센터 정보 조회
+			log.info("ERP 시스템(SHM_IF_VIEW_TPDBaseWorkCenter)에서 워크센터 데이터 조회 시작");
+			List<ErpWorkCenter> erpWorkCenters = selectErpWorkCenters(fromDate, toDate);
+			log.info("ERP 워크센터 데이터 조회 완료: {}건", erpWorkCenters.size());
+
+			// 2. MES 공통코드 상세(COM010)에 워크센터 정보 등록/업데이트
+			for (ErpWorkCenter workCenter : erpWorkCenters) {
+				try {
+					// 2-1. CommonDetailCode 객체 생성
+					CommonDetailCode detailCode = new CommonDetailCode();
+					detailCode.setCodeId("COM010");
+					detailCode.setCode(String.valueOf(workCenter.getWorkCenterSeq()));
+					detailCode.setCodeNm(workCenter.getWorkCenterName());
+					detailCode.setCodeDc(workCenter.getRemark() != null ? workCenter.getRemark() : "");
+					detailCode.setUseAt("Y");
+
+					// 2-2. MES 공통코드 상세에 해당 워크센터가 존재하는지 확인
+					java.util.Map<String, String> params = new java.util.HashMap<>();
+					params.put("codeId", "COM010");
+					params.put("code", String.valueOf(workCenter.getWorkCenterSeq()));
+					int count = commonDetailCodeDAO.selectCodeCheck(params);
+
+					if (count == 0) {
+						// 2-3. 신규 워크센터인 경우 INSERT
+						commonDetailCodeDAO.insertCommonDetailCode(detailCode);
+						insertCount++;
+						log.debug("신규 워크센터 등록: {} ({})", workCenter.getWorkCenterName(), workCenter.getWorkCenterSeq());
+					} else {
+						// 2-4. 기존 워크센터인 경우 UPDATE
+						commonDetailCodeDAO.updateCommonDetailCode(detailCode);
+						updateCount++;
+						log.debug("기존 워크센터 업데이트: {} ({})", workCenter.getWorkCenterName(), workCenter.getWorkCenterSeq());
+					}
+				} catch (Exception e) {
+					errorCount++;
+					lastError = e;
+					log.error("워크센터 정보 처리 실패: {} ({})", workCenter.getWorkCenterName(), workCenter.getWorkCenterSeq(), e);
+				}
+			}
+
+			log.info("=== ERP 워크센터 정보 연동 완료 ===");
+			log.info("총 처리: {}건, 신규등록: {}건, 업데이트: {}건, 오류: {}건",
+					erpWorkCenters.size(), insertCount, updateCount, errorCount);
+
+			// 오류가 하나라도 있으면 예외를 던져서 스케쥴러 히스토리에 실패로 기록
+			if (errorCount > 0 && lastError != null) {
+				throw new Exception(String.format("워크센터 정보 연동 중 오류 발생 - 총 처리: %d건, 성공: %d건, 실패: %d건. 마지막 오류: %s",
+						erpWorkCenters.size(), insertCount + updateCount, errorCount, lastError.getMessage()), lastError);
+			}
+
+		} catch (Exception e) {
+			log.error("워크센터 정보 연동 실패", e);
+			throw e;
+		}
+	}
+
+	/**
+	 * ERP에서 워크센터 정보 조회 (JdbcTemplate 사용)
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @return 워크센터 정보 리스트
+	 */
+	private List<ErpWorkCenter> selectErpWorkCenters(String fromDate, String toDate) {
+		String sql = "SELECT CompanySeq, WorkCenterSeq, WorkCenterName, Remark, " +
+				"LastUserSeq, LastDateTime " +
+				"FROM SHM_IF_VIEW_TPDBaseWorkCenter " +
+				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +
+				"ORDER BY WorkCenterSeq";
+
+		return erpJdbcTemplate.query(sql, new ErpWorkCenterRowMapper(), fromDate, toDate);
+	}
+
+	/**
+	 * ERP 워크센터 데이터를 ErpWorkCenter 객체로 매핑하는 RowMapper
+	 */
+	private static class ErpWorkCenterRowMapper implements RowMapper<ErpWorkCenter> {
+		@Override
+		public ErpWorkCenter mapRow(ResultSet rs, int rowNum) throws SQLException {
+			ErpWorkCenter workCenter = new ErpWorkCenter();
+			workCenter.setCompanySeq(rs.getInt("CompanySeq"));
+			workCenter.setWorkCenterSeq(rs.getInt("WorkCenterSeq"));
+			workCenter.setWorkCenterName(rs.getString("WorkCenterName"));
+			workCenter.setRemark(rs.getString("Remark"));
+			workCenter.setLastUserSeq(rs.getInt("LastUserSeq"));
+			workCenter.setLastDateTime(rs.getTimestamp("LastDateTime"));
+			return workCenter;
+		}
+	}
+
+	/**
+	 * 스케쥴러에서 호출되는 워크센터 정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 */
+	@Override
+	public void executeWorkCenterInterface(String fromDate, String toDate) throws Exception {
+		log.info("╔══════════════════════════════════════╗");
+		log.info("║  ERP-MES 워크센터 연동 시작          ║");
+		log.info("╚══════════════════════════════════════╝");
+
+		long startTime = System.currentTimeMillis();
+
+		try {
+			// 워크센터 정보 연동 실행
+			syncWorkCenters(fromDate, toDate);
+
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.info("╔══════════════════════════════════════╗");
+			log.info("║  ERP-MES 워크센터 연동 완료          ║");
+			log.info("║  실행 시간: {}ms                 ║", executionTime);
+			log.info("╚══════════════════════════════════════╝");
+
+		} catch (Exception e) {
+			long executionTime = System.currentTimeMillis() - startTime;
+			log.error("╔══════════════════════════════════════╗");
+			log.error("║  ERP-MES 워크센터 연동 실패          ║");
+			log.error("║  실행 시간: {}ms                 ║", executionTime);
+			log.error("╚══════════════════════════════════════╝");
+			throw e;
 		}
 	}
 }

@@ -105,6 +105,23 @@ public interface ErpToMesInterfaceService {
 	void executeProdReqInterface(String fromDate, String toDate) throws Exception;
 
 	/**
+	 * ERP 시스템의 워크센터 정보를 MES 공통코드(COM010)로 연동
+	 * ERP의 SHM_IF_VIEW_TPDBaseWorkCenter 뷰에서 워크센터 정보를 조회하여 공통코드 상세(COM010)에 동기화
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @throws Exception
+	 */
+	void syncWorkCenters(String fromDate, String toDate) throws Exception;
+
+	/**
+	 * 스케쥴러에서 호출되는 워크센터 정보 프로세스 실행
+	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
+	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
+	 * @throws Exception
+	 */
+	void executeWorkCenterInterface(String fromDate, String toDate) throws Exception;
+
+	/**
 	 * 스케쥴러에서 호출되는 모든 프로세스 실행
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)

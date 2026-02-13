@@ -23,6 +23,7 @@ import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrder from './pages/ProdOrder';
 import ProductionResult from './pages/ProdResult';
 import ProdPlanResult from './pages/ProdPlanResult';
+import StockInquiry from './pages/StockInquiry';
 import SchedulerManagement from './pages/Scheduler';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import MenuManagement from './pages/Admin/MenuManagement';
@@ -113,6 +114,10 @@ function App() {
                           <Route
                             path={URL.PROD_PLAN_RESULT}
                             element={<ProdPlanResult />}
+                          />
+                          <Route
+                            path={URL.STOCK_INQUIRY}
+                            element={<StockInquiry />}
                           />
                           {/* <Route
                           path={URL.INTERFACE}

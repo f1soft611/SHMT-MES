@@ -53,7 +53,8 @@
                 WHEN #{typeSeq} = 3031001 THEN 'Y'
                 ELSE 'N'
             END,
-            EMP_SEQ = #{empSeq}
+            EMP_SEQ = #{empSeq},
+            DEPT_SEQ = #{deptSeq}
         WHERE EMPLYR_ID = #{empId}
     </update>
 
