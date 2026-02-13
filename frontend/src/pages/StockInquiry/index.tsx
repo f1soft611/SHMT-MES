@@ -199,7 +199,7 @@ const StockInquiryPage: React.FC = () => {
       <Box sx={{ width: '100%', height: '100%' }}>
         <PageHeader
           title=""
-          crumbs={[{ label: '재고 관리' }, { label: '재고조회' }]}
+          crumbs={[{ label: '생산 관리' }, { label: '재고 관리' }]}
         />
 
         <Paper sx={{ p: 2, mb: 2 }}>
