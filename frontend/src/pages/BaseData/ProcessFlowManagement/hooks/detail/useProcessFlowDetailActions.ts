@@ -1,7 +1,10 @@
 import processFlowService from '../../../../../services/processFlowService';
 import {DetailSavePayload, DetailSaveResult, ProcessFlow, ProcessFlowItem, ProcessFlowProcess} from "../../../../../types/processFlow";
+import {useState} from "react";
 
 export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
+
+    const [loading, setLoading] = useState(false);
 
     // 공정 흐름별 공정/제품 저장 및 수정
     const handleDetailSave = async (
@@ -12,6 +15,7 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
         if (!selectedFlow?.processFlowId) {
             return { ok: false, reason: "선택한 공정흐름이 없음" };
         }
+        setLoading(true);
 
         try {
             // 공정 저장
@@ -60,7 +64,7 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
 
                 // ✅ 신규 항목만 추림
                 const newItems = items.filter(
-                    (it: ProcessFlowItem) => it.flowItemId === 'new-'
+                    (it: ProcessFlowItem) => it.flowItemId?.startsWith('new-')
                 );
 
                 // 신규가 없으면 저장 API 호출 안 함
@@ -93,10 +97,13 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
         } catch (e) {
             console.error(e);
             return { ok: false, reason: "저장 실패" };
+        } finally {
+            setLoading(false);
         }
     };
 
     return {
         handleDetailSave,
+        loading
     };
 }

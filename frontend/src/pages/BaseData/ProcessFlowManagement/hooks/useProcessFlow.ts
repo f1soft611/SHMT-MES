@@ -58,6 +58,7 @@ export function useProcessFlow() {
 
         /** 상세 저장 액션 */
         handleDetailSave: detailActions.handleDetailSave,
+        itemLoading: detailActions.loading,
     };
 }
 
