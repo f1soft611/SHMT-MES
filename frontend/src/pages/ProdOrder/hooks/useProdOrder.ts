@@ -40,6 +40,7 @@ export function useProdOrder() {
         prodworkSeq: row.prodworkSeq,
 
         prodplanId: row.prodplanId,
+        prodplanDetailId: row.prodplanDetailId,
         newWorkorderSeq: seq,
 
         workCode: row.workCode,

@@ -43,6 +43,7 @@ export default function ProdOrderDialog({
 
     const columns: GridColDef[] =[
         { field: 'prodplanId'},
+        { field: 'prodplanDetailId'},
         { field: 'prodplanDate'},
         { field: 'prodplanSeq'},
         { field: 'prodworkSeq'},
@@ -319,7 +320,7 @@ export default function ProdOrderDialog({
                                     생산계획 ID
                                 </Typography>
                                 <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                    {plan.prodplanId}
+                                    {plan.prodplanDetailId}
                                 </Typography>
                             </Box>
 
@@ -403,6 +404,7 @@ export default function ProdOrderDialog({
                             columnHeaderHeight={40}
                             columnVisibilityModel={{
                                 prodplanId: false,
+                                prodplanDetailId: false,
                                 prodplanDate: false,
                                 prodplanSeq: false,
                                 prodworkSeq: false,

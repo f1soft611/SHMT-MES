@@ -283,7 +283,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             },
         },
         {
-            field: "prodplanId",
+            field: "prodplanDetailId",
             headerName: "지시번호",
             width: 140,
             headerAlign: "center",

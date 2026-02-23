@@ -11,6 +11,7 @@ public class ProdOrderInsertDto {
     private int orderSeq;
 
     private String prodplanId;
+    private String prodplanDetailId;
     private String prodorderId;
     private int newWorkorderSeq;
 
