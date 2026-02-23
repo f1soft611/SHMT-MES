@@ -820,6 +820,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                   display: 'flex',
                                                   flexDirection: 'column',
                                                   gap: 0.5,
+                                                  flexShrink: 0,
                                                 }}
                                               >
                                                 <Tooltip title="수정">
