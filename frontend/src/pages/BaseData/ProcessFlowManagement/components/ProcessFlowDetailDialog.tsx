@@ -3,6 +3,7 @@ import {
     Box,  Button,
     Dialog, DialogActions, DialogContent, DialogTitle,
     Tab, Tabs,
+    Backdrop, CircularProgress
 } from '@mui/material';
 import {
     Extension as ExtensionIcon,
@@ -24,6 +25,7 @@ interface Props {
     selectedFlow: ProcessFlow | null;
     onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
     initialTab: number;
+    itemLoading: boolean;
 }
 
 function DetailDialogContent({
@@ -53,11 +55,13 @@ function DetailDialogContent({
 function DetailDialogActions({
                                 onSave,
                                 onClose,
-                                tabIndex
-                            }: {
+                                tabIndex,
+                                 itemLoading
+                             }: {
     onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
     onClose: () => void;
     tabIndex: number;
+    itemLoading: boolean;
 }) {
     const { getSavePayload  } = useProcessFlowDetailContext();
     const { showToast } = useToast();
@@ -83,8 +87,11 @@ function DetailDialogActions({
 
     return (
         <DialogActions>
-            <Button variant="contained" onClick={handleSave}>
-                저장
+            <Button
+                variant="contained"
+                onClick={handleSave}
+                disabled={itemLoading}>
+                {itemLoading ? "저장중..." : "저장"}
             </Button>
             <Button onClick={onClose}>닫기</Button>
         </DialogActions>
@@ -96,7 +103,7 @@ export default function ProcessFlowDetailDialog({
                                                     onClose,
                                                     selectedFlow,
                                                     onSave,
-                                                    initialTab
+                                                    initialTab,itemLoading
 }: Props) {
     const [tabIndex, setTabIndex] = React.useState(0);
 
@@ -109,6 +116,18 @@ export default function ProcessFlowDetailDialog({
     return (
         <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
             <ProcessFlowDetailProvider processFlow={selectedFlow}>
+
+                <Backdrop
+                    open={itemLoading}
+                    sx={{
+                        position: "absolute",
+                        zIndex: 2000,
+                        color: "#fff"
+                    }}
+                >
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+
                 <DialogTitle>공정흐름 상세 관리</DialogTitle>
 
                 <DialogContent
@@ -130,6 +149,7 @@ export default function ProcessFlowDetailDialog({
                     tabIndex={tabIndex}
                     onSave={onSave}
                     onClose={onClose}
+                    itemLoading={itemLoading}
                 />
             </ProcessFlowDetailProvider>
         </Dialog>

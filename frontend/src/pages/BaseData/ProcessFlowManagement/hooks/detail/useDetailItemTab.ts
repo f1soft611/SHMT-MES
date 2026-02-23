@@ -29,14 +29,14 @@ export function useDetailItemTab({ flowItemRows, setFlowItemRows }: Props) {
     if (!leftSelected.length) return;
 
     setFlowItemRows((prev) => {
-      const existCodes = new Set(prev.map((r) => r.flowItemCode));
+      const existCodes = new Set(prev.map((r) => r.flowItemCodeId));
 
       const newList: ProcessFlowItem[] = itemRows
         .filter((it) => leftSelected.includes(it.itemId))
         .filter((it) => !existCodes.has(it.itemId))
         .map((it) => ({
           flowRowId: crypto.randomUUID(),
-          flowItemId: 'new-',
+          flowItemId: 'new-'+crypto.randomUUID(),
 
           processFlowId,
           processFlowCode,
@@ -49,7 +49,7 @@ export function useDetailItemTab({ flowItemRows, setFlowItemRows }: Props) {
           unitName: it.unitName ?? '',
         }));
 
-      return [...prev, ...newList];
+      return [...newList, ...prev];
     });
   };
 
