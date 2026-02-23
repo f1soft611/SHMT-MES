@@ -186,7 +186,7 @@ export default function ProcessFlowItemTab() {
             rowCount={totalCount}
             paginationModel={{ page, pageSize }}
             onPaginationModelChange={handlePaginationChange}
-            pageSizeOptions={[10, 20, 50]}
+            pageSizeOptions={[10, 20, 50, 100]}
             columnVisibilityModel={{ unit: false }} // 화면에서만 숨김
             checkboxSelection
             disableRowSelectionExcludeModel
@@ -275,6 +275,7 @@ export default function ProcessFlowItemTab() {
               const anyModel = model as { ids: Set<GridRowId> };
               setRightSelected(Array.from(anyModel.ids ?? []));
             }}
+            pageSizeOptions={[10, 20, 50, 100]}
             autoHeight={false}
             rowHeight={35}
             columnHeaderHeight={40}
