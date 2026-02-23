@@ -54,6 +54,15 @@ export function useDetailProcessTab({
           prev.map((p) => p.flowProcessId).filter(Boolean)
       );
 
+      // 현재 seq 최대값 구하기 (숫자만)
+      const maxSeq =
+          prev
+          .map((p) => Number(p.seq))
+          .filter((n) => !Number.isNaN(n))
+          .reduce((acc, cur) => Math.max(acc, cur), 0);
+
+      let nextSeq = maxSeq + 1;
+
       const newRows: ProcessFlowProcess[] = processRows
         .filter((p) => p.processId  && selectedLeft.includes(p.processId ))
         .filter((p) => p.processId  && !existIds.has(p.processId ))
@@ -69,7 +78,8 @@ export function useDetailProcessTab({
 
           equipmentFlag: p.equipmentIntegrationYn ?? 'N',
           lastFlag: 'N',
-          seq: '',
+          // 자동증가
+          seq: String(nextSeq++),
           processSeq: String(p.sortOrder ?? ''),
         }));
 
