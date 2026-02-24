@@ -636,7 +636,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                 alignItems: 'flex-start',
                                               }}
                                             >
-                                              <Box sx={{ flex: 1 }}>
+                                              <Box
+                                                sx={{ flex: 1, minWidth: 0 }}
+                                              >
                                                 {/* 1줄: 품목코드, 품목명 */}
                                                 <Box
                                                   sx={{
@@ -781,6 +783,16 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                       color="secondary"
                                                       variant="outlined"
                                                       sx={{
+                                                        maxWidth: '100%',
+                                                        height: 'auto',
+                                                        alignSelf: 'flex-start',
+                                                        '& .MuiChip-label': {
+                                                          whiteSpace: 'nowrap',
+                                                          textOverflow:
+                                                            'ellipsis',
+                                                          overflow: 'hidden',
+                                                          display: 'block',
+                                                        },
                                                         cursor: plan
                                                           .additionalCustomers
                                                           ?.length
