@@ -716,6 +716,7 @@
 		FROM TPR504 O
 		WHERE O.FACTORY_CODE = #{factoryCode}
 		  AND O.PRODPLAN_ID = #{prodPlanId}
+		  AND ISNULL(O.DELETE_FLAG, '0') != 1
 	</select>
 
 	<!-- 생산계획에 등록된 생산실적 개수 조회 -->
