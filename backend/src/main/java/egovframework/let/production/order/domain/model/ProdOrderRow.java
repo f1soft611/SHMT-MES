@@ -25,6 +25,7 @@ public class ProdOrderRow implements Serializable {
 
     private Integer orderSeq;        // WORK_SEQ
     private String prodplanId;
+    private String prodplanDetailId;
     private String prodorderId;
     private Integer workorderSeq;
 

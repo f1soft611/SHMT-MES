@@ -46,6 +46,9 @@ public class ProdPlanRow implements Serializable {
     /** 생산계획 ID */
     private String prodplanId;
 
+    /** 생산계획_detail ID */
+    private String prodplanDetailId;
+
     /** 생산일자 */
     private String prodDate;
 

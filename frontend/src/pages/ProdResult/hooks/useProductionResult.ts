@@ -43,7 +43,7 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
       dateTo: formatDate(rowData.prodplanDate),
       workplace: rowData.workcenterCode,
       equipment: '',
-      keyword: rowData.prodplanId,
+      keyword: rowData.prodplanDetailId,
     };
 
     // 1) 검색필터 UI 세팅 (화면 표시용)
