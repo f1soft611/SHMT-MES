@@ -37,6 +37,7 @@ export interface ProdPlanRow {
     prodplanSeq: number;
     prodworkSeq: number;
     prodplanId: string;
+    prodplanDetailId:string;
     prodDate?: string;
     itemCodeId: string;
     itemCode: string;
@@ -75,6 +76,7 @@ export interface ProdOrderRow {
     prodworkSeq: number;
     orderSeq: number;
     prodplanId: string;
+    prodplanDetailId: string;
     prodorderId: string;
     workorderSeq: number;
     workCode: string;
@@ -113,6 +115,7 @@ export interface ProdOrderInsertDto {
     prodworkSeq: number;
 
     prodplanId: string;
+    prodplanDetailId: string;
     prodorderId?: string;   // 서버에서 채번
     newWorkorderSeq: number;
 

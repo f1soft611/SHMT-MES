@@ -17,6 +17,7 @@
 			   A.PRODPLAN_SEQ,
 			   A.PRODWORK_SEQ,
 			   A.PRODPLAN_ID,
+			   A.PRODPLAN_DETAIL_ID,
 			   A.PROD_DATE,
 			   A.ITEM_CODE AS ITEM_CODE_ID,
 			   B1.MATERIAL_CODE AS ITEM_CODE,
@@ -92,6 +93,7 @@
 		SELECT
 		    ROW_NUMBER() OVER(ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ, D.SEQ, D.WORK_SEQ) AS IDX,
 			A.PRODPLAN_ID,
+			A.PRODPLAN_DETAIL_ID,
 			A.PRODPLAN_DATE,
 			A.PRODPLAN_SEQ,
 			A.PRODWORK_SEQ,
@@ -208,6 +210,7 @@
 			ISNULL(A.OPMAN_CODE2, A.OPMAN_CODE) AS OPMAN_CODE2,
 			ISNULL(A.OPTIME2, A.OPTIME) AS OPTIME2,
 			A.PRODPLAN_ID,
+			A.PRODPLAN_ID as PRODPLAN_DETAIL_ID,
 			A.PRODORDER_ID,
 			(
 			    SELECT COUNT(*)
@@ -321,7 +324,7 @@
 			#{prodplanSeq},
 			#{prodworkSeq},
 			#{orderSeq},
-			#{prodplanId},
+			#{prodplanDetailId},
 			#{prodorderId},
 			#{newWorkorderSeq},
 			#{workCode},
