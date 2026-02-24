@@ -19,8 +19,8 @@ export function useSameFlagSelection(
 
 
     const onSelectionChange = (model: GridRowSelectionModel) => {
-        console.log(model.type)
-        console.log(model)
+        // console.log(model.type)
+        // console.log(model)
         // 전체선택시
         if (model.type === 'exclude') {
             // 전체 해제
