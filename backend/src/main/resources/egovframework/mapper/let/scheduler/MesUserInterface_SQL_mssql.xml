@@ -23,7 +23,9 @@
             EMAIL_ADRES,
             EMPLYR_STTUS_CODE,
             GROUP_ID,
-            SBSCRB_DE
+            SBSCRB_DE,
+            EMP_SEQ,
+            DEPT_SEQ,
         ) VALUES (
             'ERP' + CONVERT(VARCHAR(20), #{empSeq}),
             '000001',
@@ -35,7 +37,9 @@
             #{email},
             'Y',
             2,
-            GETDATE()
+            GETDATE(),
+            #{empSeq},
+            #{deptSeq},
         )
     </insert>
 
@@ -48,7 +52,9 @@
             EMPLYR_STTUS_CODE = CASE 
                 WHEN #{typeSeq} = 3031001 THEN 'Y'
                 ELSE 'N'
-            END
+            END,
+            EMP_SEQ = #{empSeq},
+            DEPT_SEQ = #{deptSeq}
         WHERE EMPLYR_ID = #{empId}
     </update>
 

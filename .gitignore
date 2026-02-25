@@ -62,3 +62,4 @@ backend/src/main/resources/logback-spring.xml
 backend/backend-prod
 문서/*.md
 backend/backend-dev
+.github/copilot-instructions.md

@@ -16,7 +16,10 @@ import {
   Box,
   Typography,
   Chip,
+  Paper,
+  PaperProps,
 } from '@mui/material';
+import Draggable from 'react-draggable';
 import {
   Link as LinkIcon,
   Inventory as InventoryIcon,
@@ -104,7 +107,14 @@ const productionPlanSchema = yup.object({
   customerCode: yup.string(),
   customerName: yup.string(),
   additionalCustomers: yup.array().of(yup.string().required()),
-  deliveryDate: yup.string(), // 납기일 (YYYY-MM-DD 또는 YYYYMMDD)
+  deliveryDate: yup
+    .string()
+    .matches(/^\d{4}-\d{2}-\d{2}$/, '납기일은 YYYY-MM-DD 형식이어야 합니다.')
+    .test('valid-date', '유효한 날짜를 입력하세요', function (value) {
+      if (!value) return true; // 선택입니다
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    }),
   // 선택적 확장/백엔드 매핑 필드
   processCode: yup.string(),
   processName: yup.string(),
@@ -160,6 +170,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [productionReferences, setProductionReferences] = useState<any[]>([]);
   const [shiftCodes, setShiftCodes] = useState<CommonDetailCode[]>([]);
+  const draggableRef = React.useRef<HTMLDivElement>(null);
 
   // react-hook-form 설정
   const {
@@ -175,12 +186,15 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   });
 
   const watchCreateDays = watch('createDays', formData.createDays || 1);
-  const watchPlannedQty = watch('plannedQty', formData.plannedQty || 0);
+  // watchPlannedQty 제거 - 이것이 리렌더링의 원인!
 
   // formData가 변경될 때마다 폼을 리셋 (외부에서 값이 변경되었을 때 반영)
+  // formData를 의존성에 추가하면 포커스 손실 발생하므로 의도적으로 제외
   useEffect(() => {
-    reset(formData);
-  }, [formData, reset]);
+    if (open) {
+      reset(formData);
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 근무구분(COM006) 공통코드 조회
   useEffect(() => {
@@ -225,8 +239,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setSelectedItem(item);
 
     const updates = {
-      // 품목 직접 선택 시, 저장될 필드인 itemCode에 품목 ID를 매핑
-      // (기존 품목코드 대신 내부 식별자 사용)
       itemCode:
         (item as any).itemId ||
         (item as any).id ||
@@ -234,9 +246,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         '',
       itemDisplayCode: (item as any).itemCode || '',
       itemName: item.itemName || '',
-      plannedQty: 1, // 기본값
+      plannedQty: 1,
       createDays: 1,
-      // 생산의뢰 정보 초기화
       orderNo: undefined,
       orderSeqno: undefined,
       orderHistno: undefined,
@@ -245,25 +256,20 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       additionalCustomers: undefined,
     };
 
-    // react-hook-form의 setValue를 사용하여 각 필드 업데이트
     Object.entries(updates).forEach(([key, value]) => {
       setValue(key as keyof ProductionPlanData, value);
     });
 
-    // 부모 컴포넌트의 상태도 업데이트
-    onBatchChange(updates);
     setOpenItemDialog(false);
   };
 
   const handleSelectRequest = (requestsOrData: ProductionRequest[] | any) => {
-    // 다중 선택 시 references가 포함된 객체가 전달됨
     let requests: ProductionRequest[] = [];
     let references: any[] = [];
 
     if (Array.isArray(requestsOrData)) {
       requests = requestsOrData;
     } else if (requestsOrData.selectedItems) {
-      // 다중 선택 시
       requests = requestsOrData.selectedItems;
       references = requestsOrData.references || [];
       setProductionReferences(references);
@@ -271,15 +277,11 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
 
     if (requests.length === 0) return;
 
-    // 생산의뢰 선택 시 품목 선택 초기화
     setSelectedItem(null);
     setSelectedRequests(requests);
 
-    // 첫 번째 생산의뢰의 품목 정보를 기준으로 설정
     const firstRequest = requests[0];
 
-    // 여러 생산의뢰의 수량 합계
-    // remainingQty가 있으면 남은 수량을, 없으면 orderQty를 사용
     const totalQty = requests.reduce(
       (sum, req) =>
         sum +
@@ -289,7 +291,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       0,
     );
 
-    // 거래처 정보 처리
     const customerCodes = requests
       .map((r) => r.customerCode)
       .filter(Boolean) as string[];
@@ -309,17 +310,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       customerCode: uniqueCustomers[0],
       customerName: customerNames[0],
       additionalCustomers: uniqueCustomers.slice(1),
-      deliveryDate: firstRequest.deliveryDate || '', // 납기일 추가
+      deliveryDate: firstRequest.deliveryDate || '',
       createDays: 1,
     };
 
-    // react-hook-form의 setValue를 사용하여 각 필드 업데이트
     Object.entries(updates).forEach(([key, value]) => {
       setValue(key as keyof ProductionPlanData, value);
     });
 
-    // 부모 컴포넌트의 상태도 업데이트
-    onBatchChange(updates);
     setOpenRequestDialog(false);
   };
 
@@ -334,15 +332,43 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     onClose();
   };
 
+  // 드래그 가능한 Paper 컴포넌트
+  const DraggablePaper = (props: PaperProps) => {
+    return (
+      <Draggable
+        nodeRef={draggableRef}
+        handle="#draggable-dialog-title"
+        cancel={'[class*="MuiDialogContent-root"]'}
+      >
+        <Paper {...props} ref={draggableRef} />
+      </Draggable>
+    );
+  };
+
   return (
     <>
-      <Dialog open={open} onClose={handleDialogClose} maxWidth="md" fullWidth>
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          // backdrop 클릭이나 ESC 키로는 닫히지 않도록
+          if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+            return;
+          }
+          handleDialogClose();
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperComponent={DraggablePaper}
+        aria-labelledby="draggable-dialog-title"
+      >
         <DialogTitle
+          id="draggable-dialog-title"
           sx={{
             bgcolor: 'primary.main',
             color: 'white',
             fontWeight: 700,
             fontSize: '1.25rem',
+            cursor: 'move',
           }}
         >
           {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
@@ -644,7 +670,6 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       onChange={(e) => {
                         if (!canEditPlanDate) return;
                         field.onChange(e.target.value);
-                        onBatchChange({ date: e.target.value });
                       }}
                       error={!!errors.date}
                       helperText={
@@ -714,12 +739,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         required
                         label="품목코드"
                         disabled={
+                          dialogMode === 'edit' ||
                           isOrderedPlan ||
                           selectedRequests.length > 0 ||
                           selectedItem !== null
                         }
                         InputProps={{
-                          readOnly: isOrderedPlan,
+                          readOnly: dialogMode === 'edit' || isOrderedPlan,
                         }}
                         error={!!errors.itemCode}
                         helperText={errors.itemCode?.message}
@@ -736,12 +762,13 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         required
                         label="품목명"
                         disabled={
+                          dialogMode === 'edit' ||
                           isOrderedPlan ||
                           selectedRequests.length > 0 ||
                           selectedItem !== null
                         }
                         InputProps={{
-                          readOnly: isOrderedPlan,
+                          readOnly: dialogMode === 'edit' || isOrderedPlan,
                         }}
                         error={!!errors.itemName}
                         helperText={errors.itemName?.message}
@@ -760,7 +787,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       required
                       label="계획수량"
                       type="number"
-                      inputProps={{ min: 1 }}
+                      inputMode="numeric"
                       disabled={isOrderedPlan}
                       InputProps={{
                         readOnly: isOrderedPlan,
@@ -771,6 +798,67 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   )}
                 />
 
+                {/* 납기일 */}
+                <Controller
+                  name="deliveryDate"
+                  control={control}
+                  render={({ field }) => {
+                    // YYYYMMDD -> YYYY-MM-DD 변환
+                    let displayValue = field.value || '';
+                    if (
+                      displayValue &&
+                      displayValue.length === 8 &&
+                      !displayValue.includes('-')
+                    ) {
+                      displayValue = `${displayValue.substring(
+                        0,
+                        4,
+                      )}-${displayValue.substring(4, 6)}-${displayValue.substring(
+                        6,
+                        8,
+                      )}`;
+                    }
+
+                    const handleDeliveryDateChange = (
+                      e: React.ChangeEvent<HTMLInputElement>,
+                    ) => {
+                      let value = e.target.value.replace(/[^\d-]/g, ''); // 숫자와 하이픈만 허용
+
+                      // YYYYMMDD 형식 (8자리 숫자) -> YYYY-MM-DD로 변환
+                      if (value.length === 8 && /^\d{8}$/.test(value)) {
+                        value = `${value.substring(0, 4)}-${value.substring(
+                          4,
+                          6,
+                        )}-${value.substring(6, 8)}`;
+                      }
+                      // YYYY-MM-DD 형식은 그대로 허용
+
+                      field.onChange(value);
+                    };
+
+                    return (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="납기일"
+                        type="text"
+                        placeholder="YYYY-MM-DD 또는 YYYYMMDD"
+                        inputMode="numeric"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ readOnly: isOrderedPlan }}
+                        value={displayValue}
+                        onChange={handleDeliveryDateChange}
+                        error={!!errors.deliveryDate}
+                        helperText={
+                          errors.deliveryDate?.message ||
+                          '날짜를 입력하세요 (형식: YYYY-MM-DD 또는 YYYYMMDD)'
+                        }
+                      />
+                    );
+                  }}
+                />
+
+                {/* 생성일수 (품목 직접 선택 시) - 계획수량 아래로 이동 */}
                 {dialogMode === 'create' &&
                   selectedItem &&
                   selectedRequests.length === 0 && (
@@ -840,53 +928,12 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                             color="text.secondary"
                             sx={{ display: 'block', mt: 0.5 }}
                           >
-                            일일 수량:{' '}
-                            {Math.floor(
-                              (watchPlannedQty || 0) / (watchCreateDays || 1),
-                            )}
-                            개
+                            계획수량을 입력 후 확인 가능합니다
                           </Typography>
                         </Box>
                       </Stack>
                     </Box>
                   )}
-
-                {/* 납기일 */}
-                <Controller
-                  name="deliveryDate"
-                  control={control}
-                  render={({ field }) => {
-                    // YYYYMMDD -> YYYY-MM-DD 변환
-                    let displayValue = field.value || '';
-                    if (
-                      displayValue &&
-                      displayValue.length === 8 &&
-                      !displayValue.includes('-')
-                    ) {
-                      displayValue = `${displayValue.substring(
-                        0,
-                        4,
-                      )}-${displayValue.substring(4, 6)}-${displayValue.substring(
-                        6,
-                        8,
-                      )}`;
-                    }
-
-                    return (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        label="납기일"
-                        type="date"
-                        InputLabelProps={{ shrink: true }}
-                        InputProps={{ readOnly: isOrderedPlan }}
-                        value={displayValue}
-                        error={!!errors.deliveryDate}
-                        helperText={errors.deliveryDate?.message}
-                      />
-                    );
-                  }}
-                />
 
                 <Stack direction="row" spacing={2}>
                   {/* 작업자 */}

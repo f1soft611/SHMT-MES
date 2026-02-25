@@ -43,7 +43,8 @@ BEGIN
         [PRODPLAN_DATE] NVARCHAR(8) NOT NULL,                   -- 계획일자 (YYYYMMDD)
         [PRODPLAN_SEQ] INT NOT NULL,                            -- 계획순번
         [PRODWORK_SEQ] INT NOT NULL,                            -- 작업순번
-        [PRODPLAN_ID] NVARCHAR(20) NOT NULL,                    -- 계획번호
+        [PRODPLAN_ID] NVARCHAR(20) NOT NULL,                    -- 계획번호 (TPR301M 참조)
+        [PRODPLAN_DETAIL_ID] NVARCHAR(20) NULL,                 -- 계획상세번호 (PLD로 시작)
         [PROD_DATE] NVARCHAR(8) NOT NULL,                       -- 생산일자 (YYYYMMDD)
         [ITEM_CODE] NVARCHAR(50) NOT NULL,                      -- 품목코드
         [ITEM_NAME] NVARCHAR(200) NOT NULL,                     -- 품목명

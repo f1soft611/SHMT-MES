@@ -53,10 +53,6 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
   itemCode: yup
     .string()
     .required('품목 코드는 필수입니다.')
-    .matches(
-      /^[A-Za-z0-9-_]+$/,
-      '품목 코드는 영문, 숫자, 하이픈(-), 언더스코어(_)만 입력 가능합니다.',
-    )
     .max(50, '품목 코드는 최대 50자까지 입력 가능합니다.'),
   itemName: yup.string().required('품목명은 필수입니다.'),
   itemType: yup.string().optional(),

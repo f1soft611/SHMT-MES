@@ -89,6 +89,7 @@
 			PRODPLAN_SEQ,
 			PRODWORK_SEQ,
 		    PRODPLAN_ID,
+		    PRODPLAN_DETAIL_ID,
 			PROD_DATE,
 		    PROD_QTY,
 			ITEM_CODE,
@@ -118,6 +119,7 @@
 				  AND PRODPLAN_SEQ = #{prodPlanSeq}
 			),                                      -- 오늘 날짜의 순번 +1
 			#{prodPlanId},
+			#{prodPlanDetailId},
 			#{planDate},
 			#{plannedQty},
 			#{itemCode},
