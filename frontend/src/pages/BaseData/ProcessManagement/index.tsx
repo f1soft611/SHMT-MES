@@ -115,6 +115,7 @@ const ProcessManagement: React.FC = () => {
     searchWrd: '',
     status: '',
     equipmentIntegrationYn: '',
+    useYn: '',
   });
 
   const [inputValues, setInputValues] = useState({
@@ -122,6 +123,7 @@ const ProcessManagement: React.FC = () => {
     searchWrd: '',
     status: '',
     equipmentIntegrationYn: '',
+    useYn: '',
   });
 
   const fetchProcesses = useCallback(async () => {
@@ -273,6 +275,7 @@ const ProcessManagement: React.FC = () => {
     status === 'ACTIVE' ? 'success' : 'default';
   const getStatusLabel = (status: string) =>
     status === 'ACTIVE' ? '활성' : '비활성';
+  const getUseYnLabel = (useYn?: string) => (useYn === 'N' ? '미사용' : '사용');
 
   const columns: GridColDef[] = [
     {
@@ -321,11 +324,24 @@ const ProcessManagement: React.FC = () => {
       ),
     },
     {
-      field: 'sortOrder',
-      headerName: '순서',
+      field: 'useYn',
+      headerName: '사용 여부',
       align: 'center',
       headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getUseYnLabel(params.value)}
+          color={params.value === 'N' ? 'default' : 'success'}
+          size="small"
+        />
+      ),
     },
+    // {
+    //   field: 'sortOrder',
+    //   headerName: '순서',
+    //   align: 'center',
+    //   headerAlign: 'center',
+    // },
     {
       field: 'regDt',
       headerName: '등록일',
@@ -488,6 +504,19 @@ const ProcessManagement: React.FC = () => {
               <MenuItem value="">전체</MenuItem>
               <MenuItem value="ACTIVE">활성</MenuItem>
               <MenuItem value="INACTIVE">비활성</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>사용 여부</InputLabel>
+            <Select
+              value={inputValues.useYn}
+              label="사용 여부"
+              onChange={(e) => handleInputChange('useYn', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="Y">사용</MenuItem>
+              <MenuItem value="N">미사용</MenuItem>
             </Select>
           </FormControl>
 

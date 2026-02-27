@@ -286,15 +286,32 @@ const ProductionPlan: React.FC = () => {
 
   const loadWorkplaces = useCallback(async () => {
     try {
-      const response = await workplaceService.getWorkplaceList(0, 100);
+      const response = await workplaceService.getWorkplaceList(0, 100, {
+        status: 'ACTIVE',
+        useYn: 'Y',
+      });
       if (response.resultCode === 200 && response.result?.resultList) {
-        setWorkplaces(response.result.resultList);
+        const filteredWorkplaces = response.result.resultList.filter(
+          (workplace: Workplace) =>
+            workplace.status === 'ACTIVE' && workplace.useYn === 'Y',
+        );
+        setWorkplaces(filteredWorkplaces);
       }
     } catch (error) {
       // Mock data for development
       const mockWorkplaces = [
-        { workplaceCode: 'WP001', workplaceName: '작업장1' },
-        { workplaceCode: 'WP002', workplaceName: '작업장2' },
+        {
+          workplaceCode: 'WP001',
+          workplaceName: '작업장1',
+          status: 'ACTIVE',
+          useYn: 'Y',
+        },
+        {
+          workplaceCode: 'WP002',
+          workplaceName: '작업장2',
+          status: 'ACTIVE',
+          useYn: 'Y',
+        },
       ];
       setWorkplaces(mockWorkplaces as Workplace[]);
       loadEquipments();

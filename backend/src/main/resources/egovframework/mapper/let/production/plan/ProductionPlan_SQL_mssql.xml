@@ -321,6 +321,7 @@
 	<update id="ProductionPlanDAO.updateProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
 		UPDATE TPR301
 		SET
+			PROD_QTY = #{plannedQty},
 			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
