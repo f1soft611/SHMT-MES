@@ -5,8 +5,8 @@ import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.domain.repository.ProductionResultDAO;
 import egovframework.let.production.result.service.EgovProductionResultService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -28,6 +28,7 @@ import java.util.List;
  *
  * </pre>
  */
+@Slf4j
 @Service("egovProductionResultService")
 @RequiredArgsConstructor
 public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl implements EgovProductionResultService {
@@ -86,6 +87,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Override
 	@Transactional
 	public void updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception {
+
 		for(ProdResultUpdateDto  dto : resultList){
 
 			// TPR601 UPDATE
@@ -127,7 +129,6 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 
 	private void saveProductionResultWorkers(ProdResultDetailParent parent) throws Exception {
-
 		List<String> workers = parent.getWorkerCodes();
 		if (workers == null || workers.isEmpty()) return;
 

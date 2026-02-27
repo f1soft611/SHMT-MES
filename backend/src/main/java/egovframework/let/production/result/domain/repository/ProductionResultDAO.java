@@ -5,7 +5,6 @@ import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 생산계획 데이터 처리를 위한 DAO 클래스
