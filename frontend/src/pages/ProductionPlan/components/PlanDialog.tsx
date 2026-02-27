@@ -738,14 +738,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         fullWidth
                         required
                         label="품목코드"
-                        disabled={
-                          dialogMode === 'edit' ||
-                          isOrderedPlan ||
-                          selectedRequests.length > 0 ||
-                          selectedItem !== null
-                        }
+                        disabled
                         InputProps={{
-                          readOnly: dialogMode === 'edit' || isOrderedPlan,
+                          readOnly: true,
                         }}
                         error={!!errors.itemCode}
                         helperText={errors.itemCode?.message}
@@ -761,14 +756,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         fullWidth
                         required
                         label="품목명"
-                        disabled={
-                          dialogMode === 'edit' ||
-                          isOrderedPlan ||
-                          selectedRequests.length > 0 ||
-                          selectedItem !== null
-                        }
+                        disabled
                         InputProps={{
-                          readOnly: dialogMode === 'edit' || isOrderedPlan,
+                          readOnly: true,
                         }}
                         error={!!errors.itemName}
                         helperText={errors.itemName?.message}

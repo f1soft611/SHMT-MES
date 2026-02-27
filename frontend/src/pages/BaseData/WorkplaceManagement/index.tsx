@@ -107,6 +107,7 @@ const WorkplaceManagement: React.FC = () => {
     searchCnd: '1',
     searchWrd: '',
     status: '',
+    useYn: '',
   });
 
   // 입력 필드용 상태 (화면 입력용)
@@ -114,6 +115,7 @@ const WorkplaceManagement: React.FC = () => {
     searchCnd: '1',
     searchWrd: '',
     status: '',
+    useYn: '',
   });
 
   // 작업장 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
@@ -255,6 +257,10 @@ const WorkplaceManagement: React.FC = () => {
     return status === 'ACTIVE' ? '활성' : '비활성';
   };
 
+  const getUseYnLabel = (useYn?: string) => {
+    return useYn === 'N' ? '미사용' : '사용';
+  };
+
   const columns: GridColDef[] = [
     {
       field: 'workplaceCode',
@@ -291,6 +297,19 @@ const WorkplaceManagement: React.FC = () => {
         <Chip
           label={getStatusLabel(params.value || 'ACTIVE')}
           color={getStatusColor(params.value || 'ACTIVE') as any}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: 'useYn',
+      headerName: '사용 여부',
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getUseYnLabel(params.value)}
+          color={params.value === 'N' ? 'default' : 'success'}
           size="small"
         />
       ),
@@ -435,6 +454,19 @@ const WorkplaceManagement: React.FC = () => {
               <MenuItem value="">전체</MenuItem>
               <MenuItem value="ACTIVE">활성</MenuItem>
               <MenuItem value="INACTIVE">비활성</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>사용 여부</InputLabel>
+            <Select
+              value={inputValues.useYn}
+              label="사용 여부"
+              onChange={(e) => handleInputChange('useYn', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="Y">사용</MenuItem>
+              <MenuItem value="N">미사용</MenuItem>
             </Select>
           </FormControl>
 

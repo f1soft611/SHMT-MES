@@ -76,7 +76,9 @@
 		<if test="status != null and status != ''">
 			AND W.STATUS = #{status}
 		</if>
-		AND W.USE_YN = 'Y'
+		<if test="useYn != null and useYn != ''">
+			AND W.USE_YN = #{useYn}
+		</if>
 		ORDER BY W.WORKCENTER_CODE
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
