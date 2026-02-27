@@ -106,6 +106,8 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   const emptyDayColWidth = compactMode ? 120 : 160;
   const cellPadding = compactMode ? 0.75 : 1;
   const cardPadding = compactMode ? 0.75 : 1;
+  const visibleDayCount = visibleDays.filter(Boolean).length;
+  const emptyColSpan = 1 + visibleDayCount;
 
   useEffect(() => {
     const container = tableContainerRef.current;
@@ -411,9 +413,20 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                 </TableRow>
               ))
             ) : equipments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
-                  <Box sx={{ opacity: 0.6 }}>
+              <TableRow sx={{ height: '100%' }}>
+                <TableCell colSpan={emptyColSpan} sx={{ p: 0 }}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      minHeight: compactMode ? 240 : 320,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      py: compactMode ? 6 : 8,
+                      opacity: 0.6,
+                    }}
+                  >
                     <ViewWeekIcon
                       sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
                     />

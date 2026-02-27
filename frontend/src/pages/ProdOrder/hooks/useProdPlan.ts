@@ -9,16 +9,16 @@ export function useProdPlan() {
   const { showToast } = useToast();
   // 검색 조건
   const today = new Date().toISOString().slice(0, 10);
-  const dateFrom = new Date();
-  dateFrom.setDate(dateFrom.getDate() - 30);
-  const dateFromStr = dateFrom.toISOString().slice(0, 10);
+  const dateTo = new Date();
+  dateTo.setDate(dateTo.getDate() + 7);
+  const dateToStr = dateTo.toISOString().slice(0, 10);
 
   // 검색조건
   const [search, setSearch] = useState<ProdPlanSearchParams>({
     workplace: '',
     equipment: '',
-    dateFrom: dateFromStr,
-    dateTo: today,
+    dateFrom: today,
+    dateTo: dateToStr,
     orderFlag: 'PLANNED'
   });
 
