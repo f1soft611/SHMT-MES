@@ -64,6 +64,7 @@
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
+        AND ISNULL(A.DELETE_FLAG, '0') != '1'
         AND A.WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
         <if test="workplace != null and workplace != ''">
             AND A1.WORKCENTER_CODE = #{workplace}
@@ -115,6 +116,7 @@
         LEFT JOIN TCO601 X1
         ON X.CUSTOMER_CODE = X1.CUSTOMER_CODE
         WHERE 1=1
+        AND ISNULL(A.DELETE_FLAG, '0') != '1'
         AND A.WORKDT_DATE BETWEEN #{dateFrom} AND #{dateTo}
         <if test="workplace != null and workplace != ''">
             AND A1.WORKCENTER_CODE = #{workplace}
