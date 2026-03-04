@@ -360,7 +360,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// WORK_SEQ 채번
 			dto.setOrderSeq(productionOrderDAO.selectProdOrderWorkSeq(dto));
 			// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
-			dto.setNewWorkorderSeq(plan.getProdworkSeq());
+			dto.setNewWorkorderSeq(row.getTpr110dSeq());
 
 			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
 			dto.setWorkCodeId(row.getWorkCodeId());
