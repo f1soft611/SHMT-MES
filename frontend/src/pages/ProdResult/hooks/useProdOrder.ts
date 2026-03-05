@@ -11,13 +11,14 @@ export function useProdOrder() {
 
   // 검색 조건
   const today = new Date().toISOString().slice(0, 10);
-  const dateFrom = new Date();
-  dateFrom.setDate(dateFrom.getDate() - 7);
+  const dateTo = new Date();
+  dateTo.setDate(dateTo.getDate() + 7);
+  const dateToStr = dateTo.toISOString().slice(0, 10);
 
   // 화면 입력용 검색 조건
   const [search, setSearch] = useState<ProductionResultSearchForm>({
-    dateFrom: dateFrom.toISOString().slice(0, 10),
-    dateTo: today,
+    dateFrom: today,
+    dateTo: dateToStr,
     workplace: '',
     equipment: '',
     keyword: '', //통합검색
