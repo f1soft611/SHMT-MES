@@ -371,7 +371,7 @@ export default function ProdOrderDialog({
                                             fontSize: '0.9rem',
                                         }}
                                     >
-                                        {plan.itemName}
+                                        {decodeHtml(plan.itemName)}
                                     </Typography>
                                 </Tooltip>
                             </Box>
