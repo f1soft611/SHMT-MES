@@ -147,6 +147,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   dialogMode,
   selectedDate,
   formData,
+  equipments = [],
   workplaceWorkers = [],
   workplaceCode,
   onSave,
@@ -712,19 +713,68 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   />
 
                   {/* 설비 */}
-                  <TextField
-                    fullWidth
-                    required
-                    label="설비"
-                    value={
-                      formData.equipmentCode
-                        ? `${formData.equipmentName || ''} (${
-                            formData.equipmentCode
-                          })`
-                        : ''
-                    }
-                    disabled
-                    InputProps={{ readOnly: true }}
+                  <Controller
+                    name="equipmentCode"
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl
+                        fullWidth
+                        required
+                        disabled={isOrderedPlan}
+                        error={!!errors.equipmentCode}
+                      >
+                        <InputLabel>설비</InputLabel>
+                        <Select
+                          {...field}
+                          label="설비"
+                          disabled={isOrderedPlan}
+                          onChange={(e) => {
+                            // 설비 코드 업데이트
+                            field.onChange(e.target.value);
+
+                            // 선택된 설비 정보로 ID와 이름 업데이트
+                            const selectedEquip = equipments.find(
+                              (eq) => eq.equipCd === e.target.value,
+                            );
+                            if (selectedEquip) {
+                              // react-hook-form의 setValue로 동기화
+                              // equipmentId는 설비의 시스템ID (DB: EQUIP_SYS_CD)
+                              setValue(
+                                'equipmentId',
+                                selectedEquip.equipmentId || '',
+                              );
+                              setValue(
+                                'equipmentName',
+                                selectedEquip.equipmentName || '',
+                              );
+                              // 외부 상태도 업데이트 (legacy 호환성)
+                              onBatchChange({
+                                equipmentCode: e.target.value,
+                                equipmentId: selectedEquip.equipmentId,
+                                equipmentName: selectedEquip.equipmentName,
+                              });
+                            }
+                          }}
+                        >
+                          <MenuItem value="">
+                            <em>선택...</em>
+                          </MenuItem>
+                          {equipments?.map((equip) => (
+                            <MenuItem
+                              key={equip.equipmentId}
+                              value={equip.equipCd}
+                            >
+                              {equip.equipmentName} ({equip.equipCd})
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.equipmentCode && (
+                          <FormHelperText>
+                            {errors.equipmentCode.message}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    )}
                   />
                 </Stack>
 
