@@ -126,6 +126,7 @@ export default function ProdOrderDialog({
             width: 150,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => decodeHtml(params.value ?? ''),
         },
         {
             field: "materialSpec",
@@ -133,6 +134,7 @@ export default function ProdOrderDialog({
             width: 150,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => decodeHtml(params.value ?? ''),
         },
         {
             field: "materialUnit",
