@@ -322,6 +322,7 @@
 		UPDATE TPR301
 		SET
 			PROD_QTY = #{plannedQty},
+			EQUIP_SYS_CD = #{equipmentId},
 			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
