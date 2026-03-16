@@ -82,6 +82,7 @@
             resultType="int">
         SELECT
             count(*)
-        FROM TPR601
+        FROM TPR504 X
+        WHERE ISNULL(x.DELETE_FLAG,'') != '1'
     </select>
 </mapper>

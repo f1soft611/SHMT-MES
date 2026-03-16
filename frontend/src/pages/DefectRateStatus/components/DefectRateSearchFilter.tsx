@@ -68,10 +68,10 @@ const DefectRateSearchFilter = ({ loading, workplaces, equipments, search, onCha
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                     <InputLabel>작업장</InputLabel>
                     <Select
-                        // value={search.workplace ?? ''}
+                        value={search.workplace ?? ''}
                         label="작업장"
                         onChange={(e) => {
-                            // onChange('workplace', e.target.value);
+                            onChange('workplace', e.target.value);
                         }}
                         MenuProps={{
                             PaperProps: {

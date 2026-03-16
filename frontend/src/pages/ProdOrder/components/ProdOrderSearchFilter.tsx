@@ -26,7 +26,7 @@ interface Props {
 }
 
 const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChange, onSearch }: Props) => {
-    const [date, setDate] = useState("");
+    // const [date, setDate] = useState("");
     const [openCalendar, setOpenCalendar] = useState(false);
     const anchorRef = useRef<HTMLDivElement | null>(null);
 
