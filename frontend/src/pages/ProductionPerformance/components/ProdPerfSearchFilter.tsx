@@ -11,7 +11,7 @@ import {
 } from '@mui/icons-material';
 import {Workplace} from "../../../types/workplace";
 import {EquipmentInfo} from "../../../types/equipment";
-import {ProdPerfRow, ProdPerfSearchParams} from '../../../types/productionPerformance';
+import {ProdPerfSearchParams} from '../../../types/productionPerformance';
 
 interface Props {
     loading: boolean;
