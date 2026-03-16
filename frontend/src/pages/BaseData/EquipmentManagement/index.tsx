@@ -38,6 +38,8 @@ const equipmentSchema: yup.ObjectSchema<Equipment> = yup.object({
   equipmentId: yup.string(),
   equipSysCd: yup.string(),
   equipCd: yup.string(),
+  processCode: yup.string(),
+  processName: yup.string(),
   equipSpec: yup.string(),
   equipStruct: yup.string(),
   useFlag: yup.string().required('사용 여부는 필수입니다.'),

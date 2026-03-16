@@ -57,6 +57,11 @@ public class ProductionPlanWeeklyDTO {
         private String processCode;
 
         /**
+         * 공정명
+         */
+        private String processName;
+
+        /**
          * 설비 코드
          */
         private String equipmentCode;

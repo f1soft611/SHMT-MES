@@ -705,7 +705,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     label="공정"
                     value={
                       formData.processCode
-                        ? `${formData.processName} (${formData.processCode})`
+                        ? formData.processName
+                          ? `${formData.processName} (${formData.processCode})`
+                          : formData.processCode
                         : ''
                     }
                     disabled
@@ -747,11 +749,22 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                                 'equipmentName',
                                 selectedEquip.equipmentName || '',
                               );
+                              setValue(
+                                'processCode',
+                                selectedEquip.processCode || '',
+                              );
+                              setValue(
+                                'processName',
+                                selectedEquip.processName || '',
+                              );
                               // 외부 상태도 업데이트 (legacy 호환성)
                               onBatchChange({
                                 equipmentCode: e.target.value,
-                                equipmentId: selectedEquip.equipmentId,
-                                equipmentName: selectedEquip.equipmentName,
+                                equipmentId: selectedEquip.equipmentId || '',
+                                equipmentName:
+                                  selectedEquip.equipmentName || '',
+                                processCode: selectedEquip.processCode || '',
+                                processName: selectedEquip.processName || '',
                               });
                             }
                           }}

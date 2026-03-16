@@ -54,6 +54,8 @@ export interface WeeklyEquipmentPlanResponse {
     equipmentCode: string;
     equipmentName?: string;
     equipmentId?: string;
+    processCode?: string;
+    processName?: string;
     weeklyPlans: { [date: string]: ServiceProductionPlan[] }; // date: YYYY-MM-DD
   }>;
 }
