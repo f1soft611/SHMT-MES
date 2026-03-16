@@ -53,6 +53,7 @@ export interface WeeklyEquipmentPlanResponse {
   equipmentPlans: Array<{
     equipmentCode: string;
     equipmentName?: string;
+    equipmentId?: string;
     weeklyPlans: { [date: string]: ServiceProductionPlan[] }; // date: YYYY-MM-DD
   }>;
 }
@@ -71,6 +72,7 @@ const normalizeDate = (raw: string): string => {
 export const toProductionPlanData = (
   plan: ServiceProductionPlan,
   extras?: {
+    equipmentId?: string;
     equipmentCode?: string;
     equipmentName?: string;
     workplaceCode?: string;
@@ -93,7 +95,7 @@ export const toProductionPlanData = (
     itemName: plan.itemName || '',
     plannedQty: plan.plannedQty ?? 0,
     actualQty: plan.actualQty ?? 0,
-    equipmentId: plan.equipmentId,
+    equipmentId: extras?.equipmentId || plan.equipmentId,
     equipmentCode: extras?.equipmentCode || plan.equipmentCode || '',
     equipmentName: extras?.equipmentName || plan.equipmentName,
     shift: plan.shift,
@@ -138,6 +140,7 @@ export const mapWeeklyEquipmentPlans = (
       dailyPlans.forEach((plan) => {
         list.push(
           toProductionPlanData(plan, {
+            equipmentId: equip.equipmentId,
             equipmentCode: equip.equipmentCode,
             equipmentName: equip.equipmentName,
             workplaceCode,
