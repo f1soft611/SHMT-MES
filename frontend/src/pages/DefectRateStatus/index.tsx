@@ -1,8 +1,13 @@
 import React from 'react';
 import {Box, Typography} from '@mui/material';
 import DefectRateSearchFilter from "./components/DefectRateSearchFilter";
+import ProdDefectRateList from "./components/ProdDefectRateList";
+import {useDefectRate} from "./hooks/useDefectRate";
 
 export default function DefectRateStatus() {
+
+    const dr = useDefectRate();
+
     return(
         <Box>
             <Box
@@ -18,7 +23,23 @@ export default function DefectRateStatus() {
                 </Box>
             </Box>
 
-            <DefectRateSearchFilter />
+            <DefectRateSearchFilter
+                loading={dr.loading}
+                workplaces={dr.workplaces}
+                equipments={dr.equipments}
+                search={dr.search}
+                onChange={dr.onChange}
+                onSearch={dr.onSearch}
+
+            />
+
+            <ProdDefectRateList
+                rows={dr.rows}
+                loading={dr.loading}
+                rowCount={dr.rowCount}
+                paginationModel={dr.paginationModel}
+                onPaginationChange={dr.onPaginationChange}
+            />
         </Box>
     );
 }
