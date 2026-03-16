@@ -259,6 +259,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 
 			String workplaceCode = (String) row.get("workplaceCode");
 			String processCode = (String) row.get("processCode");
+			String processName = (String) row.get("processName");
 			String equipmentCode = (String) row.get("equipmentCode");
 			String equipmentName = (String) row.get("equipmentName");
 			String equipmentId = (String) row.get("equipmentId");
@@ -269,6 +270,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.EquipmentWeeklyPlan.builder()
 						.workplaceCode(workplaceCode)
 						.processCode(processCode)
+						.processName(processName)
 						.equipmentCode(equipmentCode)
 						.equipmentName(equipmentName)
 						.equipmentId(equipmentId)

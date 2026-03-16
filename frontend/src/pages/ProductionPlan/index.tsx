@@ -365,7 +365,7 @@ const ProductionPlan: React.FC = () => {
           equipmentName: eq.equipmentName,
           equipmentId: eq.equipmentId,
           processCode: eq.processCode,
-          processName: eq.processName,
+          processName: eq.processName || eq.workName || '',
         }));
         setEquipments(equipmentList);
         setExpandedEquipments(
@@ -676,6 +676,15 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSave = async (data: ProductionPlanData, references?: any[]) => {
+    const mappedProcessCode = data.equipmentCode
+      ? equipmentProcessMap.get(data.equipmentCode) || ''
+      : '';
+    const mappedProcessName = data.equipmentCode
+      ? equipmentProcessMap.get(data.equipmentCode + 'NAME') || ''
+      : '';
+    const resolvedProcessCode = mappedProcessCode || data.processCode;
+    const resolvedProcessName = mappedProcessName || data.processName;
+
     if (dialogMode === 'create') {
       try {
         const requestData: ProductionPlanRequest = {
@@ -698,8 +707,8 @@ const ProductionPlan: React.FC = () => {
               workplaceName: workplaces.find(
                 (w) => w.workplaceCode === selectedWorkplace,
               )?.workplaceName,
-              processCode: data.processCode,
-              processName: data.processName,
+              processCode: resolvedProcessCode,
+              processName: resolvedProcessName,
               equipmentId: data.equipmentId,
               equipmentCode: data.equipmentCode,
               equipmentName: data.equipmentName,
@@ -782,8 +791,8 @@ const ProductionPlan: React.FC = () => {
               plannedQty: data.plannedQty,
               workplaceCode: formData.workplaceCode || selectedWorkplace,
               workplaceName: formData.workplaceName,
-              processCode: data.processCode,
-              processName: data.processName,
+              processCode: resolvedProcessCode,
+              processName: resolvedProcessName,
               equipmentId: data.equipmentId,
               equipmentCode: data.equipmentCode,
               equipmentName: data.equipmentName,

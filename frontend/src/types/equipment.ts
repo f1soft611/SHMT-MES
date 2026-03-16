@@ -6,6 +6,8 @@ export interface Equipment {
   equipmentId?: string;
   equipSysCd?: string;
   equipCd?: string;
+  processCode?: string;
+  processName?: string;
   equipSpec?: string;
   equipStruct?: string;
   useFlag?: string;
