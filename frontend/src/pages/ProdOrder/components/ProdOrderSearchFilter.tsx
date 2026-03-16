@@ -1,14 +1,20 @@
+import {useRef, useState} from "react";
 import {
     Button, FormControl, InputLabel, MenuItem,
-    Paper, Stack, Typography, Select, TextField
+    Paper, Stack, Typography, Select, TextField, IconButton, InputAdornment
 } from "@mui/material";
 import {
     Search as SearchIcon,
     FilterList as FilterListIcon,
+    CalendarToday as CalendarTodayIcon,
 } from '@mui/icons-material';
 import {Workplace} from "../../../types/workplace";
 import {ProdPlanSearchParams} from "../../../types/productionOrder";
 import {EquipmentInfo} from "../../../types/equipment";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import 'dayjs/locale/ko';
 
 interface Props {
     loading: boolean;
@@ -20,6 +26,27 @@ interface Props {
 }
 
 const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChange, onSearch }: Props) => {
+    const [date, setDate] = useState("");
+    const [openCalendar, setOpenCalendar] = useState(false);
+    const anchorRef = useRef<HTMLDivElement | null>(null);
+
+    function formatDateOnEnter(value: string) {
+        const prefix = new Date().getFullYear().toString().slice(0, 2);
+
+        if (value.length === 6) {
+            const yyyy = prefix + value.slice(0, 2);
+            const mm = value.slice(2, 4);
+            const dd = value.slice(4, 6);
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        if (value.length === 8) {
+            return `${value.slice(0,4)}-${value.slice(4,6)}-${value.slice(6,8)}`;
+        }
+
+        return value;
+    }
+
     return(
         <>
             <Paper sx={{p: 2, mb: 2}}>
@@ -118,12 +145,60 @@ const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChan
                     </FormControl>
 
                     <TextField
+                        sx={{ width: 140 }}
+                        ref={anchorRef}
                         label="시작일"
-                        type="date"
+                        placeholder="YYYY-MM-DD"
                         value={search.dateFrom}
-                        onChange={(e) => onChange('dateFrom', e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                const formatted = formatDateOnEnter(search.dateFrom);
+                                onChange("dateFrom", formatted);
+                            }
+                        }}
+                        onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 8);
+                            onChange('dateFrom', v);
+                        }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end" sx={{ ml: 0}}>
+                                    <IconButton
+                                        sx={{ p: 0 }}
+                                        size="small"
+                                        onClick={() => setOpenCalendar(true)}
+                                    >
+                                        <CalendarTodayIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
                         InputLabelProps={{ shrink: true }}
                     />
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
+                        <DatePicker
+                            open={openCalendar}
+                            onClose={() => setOpenCalendar(false)}
+                            value={search.dateFrom ? dayjs(search.dateFrom, "YYYYMMDD") : null}
+                            onChange={(value) => {
+                                if (!value) return;
+                                const formatted = dayjs(value).format("YYYY-MM-DD");
+                                onChange("dateFrom", formatted);
+                            }}
+                            enableAccessibleFieldDOMStructure={false}
+                            slotProps={{
+                                actionBar: {
+                                    actions: ['today']
+                                },
+                                popper: {
+                                    anchorEl: anchorRef.current
+                                },
+                                textField: {
+                                    sx: { display: "none" }
+                                }
+                            }}
+                        />
+                    </LocalizationProvider>
                     <TextField
                         label="종료일"
                         type="date"
