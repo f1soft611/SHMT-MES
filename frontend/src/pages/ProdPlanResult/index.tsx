@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
   CircularProgress,
   IconButton,
   Paper,
@@ -15,11 +14,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { useProdPlanResult } from './hooks/useProdPlanResult';
+import ProdPlanResultSearchFilter from './components/ProdPlanResultSearchFilter';
 import { ProdPlanResultRow } from '../../types/prodPlanResult';
 
 const formatNumber = (value?: number) =>
@@ -90,6 +89,8 @@ const ProdPlanResult: React.FC = () => {
       return [];
     }
   });
+
+  const [showSearchFields, setShowSearchFields] = React.useState(false);
 
   const daysInMonth = useMemo(() => {
     if (!yearMonth) return 31;
@@ -204,31 +205,13 @@ const ProdPlanResult: React.FC = () => {
         </Box>
       </Box>
 
-      <Card sx={{ mb: 2 }}>
-        <CardHeader title="조회 조건" titleTypographyProps={{ fontSize: 16 }} />
-        <CardContent>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              flexWrap: 'wrap',
-            }}
-          >
-            <TextField
-              label="조회 연월"
-              type="month"
-              size="small"
-              value={yearMonth}
-              onChange={(e) => setYearMonth(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-            <Button variant="contained" onClick={handleSearch}>
-              조회
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
+      <ProdPlanResultSearchFilter
+        showSearchFields={showSearchFields}
+        onToggle={() => setShowSearchFields((prev) => !prev)}
+        yearMonth={yearMonth}
+        onYearMonthChange={setYearMonth}
+        onSearch={handleSearch}
+      />
 
       <Card>
         <CardContent sx={{ p: 0 }}>
