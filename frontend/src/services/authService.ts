@@ -39,11 +39,36 @@ const apiClient = axios.create({
 });
 
 export const authService = {
+  decodeJwtPayload(token: string): Record<string, unknown> | null {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) {
+        return null;
+      }
+
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const normalized = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const decoded = atob(normalized);
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  },
+
+  getTokenExpirationTime(token: string): number | null {
+    const payload = this.decodeJwtPayload(token);
+    if (!payload || typeof payload.exp !== 'number') {
+      return null;
+    }
+
+    return payload.exp * 1000;
+  },
+
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await apiClient.post<LoginResponse>(
         '/auth/login-jwt',
-        credentials
+        credentials,
       );
 
       if (response.data.resultCode === '200' && response.data.jToken) {
@@ -57,7 +82,7 @@ export const authService = {
         if (response.data.loginHistoryId) {
           sessionStorage.setItem(
             'loginHistoryId',
-            response.data.loginHistoryId.toString()
+            response.data.loginHistoryId.toString(),
           );
         }
 
@@ -69,7 +94,7 @@ export const authService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(
-          `인증 실패: ${error.response?.data?.resultMessage || error.message}`
+          `인증 실패: ${error.response?.data?.resultMessage || error.message}`,
         );
       }
       throw new Error('로그인 요청 중 오류가 발생했습니다.');
@@ -111,10 +136,19 @@ export const authService = {
     return !!this.getToken();
   },
 
-  // 토큰 만료 여부 확인 (JWT 토큰 유효시간: 60분)
-  // 참고: 슬라이딩 윈도우 방식으로 사용자 활동 시마다 tokenIssuedAt이 업데이트됩니다
-  // 따라서 활동 중인 사용자는 세션이 계속 유지되고, 비활동 시에만 60분 후 만료됩니다
+  // 토큰 만료 여부 확인 (JWT exp 기준, 임계값 5분)
+  // exp 파싱이 불가능할 때만 tokenIssuedAt 기반으로 폴백합니다.
   isTokenExpiringSoon(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return true;
+    }
+
+    const expirationTime = this.getTokenExpirationTime(token);
+    if (expirationTime) {
+      return expirationTime - Date.now() <= TOKEN_REFRESH_THRESHOLD;
+    }
+
     const issuedAt = sessionStorage.getItem('tokenIssuedAt');
     if (!issuedAt) {
       return true;
@@ -179,92 +213,3 @@ export const authService = {
     return API_BASE_URL;
   },
 };
-
-// Request interceptor - 자동으로 토큰 추가 및 만료 확인
-apiClient.interceptors.request.use(
-  async (config) => {
-    const token = authService.getToken();
-    if (token) {
-      // 요청 전에 토큰 만료 확인 및 자동 갱신
-      if (authService.isTokenExpiringSoon()) {
-        console.log('요청 전 토큰 자동 갱신...');
-        const newToken = await authService.refreshToken();
-        if (newToken) {
-          config.headers.Authorization = `Bearer ${newToken}`;
-        } else {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-      } else {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// 토큰 리프레쉬 중인지 추적하는 변수
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: Function; reject: Function }> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
-// Response interceptor - 401 에러 시 토큰 리프레쉬 시도
-apiClient.interceptors.response.use(
-  (response) => {
-    // 성공적인 응답 시 활동 시간 업데이트 (슬라이딩 윈도우 세션)
-    // 사용자가 활동 중일 때마다 세션을 연장합니다
-    const token = authService.getToken();
-    if (token) {
-      sessionStorage.setItem('tokenIssuedAt', Date.now().toString());
-    }
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // 이미 리프레쉬 중이면 큐에 추가
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return apiClient(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const newToken = await authService.refreshToken();
-      if (newToken) {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        processQueue(null, newToken);
-        isRefreshing = false;
-        return apiClient(originalRequest);
-      } else {
-        processQueue(error, null);
-        isRefreshing = false;
-        // 리프레쉬 실패 시 로그인 페이지로 이동
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
