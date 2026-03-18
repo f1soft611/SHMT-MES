@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import {
     Chip, IconButton, Box,
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Button, Typography, Divider, Tooltip
+    Button, Typography, Divider, Tooltip, TextField
 } from "@mui/material";
 import {
     Add as AddIcon,
@@ -310,21 +310,21 @@ export default function ProdOrderDialog({
                                 </Typography>
                             </Box>
 
-                            <Divider
-                                orientation="vertical"
-                                flexItem
-                                sx={{ mx: 0.3, opacity: 1 }}
-                            />
+                            {/*<Divider*/}
+                            {/*    orientation="vertical"*/}
+                            {/*    flexItem*/}
+                            {/*    sx={{ mx: 0.3, opacity: 1 }}*/}
+                            {/*/>*/}
 
-                            {/* 생산계획 ID */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                    생산계획 ID
-                                </Typography>
-                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                    {plan.prodplanDetailId}
-                                </Typography>
-                            </Box>
+                            {/*/!* 생산계획 ID *!/*/}
+                            {/*<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>*/}
+                            {/*    <Typography variant="caption" color="text.secondary">*/}
+                            {/*        생산계획 ID*/}
+                            {/*    </Typography>*/}
+                            {/*    <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>*/}
+                            {/*        {plan.prodplanDetailId}*/}
+                            {/*    </Typography>*/}
+                            {/*</Box>*/}
 
                             <Divider
                                 orientation="vertical"
