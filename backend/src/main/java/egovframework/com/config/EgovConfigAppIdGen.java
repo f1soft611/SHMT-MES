@@ -2093,4 +2093,24 @@ public class EgovConfigAppIdGen {
 				.build();
 	}
 
+	/** LOT NO 품목별 ID Generation  Config
+	 * @return
+	 */
+	@Bean(destroyMethod = "destroy")
+	public EgovTableIdGnrServiceImpl egovLotNoIdGnrService() {
+		// 지시번호 생성 (날짜 + 시퀀스)
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		String dateStr = sdf.format(new Date());
+
+		return new EgovIdGnrBuilder().setDataSource(dataSource)
+				.setEgovIdGnrStrategyImpl(new EgovIdGnrStrategyImpl())
+				.setBlockSize(1)
+				.setTable("IDS")
+				.setTableName("TPR504")
+				.setPreFix("PO" + dateStr)
+				.setCipers(4)
+				.setFillChar('0')
+				.build();
+	}
+
 }

@@ -1,6 +1,7 @@
 package egovframework.let.production.plan.service.impl;
 
 import egovframework.com.cmm.LoginVO;
+import egovframework.let.common.idgen.service.EgovConditionalIdService;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import egovframework.let.production.plan.domain.model.ProductionPlan;
@@ -18,6 +19,7 @@ import egovframework.let.production.plan.service.EgovProductionPlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -52,9 +54,7 @@ import java.time.YearMonth;
 public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl implements EgovProductionPlanService {
 
 	private final ProductionPlanDAO productionPlanDAO;
-
-	@Resource(name = "egovProdPlanIdGnrService")
-	private EgovIdGnrService egovProdPlanIdgenService;
+	private final EgovConditionalIdService egovConditionalIdService;
 
 	@Resource(name = "egovProdPlanDetailIdGnrService")
 	private EgovIdGnrService egovProdPlanDetailIdgenService;
@@ -65,7 +65,17 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Override
 	@Transactional
 	public String insertProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception {
-		String planId = egovProdPlanIdgenService.getNextStringId();
+		String condition2 = resolveCondition2(master);
+		master.setIdCondition2(condition2);
+
+		String planId = egovConditionalIdService.getNextStringId(
+			"TPR301M",
+			master.getIdCondition1(),
+			condition2,
+			"PL" + master.getPlanDate(),
+			4,
+			'0'
+		);
 		master.setProdPlanId(planId);
 		master.setPlanGroupId(planId);
 
@@ -146,6 +156,18 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		}
 
 		return planId;
+	}
+
+	private String resolveCondition2(ProductionPlanMaster master) {
+		if (StringUtils.hasText(master.getIdCondition2())) {
+			return master.getIdCondition2().trim();
+		}
+
+		if (!StringUtils.hasText(master.getPlanDate()) || master.getPlanDate().length() < 6) {
+			throw new IllegalArgumentException("planDate must be yyyyMMDD format when idCondition2 is omitted");
+		}
+
+		return master.getPlanDate().substring(0, 6);
 	}
 
 	/**
