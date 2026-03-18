@@ -10,10 +10,10 @@
             ISNULL(A.ORDER_NO, '') orderNo,
             ISNULL(A.CUSTOMER_CODE, '') customerCode,
             ISNULL(A1.CUSTOMER_NAME, '') customerName,
-            X.ITEM_CODE itemCode, X1.MATERIAL_NAME itemName, X1.MATERIAL_SPEC itemSpec,
+            X1.MATERIAL_CODE itemCode, X1.MATERIAL_NAME itemName, X1.MATERIAL_SPEC itemSpec,
             ISNULL(A.ORDER_QTY, 0) orderQty, --수주량
             X.WORK_CODE workCode, X3.WORK_NAME workName,
-            X.PROD_CODE prodItemCode, X2.MATERIAL_NAME prodItemName, X2.MATERIAL_SPEC prodItemSpec,
+            X2.MATERIAL_CODE prodItemCode, X2.MATERIAL_NAME prodItemName, X2.MATERIAL_SPEC prodItemSpec,
             X.WORKDT_DATE workDtDate,
             X.PROD_QTY workQty, --작업지시량
             ISNULL(S.PRODQTY,0) prodQty,
@@ -40,10 +40,10 @@
         ON A.FACTORY_CODE = A1.FACTORY_CODE
         AND A.CUSTOMER_CODE = A1.CUSTOMER_CODE
 
-        LEFT JOIN TCO403 X1
+        LEFT JOIN TCO403 X1 --제품
         ON X.ITEM_CODE = X1.MATERIAL_ID
 
-        LEFT JOIN TCO403 X2
+        LEFT JOIN TCO403 X2 --생산품
         ON X.PROD_CODE = X2.MATERIAL_ID
 
         LEFT JOIN TPR102 X3 --공정
