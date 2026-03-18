@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -157,37 +157,247 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     if (open) {
       loadProductionRequests();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, paginationModel.page, paginationModel.pageSize, searchParams]);
+  }, [open, loadProductionRequests]);
 
   // workplaceCode 변경 시 검색 조건 업데이트
   useEffect(() => {
-    if (workplaceCode) {
-      setSearchParams((prev) => ({
+    const nextWorkplaceCode = workplaceCode || '';
+
+    setSearchParams((prev) => {
+      if (prev.workplaceCode === nextWorkplaceCode) {
+        return prev;
+      }
+      return {
         ...prev,
-        workplaceCode: workplaceCode,
-      }));
-      setInputValues((prev) => ({
+        workplaceCode: nextWorkplaceCode,
+      };
+    });
+
+    setInputValues((prev) => {
+      if (prev.workplaceCode === nextWorkplaceCode) {
+        return prev;
+      }
+      return {
         ...prev,
-        workplaceCode: workplaceCode,
-      }));
-    }
+        workplaceCode: nextWorkplaceCode,
+      };
+    });
   }, [workplaceCode]);
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
-  const handleSearch = () => {
-    setSearchParams({ ...inputValues });
-    setPaginationModel({ ...paginationModel, page: 0 });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setInputValues({
-      ...inputValues,
-      [field]: value,
+  const handleSearch = useCallback(() => {
+    setSearchParams((prev) => {
+      if (
+        prev.searchCnd === inputValues.searchCnd &&
+        prev.searchWrd === inputValues.searchWrd &&
+        prev.dateFrom === inputValues.dateFrom &&
+        prev.dateTo === inputValues.dateTo &&
+        prev.workplaceCode === inputValues.workplaceCode
+      ) {
+        return prev;
+      }
+      return { ...inputValues };
     });
-  };
 
-  const handleRegisterProductionPlans = async () => {
+    setPaginationModel((prev) => {
+      if (prev.page === 0) {
+        return prev;
+      }
+      return {
+        ...prev,
+        page: 0,
+      };
+    });
+  }, [inputValues]);
+
+  const handleInputChange = useCallback((field: string, value: string) => {
+    setInputValues((prev) => {
+      if (prev[field as keyof typeof prev] === value) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
+  }, []);
+
+  const getRequestRowId = useCallback(
+    (request: ProductionRequest): GridRowId =>
+      `${request.orderNo}-${request.orderSeqno}-${request.orderHistno}-${request.itemCode}`,
+    [],
+  );
+
+  const getRequestGroupKey = useCallback(
+    (request: ProductionRequest): string =>
+      `${request.orderNo}-${request.orderSeqno}-${request.orderHistno}`,
+    [],
+  );
+
+  const isProductItem = useCallback(
+    (request?: ProductionRequest): boolean =>
+      String(request?.itemFlag ?? '') === '2',
+    [],
+  );
+
+  const isSemiItem = useCallback(
+    (request?: ProductionRequest): boolean =>
+      String(request?.itemFlag ?? '') === '4',
+    [],
+  );
+
+  const normalizeSelectionModel = useCallback(
+    (model: GridRowSelectionModel | GridRowId[]): GridRowSelectionModel => {
+      if (Array.isArray(model)) {
+        return {
+          type: 'include',
+          ids: new Set(model),
+        };
+      }
+
+      const ids = model.ids;
+      if (ids instanceof Set) {
+        return {
+          type: model.type,
+          ids: new Set(ids),
+        };
+      }
+
+      return {
+        type: model.type,
+        ids: new Set(Array.isArray(ids) ? ids : []),
+      };
+    },
+    [],
+  );
+
+  const rowById = useMemo(() => {
+    const map = new Map<string, ProductionRequest>();
+    requests.forEach((request) => {
+      map.set(String(getRequestRowId(request)), request);
+    });
+    return map;
+  }, [requests, getRequestRowId]);
+
+  const semiItemIdsByGroup = useMemo(() => {
+    const map = new Map<string, GridRowId[]>();
+    requests.forEach((request) => {
+      if (!isSemiItem(request)) {
+        return;
+      }
+
+      const groupKey = getRequestGroupKey(request);
+      const rowId = getRequestRowId(request);
+      const groupIds = map.get(groupKey);
+      if (groupIds) {
+        groupIds.push(rowId);
+      } else {
+        map.set(groupKey, [rowId]);
+      }
+    });
+    return map;
+  }, [requests, isSemiItem, getRequestGroupKey, getRequestRowId]);
+
+  const handleRowSelectionModelChange = useCallback(
+    (newSelection: GridRowSelectionModel | GridRowId[]) => {
+      const previousSelection = normalizeSelectionModel(selectionModel);
+      const nextSelection = normalizeSelectionModel(newSelection);
+
+      if (
+        previousSelection.type !== 'include' ||
+        nextSelection.type !== 'include'
+      ) {
+        setSelectionModel(nextSelection);
+        setError('');
+        return;
+      }
+
+      const adjustedIds = new Set(nextSelection.ids);
+      const addedIds: GridRowId[] = [];
+      const removedIds: GridRowId[] = [];
+
+      nextSelection.ids.forEach((id) => {
+        if (!previousSelection.ids.has(id)) {
+          addedIds.push(id);
+        }
+      });
+
+      previousSelection.ids.forEach((id) => {
+        if (!nextSelection.ids.has(id)) {
+          removedIds.push(id);
+        }
+      });
+
+      const syncChildRowsForProduct = (
+        rowId: GridRowId,
+        shouldSelect: boolean,
+      ) => {
+        const row = rowById.get(String(rowId));
+        if (!row || !isProductItem(row)) {
+          return;
+        }
+
+        const groupKey = getRequestGroupKey(row);
+        const semiItemIds = semiItemIdsByGroup.get(groupKey);
+        if (!semiItemIds || semiItemIds.length === 0) {
+          return;
+        }
+
+        semiItemIds.forEach((semiItemId) => {
+          if (shouldSelect) {
+            adjustedIds.add(semiItemId);
+            return;
+          }
+          adjustedIds.delete(semiItemId);
+        });
+      };
+
+      addedIds.forEach((addedId) => {
+        syncChildRowsForProduct(addedId, true);
+      });
+
+      removedIds.forEach((removedId) => {
+        syncChildRowsForProduct(removedId, false);
+      });
+
+      setSelectionModel({
+        type: 'include',
+        ids: adjustedIds,
+      });
+      setError('');
+    },
+    [
+      normalizeSelectionModel,
+      selectionModel,
+      rowById,
+      isProductItem,
+      getRequestGroupKey,
+      semiItemIdsByGroup,
+    ],
+  );
+
+  const handleClose = useCallback(() => {
+    onClose();
+    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
+    setError('');
+    setInputValues({
+      searchCnd: '4',
+      searchWrd: '',
+      dateFrom: '',
+      dateTo: '',
+      workplaceCode: workplaceCode || '',
+    });
+    setSearchParams({
+      searchCnd: '4',
+      searchWrd: '',
+      dateFrom: '',
+      dateTo: '',
+      workplaceCode: workplaceCode || '',
+    });
+    setPaginationModel({ page: 0, pageSize: 100 });
+  }, [onClose, workplaceCode]);
+
+  const handleRegisterProductionPlans = useCallback(async () => {
     // 선택된 항목 확인
     let selectedIds: GridRowId[] = [];
 
@@ -201,19 +411,13 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         // type이 'exclude'이고 ids가 비어있으면 전체 선택
         if (ids instanceof Set && ids.size === 0) {
           // 모든 항목 선택
-          selectedIds = requests.map(
-            (req) =>
-              `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
-          );
+          selectedIds = requests.map((req) => getRequestRowId(req));
         } else if (ids instanceof Set) {
           // exclude 항목을 제외한 나머지
           const excludeSet = new Set(Array.from(ids).map(String));
           selectedIds = requests
-            .map(
-              (req) =>
-                `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
-            )
-            .filter((id) => !excludeSet.has(id));
+            .map((req) => getRequestRowId(req))
+            .filter((id) => !excludeSet.has(String(id)));
         }
       } else if (modelType === 'include') {
         // type이 'include'이면 ids에 있는 항목만 선택
@@ -234,12 +438,15 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       return;
     }
 
-    const selectedKeys = selectedIds.map(String);
-    const selectedItems = requests.filter((req) =>
-      selectedKeys.includes(
-        `${req.orderNo}-${req.orderSeqno}-${req.orderHistno}-${req.itemCode}`,
-      ),
-    );
+    const selectedKeySet = new Set(selectedIds.map(String));
+    const selectedItems: ProductionRequest[] = [];
+
+    requests.forEach((request) => {
+      const requestRowKey = String(getRequestRowId(request));
+      if (selectedKeySet.has(requestRowKey)) {
+        selectedItems.push(request);
+      }
+    });
 
     if (selectedItems.length === 0) {
       setError('선택한 생산의뢰를 찾을 수 없습니다.');
@@ -260,21 +467,17 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       let successCount = 0;
       let failCount = 0;
       const errors: string[] = [];
+      const today = getServerDate()
+        .toISOString()
+        .split('T')[0]
+        .replace(/-/g, '');
+      const planDate = selectedDate ? selectedDate.replace(/-/g, '') : today;
 
       // 각 생산의뢰마다 개별 생산계획 등록
       for (let i = 0; i < selectedItems.length; i++) {
         const item = selectedItems[i];
         setRegisterProgress({ current: i + 1, total: selectedItems.length });
         try {
-          const today = getServerDate()
-            .toISOString()
-            .split('T')[0]
-            .replace(/-/g, '');
-          // selectedDate를 8자리 형식(YYYYMMDD)으로 변환
-          const planDate = selectedDate
-            ? selectedDate.replace(/-/g, '')
-            : today;
-
           const planData: ProductionPlanRequest = {
             master: {
               planDate: planDate,
@@ -369,30 +572,24 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       setRegistering(false);
       setRegisterProgress({ current: 0, total: 0 });
     }
-  };
+  }, [
+    selectionModel,
+    requests,
+    getRequestRowId,
+    workplaceCode,
+    selectedDate,
+    equipmentId,
+    equipmentCode,
+    processCode,
+    shift,
+    workerCode,
+    onRegisterComplete,
+    onSelect,
+    showToast,
+    handleClose,
+  ]);
 
-  const handleClose = () => {
-    onClose();
-    setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
-    setError('');
-    setInputValues({
-      searchCnd: '4',
-      searchWrd: '',
-      dateFrom: '',
-      dateTo: '',
-      workplaceCode: workplaceCode || '',
-    });
-    setSearchParams({
-      searchCnd: '4',
-      searchWrd: '',
-      dateFrom: '',
-      dateTo: '',
-      workplaceCode: workplaceCode || '',
-    });
-    setPaginationModel({ page: 0, pageSize: 100 });
-  };
-
-  const formatDate = (dateStr?: string) => {
+  const formatDate = useCallback((dateStr?: string) => {
     if (!dateStr) return '';
     if (dateStr.length === 8) {
       return `${dateStr.substring(0, 4)}-${dateStr.substring(
@@ -401,159 +598,162 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       )}-${dateStr.substring(6, 8)}`;
     }
     return dateStr;
-  };
+  }, []);
 
   // DataGrid 컬럼 정의
-  const columns: GridColDef[] = [
-    {
-      field: 'orderNo',
-      headerName: '생산의뢰번호',
-      width: 150,
-      align: 'center',
-      headerAlign: 'center',
-    },
-    {
-      field: 'prodPlanDate',
-      headerName: '생산의뢰일',
-      width: 130,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => formatDate(value),
-    },
-    {
-      field: 'customerName',
-      headerName: '거래처',
-      width: 150,
-      headerAlign: 'center',
-      valueFormatter: (value) => value || '-',
-    },
-    {
-      field: 'itemCode',
-      headerName: '품목코드',
-      width: 130,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color="primary"
-          variant="outlined"
-        />
-      ),
-    },
-    {
-      field: 'itemNo',
-      headerName: '품목번호',
-      width: 130,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => value || '-',
-    },
-    {
-      field: 'itemFlag',
-      headerName: '품목구분',
-      width: 100,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => {
-        const flag = params.value;
-        const label = flag === '2' ? '제품' : flag === '4' ? '반제품' : '-';
-        const color =
-          flag === '2' ? 'success' : flag === '4' ? 'warning' : 'default';
-        return <Chip label={label} size="small" color={color} />;
+  const columns: GridColDef[] = useMemo(
+    () => [
+      {
+        field: 'orderNo',
+        headerName: '생산의뢰번호',
+        width: 150,
+        align: 'center',
+        headerAlign: 'center',
       },
-    },
-    {
-      field: 'itemName',
-      headerName: '품목명',
-      flex: 1,
-      minWidth: 150,
-      headerAlign: 'center',
-    },
-    {
-      field: 'specification',
-      headerName: '규격',
-      flex: 1,
-      minWidth: 150,
-      headerAlign: 'center',
-      valueFormatter: (value) => value || '-',
-    },
-    {
-      field: 'unit',
-      headerName: '단위',
-      width: 80,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => value || 'EA',
-    },
-    {
-      field: 'orderQty',
-      headerName: '생산의뢰량',
-      width: 120,
-      align: 'right',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value?.toLocaleString()}
-          size="small"
-          color="default"
-        />
-      ),
-    },
-    {
-      field: 'allocatedQty',
-      headerName: '할당량',
-      width: 100,
-      align: 'right',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value?.toLocaleString() || '0'}
-          size="small"
-          color="info"
-        />
-      ),
-    },
-    {
-      field: 'remainingQty',
-      headerName: '남은수량',
-      width: 120,
-      align: 'right',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.value?.toLocaleString()}
-          size="small"
-          color="success"
-        />
-      ),
-    },
-    {
-      field: 'deliveryDate',
-      headerName: '납기일',
-      width: 130,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (value) => formatDate(value),
-    },
-    // {
-    //   field: 'registrant',
-    //   headerName: '등록자',
-    //   width: 100,
-    //   align: 'center',
-    //   headerAlign: 'center',
-    //   valueFormatter: (value) => value || '-',
-    // },
-    // {
-    //   field: 'registTime',
-    //   headerName: '등록시간',
-    //   width: 100,
-    //   align: 'center',
-    //   headerAlign: 'center',
-    //   valueFormatter: (value) => value || '-',
-    // },
-  ];
+      {
+        field: 'prodPlanDate',
+        headerName: '생산의뢰일',
+        width: 130,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => formatDate(value),
+      },
+      {
+        field: 'customerName',
+        headerName: '거래처',
+        width: 150,
+        headerAlign: 'center',
+        valueFormatter: (value) => value || '-',
+      },
+      {
+        field: 'itemCode',
+        headerName: '품목코드',
+        width: 130,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Chip
+            label={params.value}
+            size="small"
+            color="primary"
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        field: 'itemNo',
+        headerName: '품목번호',
+        width: 130,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => value || '-',
+      },
+      {
+        field: 'itemFlag',
+        headerName: '품목구분',
+        width: 100,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => {
+          const flag = params.value;
+          const label = flag === '2' ? '제품' : flag === '4' ? '반제품' : '-';
+          const color =
+            flag === '2' ? 'success' : flag === '4' ? 'warning' : 'default';
+          return <Chip label={label} size="small" color={color} />;
+        },
+      },
+      {
+        field: 'itemName',
+        headerName: '품목명',
+        flex: 1,
+        minWidth: 150,
+        headerAlign: 'center',
+      },
+      {
+        field: 'specification',
+        headerName: '규격',
+        flex: 1,
+        minWidth: 150,
+        headerAlign: 'center',
+        valueFormatter: (value) => value || '-',
+      },
+      {
+        field: 'unit',
+        headerName: '단위',
+        width: 80,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => value || 'EA',
+      },
+      {
+        field: 'orderQty',
+        headerName: '생산의뢰량',
+        width: 120,
+        align: 'right',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Chip
+            label={params.value?.toLocaleString()}
+            size="small"
+            color="default"
+          />
+        ),
+      },
+      {
+        field: 'allocatedQty',
+        headerName: '할당량',
+        width: 100,
+        align: 'right',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Chip
+            label={params.value?.toLocaleString() || '0'}
+            size="small"
+            color="info"
+          />
+        ),
+      },
+      {
+        field: 'remainingQty',
+        headerName: '남은수량',
+        width: 120,
+        align: 'right',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Chip
+            label={params.value?.toLocaleString()}
+            size="small"
+            color="success"
+          />
+        ),
+      },
+      {
+        field: 'deliveryDate',
+        headerName: '납기일',
+        width: 130,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => formatDate(value),
+      },
+      // {
+      //   field: 'registrant',
+      //   headerName: '등록자',
+      //   width: 100,
+      //   align: 'center',
+      //   headerAlign: 'center',
+      //   valueFormatter: (value) => value || '-',
+      // },
+      // {
+      //   field: 'registTime',
+      //   headerName: '등록시간',
+      //   width: 100,
+      //   align: 'center',
+      //   headerAlign: 'center',
+      //   valueFormatter: (value) => value || '-',
+      // },
+    ],
+    [formatDate],
+  );
 
   return (
     <Dialog
@@ -692,9 +892,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           <DataGrid
             rows={requests}
             columns={columns}
-            getRowId={(row) =>
-              `${row.orderNo}-${row.orderSeqno}-${row.orderHistno}-${row.itemCode}`
-            }
+            getRowId={getRequestRowId}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 25, 50, 100]}
@@ -705,18 +903,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             checkboxSelection={true}
             disableMultipleRowSelection={!multiSelect}
             rowSelectionModel={selectionModel}
-            onRowSelectionModelChange={(newSelection) => {
-              // 배열로 오면 커스텀 형탄로 변환
-              if (Array.isArray(newSelection)) {
-                setSelectionModel({
-                  type: 'include',
-                  ids: new Set(newSelection),
-                });
-              } else {
-                setSelectionModel(newSelection);
-              }
-              setError('');
-            }}
+            onRowSelectionModelChange={handleRowSelectionModelChange}
             disableRowSelectionOnClick={false}
             sx={{
               // border: 'none',

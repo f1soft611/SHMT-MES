@@ -75,7 +75,7 @@ const WorkplaceManagement: React.FC = () => {
   const [detailTab, setDetailTab] = useState(0);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
@@ -498,6 +498,7 @@ const WorkplaceManagement: React.FC = () => {
           getRowId={(row) => row.workplaceId || ''}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 20, 50]}
           rowCount={totalCount}
           loading={false}
         />

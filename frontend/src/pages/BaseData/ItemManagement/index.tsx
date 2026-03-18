@@ -18,7 +18,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Refresh as RefreshIcon,
   Search as SearchIcon,
   FilterList as FilterListIcon,
 } from '@mui/icons-material';
@@ -91,7 +90,7 @@ const ItemManagement: React.FC = () => {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
@@ -400,17 +399,6 @@ const ItemManagement: React.FC = () => {
       <PageHeader
         title=""
         crumbs={[{ label: '기준정보' }, { label: '품목 관리' }]}
-        actionsRight={
-          <Button
-            variant="contained"
-            color="info"
-            startIcon={<RefreshIcon />}
-            // onClick={handleRestartClick}
-            // disabled={restartMutation.isPending}
-          >
-            ERP 연동
-          </Button>
-        }
       />
 
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -504,6 +492,7 @@ const ItemManagement: React.FC = () => {
           loading={false}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 20, 50]}
           getRowId={(row) => row.itemCode}
           emptyMessage="데이터가 없습니다."
         />

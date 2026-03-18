@@ -8,10 +8,17 @@
         SELECT COUNT(1) AS cnt
         FROM TSA308
         WHERE FACTORY_CODE = #{factoryCode}
-          AND ORDER_NO = #{prodReqSeq}
+          AND ORDER_NO = #{prodReqNo}
           AND ORDER_SEQNO = #{prodReqSeq}
-          AND ORDER_HISTNO = #{prodReqSeq}
-          AND ITEM_CODE = #{itemSeq}
+          AND ORDER_HISTNO = #{serl}
+          AND ITEM_CODE = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemSeq}
+                </when>
+                <otherwise>
+                    #{itemSeq}
+                </otherwise>
+            </choose>
     </select>
 
     <!-- MES 생산 의뢰 테이블에 생산 의뢰 정보 삽입 -->
@@ -158,9 +165,17 @@
             OPMAN_CODE2 = 'INTERFACE',
             OPTIME2 = GETDATE()
         WHERE FACTORY_CODE = #{factoryCode}
-          AND ORDER_NO = #{prodReqSeq}
+          AND ORDER_NO = #{prodReqNo}
           AND ORDER_SEQNO = #{prodReqSeq}
-          AND ORDER_HISTNO = #{prodReqSeq}
+          AND ORDER_HISTNO = #{serl}
+          AND ITEM_CODE = <choose>
+                <when test="itemFlag != null and itemFlag == 4">
+                    #{semiItemSeq}
+                </when>
+                <otherwise>
+                    #{itemSeq}
+                </otherwise>
+            </choose>
     </update>
 
 </mapper>

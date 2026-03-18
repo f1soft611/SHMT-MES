@@ -10,7 +10,7 @@ import {
 } from '@mui/x-data-grid';
 
 export interface DataTableProps<
-  T extends GridValidRowModel = GridValidRowModel
+  T extends GridValidRowModel = GridValidRowModel,
 > {
   rows: T[];
   columns: GridColDef<T>[];

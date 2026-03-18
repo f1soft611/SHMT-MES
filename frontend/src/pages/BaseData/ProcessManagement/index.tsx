@@ -84,7 +84,7 @@ const ProcessManagement: React.FC = () => {
   >([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
   const { showToast } = useToast();
 
@@ -547,6 +547,7 @@ const ProcessManagement: React.FC = () => {
           getRowId={(row) => row.processId || ''}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 20, 50]}
           rowCount={totalCount}
           loading={false}
         />
