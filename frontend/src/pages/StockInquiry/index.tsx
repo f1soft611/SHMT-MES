@@ -6,9 +6,7 @@ import {
   Stack,
   TextField,
   Typography,
-  InputAdornment,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
@@ -61,7 +59,7 @@ const StockInquiryPage: React.FC = () => {
   // 페이징 상태
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
 
   // 재고 조회
@@ -126,7 +124,7 @@ const StockInquiryPage: React.FC = () => {
       itemName: '',
       whName: '',
     });
-    setPaginationModel({ page: 0, pageSize: 10 });
+    setPaginationModel({ page: 0, pageSize: 20 });
   };
 
   // 테이블 컴럼 정의
@@ -202,6 +200,7 @@ const StockInquiryPage: React.FC = () => {
           crumbs={[{ label: '생산 관리' }, { label: '재고 관리' }]}
         />
 
+        {/* 검색 영역 (기준정보 패턴 통일) */}
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography
             variant="h6"
@@ -217,64 +216,51 @@ const StockInquiryPage: React.FC = () => {
             <FilterListIcon color="primary" />
             검색 필터
           </Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              label="시작 일자"
+              size="small"
+              type="date"
+              value={searchParams.dateFr}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  dateFr: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
 
-          <Grid container spacing={1} sx={{ mb: 2 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-              <TextField
-                fullWidth
-                label="시작 일자"
-                size="small"
-                type="date"
-                value={searchParams.dateFr}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    dateFr: e.target.value,
-                  })
-                }
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-              <TextField
-                fullWidth
-                label="종료 일자"
-                size="small"
-                type="date"
-                value={searchParams.dateTo}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    dateTo: e.target.value,
-                  })
-                }
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-              <TextField
-                fullWidth
-                label="품번"
-                size="small"
-                value={searchParams.itemNo}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    itemNo: e.target.value,
-                  })
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
+            <TextField
+              label="종료 일자"
+              size="small"
+              type="date"
+              value={searchParams.dateTo}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  dateTo: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
 
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <TextField
+              size="small"
+              label="품번"
+              value={searchParams.itemNo}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  itemNo: e.target.value,
+                })
+              }
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              sx={{ flex: 1, minWidth: 240 }}
+            />
+
             <Button variant="outlined" onClick={handleReset}>
               초기화
             </Button>
@@ -297,6 +283,7 @@ const StockInquiryPage: React.FC = () => {
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             rowCount={totalCount}
+            pageSizeOptions={[20, 50, 100]}
           />
         </Paper>
       </Box>

@@ -91,7 +91,7 @@ const ItemManagement: React.FC = () => {
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
   const [confirmDelete, setConfirmDelete] = useState<{
     open: boolean;
@@ -504,6 +504,7 @@ const ItemManagement: React.FC = () => {
           loading={false}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 20, 50]}
           getRowId={(row) => row.itemCode}
           emptyMessage="데이터가 없습니다."
         />
