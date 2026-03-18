@@ -77,7 +77,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                     <TableCell width={40} sx={{ padding: "0 2px" }} />
                                     <TableCell width={120} align="center" sx={{ padding: "0 2px" }}>수주번호</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>거래처</TableCell>
-                                    <TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>
+                                    {/*<TableCell width={150} align="center" sx={{ padding: "0 2px" }}>생산의뢰번호</TableCell>*/}
                                     <TableCell width={200} align="center" sx={{ padding: "0 2px" }}>제품명</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>공정명</TableCell>
                                     <TableCell width={100} align="center" sx={{ padding: "0 2px" }}>설비코드</TableCell>
@@ -94,7 +94,7 @@ export default function ProdResultTable({ rows, rowCount, pagination, onPageChan
                                 {rows.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={14}
+                                            colSpan={13}
                                             align="center"
                                             sx={{ height: 80, color: 'text.secondary' }}
                                         >
@@ -181,9 +181,9 @@ function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     <EllipsisCell value={row.customerName ?? ""} />
                 </TableCell>
-                <TableCell align="center" sx={{ padding: "0 2px" }}>
-                    {row.prodplanId}
-                </TableCell>
+                {/*<TableCell align="center" sx={{ padding: "0 2px" }}>*/}
+                {/*    {row.prodplanId}*/}
+                {/*</TableCell>*/}
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     <EllipsisCell value={row.itemName}/>
                 </TableCell>
