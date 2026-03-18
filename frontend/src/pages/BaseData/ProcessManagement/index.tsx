@@ -241,19 +241,36 @@ const ProcessManagement: React.FC = () => {
         data.processCode = data.processId;
       }
 
+      let isSuccess = false;
+      let errorMessage = '저장에 실패했습니다.';
+
       if (dialogMode === 'create') {
         const result = await processService.createProcess(data);
         if (result.resultCode === 200) {
+          isSuccess = true;
           showToast({ message: '공정이 등록되었습니다.', severity: 'success' });
         } else {
-          showToast({ message: result.result.message, severity: 'error' });
+          errorMessage = result.result?.message || errorMessage;
         }
       } else {
-        await processService.updateProcess(data.processId!, data);
-        showToast({ message: '공정이 수정되었습니다.', severity: 'success' });
+        const result = await processService.updateProcess(
+          data.processId!,
+          data,
+        );
+        if (result.resultCode === 200) {
+          isSuccess = true;
+          showToast({ message: '공정이 수정되었습니다.', severity: 'success' });
+        } else {
+          errorMessage = result.result?.message || errorMessage;
+        }
       }
-      handleCloseDialog();
-      fetchProcesses();
+
+      if (isSuccess) {
+        handleCloseDialog();
+        fetchProcesses();
+      } else {
+        showToast({ message: errorMessage, severity: 'error' });
+      }
     } catch (error) {
       console.error('Failed to save process:', error);
       showToast({ message: '저장에 실패했습니다.', severity: 'error' });
@@ -612,7 +629,11 @@ const ProcessManagement: React.FC = () => {
                     <Select
                       {...field}
                       label="ERP 공정 매핑"
+                      disabled={dialogMode === 'edit'}
                       onChange={(e) => {
+                        if (dialogMode === 'edit') {
+                          return;
+                        }
                         field.onChange(e);
                         // ERP 공정 선택 시 MES 공정명을 ERP 공정명으로 변경
                         const selectedCode = erpProcessCodes.find(
@@ -707,6 +728,7 @@ const ProcessManagement: React.FC = () => {
                   control={
                     <Checkbox
                       checked={field.value === 'Y'}
+                      disabled={dialogMode === 'edit'}
                       onChange={(e) =>
                         field.onChange(e.target.checked ? 'Y' : 'N')
                       }
