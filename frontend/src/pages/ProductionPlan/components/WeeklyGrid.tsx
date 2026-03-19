@@ -108,6 +108,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   const cardPadding = compactMode ? 0.75 : 1;
   const visibleDayCount = visibleDays.filter(Boolean).length;
   const emptyColSpan = 1 + visibleDayCount;
+  const isEmptyState = !loading && equipments.length === 0;
 
   useEffect(() => {
     const container = tableContainerRef.current;
@@ -259,7 +260,10 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         <Table
           stickyHeader
           size={compactMode ? 'small' : 'medium'}
-          sx={{ tableLayout: 'fixed' }}
+          sx={{
+            tableLayout: 'fixed',
+            ...(isEmptyState && { height: '100%' }),
+          }}
         >
           <TableHead>
             <TableRow>
@@ -362,7 +366,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
               })}
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody sx={isEmptyState ? { height: '100%' } : undefined}>
             {loading ? (
               // 스켈레톤 UI
               Array.from({ length: 3 }).map((_, index) => (
@@ -414,16 +418,17 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
               ))
             ) : equipments.length === 0 ? (
               <TableRow sx={{ height: '100%' }}>
-                <TableCell colSpan={emptyColSpan} sx={{ p: 0 }}>
+                <TableCell colSpan={emptyColSpan} sx={{ p: 0, height: '100%' }}>
                   <Box
                     sx={{
                       width: '100%',
+                      height: '100%',
                       minHeight: compactMode ? 240 : 320,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      py: compactMode ? 6 : 8,
+                      textAlign: 'center',
                       opacity: 0.6,
                     }}
                   >
