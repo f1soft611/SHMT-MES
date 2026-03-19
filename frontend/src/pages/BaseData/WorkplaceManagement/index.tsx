@@ -106,16 +106,16 @@ const WorkplaceManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useState({
     searchCnd: '1',
     searchWrd: '',
-    status: '',
-    useYn: '',
+    status: 'ACTIVE',
+    useYn: 'Y',
   });
 
   // 입력 필드용 상태 (화면 입력용)
   const [inputValues, setInputValues] = useState({
     searchCnd: '1',
     searchWrd: '',
-    status: '',
-    useYn: '',
+    status: 'ACTIVE',
+    useYn: 'Y',
   });
 
   // 작업장 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)

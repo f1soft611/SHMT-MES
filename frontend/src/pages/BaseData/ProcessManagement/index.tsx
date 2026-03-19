@@ -113,17 +113,17 @@ const ProcessManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useState({
     searchCnd: '1',
     searchWrd: '',
-    status: '',
+    status: 'ACTIVE',
     equipmentIntegrationYn: '',
-    useYn: '',
+    useYn: 'Y',
   });
 
   const [inputValues, setInputValues] = useState({
     searchCnd: '1',
     searchWrd: '',
-    status: '',
+    status: 'ACTIVE',
     equipmentIntegrationYn: '',
-    useYn: '',
+    useYn: 'Y',
   });
 
   const fetchProcesses = useCallback(async () => {
