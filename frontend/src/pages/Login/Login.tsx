@@ -202,7 +202,9 @@ const Login: React.FC = () => {
               sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}
             >
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                테스트 계정: admin / f1soft@611
+                보안을 위해 최초 로그인 후 반드시 비밀번호를 변경해 주세요.
+                <br />
+                (초기 비밀번호: 아이디 2회 반복 입력)
               </Typography>
             </Box>
           </CardContent>

@@ -37,7 +37,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws IOException, ServletException {
 
         // step 1. request header에서 토큰을 가져온다.
-        String jwtToken = EgovStringUtil.isNullToString(req.getHeader(HEADER_STRING));
+        String jwtToken = EgovStringUtil.isNullToString(req.getHeader(HEADER_STRING)).trim();
+
+        if (jwtToken.isEmpty()) {
+            chain.doFilter(req, res);
+            return;
+        }
+
+        if (jwtToken.startsWith("Bearer ")) {
+            jwtToken = jwtToken.substring(7).trim();
+        }
+
+        if (jwtToken.isEmpty()) {
+            chain.doFilter(req, res);
+            return;
+        }
 
 
         // step 2. 토큰에 내용이 있는지 확인해서 id값을 가져옴
@@ -60,7 +74,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             logger.debug("authentication ===>>> " + authentication);
         } catch (InvalidJwtException e) {
-            logger.debug(e.getMessage());
+            SecurityContextHolder.clearContext();
+            logger.warn("Invalid JWT token: " + e.getMessage());
         }
 
         chain.doFilter(req, res);

@@ -323,6 +323,9 @@
 	<update id="ProductionPlanDAO.updateProductionPlan" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
 		UPDATE TPR301
 		SET
+			PROD_QTY = #{plannedQty},
+			WORK_CODE = #{processCode},
+			EQUIP_SYS_CD = #{equipmentId},
 			WORKER_TYPE = #{workerType},
 			WORKER_CODE = #{workerCode},
 			WORKER_NAME = #{workerName},
@@ -406,6 +409,7 @@
 		    E.FACTORY_CODE,
 		    E.WORKCENTER_CODE AS WORKPLACE_CODE,
 		    E.WORK_CODE AS PROCESS_CODE,
+		    E.PROCESS_NAME AS PROCESS_NAME,
 			E.EQUIP_SYS_CD AS EQUIPMENT_ID,
 			E.EQUIP_CD AS EQUIPMENT_CODE,
 			E.EQUIPMENT_NAME,
@@ -442,6 +446,7 @@
 				E.FACTORY_CODE,
 				H.WORKCENTER_CODE,
 				D.WORK_CODE,
+				P.WORK_NAME AS PROCESS_NAME,
 				E.EQUIP_SYS_CD,
 				E.EQUIP_CD,
 				E.EQUIPMENT_NAME
@@ -465,6 +470,7 @@
 			E.FACTORY_CODE,
 			H.WORKCENTER_CODE,
 			D.WORK_CODE,
+			P.WORK_NAME,
 			E.EQUIP_SYS_CD,
 			E.EQUIP_CD,
 			E.EQUIPMENT_NAME
@@ -666,7 +672,7 @@
 				 AND PF.WORK_ORDER_ID = PFI.WORK_ORDER_ID
 				WHERE PF.FACTORY_CODE = T.FACTORY_CODE
 				  AND PF.WORKCENTER_CODE = #{workplaceCode}
-				  AND PFI.PROD_CODE = T.ITEM_CODE
+				  AND PFI.PROD_CODE_ID = T.ITEM_CODE
 				  AND ISNULL(PF.DELETE_FLAG, '') != '1'
 			)
 		</if>

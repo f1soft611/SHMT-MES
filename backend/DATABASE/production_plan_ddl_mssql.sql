@@ -3,6 +3,21 @@
 -- TPR301: 생산계획 상세
 -- TPR301R: 생산계획 실적(주문연결)
 
+-- 조건형 ID 생성 테이블 (IDS2)
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[IDS2]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[IDS2] (
+        [TABLE_NAME] NVARCHAR(30) NOT NULL,
+        [CONDITION1] NVARCHAR(50) NOT NULL,
+        [CONDITION2] NVARCHAR(50) NOT NULL,
+        [NEXT_ID] DECIMAL(20,0) NOT NULL DEFAULT 0,
+        CONSTRAINT [PK_IDS2] PRIMARY KEY ([TABLE_NAME], [CONDITION1], [CONDITION2])
+    );
+
+    CREATE INDEX [IX_IDS2_TABLE_COND2] ON [dbo].[IDS2] ([TABLE_NAME], [CONDITION2]);
+END
+GO
+
 -- 생산계획 마스터 테이블 (TPR301M)
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[TPR301M]') AND type in (N'U'))
 BEGIN

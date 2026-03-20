@@ -106,6 +106,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   const emptyDayColWidth = compactMode ? 120 : 160;
   const cellPadding = compactMode ? 0.75 : 1;
   const cardPadding = compactMode ? 0.75 : 1;
+  const visibleDayCount = visibleDays.filter(Boolean).length;
+  const emptyColSpan = 1 + visibleDayCount;
+  const isEmptyState = !loading && equipments.length === 0;
 
   useEffect(() => {
     const container = tableContainerRef.current;
@@ -257,7 +260,10 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         <Table
           stickyHeader
           size={compactMode ? 'small' : 'medium'}
-          sx={{ tableLayout: 'fixed' }}
+          sx={{
+            tableLayout: 'fixed',
+            ...(isEmptyState && { height: '100%' }),
+          }}
         >
           <TableHead>
             <TableRow>
@@ -360,7 +366,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
               })}
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody sx={isEmptyState ? { height: '100%' } : undefined}>
             {loading ? (
               // 스켈레톤 UI
               Array.from({ length: 3 }).map((_, index) => (
@@ -411,9 +417,21 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                 </TableRow>
               ))
             ) : equipments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
-                  <Box sx={{ opacity: 0.6 }}>
+              <TableRow sx={{ height: '100%' }}>
+                <TableCell colSpan={emptyColSpan} sx={{ p: 0, height: '100%' }}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      minHeight: compactMode ? 240 : 320,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      opacity: 0.6,
+                    }}
+                  >
                     <ViewWeekIcon
                       sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }}
                     />

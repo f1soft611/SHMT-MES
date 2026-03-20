@@ -372,7 +372,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 		try {
 			// 1. ERP 시스템에서 생산 의뢰 정보 조회
 			log.info("ERP 시스템에서 생산 의뢰 데이터 조회 시작");
-			List<ErpProductionRequest> erpProdReqs = selectErpProductionRequests(fromDate, toDate, fromDate, toDate);
+			List<ErpProductionRequest> erpProdReqs = selectErpProductionRequests(fromDate, toDate);
 			log.info("ERP 생산 의뢰 데이터 조회 완료: {}건", erpProdReqs.size());
 
 			// 2. MES 시스템에 생산 의뢰 정보 등록/업데이트
@@ -421,7 +421,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @return 생산 의뢰 정보 리스트
 	 */
-	private List<ErpProductionRequest> selectErpProductionRequests(String fromDate, String toDate, String fromDate2, String toDate2) {
+	private List<ErpProductionRequest> selectErpProductionRequests(String fromDate, String toDate) {
 		String sql =
 				"SELECT " +
 						"      JoinItem.ProdReqNo, " +
@@ -508,13 +508,51 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"             ON A.MatItemSeq = C.ItemSeq " +
 						"            AND C.ASSETSEQ = '4' " +
 						"      WHERE CONVERT(VARCHAR(10), PRI.LastDateTime, 120) BETWEEN ? AND ? " +
+
+						"      UNION ALL " +
+
+						"      SELECT " +
+						"           PRI.ProdReqNo, " +
+						"           PRI.ProdReqSeq, " +
+						"           PRI.Serl, " +
+						"           PRI.ReqDate, " +
+						"           PRI.CustSeq, " +
+						"           PRI.DeptSeq, " +
+						"           PRI.EmpSeq, " +
+						"           PRI.ItemSeq, " +
+						"           PRI.ItemNo, " +
+						"           PRI.ItemName, " +
+						"           PRI.Spec, " +
+						"           PRI.UnitSeq, " +
+						"           PRI.Qty, " +
+						"           PRI.EndDate, " +
+						"           PRI.DelvDate, " +
+						"           PRI.LastUserSeq, " +
+						"           PRI.LastDateTime, " +
+						"           C2.ItemSeq AS JoinItemSeq, " +
+						"           C2.ItemNo AS JoinItemNo, " +
+						"           C2.ItemName AS JoinItemName, " +
+						"           C2.Spec AS JoinSpec, " +
+						"           4 AS ItemFlag " +
+						"      FROM SHM_IF_VIEW_TPDMPSProdReqItem PRI " +
+						"      INNER JOIN SHM_IF_VIEW_TPDROUItemProcMat A1 " +
+						"             ON PRI.ItemSeq = A1.UpperItemSeq " +
+						"      INNER JOIN SHM_IF_VIEW_TDAItem C1 " +
+						"             ON A1.MatItemSeq = C1.ItemSeq " +
+						"            AND C1.ASSETSEQ = '4' " +
+						"      INNER JOIN SHM_IF_VIEW_TPDROUItemProcMat A2 " +
+						"             ON C1.ItemSeq = A2.UpperItemSeq " +
+						"      INNER JOIN SHM_IF_VIEW_TDAItem C2 " +
+						"             ON A2.MatItemSeq = C2.ItemSeq " +
+						"            AND C2.ASSETSEQ = '4' " +
+						"      WHERE CONVERT(VARCHAR(10), PRI.LastDateTime, 120) BETWEEN ? AND ? " +
 						"     ) AS JoinItem " +
 
 						"ORDER BY ProdReqNo, ProdReqSeq, Serl, ItemFlag";
 
 
 
-		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate, fromDate2, toDate2);
+		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate, fromDate, toDate, fromDate, toDate);
 	}
 
 	/**

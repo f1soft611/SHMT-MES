@@ -286,15 +286,32 @@ const ProductionPlan: React.FC = () => {
 
   const loadWorkplaces = useCallback(async () => {
     try {
-      const response = await workplaceService.getWorkplaceList(0, 100);
+      const response = await workplaceService.getWorkplaceList(0, 100, {
+        status: 'ACTIVE',
+        useYn: 'Y',
+      });
       if (response.resultCode === 200 && response.result?.resultList) {
-        setWorkplaces(response.result.resultList);
+        const filteredWorkplaces = response.result.resultList.filter(
+          (workplace: Workplace) =>
+            workplace.status === 'ACTIVE' && workplace.useYn === 'Y',
+        );
+        setWorkplaces(filteredWorkplaces);
       }
     } catch (error) {
       // Mock data for development
       const mockWorkplaces = [
-        { workplaceCode: 'WP001', workplaceName: '작업장1' },
-        { workplaceCode: 'WP002', workplaceName: '작업장2' },
+        {
+          workplaceCode: 'WP001',
+          workplaceName: '작업장1',
+          status: 'ACTIVE',
+          useYn: 'Y',
+        },
+        {
+          workplaceCode: 'WP002',
+          workplaceName: '작업장2',
+          status: 'ACTIVE',
+          useYn: 'Y',
+        },
       ];
       setWorkplaces(mockWorkplaces as Workplace[]);
       loadEquipments();
@@ -348,7 +365,7 @@ const ProductionPlan: React.FC = () => {
           equipmentName: eq.equipmentName,
           equipmentId: eq.equipmentId,
           processCode: eq.processCode,
-          processName: eq.processName,
+          processName: eq.processName || eq.workName || '',
         }));
         setEquipments(equipmentList);
         setExpandedEquipments(
@@ -659,6 +676,15 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleSave = async (data: ProductionPlanData, references?: any[]) => {
+    const mappedProcessCode = data.equipmentCode
+      ? equipmentProcessMap.get(data.equipmentCode) || ''
+      : '';
+    const mappedProcessName = data.equipmentCode
+      ? equipmentProcessMap.get(data.equipmentCode + 'NAME') || ''
+      : '';
+    const resolvedProcessCode = mappedProcessCode || data.processCode;
+    const resolvedProcessName = mappedProcessName || data.processName;
+
     if (dialogMode === 'create') {
       try {
         const requestData: ProductionPlanRequest = {
@@ -681,8 +707,8 @@ const ProductionPlan: React.FC = () => {
               workplaceName: workplaces.find(
                 (w) => w.workplaceCode === selectedWorkplace,
               )?.workplaceName,
-              processCode: data.processCode,
-              processName: data.processName,
+              processCode: resolvedProcessCode,
+              processName: resolvedProcessName,
               equipmentId: data.equipmentId,
               equipmentCode: data.equipmentCode,
               equipmentName: data.equipmentName,
@@ -765,8 +791,8 @@ const ProductionPlan: React.FC = () => {
               plannedQty: data.plannedQty,
               workplaceCode: formData.workplaceCode || selectedWorkplace,
               workplaceName: formData.workplaceName,
-              processCode: data.processCode,
-              processName: data.processName,
+              processCode: resolvedProcessCode,
+              processName: resolvedProcessName,
               equipmentId: data.equipmentId,
               equipmentCode: data.equipmentCode,
               equipmentName: data.equipmentName,

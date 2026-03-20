@@ -76,7 +76,7 @@ const CommonCodeManagement: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 10,
+    pageSize: 20,
   });
   const { showToast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -126,7 +126,7 @@ const CommonCodeManagement: React.FC = () => {
       const response = await commonCodeService.getCommonCodeList(
         paginationModel.page,
         paginationModel.pageSize,
-        searchParams
+        searchParams,
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setCommonCodes(response.result.resultList);

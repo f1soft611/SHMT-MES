@@ -65,6 +65,12 @@ public class ProductionPlanMaster implements Serializable {
 	@Schema(description = "생산계획일자 (YYYYMMDD)")
 	private String planDate = "";
 
+	@Schema(description = "ID 조건1 (선택)")
+	private String idCondition1 = "";
+
+	@Schema(description = "ID 조건2 (선택, 미입력 시 yyyyMM 자동)")
+	private String idCondition2 = "";
+
 	@Schema(description = "작업장 코드")
 	private String workplaceCode = "";
 

@@ -173,6 +173,30 @@ public class EgovProcessApiController {
             @RequestBody Process process,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+                Process currentProcess = processService.selectProcess(processId);
+                if (currentProcess == null) {
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", "존재하지 않는 공정입니다.");
+                        errorMap.put("processId", processId);
+                        return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+                }
+
+                String currentErpProcessMapping = normalizeField(currentProcess.getErpProcessMapping());
+                String requestErpProcessMapping = normalizeField(process.getErpProcessMapping());
+                String currentEquipmentIntegrationYn = normalizeField(currentProcess.getEquipmentIntegrationYn());
+                String requestEquipmentIntegrationYn = normalizeField(process.getEquipmentIntegrationYn());
+
+                if (!currentErpProcessMapping.equals(requestErpProcessMapping)
+                                || !currentEquipmentIntegrationYn.equals(requestEquipmentIntegrationYn)) {
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", "등록된 공정의 설비연동, ERP 공정 매핑 필드는 수정할 수 없습니다.");
+                        errorMap.put("immutableFields", new String[]{"erpProcessMapping", "equipmentIntegrationYn"});
+                        return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+                }
+
+                process.setErpProcessMapping(currentProcess.getErpProcessMapping());
+                process.setEquipmentIntegrationYn(currentProcess.getEquipmentIntegrationYn());
+
         process.setProcessId(processId);
         process.setUpdUserId(user.getUniqId());
         processService.updateProcess(process);
@@ -182,6 +206,10 @@ public class EgovProcessApiController {
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
+
+        private String normalizeField(String value) {
+                return value == null ? "" : value;
+        }
 
     /**
      * 공정을 삭제한다.
