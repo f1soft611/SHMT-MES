@@ -16,10 +16,11 @@ import {
 import {
     Delete as DeleteIcon
 } from "@mui/icons-material";
-import {ProductionResultDetail, ProdResultOrderRow, BadDetail} from "../../../types/productionResult";
+import {ProductionResultDetail, ProdResultOrderRow} from "../../../types/productionResult";
 import {useProdResultDetail} from "../hooks/useProdResultDetail";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BadQtyDialog from "./BadQtyDialog";
+import processService from "../../../services/processService";
 
 export interface DetailGridRef {
     addRow: () => void;
@@ -41,12 +42,31 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState<any>(null);
+    const [defectOptions, setDefectOptions] = useState<
+        { value: string; label: string }[]
+    >([]);
 
-    const handleCellClick = (params: any) => {
+    const handleCellClick = async  (params: any) => {
         if (params.field !== "badQty") return;
+        try {
+            const data = await processService.getProcessDefects(
+                params.row.workCode
+            );
 
-        setSelectedRow(params.row);
-        setDialogOpen(true);
+            const list = data.result.resultList;
+            setDefectOptions(
+                list.map((d: any) => ({
+                    value: d.processDefectId,
+                    label: d.defectName
+                }))
+            );
+
+            setSelectedRow(params.row);
+            setDialogOpen(true);
+
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     useImperativeHandle(ref, () => ({
@@ -307,7 +327,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                                 processRowUpdate={details.processRowUpdate}
                                 showToolbar
                                 slots={{toolbar: Toolbar}}
-                                onCellClick={handleCellClick}
+                                onCellDoubleClick={handleCellClick}
                             />
                         </LocalizationProvider>
                     </Box>
@@ -338,7 +358,8 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
             <BadQtyDialog
                 open={dialogOpen}
-                defectOptions={[]}
+                selectedRow={selectedRow}
+                defectOptions={defectOptions}
                 onClose={() => setDialogOpen(false)}
                 onSave={() => {}} />
 

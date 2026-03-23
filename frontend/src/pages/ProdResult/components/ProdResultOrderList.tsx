@@ -1,10 +1,9 @@
 import React, {useState} from "react";
 import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer} from "@mui/x-data-grid";
 import {
-    Card, CardContent, CardActions, CircularProgress, Box, Button,
+    Card, CardContent, CardActions, CircularProgress, Box,
 } from "@mui/material";
 import {ProdResultOrderRow} from "../../../types/productionResult";
-import {useToast} from "../../../components/common/Feedback/ToastProvider";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import {formatNumberWithCommas} from "../../../utils/formatUtils";
 
@@ -27,14 +26,13 @@ const numberCol: Partial<GridColDef> = {
 
 export default function ProdResultOrderList({rows, loading, totalCount, paginationModel, onPaginationChange, onRowClick}: Props) {
 
-    const { showToast } = useToast();
-
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
 
     const columns: GridColDef[] = [
         { field: 'orderNo', headerName: '수주번호', width: 120},
         { field: 'customerName', headerName: '거래처', width: 120 },
+        { field: 'itemCode', headerName: '제품번호', width: 100 },
         { field: 'itemName', headerName: '제품명', width: 200 },
         { field: 'workName', headerName: '공정명', width: 120 },
         { field: 'equipSysCd', headerName: '설비코드', width: 120 },
