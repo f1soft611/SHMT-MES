@@ -186,18 +186,23 @@ public class EgovProductionPlanApiController {
 
 		// 마스터 정보 설정
 		ProductionPlanMaster master = requestBody.getMaster();
+		master.setFactoryCode(user.getFactoryCode());
 		master.setProdPlanId(planNo);
 		master.setOpmanCode2(user.getUniqId());
 
 		// 상세 정보 설정
 		List<ProductionPlan> planList = requestBody.getDetails();
 		for (ProductionPlan plan : planList) {
+			plan.setFactoryCode(user.getFactoryCode());
 			plan.setProdPlanId(planNo);
 			plan.setOpmanCode2(user.getUniqId());
 		}
 
+		// 참조 정보 가져오기
+		List<ProductionPlanReference> references = requestBody.getReferences();
+
 		// 생산계획 수정 (트랜잭션 처리)
-		productionPlanService.updateProductionPlan(master, planList);
+		productionPlanService.updateProductionPlan(master, planList, references);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("message", "생산계획이 수정되었습니다.");
