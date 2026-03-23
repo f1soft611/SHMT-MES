@@ -267,17 +267,18 @@ const ProdPlanResult: React.FC = () => {
               component={Paper}
               ref={tableContainerRef}
               sx={{
-                overflowX: 'hidden',
+                overflowX: 'auto',
                 maxHeight: 620,
               }}
             >
               <Table
                 stickyHeader
                 sx={{
+                  width: 'max-content',
                   minWidth: 2000,
-                  tableLayout: 'fixed',
                   '& .MuiTableCell-root': {
                     border: '1px solid #c7c7c7',
+                    whiteSpace: 'nowrap',
                   },
                 }}
               >
@@ -286,7 +287,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.workplace,
                         minWidth: columnWidths.workplace,
                       }}
                     >
@@ -295,7 +295,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.monthTarget,
                         minWidth: columnWidths.monthTarget,
                       }}
                     >
@@ -304,7 +303,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.monthPlan,
                         minWidth: columnWidths.monthPlan,
                       }}
                     >
@@ -313,7 +311,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.orderBacklog,
                         minWidth: columnWidths.orderBacklog,
                       }}
                     >
@@ -322,7 +319,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.nextMonthCarry,
                         minWidth: columnWidths.nextMonthCarry,
                       }}
                     >
@@ -331,7 +327,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.rowType,
                         minWidth: columnWidths.rowType,
                       }}
                     >
@@ -340,7 +335,6 @@ const ProdPlanResult: React.FC = () => {
                     <TableCell
                       align="center"
                       sx={{
-                        width: columnWidths.total,
                         minWidth: columnWidths.total,
                       }}
                     >
@@ -364,7 +358,6 @@ const ProdPlanResult: React.FC = () => {
                             key={`day-${day}`}
                             align="center"
                             sx={{
-                              width: columnWidths.day,
                               minWidth: columnWidths.day,
                               backgroundColor: weekend ? '#D9E1F2' : undefined,
                             }}
@@ -387,7 +380,6 @@ const ProdPlanResult: React.FC = () => {
                             data-week-index={boundaryIndex}
                             colSpan={isCollapsed ? weekLength : 1}
                             sx={{
-                              width: columnWidths.week,
                               minWidth: columnWidths.week,
                               backgroundColor: '#B4C6E7',
                             }}
@@ -482,7 +474,6 @@ const ResultRow = ({
           align="center"
           rowSpan={rowSpan}
           sx={{
-            width: columnWidths.workplace,
             minWidth: columnWidths.workplace,
           }}
         >
@@ -492,22 +483,17 @@ const ResultRow = ({
       <TableCell
         align="right"
         sx={{
-          width: columnWidths.monthTarget,
           minWidth: columnWidths.monthTarget,
         }}
       >
         {formatNumber(row.monthTarget)}
       </TableCell>
-      <TableCell
-        align="right"
-        sx={{ width: columnWidths.monthPlan, minWidth: columnWidths.monthPlan }}
-      >
+      <TableCell align="right" sx={{ minWidth: columnWidths.monthPlan }}>
         {formatNumber(row.monthPlan)}
       </TableCell>
       <TableCell
         align="right"
         sx={{
-          width: columnWidths.orderBacklog,
           minWidth: columnWidths.orderBacklog,
         }}
       >
@@ -516,7 +502,6 @@ const ResultRow = ({
       <TableCell
         align="right"
         sx={{
-          width: columnWidths.nextMonthCarry,
           minWidth: columnWidths.nextMonthCarry,
           backgroundColor: '#FCE4D6',
           color: 'red',
@@ -527,7 +512,6 @@ const ResultRow = ({
       <TableCell
         align="center"
         sx={{
-          width: columnWidths.rowType,
           minWidth: columnWidths.rowType,
           ...rateCellStyle,
         }}
@@ -537,7 +521,6 @@ const ResultRow = ({
       <TableCell
         align="right"
         sx={{
-          width: columnWidths.total,
           minWidth: columnWidths.total,
           backgroundColor: row.rowType === 'RATE' ? '#FFC000' : '#FFFFCC',
         }}
@@ -558,7 +541,6 @@ const ResultRow = ({
                 align="right"
                 colSpan={weekLength}
                 sx={{
-                  width: columnWidths.week,
                   minWidth: columnWidths.week,
                   backgroundColor:
                     row.rowType === 'RATE' ? '#FFC000' : '#B4C6E7',
@@ -575,7 +557,6 @@ const ResultRow = ({
             key={`day-${day}`}
             align="right"
             sx={{
-              width: columnWidths.day,
               minWidth: columnWidths.day,
               backgroundColor: isWeekendDay(day) ? '#D9E1F2' : undefined,
               ...rateCellStyle,
@@ -592,7 +573,6 @@ const ResultRow = ({
               key={`week-${weekIndexForDay + 1}`}
               align="right"
               sx={{
-                width: columnWidths.week,
                 minWidth: columnWidths.week,
                 backgroundColor: row.rowType === 'RATE' ? '#FFC000' : '#B4C6E7',
               }}
