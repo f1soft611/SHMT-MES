@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
   ProdResultOrderRow,
@@ -35,7 +35,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   /** ======================
    *  실적 상세 조회
    *  ====================== */
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     if (!parentRow) return;
     setLoading(true);
     try {
@@ -51,7 +51,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentRow, showToast]);
 
 
   /** ======================
