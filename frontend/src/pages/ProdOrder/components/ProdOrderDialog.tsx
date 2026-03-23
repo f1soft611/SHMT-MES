@@ -108,14 +108,14 @@ export default function ProdOrderDialog({
         },
         {
             field: "itemCode",
-            headerName: "아이템코드",
+            headerName: "제품번호",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
             field: "prodCode",
-            headerName: "생산품목코드",
+            headerName: "생산품목번호",
             width: 100,
             headerAlign: "center",
             align: "center",
