@@ -28,6 +28,7 @@ public class ProdResultOrderRow {
 
     private String itemCode;
     private String itemName;
+    private String lotNo;
 
     private String prodCode;
     private String prodName;

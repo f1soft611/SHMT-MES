@@ -33,13 +33,15 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
         { field: 'orderNo', headerName: '수주번호', width: 120},
         { field: 'customerName', headerName: '거래처', width: 120 },
         { field: 'itemCode', headerName: '제품번호', width: 100 },
-        { field: 'itemName', headerName: '제품명', width: 200 },
+        { field: 'itemName', headerName: '제품명', width: 150 },
+        { field: 'lotNo', headerName: '제품 LotNo', width: 150 },
         { field: 'workName', headerName: '공정명', width: 120 },
-        { field: 'equipSysCd', headerName: '설비코드', width: 120 },
+        { field: 'equipSysCd', headerName: '설비코드', width: 100 },
         { field: 'equipSysCdNm', headerName: '설비명', width: 120 },
-        { field: 'prodCode', headerName: '생산품목코드', width: 150 },
-        { field: 'prodName', headerName: '생산품목명', width: 200 },
+        { field: 'prodCode', headerName: '생산품목번호', width: 100 },
+        { field: 'prodName', headerName: '생산품목명', width: 150 },
         { field: 'prodSpec', headerName: '생산품목규격', width: 150 },
+        {field: 'workdtDate', headerName: '작업시작일', width: 120,},
         {
             field: 'prodQty',
             headerName: '작업지시량',
@@ -47,11 +49,6 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
             ...numberCol,
         },
         { field: 'bigo', headerName: '비고', width: 200 },
-        {
-            field: 'workdtDate',
-            headerName: '작업시작일',
-            width: 120,
-        },
     ].map(col => ({
         headerAlign: 'center',
         align:'center',
@@ -126,6 +123,9 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
                             }}
                             showToolbar
                             slots={{ toolbar: Toolbar }}
+                            columnVisibilityModel={{
+                                equipSysCd: false,
+                            }}
                         />
                     </Box>
                 </CardContent>
