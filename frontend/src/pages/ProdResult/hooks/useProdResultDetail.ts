@@ -312,7 +312,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
      *  parentRow 변경 시 작업자 재조회
      *  ====================== */
     fetchDetails();
-  }, [parentRow]);
+  }, [parentRow, fetchDetails]);
 
   return {
     rows,
