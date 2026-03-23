@@ -31,6 +31,7 @@ export interface ProdResultOrderRow {
     // === 품목 ===
     itemCode: string;
     itemName: string;
+    lotNo: string;
 
     prodCode: string;
     prodName: string;
