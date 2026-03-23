@@ -111,7 +111,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		productionResultDAO.deleteProductionResultWorker(dto);
 
 		// 2. 실적별 투입자재 삭제 TPR601M
-//		productionResultDAO.deleteProductionResultMaterial(dto); // todo
+//		productionResultDAO.deleteProductionResultMaterial(dto); // todo: 투입자재 삭제로직
 
 		// 3. 실적 삭제 TPR601
 		productionResultDAO.deleteProductionResult(dto);
@@ -128,6 +128,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	}
 
 
+	// 생산실적 작업자 저장
 	private void saveProductionResultWorkers(ProdResultDetailParent parent) throws Exception {
 		List<String> workers = parent.getWorkerCodes();
 		if (workers == null || workers.isEmpty()) return;

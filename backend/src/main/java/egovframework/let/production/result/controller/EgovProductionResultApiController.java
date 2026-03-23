@@ -148,7 +148,7 @@ public class EgovProductionResultApiController {
 
 		try {
 			for (ProdResultUpdateDto detail : details) {
-				detail.setFactoryCode(user.getUniqId());
+				detail.setOpmanCode(user.getUniqId());
 			}
 
 			productionResultService.updateProductionResult(details);
