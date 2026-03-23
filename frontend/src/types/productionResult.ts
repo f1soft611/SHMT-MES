@@ -86,7 +86,7 @@ export interface ProductionResultDetail {
 
     // === 작업 시간 ===
     prodStime: string;
-    prodEtime: string;
+    prodEtime: string| null;
 
     // === 수량 ===
     prodQty: number;

@@ -17,6 +17,8 @@ public class ProdResultUpdateDto implements ProdResultDetailParent {
 
     private String tpr601Id;
 
+    private String orderFlag;
+
     //  수정 컬럼
     private String prodStime;   // PROD_STIME
     private String prodEtime;   // PROD_ETIME

@@ -154,6 +154,10 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     }
 
     nextRow.__isModified = true;
+    nextRow.prodEtime = newRow.prodEtime?.trim() ? newRow.prodEtime : null;
+    // ORDER_FLAG 세팅
+    nextRow.orderFlag = nextRow.prodEtime ? '1' : '2';
+
 
     setRows(prev =>
         prev.map(r =>
