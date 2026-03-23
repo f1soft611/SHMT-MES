@@ -125,6 +125,7 @@ export interface ProductionResultDetail {
  */
 export interface BadDetail {
     defectType: string;
+    defectName: string;
     qty: number;
 }
 

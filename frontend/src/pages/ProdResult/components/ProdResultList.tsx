@@ -16,7 +16,7 @@ import {
 import {
     Delete as DeleteIcon
 } from "@mui/icons-material";
-import {ProductionResultDetail, ProdResultOrderRow} from "../../../types/productionResult";
+import {ProductionResultDetail, ProdResultOrderRow, BadDetail} from "../../../types/productionResult";
 import {useProdResultDetail} from "../hooks/useProdResultDetail";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BadQtyDialog from "./BadQtyDialog";
@@ -35,7 +35,7 @@ interface Props {
 
 const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
-    const details = useProdResultDetail(parentRow);
+    const detailHook = useProdResultDetail(parentRow);
 
     const { showToast } = useToast();
 
@@ -44,13 +44,15 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
 
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [selectedRow, setSelectedRow] = useState<any>(null);
-    const [defectOptions, setDefectOptions] = useState<
-        { value: string; label: string }[]
-    >([]);
+    const [defectOptions, setDefectOptions] = useState<BadDetail[]>([]);
+
+    const [selectedRow, setSelectedRow] = useState<ProductionResultDetail | null>(null);
 
     const handleCellClick = async  (params: any) => {
         if (params.field !== "badQty") return;
+
+        setSelectedRow(params.row);
+
         try {
             const data = await processService.getProcessDefects(
                 params.row.workCode
@@ -59,12 +61,12 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
             const list = data.result.resultList;
             setDefectOptions(
                 list.map((d: any) => ({
-                    value: d.processDefectId,
-                    label: d.defectName
+                    defectType: d.processDefectId,
+                    defectName: d.defectName,
+                    qty: 0,
                 }))
             );
 
-            setSelectedRow(params.row);
             setDialogOpen(true);
 
         } catch (e) {
@@ -73,9 +75,9 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
     };
 
     useImperativeHandle(ref, () => ({
-        addRow: details.addRow,
-        getRows: () => details.rows,
-        fetchDetails: details.fetchDetails,
+        addRow: detailHook.addRow,
+        getRows: () => detailHook.rows,
+        fetchDetails: detailHook.fetchDetails,
     }));
 
     const DateTimeEditCell = (params: GridRenderEditCellParams) => {
@@ -197,7 +199,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
                 if (value.length === 0) return "";
 
-                const labels = details.workerOptions
+                const labels = detailHook.workerOptions
                 .filter(o => value.includes(o.value))
                 .map(o => o.label);
 
@@ -237,13 +239,13 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                             });
                         }}
                         renderValue={(selected) =>
-                            details.workerOptions
+                            detailHook.workerOptions
                             .filter(o => selected.includes(o.value))
                             .map(o => o.label)
                             .join(", ")
                         }
                     >
-                        {details.workerOptions.map(opt => (
+                        {detailHook.workerOptions.map(opt => (
                             <MenuItem key={opt.value} value={opt.value}>
                                 <Checkbox checked={value.includes(opt.value)}/>
                                 <ListItemText primary={opt.label}/>
@@ -304,10 +306,10 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                 </Box>
 
                 <Box sx={{ml: "auto", display: "flex", gap: 1}}>
-                    <Button size="small" variant="contained" onClick={details.addRow}>
+                    <Button size="small" variant="contained" onClick={detailHook.addRow}>
                         실적 추가
                     </Button>
-                    <Button size="small" variant="contained" onClick={details.handleSave}>
+                    <Button size="small" variant="contained" onClick={detailHook.handleSave}>
                         저장
                     </Button>
                 </Box>
@@ -325,7 +327,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                     <Box sx={{height: 300}}>
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <DataGrid
-                                rows={details.rows}
+                                rows={detailHook.rows}
                                 columns={columns}
                                 getRowId={(row) => row.tpr601Id}
                                 autoHeight
@@ -345,7 +347,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                                     },
                                 }}
                                 disableRowSelectionOnClick
-                                processRowUpdate={details.processRowUpdate}
+                                processRowUpdate={detailHook.processRowUpdate}
                                 showToolbar
                                 slots={{toolbar: Toolbar}}
                                 onCellDoubleClick={handleCellClick}
@@ -366,12 +368,12 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                 }
                 confirmText="삭제"
                 cancelText="닫기"
-                loading={details.loading}
+                loading={detailHook.loading}
                 onClose={() => setDeleteConfirmOpen(false)}
                 onConfirm={async () => {
                     if (!deleteTarget) return;
 
-                    await details.handleDeleteRow(deleteTarget);
+                    await detailHook.handleDeleteRow(deleteTarget);
                     setDeleteConfirmOpen(false);
                     setDeleteTarget(null);
                 }}
@@ -379,10 +381,26 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
             <BadQtyDialog
                 open={dialogOpen}
-                selectedRow={selectedRow}
                 defectOptions={defectOptions}
+                onSave={(badDetails) => {
+                    if (!selectedRow) return;
+
+                    const sum = badDetails.reduce((acc, cur) => acc + (cur.qty || 0), 0);
+
+                    // 해당 row badQty 업데이트
+                    detailHook.setRows((prev: ProductionResultDetail[]) =>
+                        prev.map((r: ProductionResultDetail) =>
+                            r.tpr601Id === selectedRow.tpr601Id
+                                ? { ...r, badQty: sum, goodQty:r.prodQty-sum, __isModified: true, }
+                                : r
+                        )
+                    );
+
+                    setDialogOpen(false);
+                    setSelectedRow(null);
+                }}
                 onClose={() => setDialogOpen(false)}
-                onSave={() => {}} />
+            />
 
 
         </>
