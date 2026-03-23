@@ -7,6 +7,7 @@ import {
 import { productionResultService } from '../../../services/productionResultService';
 import workplaceService from '../../../services/workplaceService';
 import { WorkplaceWorker } from '../../../types/workplace';
+import dayjs from "dayjs";
 
 export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   const { showToast } = useToast();
@@ -114,6 +115,21 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
       newRow: ProductionResultDetail,
       oldRow: ProductionResultDetail
   ) => {
+
+    // 시간 검증 추가
+    const start = newRow.prodStime ? dayjs(newRow.prodStime) : null;
+    const end = newRow.prodEtime ? dayjs(newRow.prodEtime) : null;
+
+    if (start && end && !end.isAfter(start)) {
+      showToast({
+        message: '종료시간은 시작시간보다 커야 합니다.',
+        severity: 'error',
+      });
+
+      return oldRow;
+    }
+
+
     const prod = Number(newRow.prodQty ?? 0);
     const good = Number(newRow.goodQty ?? 0);
     const bad  = Number(newRow.badQty ?? 0);

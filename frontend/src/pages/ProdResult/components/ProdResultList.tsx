@@ -21,6 +21,7 @@ import {useProdResultDetail} from "../hooks/useProdResultDetail";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BadQtyDialog from "./BadQtyDialog";
 import processService from "../../../services/processService";
+import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
 export interface DetailGridRef {
     addRow: () => void;
@@ -35,6 +36,8 @@ interface Props {
 const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
     const details = useProdResultDetail(parentRow);
+
+    const { showToast } = useToast();
 
     const [deleteTarget, setDeleteTarget] = useState<ProductionResultDetail | null>(null);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -81,11 +84,29 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
         );
 
         return (
-
             <DateTimePicker
                 value={temp}
                 onChange={setTemp}
                 onAccept={(v) => {
+                    const row = params.api.getRow(params.id);
+                    const start =
+                        params.field === "prodStime"
+                            ? v
+                            : row?.prodStime ? dayjs(row.prodStime) : null;
+                    const end =
+                        params.field === "prodEtime"
+                            ? v
+                            : row?.prodEtime ? dayjs(row.prodEtime) : null;
+
+                    // 🔥 여기서 막기
+                    if (start && end && !end.isAfter(start)) {
+                        showToast({
+                            message: "종료시간은 시작시간보다 커야 합니다.",
+                            severity: "error",
+                        });
+                        return; // 🔥 값 반영 안함
+                    }
+
                     params.api.setEditCellValue({
                         id: params.id,
                         field: params.field,
