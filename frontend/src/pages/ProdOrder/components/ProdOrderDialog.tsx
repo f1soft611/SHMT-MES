@@ -108,14 +108,14 @@ export default function ProdOrderDialog({
         },
         {
             field: "itemCode",
-            headerName: "아이템코드",
+            headerName: "제품번호",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
             field: "prodCode",
-            headerName: "생산품목코드",
+            headerName: "생산품목번호",
             width: 100,
             headerAlign: "center",
             align: "center",
@@ -310,21 +310,21 @@ export default function ProdOrderDialog({
                                 </Typography>
                             </Box>
 
-                            <Divider
-                                orientation="vertical"
-                                flexItem
-                                sx={{ mx: 0.3, opacity: 1 }}
-                            />
+                            {/*<Divider*/}
+                            {/*    orientation="vertical"*/}
+                            {/*    flexItem*/}
+                            {/*    sx={{ mx: 0.3, opacity: 1 }}*/}
+                            {/*/>*/}
 
-                            {/* 생산계획 ID */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                    생산계획 ID
-                                </Typography>
-                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                    {plan.prodplanDetailId}
-                                </Typography>
-                            </Box>
+                            {/*/!* 생산계획 ID *!/*/}
+                            {/*<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>*/}
+                            {/*    <Typography variant="caption" color="text.secondary">*/}
+                            {/*        생산계획 ID*/}
+                            {/*    </Typography>*/}
+                            {/*    <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>*/}
+                            {/*        {plan.prodplanDetailId}*/}
+                            {/*    </Typography>*/}
+                            {/*</Box>*/}
 
                             <Divider
                                 orientation="vertical"
@@ -389,6 +389,22 @@ export default function ProdOrderDialog({
                                 </Typography>
                                 <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
                                     {plan.prodQty?.toLocaleString()}
+                                </Typography>
+                            </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* LOT_NO */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    제품 LOT No
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.lotNo? plan.lotNo :""}
                                 </Typography>
                             </Box>
                         </Box>

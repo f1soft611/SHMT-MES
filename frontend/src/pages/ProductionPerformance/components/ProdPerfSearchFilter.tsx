@@ -1,9 +1,7 @@
-import React from 'react';
+import {useState} from 'react';
 import {
-    Paper,
-    Button,
-    Stack,
-    Typography, InputLabel, Select, MenuItem, FormControl,
+    Paper, Button, Stack,
+    Typography, InputLabel, Select, MenuItem, FormControl, Tooltip,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -23,6 +21,9 @@ interface Props {
 }
 
 const ProdPerfSearchFilter = ({ loading, workplaces, equipments, search, onChange, onSearch }: Props) => {
+
+    const [equipOpen, setEquipOpen] = useState(false);
+    const [tooltipOpen, setTooltipOpen] = useState(false);
 
     return (
         <Paper sx={{p: 2, mb: 2}}>
@@ -93,31 +94,50 @@ const ProdPerfSearchFilter = ({ loading, workplaces, equipments, search, onChang
                         ))}
                     </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel>설비</InputLabel>
-                    <Select
-                        value={search.equipment ?? ''}
-                        label="설비"
-                        onChange={(e) => onChange('equipment', e.target.value)}
-                        disabled={!search.workplace}   // 작업장 선택 전 비활성화
-                        MenuProps={{
-                            PaperProps: {
-                                sx: {
-                                    '& .MuiMenuItem-root': {
-                                        fontSize: 13,
+                <Tooltip
+                    title="작업장을 먼저 선택하세요"
+                    open={tooltipOpen}
+                    placement="top"
+                    arrow
+                >
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>설비</InputLabel>
+                        <Select
+                            open={equipOpen}
+                            value={search.equipment ?? ''}
+                            label="설비"
+                            onChange={(e) => onChange('equipment', e.target.value)}
+                            onOpen={() => {
+                                if (!search.workplace) {
+                                    setTooltipOpen(true);
+
+                                    // 1.5초 후 자동 닫기
+                                    setTimeout(() => setTooltipOpen(false), 1500);
+                                    return;
+                                }
+                                setEquipOpen(true);
+                            }}
+                            onClose={() => setEquipOpen(false)}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        '& .MuiMenuItem-root': {
+                                            fontSize: 13,
+                                        },
                                     },
                                 },
-                            },
-                        }}
-                    >
-                        <MenuItem value="">전체</MenuItem>
-                        {equipments.map(eq => (
-                            <MenuItem key={eq.equipSysCd} value={eq.equipSysCd}>
-                                {eq.equipmentName} ({eq.equipSysCd })
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+                            }}
+                        >
+                            <MenuItem value="">전체</MenuItem>
+                            {equipments.map(eq => (
+                                <MenuItem key={eq.equipSysCd} value={eq.equipSysCd}>
+                                    {eq.equipmentName} ({eq.equipSysCd })
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Tooltip>
+
                 <Button
                     variant="contained"
                     color="primary"

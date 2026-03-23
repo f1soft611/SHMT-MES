@@ -3,6 +3,7 @@ import { useProdOrder } from './useProdOrder';
 import { useProdResultDialog } from './useProdResultDialog';
 import { useEffect, useState } from 'react';
 import {ProdPlanRow} from "../../../types/productionOrder";
+import {ProdResultOrderRow} from "../../../types/productionResult";
 
 export function useProductionResult(rowData: ProdPlanRow | null) {
   // 검색필터 작업장 fetch 공통 훅
@@ -16,11 +17,15 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
 
   // 선택된 생산지시
   const [selectedOrder, setSelectedOrder] = useState<any>([]);
+  const [selectedRow, setSelectedRow] = useState<ProdResultOrderRow | null>(null);
 
   // 생산지시 row 선택했을때
-  const handleResultSelect = async (row: any) => {
+  const handleResultSelect = async (row: ProdResultOrderRow) => {
     setSelectedOrder(row);
     dialog.openDialog();
+  };
+  const handleRowClick = (row: ProdResultOrderRow) => {
+    setSelectedRow(row);
   };
 
 
@@ -57,7 +62,8 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     });
 
     // 3) 첫 페이지로
-    prodOrder.setPagination((prev) => ({ ...prev, page: 0 }));
+    const model = { ...prodOrder.paginationModel, page: 0 };
+    prodOrder.onPaginationChange(model);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowData]);
 
@@ -70,13 +76,14 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
     rowCount: prodOrder.rowCount,
     loading: prodOrder.loading,
 
-    pagination: prodOrder.pagination,
-    setPagination: prodOrder.setPagination,
-    handlePageChange: prodOrder.handlePageChange,
-    handlePageSizeChange: prodOrder.handlePageSizeChange,
+    pagination: prodOrder.paginationModel,
+    onPaginationChange: prodOrder.onPaginationChange,
 
     workplaces: wpfetchHook.workplaces,
     refetchWorkplaces: wpfetchHook.refetchWorkplaces,
+
+    selectedRow,
+    handleRowClick,
 
     handleResultSelect,
 

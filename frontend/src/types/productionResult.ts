@@ -91,6 +91,7 @@ export interface ProductionResultDetail {
     prodQty: number;
     goodQty: number | null;
     badQty: number | null;
+    badDetails?: BadDetail[];
     rcvQty: number | null;
 
     // === 지시 / 연동 ===
@@ -116,6 +117,14 @@ export interface ProductionResultDetail {
     id?: string;
     __isModified?: boolean;
 
+}
+
+/**
+ * 불량유형 디테일
+ */
+export interface BadDetail {
+    defectType: string;
+    qty: number;
 }
 
 /**
@@ -159,17 +168,5 @@ export interface ProductionResultSearchForm {
  * 생산실적
  */
 export interface ProdResultRow {
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

@@ -124,6 +124,7 @@ export interface ProdOrderInsertDto {
     workdtDate: string;
 
     itemCodeId: string;
+    itemCode: string;
     itemUnitId: number;
     prodCodeId: string;
     equipmentCode?: string;

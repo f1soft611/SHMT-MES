@@ -166,7 +166,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         },
         {
             field: "lotNo",
-            headerName: "LOT_NO",
+            headerName: "제품 LOT No",
             width: 100,
             headerAlign: "center",
             align: "center",
@@ -310,8 +310,8 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
                         선택한 생산지시를 <b>일괄 취소</b>하시겠습니까?
                         <br />
                         <span style={{ color: '#888', fontSize: 13 }}>
-                ※ 생산실적이 등록된 지시는 취소할 수 없습니다.
-            </span>
+                            ※ 생산실적이 등록된 지시는 취소할 수 없습니다.
+                        </span>
                     </>
                 }
                 confirmText="일괄 취소"

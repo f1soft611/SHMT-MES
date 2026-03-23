@@ -119,6 +119,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		List<ErpIFProdOrderDto> erpIfList = new ArrayList<>();
 
 		for (ProdOrderInsertDto dto : prodOrderList) {
+
+			// TODO: lotNo 세팅
+			dto.setLotNo(dto.getItemCode()+"-yy000");
+
 			// 생산지시 ID 채번
 			String nextId = productionOrderDAO.selectProdOrderNextId();
 			dto.setProdorderId(nextId);
@@ -153,6 +157,13 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					first.getProdworkSeq(),
 					"ORDERED"
 			);
+
+//			updatePlanLotNo(
+//					first.getProdplanDate(),
+//					first.getProdplanSeq(),
+//					first.getProdworkSeq(),
+//					lotNo
+//			);
 		}
 	}
 
@@ -203,6 +214,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				dto.getProdworkSeq(),
 				"PLANNED"
 		);
+
+		// 생산계획TPR301 LOT_NO UPDATE
+		updatePlanLotNo(
+				dto.getProdplanDate(),
+				dto.getProdplanSeq(),
+				dto.getProdworkSeq(),
+				""
+		);
 	}
 
 
@@ -232,6 +251,13 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				continue;
 			}
 
+			String lotNo = targets.get(0).getItemCode()+"-yy000";
+
+			for (ProdOrderRow row : targets) {
+				row.setLotNo(lotNo);
+			}
+
+
 			// 3. 생산지시 저장
 			List<ErpIFProdOrderDto> ifList = createProductionOrders(plan, targets);
 			erpIfService.sendProdOrderBatchToErp(ifList);
@@ -242,6 +268,13 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					plan.getProdplanSeq(),
 					plan.getProdworkSeq(),
 					"ORDERED"
+			);
+
+			updatePlanLotNo(
+					plan.getProdplanDate(),
+					plan.getProdplanSeq(),
+					plan.getProdworkSeq(),
+					lotNo
 			);
 
 		}
@@ -283,6 +316,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					plan.getProdplanSeq(),
 					plan.getProdworkSeq(),
 					"PLANNED"
+			);
+
+			// 생산계획TPR301 LOT_NO UPDATE
+			updatePlanLotNo(
+					plan.getProdplanDate(),
+					plan.getProdplanSeq(),
+					plan.getProdworkSeq(),
+					""
 			);
 		}
 
@@ -362,6 +403,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
 			dto.setNewWorkorderSeq(row.getTpr110dSeq());
 
+			dto.setLotNo(row.getLotNo());
+
 			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
 			dto.setWorkCodeId(row.getWorkCodeId());
 			dto.setItemUnitId(row.getItemUnitId());
@@ -394,6 +437,26 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		flagDto.setOrderFlag(orderFlag);
 
 		productionOrderDAO.updateProdPlanOrderFlag(flagDto);
+	}
+
+	/**
+	 * 생산계획(TPR301)의 LOT_NO 값을 갱신한다.
+	 * (PLANNED / ORDERED)
+	 */
+	private void updatePlanLotNo(
+			String prodplanDate,
+			int prodplanSeq,
+			int prodworkSeq,
+			String lotNo
+	) {
+
+		ProdPlanLotNoDto lotNoDto = new ProdPlanLotNoDto();
+		lotNoDto.setProdplanDate(prodplanDate);
+		lotNoDto.setProdplanSeq(prodplanSeq);
+		lotNoDto.setProdworkSeq(prodworkSeq);
+		lotNoDto.setLotNo(lotNo);
+
+		productionOrderDAO.updateProdPlanLotNo(lotNoDto);
 	}
 
 	/**

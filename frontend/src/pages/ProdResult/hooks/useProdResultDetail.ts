@@ -8,7 +8,7 @@ import { productionResultService } from '../../../services/productionResultServi
 import workplaceService from '../../../services/workplaceService';
 import { WorkplaceWorker } from '../../../types/workplace';
 
-export function useProdResultDetail(parentRow: ProdResultOrderRow) {
+export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   const { showToast } = useToast();
 
   // 상태관리
@@ -36,8 +36,8 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
    *  실적 상세 조회
    *  ====================== */
   const fetchDetails = async () => {
+    if (!parentRow) return;
     setLoading(true);
-
     try {
       const response = await productionResultService.getProdResultDetails(parentRow);
       const list = response.result?.resultList ?? [];
@@ -58,6 +58,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
    *  신규 실적 행 추가
    *  ====================== */
   const addRow = () => {
+    if (!parentRow) return;
     // console.log(parentRow);
     setRows((prev) => [
       ...prev,
@@ -233,10 +234,10 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
       return;
     }
 
-    // 기존 행 → 확인
-    if (!window.confirm('해당 실적을 삭제하시겠습니까?')) return;
-
-    let lastMessage = '삭제되었습니다';
+    // // 기존 행 → 확인
+    // if (!window.confirm('해당 실적을 삭제하시겠습니까?')) return;
+    //
+    // let lastMessage = '삭제되었습니다';
 
     // // 실제 삭제는 저장 시 처리 → 여기서는 제거
     try {
@@ -245,13 +246,12 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
         showToast({ message: data.resultMessage, severity: 'error' });
         return;
       }
-      lastMessage = data.resultMessage;
 
       // 화면에서도 제거
       setRows((prev) => prev.filter((r) => r.tpr601Id !== row.tpr601Id));
 
       showToast({
-        message: lastMessage,
+        message: data.resultMessage,
         severity: 'success',
       });
     } catch (e) {
@@ -267,6 +267,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
    *  작업자 목록 조회
    *  ====================== */
   const fetchWorkers = async () => {
+    if (!parentRow) return;
     try {
       const response = await workplaceService.getWorkplaceWorkers(
         parentRow.workcenterCode
@@ -294,11 +295,24 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow) {
   /** ======================
    *  작업장 변경 시 작업자 재조회
    *  ====================== */
+  const workcenterCode = parentRow?.workcenterCode;
   useEffect(() => {
-    if (!parentRow?.workcenterCode) return;
+    if (!workcenterCode) return;
     fetchWorkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parentRow.workcenterCode]);
+  }, [workcenterCode]);
+
+  useEffect(() => {
+    if (!parentRow) {
+      setRows([]); // 선택 해제 시 초기화까지 해주는 게 맞음
+      return;
+    }
+
+    /** ======================
+     *  parentRow 변경 시 작업자 재조회
+     *  ====================== */
+    fetchDetails();
+  }, [parentRow]);
 
   return {
     rows,

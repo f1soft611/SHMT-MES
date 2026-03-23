@@ -3,17 +3,18 @@ import { useLocation } from 'react-router-dom';
 import {Box, Typography, Grid} from '@mui/material';
 import ProdResultSearchFilter from "./components/ProdResultSearchFilter";
 import {useProductionResult} from "./hooks/useProductionResult";
-import ProdResultTable from "./components/ProdResultTable";
 import {ProdPlanRow} from "../../types/productionOrder";
+import ProdResultOrderList from "./components/ProdResultOrderList";
+import ProdResultList from "./components/ProdResultList";
 
-const ProductionResult: React.FC = () => {
+const ProductionResult = () => {
 
     const location = useLocation();
     const rowData = location.state?.rowData as ProdPlanRow | null; // 생산지시에서 넘어올때 사용하는 params
 
     const rs = useProductionResult(rowData);
 
-    return(
+    return (
         <Box>
             <Box
                 sx={{
@@ -23,7 +24,7 @@ const ProductionResult: React.FC = () => {
                     mb: 2,
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                     <Typography variant="h5">생산실적 관리</Typography>
                 </Box>
             </Box>
@@ -38,16 +39,18 @@ const ProductionResult: React.FC = () => {
                 loading={rs.loading}
             />
 
-            <Grid container spacing={0} columns={12}>
+            <Grid container direction="column" spacing={1}>
                 <Grid size={{xs: 12,}}>
-                    <ProdResultTable
+                    <ProdResultOrderList
                         rows={rs.rows}
-                        rowCount={rs.rowCount}
-                        pagination={rs.pagination}
-                        onPageChange={rs.handlePageChange}
-                        onPageSizeChange={rs.handlePageSizeChange}
                         loading={rs.loading}
-                    />
+                        totalCount={rs.rowCount}
+                        paginationModel={rs.pagination}
+                        onPaginationChange={rs.onPaginationChange}
+                        onRowClick={rs.handleRowClick} />
+
+                    <ProdResultList
+                        parentRow={rs.selectedRow} />
                 </Grid>
             </Grid>
 
