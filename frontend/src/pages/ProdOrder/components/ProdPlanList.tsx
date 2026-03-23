@@ -166,7 +166,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         },
         {
             field: "lotNo",
-            headerName: "LOT_NO",
+            headerName: "제품 LOT No",
             width: 100,
             headerAlign: "center",
             align: "center",

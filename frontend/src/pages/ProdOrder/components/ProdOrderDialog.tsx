@@ -391,6 +391,22 @@ export default function ProdOrderDialog({
                                     {plan.prodQty?.toLocaleString()}
                                 </Typography>
                             </Box>
+
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ mx: 0.3, opacity: 1 }}
+                            />
+
+                            {/* LOT_NO */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    제품 LOT No
+                                </Typography>
+                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
+                                    {plan.lotNo? plan.lotNo :""}
+                                </Typography>
+                            </Box>
                         </Box>
                     )}
 
