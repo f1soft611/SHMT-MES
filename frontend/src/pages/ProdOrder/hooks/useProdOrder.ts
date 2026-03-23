@@ -48,6 +48,7 @@ export function useProdOrder() {
         workdtDate: row.workdtDate,
 
         itemCodeId: row.itemCodeId,
+        itemCode: row.itemCode,
         itemUnitId: row.itemUnitId,
         prodCodeId: row.prodCodeId,
         equipmentCode: row.equipmentCode,

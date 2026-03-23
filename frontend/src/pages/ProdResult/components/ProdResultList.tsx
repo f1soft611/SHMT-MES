@@ -10,13 +10,17 @@ import {
 } from "@mui/x-data-grid";
 import {
     Button, Select, MenuItem, Checkbox, ListItemText,
-    Box, Stack, IconButton
+    Box, Stack, IconButton,
+    Card, CardContent, CardActions,
 } from "@mui/material";
 import {
     Delete as DeleteIcon
 } from "@mui/icons-material";
 import {ProductionResultDetail, ProdResultOrderRow} from "../../../types/productionResult";
-import { useProdResultDetail } from "../hooks/useProdResultDetail";
+import {useProdResultDetail} from "../hooks/useProdResultDetail";
+import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
+import BadQtyDialog from "./BadQtyDialog";
+import processService from "../../../services/processService";
 
 export interface DetailGridRef {
     addRow: () => void;
@@ -25,12 +29,45 @@ export interface DetailGridRef {
 }
 
 interface Props {
-    parentRow: ProdResultOrderRow;
+    parentRow: ProdResultOrderRow | null;
 }
 
-const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => {
+const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
     const details = useProdResultDetail(parentRow);
+
+    const [deleteTarget, setDeleteTarget] = useState<ProductionResultDetail | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedRow, setSelectedRow] = useState<any>(null);
+    const [defectOptions, setDefectOptions] = useState<
+        { value: string; label: string }[]
+    >([]);
+
+    const handleCellClick = async  (params: any) => {
+        if (params.field !== "badQty") return;
+        try {
+            const data = await processService.getProcessDefects(
+                params.row.workCode
+            );
+
+            const list = data.result.resultList;
+            setDefectOptions(
+                list.map((d: any) => ({
+                    value: d.processDefectId,
+                    label: d.defectName
+                }))
+            );
+
+            setSelectedRow(params.row);
+            setDialogOpen(true);
+
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     useImperativeHandle(ref, () => ({
         addRow: details.addRow,
@@ -44,6 +81,7 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
         );
 
         return (
+
             <DateTimePicker
                 value={temp}
                 onChange={setTemp}
@@ -51,9 +89,9 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                     params.api.setEditCellValue({
                         id: params.id,
                         field: params.field,
-                        value: v? v.format("YYYY-MM-DD HH:mm") : null,
+                        value: v ? v.format("YYYY-MM-DD HH:mm") : null,
                     });
-                    params.api.stopCellEditMode({ id: params.id, field: params.field });
+                    params.api.stopCellEditMode({id: params.id, field: params.field});
                 }}
                 ampm={false}
                 format="YYYY-MM-DD HH:mm"
@@ -76,33 +114,56 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
             headerAlign: 'center',
             align: 'center',
             editable: true,
-            valueFormatter: (value) =>
-                value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
+            valueFormatter: (value) => value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
             renderEditCell: (params) => <DateTimeEditCell {...params} />,
         },
-        { field: "prodEtime",
+        {
+            field: "prodEtime",
             headerName: "작업종료시간",
             type: "dateTime",
             width: 200,
             headerAlign: 'center',
             align: 'center',
             editable: true,
-            valueFormatter: (value) =>
-                value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
+            valueFormatter: (value) => value ? dayjs(value as Date).format("YYYY-MM-DD HH:mm") : "",
             renderEditCell: (params) => <DateTimeEditCell {...params} />,
         },
-        { field: "prodQty", headerName: "생산수량", type: "number", width: 120,
+        {
+            field: "prodQty",
+            headerName: "생산수량",
+            type: "number",
+            width: 120,
             headerAlign: 'center',
-            align: 'right', editable: true },
-        { field: "goodQty", headerName: "양품수량", type: "number", width: 120,
+            align: 'center',
+            editable: true
+        },
+        {
+            field: "goodQty",
+            headerName: "양품수량",
+            type: "number",
+            width: 120,
             headerAlign: 'center',
-            align: 'right', editable: true },
-        { field: "badQty", headerName: "불량수량", type: "number", width: 120,
+            align: 'center',
+            editable: true
+        },
+        {
+            field: "badQty",
+            headerName: "불량수량",
+            type: "number",
+            width: 120,
             headerAlign: 'center',
-            align: 'right', editable: true },
-        { field: "rcvQty", headerName: "인수수량", type: "number", width: 120,
+            align: 'center',
+            editable: false
+        },
+        {
+            field: "rcvQty",
+            headerName: "인수수량",
+            type: "number",
+            width: 120,
             headerAlign: 'center',
-            align: 'right', editable: true },
+            align: 'center',
+            editable: true
+        },
         {
             field: "workerCodes",
             headerName: "작업자",
@@ -163,17 +224,15 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                     >
                         {details.workerOptions.map(opt => (
                             <MenuItem key={opt.value} value={opt.value}>
-                                <Checkbox checked={value.includes(opt.value)} />
-                                <ListItemText primary={opt.label} />
+                                <Checkbox checked={value.includes(opt.value)}/>
+                                <ListItemText primary={opt.label}/>
                             </MenuItem>
                         ))}
                     </Select>
                 );
             },
         },
-        { field: "input_mat", headerName: "투입자재", width: 120,
-            headerAlign: 'center',
-            align: 'center', editable: true },
+        {field: "input_mat", headerName: "투입자재", width: 120, headerAlign: 'center', align: 'center', editable: true},
         {
             field: "actionDelete",
             headerName: "삭제",
@@ -195,10 +254,12 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
                             color="error"
                             onClick={(e) => {
                                 e.stopPropagation();               // 행 클릭 방지
-                                details.handleDeleteRow(params.row);
+                                setDeleteTarget(params.row);
+                                setDeleteConfirmOpen(true);
+                                // details.handleDeleteRow(params.row);
                             }}
                         >
-                            <DeleteIcon />
+                            <DeleteIcon/>
                         </IconButton>
                     </Stack>
                 </Box>
@@ -207,35 +268,103 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow }, ref) => 
     ];
 
     const Toolbar = () => (
-        <GridToolbarContainer sx={{ p: 1, justifyContent: "flex-end" }}>
-            <Button size="small" variant="contained" onClick={details.addRow}>
-                실적 추가
-            </Button>
-            <Button size="small" variant="contained" onClick={details.handleSave}>
-                저장
-            </Button>
+        <GridToolbarContainer
+            sx={{
+                px: 1.5,
+                py: 0.75,
+                borderBottom: "1px solid #e0e0e0",
+                fontSize: 16,
+                fontWeight: 600,
+            }}
+        >
+            <Box sx={{display: "flex", alignItems: "center", width: "100%"}}>
+                <Box sx={{fontSize: 16, fontWeight: 600}}>
+                    생산실적 목록
+                </Box>
+
+                <Box sx={{ml: "auto", display: "flex", gap: 1}}>
+                    <Button size="small" variant="contained" onClick={details.addRow}>
+                        실적 추가
+                    </Button>
+                    <Button size="small" variant="contained" onClick={details.handleSave}>
+                        저장
+                    </Button>
+                </Box>
+            </Box>
+
+
         </GridToolbarContainer>
     );
 
 
+    return (
+        <>
+            <Card sx={{boxShadow: 2, mt: 1}}>
+                <CardContent sx={{p: 0, position: 'relative'}}>
+                    <Box sx={{height: 300}}>
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DataGrid
+                                rows={details.rows}
+                                columns={columns}
+                                getRowId={(row) => row.tpr601Id}
+                                autoHeight
+                                hideFooter
+                                rowHeight={30}
+                                columnHeaderHeight={35}
+                                sx={{
+                                    fontSize: 12.5,
+                                    "& .MuiDataGrid-cell": {
+                                        padding: "0 2px",     // 셀 패딩 축소
+                                    },
+                                    '& .MuiDataGrid-cell:focus': {
+                                        outline: 'none',
+                                    },
+                                    '& .MuiDataGrid-row:hover': {
+                                        backgroundColor: 'action.hover',
+                                    },
+                                }}
+                                disableRowSelectionOnClick
+                                processRowUpdate={details.processRowUpdate}
+                                showToolbar
+                                slots={{toolbar: Toolbar}}
+                                onCellDoubleClick={handleCellClick}
+                            />
+                        </LocalizationProvider>
+                    </Box>
+                </CardContent>
+                <CardActions sx={{display: 'none'}}/>
+            </Card>
 
-    return(
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DataGrid
-                rows={details.rows}
-                columns={columns}
-                getRowId={(row) => row.tpr601Id}
-                autoHeight
-                hideFooter
-                rowHeight={35}
-                columnHeaderHeight={40}
-                disableRowSelectionOnClick
-                processRowUpdate={details.processRowUpdate}
-                showToolbar
-                slots={{ toolbar: Toolbar }}
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                title="생산실적 삭제"
+                message={
+                    <>
+                        선택한 생산실적을 <b>삭제</b>하시겠습니까?
+                    </>
+                }
+                confirmText="삭제"
+                cancelText="닫기"
+                loading={details.loading}
+                onClose={() => setDeleteConfirmOpen(false)}
+                onConfirm={async () => {
+                    if (!deleteTarget) return;
+
+                    await details.handleDeleteRow(deleteTarget);
+                    setDeleteConfirmOpen(false);
+                    setDeleteTarget(null);
+                }}
             />
-        </LocalizationProvider>
 
+            <BadQtyDialog
+                open={dialogOpen}
+                selectedRow={selectedRow}
+                defectOptions={defectOptions}
+                onClose={() => setDialogOpen(false)}
+                onSave={() => {}} />
+
+
+        </>
     );
 
 })

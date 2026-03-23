@@ -5,6 +5,7 @@ import {
   ProdResultOrderRow,
   ProductionResultSearchForm,
 } from '../../../types/productionResult';
+import {GridPaginationModel} from "@mui/x-data-grid";
 
 export function useProdOrder() {
   const { showToast } = useToast();
@@ -31,10 +32,10 @@ export function useProdOrder() {
    */
   const [searchParams, setSearchParams] = useState<ProductionResultSearchForm | null>(null);
 
-  // 페이징
-  const [pagination, setPagination] = useState({
+  /** 페이징 */
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 20,
+    pageSize: 20
   });
 
   // 데이터 상태
@@ -51,8 +52,8 @@ export function useProdOrder() {
     try {
       const params = {
         ...searchParams,
-        page: pagination.page,
-        size: pagination.pageSize,
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
       };
       const response = await productionResultService.getProdOrders(params);
 
@@ -78,18 +79,26 @@ export function useProdOrder() {
     }
   };
 
+  // /** ======================
+  //  *  페이지 변경
+  //  *  ====================== */
+  // const handlePageChange = (page: number) => {
+  //   setPagination((prev) => ({ ...prev, page }));
+  // };
+  //
+  // /** ======================
+  //  *  페이지 사이즈 변경
+  //  *  ====================== */
+  // const handlePageSizeChange = (pageSize: number) => {
+  //   setPagination({ page: 0, pageSize });
+  // };
+
   /** ======================
    *  페이지 변경
    *  ====================== */
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  };
-
-  /** ======================
-   *  페이지 사이즈 변경
-   *  ====================== */
-  const handlePageSizeChange = (pageSize: number) => {
-    setPagination({ page: 0, pageSize });
+  const onPaginationChange = (model: GridPaginationModel) => {
+    setPaginationModel(model);
+    // onSearch(model);
   };
 
   /** ======================
@@ -108,12 +117,14 @@ export function useProdOrder() {
   const handleSearch = () => {
     setLoading(true);
     const toYYYYMMDD = (v: string) => v.replaceAll('-', '');
+    const model = { ...paginationModel, page: 0 };
+
     setSearchParams({
       ...search,
       dateFrom: toYYYYMMDD(search.dateFrom!),
       dateTo: toYYYYMMDD(search.dateTo!),
     });
-    setPagination((prev) => ({ ...prev, page: 0 })); // 검색 시 첫 페이지로
+    setPaginationModel(model);
   };
 
 
@@ -127,7 +138,7 @@ export function useProdOrder() {
     if (!searchParams) return;
     fetchList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.pageSize, searchParams]);
+  }, [paginationModel, searchParams]);
 
   return {
     search,
@@ -142,9 +153,7 @@ export function useProdOrder() {
     loading,
 
     // 페이징
-    pagination,
-    setPagination,
-    handlePageChange,
-    handlePageSizeChange,
+    paginationModel,
+    onPaginationChange,
   };
 }

@@ -48,14 +48,14 @@ const ProdDefectRateList = ({
         },
         {
             field: "itemCode",
-            headerName: "품목코드",
+            headerName: "제품번호",
             width: 100,
             headerAlign: "center",
             align: "center",
         },
         {
             field: "itemName",
-            headerName: "품목명",
+            headerName: "제품명",
             width: 100,
             headerAlign: "center",
             align: "center",
@@ -63,11 +63,18 @@ const ProdDefectRateList = ({
         },
         {
             field: "itemSpec",
-            headerName: "품목규격",
+            headerName: "제품규격",
             width: 100,
             headerAlign: "center",
             align: "center",
             valueFormatter: (value) => decodeHtml(value),
+        },
+        {
+            field: "lotNo",
+            headerName: "lotNo",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
         },
         {
             field: "orderQty",
