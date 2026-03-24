@@ -19,6 +19,8 @@ export function useProdPlan() {
     equipment: '',
     dateFrom: today,
     dateTo: dateToStr,
+    prodFrom: '',
+    prodTo: '',
     orderFlag: 'PLANNED'
   });
 
