@@ -50,21 +50,28 @@
         ON X.FACTORY_CODE = X3.FACTORY_CODE
         AND X.WORK_CODE = X3.WORK_CODE
 
+        LEFT JOIN TPR301 P --작업장
+        ON X.FACTORY_CODE = P.FACTORY_CODE
+        AND X.PRODPLAN_DATE = P.PRODPLAN_DATE
+        AND X.PRODPLAN_SEQ = P.PRODPLAN_SEQ
+        AND X.PRODWORK_SEQ = P.PRODWORK_SEQ
+
         LEFT JOIN (
             SELECT
-            FACTORY_CODE,
-            PRODPLAN_DATE,
-            PRODPLAN_SEQ,
-            WORK_SEQ,
-            SUM(PROD_QTY) PRODQTY,
-            SUM(GOOD_QTY) GOODQTY,
-            SUM(BAD_QTY) BADQTY
-        FROM TPR601
-        GROUP BY
-            FACTORY_CODE,
-            PRODPLAN_DATE,
-            PRODPLAN_SEQ,
-            WORK_SEQ
+                FACTORY_CODE,
+                PRODPLAN_DATE,
+                PRODPLAN_SEQ,
+                WORK_SEQ,
+                SUM(PROD_QTY) PRODQTY,
+                SUM(GOOD_QTY) GOODQTY,
+                SUM(BAD_QTY) BADQTY,
+                MAX(PROD_ETIME) MAX_PROD_ETIME
+            FROM TPR601
+            GROUP BY
+                FACTORY_CODE,
+                PRODPLAN_DATE,
+                PRODPLAN_SEQ,
+                WORK_SEQ
         ) S
         ON X.FACTORY_CODE = S.FACTORY_CODE
         AND X.PRODPLAN_DATE = S.PRODPLAN_DATE
@@ -72,7 +79,27 @@
         AND X.WORK_SEQ = S.WORK_SEQ
 
         WHERE ISNULL(x.DELETE_FLAG,'') != '1'
+        <if test="dateFrom != null and dateFrom != ''">
+            AND X.WORKDT_DATE <![CDATA[>=]]> REPLACE(#{dateFrom}, '-', '')
+        </if>
+        <if test="dateTo != null and dateTo != ''">
+            AND X.WORKDT_DATE <![CDATA[<=]]> REPLACE(#{dateTo}, '-', '')
+        </if>
+        <if test="completeFrom != null and completeFrom != ''">
+            AND CONVERT(char(8), S.MAX_PROD_ETIME, 112) <![CDATA[>=]]> REPLACE(#{completeFrom}, '-', '')
+        </if>
+        <if test="completeTo != null and completeTo != ''">
+            AND CONVERT(char(8), S.MAX_PROD_ETIME, 112) <![CDATA[<=]]> REPLACE(#{completeTo}, '-', '')
+        </if>
+        <if test="workplace != null and workplace != ''">
+            AND P.WORKCENTER_CODE = #{workplace}
+        </if>
+        <if test="equipment != null and equipment != ''">
+            AND X.EQUIP_SYS_CD = #{equipment}
+        </if>
         ORDER BY X.PRODPLAN_DATE, CAST(X.PRODPLAN_SEQ AS INT), CAST(X.WORK_SEQ AS INT)
+        OFFSET #{offset} ROWS
+        FETCH NEXT #{size} ROWS ONLY
 
     </select>
 
@@ -83,6 +110,40 @@
         SELECT
             count(*)
         FROM TPR504 X
+        LEFT JOIN TPR301 P --작업장
+        ON X.FACTORY_CODE = P.FACTORY_CODE
+        AND X.PRODPLAN_DATE = P.PRODPLAN_DATE
+        AND X.PRODPLAN_SEQ = P.PRODPLAN_SEQ
+        AND X.PRODWORK_SEQ = P.PRODWORK_SEQ
+        LEFT JOIN (
+            SELECT
+                FACTORY_CODE, PRODPLAN_DATE, PRODPLAN_SEQ, WORK_SEQ,
+                MAX(PROD_ETIME) MAX_PROD_ETIME
+            FROM TPR601
+            GROUP BY FACTORY_CODE, PRODPLAN_DATE, PRODPLAN_SEQ, WORK_SEQ
+        ) S
+        ON X.FACTORY_CODE = S.FACTORY_CODE
+        AND X.PRODPLAN_DATE = S.PRODPLAN_DATE
+        AND X.PRODPLAN_SEQ = S.PRODPLAN_SEQ
+        AND X.WORK_SEQ = S.WORK_SEQ
         WHERE ISNULL(x.DELETE_FLAG,'') != '1'
+        <if test="dateFrom != null and dateFrom != ''">
+            AND X.WORKDT_DATE <![CDATA[>=]]> REPLACE(#{dateFrom}, '-', '')
+        </if>
+        <if test="dateTo != null and dateTo != ''">
+            AND X.WORKDT_DATE <![CDATA[<=]]> REPLACE(#{dateTo}, '-', '')
+        </if>
+        <if test="completeFrom != null and completeFrom != ''">
+            AND CONVERT(char(8), S.MAX_PROD_ETIME, 112) <![CDATA[>=]]> REPLACE(#{completeFrom}, '-', '')
+        </if>
+        <if test="completeTo != null and completeTo != ''">
+            AND CONVERT(char(8), S.MAX_PROD_ETIME, 112) <![CDATA[<=]]> REPLACE(#{completeTo}, '-', '')
+        </if>
+        <if test="workplace != null and workplace != ''">
+            AND P.WORKCENTER_CODE = #{workplace}
+        </if>
+        <if test="equipment != null and equipment != ''">
+            AND X.EQUIP_SYS_CD = #{equipment}
+        </if>
     </select>
 </mapper>

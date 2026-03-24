@@ -1,92 +1,125 @@
-import { useState } from "react";
+import { useEffect, useState } from 'react';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import {useToast} from "../../../components/common/Feedback/ToastProvider";
-import {ProductionDefectRateRow, ProductionDefectRateSearchParams} from "../../../types/productionDefectRate";
-import {useFetchWorkplaces} from "../../../hooks/useFetchWorkplaces";
-import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
-import {productionDefectRateService} from "../../../services/productionDefectRateService";
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
+import {
+  ProductionDefectRateRow,
+  ProductionDefectRateSearchParams,
+} from '../../../types/productionDefectRate';
+import { useFetchWorkplaces } from '../../../hooks/useFetchWorkplaces';
+import { useFetchEquipments } from '../../../hooks/useFetchEquipments';
+import { productionDefectRateService } from '../../../services/productionDefectRateService';
+import commonCodeService from '../../../services/commonCodeService';
+import { CommonDetailCode } from '../../../types/commonCode';
 
 export function useDefectRate() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
 
-    const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
-    const dateTo = new Date();
-    dateTo.setDate(dateTo.getDate() + 7);
+  const dateTo = new Date();
+  dateTo.setDate(dateTo.getDate() + 7);
 
-    /** 검색조건 */
-    const [search, setSearch] = useState<ProductionDefectRateSearchParams>({
-        workplace: '',
-        equipment: '',
-        dateFrom: today,
-        dateTo: dateTo.toISOString().slice(0, 10)
-    });
+  /** 검색조건 */
+  const [search, setSearch] = useState<ProductionDefectRateSearchParams>({
+    workplace: '',
+    equipment: '',
+    defectCode: '',
+    dateFrom: today,
+    dateTo: dateTo.toISOString().slice(0, 10),
+    completeFrom: '',
+    completeTo: '',
+  });
 
-    /** 페이징 */
-    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-        page: 0,
-        pageSize: 20
-    });
+  const [defectTypes, setDefectTypes] = useState<CommonDetailCode[]>([]);
 
-    /** 리스트 */
-    const [rows, setRows] = useState<ProductionDefectRateRow[]>([]);
-    const [rowCount, setRowCount] = useState(0);
+  /** 페이징 */
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 20,
+  });
 
-    /** 로딩 */
-    const [loading, setLoading] = useState(false);
+  /** 리스트 */
+  const [rows, setRows] = useState<ProductionDefectRateRow[]>([]);
+  const [rowCount, setRowCount] = useState(0);
 
-    /** 검색조건 변경 */
-    const onChange = (name: keyof ProductionDefectRateSearchParams, value: string) => {
-        setSearch(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+  /** 로딩 */
+  const [loading, setLoading] = useState(false);
 
-    const onSearch = async (model = paginationModel) => {
-        try {
-            setLoading(true);
-            const params = {
-                ...search,
-                page: model.page,
-                size: model.pageSize,
-            };
+  /** 검색조건 변경 */
+  const onChange = (
+    name: keyof ProductionDefectRateSearchParams,
+    value: string,
+  ) => {
+    setSearch((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-            const response = await productionDefectRateService.getProdDefectRateList(params);
-            setRows(response.result?.resultList ?? []);
-            setRowCount(response.result.resultCnt ?? 0);
-        } catch (err: any) {
-            showToast({
-                message: '목록 조회 실패',
-                severity: 'error',
-            });
-            setRows([]);
-            setRowCount(0);
-        } finally {
-            setLoading(false);
+  const onSearch = async (model = paginationModel) => {
+    try {
+      setLoading(true);
+      const params = {
+        ...search,
+        page: model.page,
+        size: model.pageSize,
+      };
+
+      const response =
+        await productionDefectRateService.getProdDefectRateList(params);
+      setRows(response.result?.resultList ?? []);
+      setRowCount(response.result.resultCnt ?? 0);
+    } catch (err: any) {
+      showToast({
+        message: '목록 조회 실패',
+        severity: 'error',
+      });
+      setRows([]);
+      setRowCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onPaginationChange = (model: GridPaginationModel) => {
+    setPaginationModel(model);
+    onSearch(model);
+  };
+
+  useEffect(() => {
+    const fetchDefectTypes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM003',
+          'Y',
+        );
+        if (response.resultCode === 200 && response.result?.detailCodeList) {
+          setDefectTypes(response.result.detailCodeList);
         }
+      } catch (error) {
+        setDefectTypes([]);
+      }
     };
 
-    const onPaginationChange = (model: GridPaginationModel) => {
-        setPaginationModel(model);
-        onSearch(model);
-    };
+    fetchDefectTypes();
+  }, []);
 
-    // 작업장 조회
-    const workplaces = useFetchWorkplaces();
-    //  작업장 코드 기준 설비 자동 조회
-    const { equipments } = useFetchEquipments(search.workplace);
+  // 작업장 조회
+  const workplaces = useFetchWorkplaces();
+  //  작업장 코드 기준 설비 자동 조회
+  const { equipments } = useFetchEquipments(search.workplace);
 
-    return {
-        rows,
-        rowCount,
-        loading,
-        search,
-        onChange,
-        onSearch,
-        workplaces: workplaces.workplaces,
-        equipments,
-        paginationModel,
-        onPaginationChange
-    };
+  return {
+    rows,
+    rowCount,
+    loading,
+    search,
+    onChange,
+    onSearch,
+    workplaces: workplaces.workplaces,
+    equipments,
+    defectTypes,
+    paginationModel,
+    onPaginationChange,
+  };
 }

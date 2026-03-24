@@ -76,9 +76,10 @@ public interface EgovProductionPlanService {
 	 * 생산계획을 수정한다. (마스터 + 상세 트랜잭션 처리)
 	 * @param master 생산계획 마스터 정보
 	 * @param planList 생산계획 상세 목록
+	 * @param references 생산계획 참조 목록 (생산의뢰 연동 정보)
 	 * @throws Exception
 	 */
-	void updateProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception;
+	void updateProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception;
 
 	/**
 	 * 생산계획을 삭제한다. (마스터, 상세, 참조 모두 삭제)
