@@ -419,7 +419,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 
 	/**
-	 * 생산계획(TPR301)의 ORDER_FLAG 값을 갱신한다.
+	 * 생산계획(TPR301, TPR301M)의 ORDER_FLAG 값을 갱신한다.
 	 * (PLANNED / ORDERED)
 	 */
 	private void updatePlanOrderFlag(
@@ -440,8 +440,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	}
 
 	/**
-	 * 생산계획(TPR301)의 LOT_NO 값을 갱신한다.
-	 * (PLANNED / ORDERED)
+	 * 생산계획(TPR301, TPR301M)의 LOT_NO 값을 갱신한다.
 	 */
 	private void updatePlanLotNo(
 			String prodplanDate,
