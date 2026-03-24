@@ -25,6 +25,8 @@ public class ProdResultInsertDto implements ProdResultDetailParent {
     private Integer badQty;       // BAD_QTY
     private Integer rcvQty;       // RCV_QTY
 
+    private List<ProdResultBadDetailDto> badDetails;
+
     private Integer workorderSeq;
     private String erpSendFlag;
     private Integer erpRsltIdx;

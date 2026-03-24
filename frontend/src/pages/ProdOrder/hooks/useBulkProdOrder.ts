@@ -25,6 +25,7 @@ export function useBulkProdOrder(
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId
         }));
 
         try {
@@ -80,6 +81,7 @@ export function useBulkProdOrder(
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId,
         }));
 
         try {

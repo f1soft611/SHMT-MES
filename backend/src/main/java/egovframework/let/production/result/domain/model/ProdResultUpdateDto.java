@@ -17,6 +17,10 @@ public class ProdResultUpdateDto implements ProdResultDetailParent {
 
     private String tpr601Id;
 
+    private String orderFlag;
+
+    private String workCode;
+
     //  수정 컬럼
     private String prodStime;   // PROD_STIME
     private String prodEtime;   // PROD_ETIME
@@ -27,5 +31,6 @@ public class ProdResultUpdateDto implements ProdResultDetailParent {
     private String opmanCode;   // OPMAN_CODE2
 
     private List<String> workerCodes; // 작업자
+    private List<ProdResultBadDetailDto> badDetails; // 불량상세
 //    private List<String> materialCodes; // 투입자재
 }

@@ -1,42 +1,48 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import {BadDetail, ProductionResultDetail} from "../../../types/productionResult";
+import {BadDetail} from "../../../types/productionResult";
 
 
 interface Props {
     open: boolean;
-    selectedRow?: ProductionResultDetail;
-    initialData?: BadDetail[];
-    defectOptions: { value: string; label: string}[];
+    defectOptions: BadDetail[];
 
-    onClose: () => void;
     onSave: (details: BadDetail[]) => void;
+    onClose: () => void;
 }
 
 export default function BadQtyDialog({
                                          open,
-                                         selectedRow,
-                                         initialData = [],
                                          defectOptions,
-                                         onClose,
                                          onSave,
+                                         onClose,
                                      }: Props) {
+
+    const [rows, setRows] = useState<BadDetail[]>([]);
+
 
 
     const columns: GridColDef[] = [
         {
-            field: "label",
-            headerName: "불량 유형",
-            width: 200,
+            field: "qcCode",
+            headerName: "불량유형 코드",
+            width: 120,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "qty",
+            field: "qcName",
+            headerName: "불량유형 이름",
+            width: 220,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
+            field: "qcQty",
             headerName: "수량",
             width: 200,
             headerAlign: "center",
@@ -47,18 +53,34 @@ export default function BadQtyDialog({
     ];
 
 
+    useEffect(() => {
+        if (open) {
+            setRows(defectOptions);
+        }
+    }, [open, defectOptions]);
+
+
     return(
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>불량 상세 입력</DialogTitle>
 
             <DialogContent>
                 <DataGrid
-                    rows={defectOptions}
+                    rows={rows}
                     columns={columns}
-                    getRowId={(row) => row.value}
+                    getRowId={(row) => row.qcCode}
+                    processRowUpdate={(newRow) => {
+                        setRows(prev =>
+                            prev.map(r =>
+                                r.qcCode === newRow.qcCode ? newRow : r
+                            )
+                        );
+                        return newRow;
+                    }}
                 />
             </DialogContent>
             <DialogActions>
+                <Button onClick={() => onSave(rows)}>적용</Button>
                 <Button onClick={onClose}>취소</Button>
             </DialogActions>
 

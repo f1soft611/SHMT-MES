@@ -2,11 +2,9 @@ package egovframework.let.production.result.domain.model;
 
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class ProdResultDeleteDto implements ProdResultDetailParent {
-
+public class ProdResultBadDetailDto {
+    // === PK / FK ===
     private String factoryCode;
     private String prodplanDate;
     private Integer prodplanSeq;
@@ -14,10 +12,11 @@ public class ProdResultDeleteDto implements ProdResultDetailParent {
     private Integer workSeq;
     private Integer prodSeq;
 
-    private String tpr601Id;
+    private Integer badSeq;     // BAD_SEQ (채번 필요)
 
     private String workCode;
 
-    private List<String> workerCodes; // optional
-    private List<ProdResultBadDetailDto> badDetails; // optional
+    // === 불량 정보 ===
+    private String qcCode;     // QC_CODE
+    private Integer qcQty;  // QC_QTY
 }

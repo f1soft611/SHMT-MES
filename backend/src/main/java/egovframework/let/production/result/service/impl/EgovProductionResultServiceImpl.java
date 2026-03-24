@@ -1,6 +1,7 @@
 package egovframework.let.production.result.service.impl;
 
 import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.domain.repository.ProductionResultDAO;
 import egovframework.let.production.result.service.EgovProductionResultService;
@@ -35,9 +36,6 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	private final ProductionResultDAO productionResultDAO;
 
-//	@Resource(name = "egovProdResultIdGnrService")
-//	private EgovIdGnrService egovProdPlanIdgenService;
-
 	@Override
 	public ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception {
 
@@ -68,6 +66,9 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 				// TPR601W 저장
 				saveProductionResultWorkers(dto);
 
+				// 불량 상세 저장
+				saveProductionResultBadDetails(dto);
+
 
 				// TPR601M 저장
 
@@ -97,6 +98,9 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			productionResultDAO.deleteProductionResultWorker(dto);
 			saveProductionResultWorkers(dto);
 
+			// 🔥 3. 불량 DELETE → INSERT (추가)
+			saveProductionResultBadDetails(dto);
+
 
 			// TPR601M DELETE ALL -> INSERT
 		}
@@ -107,13 +111,19 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Transactional
 	public void deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
 
-		// 1. 실적별 작업자 삭제 TPR601W
+		// 1. 실적별 불량 상세 삭제 TPR605
+		productionResultDAO.deleteBadDetails(dto);
+
+		// 2. 작업자 삭제 TPR601W
 		productionResultDAO.deleteProductionResultWorker(dto);
 
-		// 2. 실적별 투입자재 삭제 TPR601M
+		// 3. 설비상태 삭제 TPR610
+		productionResultDAO.deleteProductionResultEquipStatus(dto);
+
+		// 실적별 투입자재 삭제 TPR601M
 //		productionResultDAO.deleteProductionResultMaterial(dto); // todo: 투입자재 삭제로직
 
-		// 3. 실적 삭제 TPR601
+		// 4. 실적 삭제 TPR601
 		productionResultDAO.deleteProductionResult(dto);
 
 	}
@@ -123,6 +133,14 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Override
 	public ListResult<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception {
 		List<ProdResultRow> list = productionResultDAO.selectProductionResultDetailList(dto);
+
+		return new ListResult<>(list, 0);
+	}
+
+	// 불량 상세 목록 조회
+	@Override
+	public ListResult<ProdResultBadDetailDto> selectBadDetails(ProdResultBaseDetailDto dto) throws Exception {
+		List<ProdResultBadDetailDto> list = productionResultDAO.selectBadDetails(dto);
 
 		return new ListResult<>(list, 0);
 	}
@@ -153,8 +171,42 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 			productionResultDAO.insertProductionResultWorker(dto);
 		}
+	}
 
+	// 생산실적 불량 상세 저장
+	private void saveProductionResultBadDetails(ProdResultDetailParent parent) throws Exception {
 
+		List<ProdResultBadDetailDto> badList = parent.getBadDetails();
+
+		productionResultDAO.deleteBadDetails(parent);
+
+		if (badList == null || badList.isEmpty()) return;
+
+		int seq = 1;
+
+		for (ProdResultBadDetailDto bad : badList) {
+			if (bad.getQcQty() == null || bad.getQcQty() <= 0) continue;
+
+			// DTO 생성
+			ProdResultBadDetailDto dto = new ProdResultBadDetailDto();
+
+			// key 복사
+			dto.setFactoryCode(parent.getFactoryCode());
+			dto.setProdplanDate(parent.getProdplanDate());
+			dto.setProdplanSeq(parent.getProdplanSeq());
+			dto.setProdworkSeq(parent.getProdworkSeq());
+			dto.setWorkSeq(parent.getWorkSeq());
+			dto.setProdSeq(parent.getProdSeq());
+			dto.setWorkCode(parent.getWorkCode());
+
+			// 불량 정보
+			dto.setQcCode(bad.getQcCode());
+			dto.setQcQty(bad.getQcQty());
+
+			dto.setBadSeq(seq++);
+
+			productionResultDAO.insertBadDetail(dto);
+		}
 	}
 
 }
