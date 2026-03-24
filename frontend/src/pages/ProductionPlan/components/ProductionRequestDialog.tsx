@@ -478,12 +478,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         const item = selectedItems[i];
         setRegisterProgress({ current: i + 1, total: selectedItems.length });
         try {
+          const remainingPlanQty = Math.max(0, Number(item.remainingQty ?? 0));
+
           const planData: ProductionPlanRequest = {
             master: {
               planDate: planDate,
               workplaceCode: workplaceCode,
               planStatus: '1',
-              totalPlanQty: item.orderQty || 0,
+              totalPlanQty: remainingPlanQty,
               useYn: 'Y',
             },
             details: [
@@ -491,7 +493,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
                 planDate: planDate,
                 itemCode: item.itemCode || '',
                 itemName: item.itemName || '',
-                plannedQty: item.orderQty || 0,
+                plannedQty: remainingPlanQty,
                 workplaceCode: workplaceCode,
                 equipmentId: equipmentId || '', // EQUIP_SYS_CD 값 사용
                 equipmentCode: equipmentCode || '',

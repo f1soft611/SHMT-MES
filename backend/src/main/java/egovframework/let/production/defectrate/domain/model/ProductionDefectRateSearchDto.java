@@ -6,9 +6,12 @@ import lombok.Data;
 public class ProductionDefectRateSearchDto {
     private String dateFrom;
     private String dateTo;
+    private String completeFrom;
+    private String completeTo;
 
     private String workplace;
     private String equipment;
+    private String defectCode;
     private String keyword;
 
     // paging

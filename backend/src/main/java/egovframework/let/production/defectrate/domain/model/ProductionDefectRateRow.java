@@ -16,6 +16,7 @@ public class ProductionDefectRateRow implements Serializable {
 	private Integer prodplanSeq;
 	private Integer prodworkSeq;
 	private Integer workSeq;
+	private Integer prodSeq;
 
 	// === 수주 정보 ===
 	private String orderNo;
@@ -45,13 +46,21 @@ public class ProductionDefectRateRow implements Serializable {
 	private Double prodQty;     // 생산량
 	private Double goodQty;
 	private Double badQty;
+	private Double qcQty;
+
+	// === 불량 상세 ===
+	private Integer badSeq;
+	private String qcCode;
+	private String qcName;
 
 	// === 계산 컬럼 ===
 	private Double remainQty;
 	private Double rate;
+	private Double defectRate;
 
 
 	// === 참조 ID ===
+	private String tpr601Id;
 	private String tpr504Id;
 
 }

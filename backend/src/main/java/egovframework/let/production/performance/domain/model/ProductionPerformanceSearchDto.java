@@ -7,6 +7,9 @@ public class ProductionPerformanceSearchDto {
     private String dateFrom;
     private String dateTo;
 
+    private String completeFrom;
+    private String completeTo;
+
     private String workplace;
     private String equipment;
     private String keyword;

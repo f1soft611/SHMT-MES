@@ -187,6 +187,16 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	}
 
 	/**
+	 * 생산계획 참조(주문연결) 수량을 갱신한다. (planId 기준)
+	 * @param master 생산계획 마스터 정보 (factoryCode, prodPlanId, totalPlanQty 포함)
+	 * @return 수정(UPDATE) 결과
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int updateProductionPlanReferenceQtyByPlanId(ProductionPlanMaster master) throws Exception {
+		return update("ProductionPlanDAO.updateProductionPlanReferenceQtyByPlanId", master);
+	}
+
+	/**
 	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화용)
 	 * XML 매퍼의 'ProductionPlanDAO.selectWeeklyProductionPlansByWorkplace' ID를 호출한다.
 	 * @param searchVO 검색 조건 (workplaceCode, startDate, endDate)
