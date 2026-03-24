@@ -370,6 +370,18 @@
         AND PROD_SEQ = #{prodSeq}
     </delete>
 
+    <!-- 생산실적 설비상태 TPR10 삭제   -->
+    <delete id="deleteProductionResultEquipStatus"
+            parameterType="egovframework.let.production.result.domain.model.ProdResultDetailParent">
+        DELETE FROM TPR610
+        WHERE FACTORY_CODE = '000001'
+        AND PRODPLAN_DATE = #{prodplanDate}
+        AND PRODPLAN_SEQ = #{prodplanSeq}
+        AND PRODWORK_SEQ = #{prodworkSeq}
+        AND WORK_SEQ = #{workSeq}
+        AND PROD_SEQ = #{prodSeq}
+    </delete>
+
 
     <!-- 생산실적 저장 후 TPR504 ORDER_FLAG UPDATE  -->
     <update id="updateProdOrderOrderFlag" parameterType="egovframework.let.production.result.domain.model.ProdResultOrderFlagDto">
@@ -418,7 +430,6 @@
           AND PRODWORK_SEQ = #{prodworkSeq}
           AND WORK_SEQ = #{workSeq}
           AND PROD_SEQ = #{prodSeq}
-
     </select>
 
 

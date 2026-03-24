@@ -97,6 +97,11 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		delete("ProductionResultDAO.deleteBadDetails", dto);
 	}
 
+	// 생산실적 - 설비상태
+	public void deleteProductionResultEquipStatus(ProdResultDetailParent dto) throws Exception {
+		delete("ProductionResultDAO.deleteProductionResultEquipStatus", dto);
+	}
+
 	// 생산실적 -투입자재 삭제
 	public void deleteProductionResultMaterial(ProdResultDetailParent dto) throws Exception {
 		delete("ProductionResultDAO.deleteProductionResultMaterial", dto);

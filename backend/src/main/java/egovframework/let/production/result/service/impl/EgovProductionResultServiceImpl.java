@@ -36,9 +36,6 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	private final ProductionResultDAO productionResultDAO;
 
-//	@Resource(name = "egovProdResultIdGnrService")
-//	private EgovIdGnrService egovProdPlanIdgenService;
-
 	@Override
 	public ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception {
 
@@ -120,10 +117,13 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		// 2. 작업자 삭제 TPR601W
 		productionResultDAO.deleteProductionResultWorker(dto);
 
-		// 2. 실적별 투입자재 삭제 TPR601M
+		// 3. 설비상태 삭제 TPR610
+		productionResultDAO.deleteProductionResultEquipStatus(dto);
+
+		// 실적별 투입자재 삭제 TPR601M
 //		productionResultDAO.deleteProductionResultMaterial(dto); // todo: 투입자재 삭제로직
 
-		// 3. 실적 삭제 TPR601
+		// 4. 실적 삭제 TPR601
 		productionResultDAO.deleteProductionResult(dto);
 
 	}

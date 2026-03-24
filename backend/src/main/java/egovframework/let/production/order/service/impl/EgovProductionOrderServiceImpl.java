@@ -2,6 +2,7 @@ package egovframework.let.production.order.service.impl;
 
 import egovframework.com.cmm.exception.BizException;
 import egovframework.let.common.dto.ListResult;
+import egovframework.let.common.idgen.service.EgovConditionalIdService;
 import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.domain.repository.ProductionOrderDAO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -40,6 +43,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	private final ProductionOrderDAO productionOrderDAO;
 	private final ErpIFProdOrderService erpIfService;
+
+	private final EgovConditionalIdService egovConditionalIdService;
 
 	@Resource(name = "egovProdOrderIdGnrService")
 	private EgovIdGnrService egovProdOrderIdGnrService;
@@ -118,10 +123,31 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		List<ErpIFProdOrderDto> erpIfList = new ArrayList<>();
 
-		for (ProdOrderInsertDto dto : prodOrderList) {
+		String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
 
-			// TODO: lotNo 세팅
-			dto.setLotNo(dto.getItemCode()+"-yy000");
+		Map<String, String> lotMap = new HashMap<>();
+
+        for (ProdOrderInsertDto dto : prodOrderList) {
+
+			String itemCode = dto.getItemCode();
+
+			// 이미 채번된 품목이면 재사용
+			String lotNo = lotMap.get(itemCode);
+
+			if (lotNo == null) {
+				lotNo = egovConditionalIdService.getNextStringId(
+						"TPR301M",
+						itemCode,
+						year,
+						itemCode + "-"+year,
+						3,
+						'0'
+				);
+
+				lotMap.put(itemCode, lotNo);
+			}
+
+			dto.setLotNo(lotNo);
 
 			// 생산지시 ID 채번
 			String nextId = productionOrderDAO.selectProdOrderNextId();
@@ -147,7 +173,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
 		}
 
-
 		// 생산계획TPR301 ORDER_FLAG UPDATE
 		if (!prodOrderList.isEmpty()) {
 			ProdOrderInsertDto first = prodOrderList.get(0);
@@ -157,12 +182,17 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					first.getProdworkSeq(),
 					"ORDERED"
 			);
-//			updatePlanLotNo(
-//					first.getProdplanDate(),
-//					first.getProdplanSeq(),
-//					first.getProdworkSeq(),
-//					lotNo
-//			);
+
+			// 품목별 LOT 업데이트
+			for (Map.Entry<String, String> entry : lotMap.entrySet()) {
+
+				updatePlanLotNo(
+						first.getProdplanDate(),
+						first.getProdplanSeq(),
+						first.getProdworkSeq(),
+						entry.getValue()  // lotNo
+				);
+			}
 		}
 	}
 
@@ -236,6 +266,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	public void bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
 		if (plans == null || plans.isEmpty()) return;
 
+		String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+
 		for (ProdPlanKeyDto plan : plans) {
 
 			// 1. 이미 생산 지시된 계획인지 체크
@@ -250,7 +282,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				continue;
 			}
 
-			String lotNo = targets.get(0).getItemCode()+"-yy000";
+			String itemCode = targets.get(0).getItemCode();
+			String lotNo = egovConditionalIdService.getNextStringId(
+					"TPR301M",
+					itemCode,
+					year,
+					itemCode + "-" + year,
+					3,
+					'0'
+			);
 
 			for (ProdOrderRow row : targets) {
 				row.setLotNo(lotNo);
