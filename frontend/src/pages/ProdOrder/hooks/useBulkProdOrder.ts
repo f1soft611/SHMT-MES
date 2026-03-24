@@ -54,7 +54,6 @@ export function useBulkProdOrder(
             setBulkLoading(false);
         }
 
-
     };
 
 
