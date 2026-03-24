@@ -13,6 +13,7 @@ export interface Item {
   stockQty?: string;
   safetyStock?: string;
   productionPerCycle?: string;
+  cycleTime?: string;
   remark?: string;
   interfaceYn?: string;
   useYn?: string;
@@ -38,6 +39,7 @@ export interface ItemType {
   stockQty?: string;
   safetyStock?: string;
   productionPerCycle?: string;
+  cycleTime?: string;
   remark?: string;
   interfaceYn?: string;
   useYn?: string;

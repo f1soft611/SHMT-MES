@@ -43,8 +43,6 @@ export function useSameFlagSelection(
             .filter(r => r.orderFlag === baseFlag)
             .map(r => getRowId(r));
 
-            console.log(allowedIds)
-
             if (hasDifferentFlag){
                 showToast({
                     message: '지시상태가 같은 항목만 선택할 수 있습니다.',
@@ -59,8 +57,6 @@ export function useSameFlagSelection(
                 type: 'include',
                 ids: new Set(allowedIds),
             });
-
-            console.log(selectionModel)
             return;
         }
 

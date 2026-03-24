@@ -13,7 +13,8 @@
 		<result property="unitName" column="UNIT_NAME"/>
 		<result property="stockQty" column="STOCK_QTY"/>
 		<result property="safetyStock" column="SAFETY_STOCK"/>
-		<result property="productionPerCycle" column="PRODUCTION_PER_CYCLE"/>
+		<result property="productionPerCycle" column="ITEM_ONE_PER_QTY"/>
+		<result property="cycleTime" column="ITEM_CT_TIME"/>
 		<result property="remark" column="ETC"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
 		<result property="useYn" column="DELETE_FLAG"/>
@@ -34,7 +35,10 @@
 		UNIT,
 		ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
 		STOCK_QTY,
-		SAFETY_STOCK,		ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,		ETC,
+		SAFETY_STOCK,
+		ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
+		ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
+		ETC,
 		INTERFACE_YN,
 		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
 		OPMAN_CODE,
@@ -164,7 +168,8 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,
+			ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
+			ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
 			ETC,
 			INTERFACE_YN,
 			CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
@@ -187,7 +192,8 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			PRODUCTION_PER_CYCLE,
+			ITEM_ONE_PER_QTY,
+			ITEM_CT_TIME,
 			ETC,
 			INTERFACE_YN,
 			DELETE_FLAG,
@@ -204,6 +210,7 @@
 					 ISNULL(#{stockQty}, '0'),
 					 ISNULL(#{safetyStock}, '0'),
 					 ISNULL(#{productionPerCycle}, '0'),
+					 ISNULL(#{cycleTime}, '0'),
 					 #{remark},
 					 ISNULL(#{interfaceYn}, 'N'),
 					 CASE WHEN ISNULL(#{useYn}, 'N') = 'Y' THEN '0' ELSE '1' END,
@@ -222,7 +229,8 @@
 			UNIT = #{unit},
 			STOCK_QTY = #{stockQty},
 			SAFETY_STOCK = #{safetyStock},
-			PRODUCTION_PER_CYCLE = #{productionPerCycle},
+			ITEM_ONE_PER_QTY = #{productionPerCycle},
+			ITEM_CT_TIME = #{cycleTime},
 			ETC = #{remark},
 			INTERFACE_YN = #{interfaceYn},
 			DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
