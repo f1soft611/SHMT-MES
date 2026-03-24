@@ -9,7 +9,6 @@ import egovframework.let.production.order.service.EgovProductionOrderService;
 import egovframework.let.production.order.service.ErpIFProdOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.javassist.runtime.DotClass;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
