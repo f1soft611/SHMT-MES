@@ -154,6 +154,10 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     }
 
     nextRow.__isModified = true;
+    nextRow.prodEtime = newRow.prodEtime?.trim() ? newRow.prodEtime : null;
+    // ORDER_FLAG 세팅
+    nextRow.orderFlag = nextRow.prodEtime ? '1' : '2';
+
 
     setRows(prev =>
         prev.map(r =>
@@ -204,9 +208,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
 
       // 신규
       if (newRows.length > 0) {
-        const { data } = await productionResultService.createProdResult(
-          newRows
-        );
+        const { data } = await productionResultService.createProdResult(newRows);
         if (data.resultCode !== 200) {
           showToast({ message: data.resultMessage, severity: 'error' });
           return;

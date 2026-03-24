@@ -90,10 +90,17 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         update("ProductionOrderDAO.updateProdPlanOrderFlag", dto);
     }
 
+    public void updateProdPlanOrderFlag2(ProdPlanOrderFlagDto dto) {
+        update("ProductionOrderDAO.updateProdPlanOrderFlag2", dto);
+    }
+
     // 생산지시] 생산지시 저장 -> 생산계획TPR301 LOT NO UPDATE
     // 생산지시] 생산지시 삭제 -> 생산계획TPR301 LOT NO UPDATE
     public void updateProdPlanLotNo(ProdPlanLotNoDto dto) {
         update("ProductionOrderDAO.updateProdPlanLotNo", dto);
+    }
+    public void updateProdPlanLotNo2(ProdPlanLotNoDto dto) {
+        update("ProductionOrderDAO.updateProdPlanLotNo2", dto);
     }
 
     // 생산지시] 생산지시 삭제

@@ -5,6 +5,7 @@ import egovframework.com.cmm.ResponseCode;
 import egovframework.com.cmm.service.ResultVO;
 import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.service.EgovProductionResultService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -222,5 +223,30 @@ public class EgovProductionResultApiController {
 		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
 	}
 
+
+
+	@Operation(
+			summary = "생산실적 불량상세 목록 조회",
+			description = "생산실적 불량상세 목록을 조회한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionResultApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@GetMapping("/badDetail")
+	public ResultVO selectProductionResultBadDetailList(
+			@ModelAttribute ProdResultBaseDetailDto dto,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		ListResult<ProdResultBadDetailDto> data = productionResultService.selectBadDetails(dto);
+
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("resultList", data.getResultList());
+		resultMap.put("user", user);
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
 
 }

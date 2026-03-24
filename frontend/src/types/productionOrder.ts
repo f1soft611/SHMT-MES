@@ -169,4 +169,5 @@ export interface ProdPlanKeyDto {
     prodplanDate: string;   // YYYYMMDD
     prodplanSeq: number;
     prodworkSeq: number;
+    // prodplanDetailId: string;
 }

@@ -86,7 +86,7 @@ export interface ProductionResultDetail {
 
     // === 작업 시간 ===
     prodStime: string;
-    prodEtime: string;
+    prodEtime: string| null;
 
     // === 수량 ===
     prodQty: number;
@@ -124,8 +124,9 @@ export interface ProductionResultDetail {
  * 불량유형 디테일
  */
 export interface BadDetail {
-    defectType: string;
-    qty: number;
+    qcCode: string;
+    qcName: string;
+    qcQty: number;
 }
 
 /**

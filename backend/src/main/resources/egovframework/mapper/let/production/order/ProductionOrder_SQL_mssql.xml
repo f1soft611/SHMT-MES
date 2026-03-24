@@ -30,7 +30,7 @@
 			   A.WORKER_TYPE,
 			   A.WORKER_CODE,
 			   A.WORKER_NAME,
-			   A.LOT_NO,
+			   M.ITEM_LOT_NO LOT_NO,
 			   A.PROD_QTY,
 			   A.WORKORDER_SEQ,
 			   A.BIGO,
@@ -40,6 +40,10 @@
 			   A.OPMAN_CODE2,
 			   A.OPTIME2
 		FROM TPR301 A
+		LEFT JOIN TPR301M M
+		ON A.FACTORY_CODE = M.FACTORY_CODE
+		AND A.PRODPLAN_DATE = M.PRODPLAN_DATE
+		AND A.PRODPLAN_SEQ = M.PRODPLAN_SEQ
 		LEFT JOIN TPR301R R
 		    ON A.FACTORY_CODE = R.FACTORY_CODE
 		    AND A.PRODPLAN_DATE = R.PRODPLAN_DATE
@@ -191,6 +195,7 @@
 		AND A.PRODPLAN_DATE = #{prodplanDate}
 		AND A.PRODPLAN_SEQ = #{prodplanSeq}
 		AND A.PRODWORK_SEQ = #{prodworkSeq}
+		AND A2.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')
 		ORDER BY A.PRODPLAN_DATE, CAST(A.PRODPLAN_SEQ AS INT), CAST(A.PRODWORK_SEQ AS INT), CAST(D.SEQ AS INT), CAST(D.WORK_SEQ AS INT)
 	</select>
 
@@ -373,6 +378,13 @@
 		AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
+	<update id="updateProdPlanOrderFlag2" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+		UPDATE TPR301M SET ORDER_FLAG = #{orderFlag}
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+	</update>
+
 	<!-- TPR301M LOTNO UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
@@ -382,6 +394,13 @@
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 		  AND PRODWORK_SEQ = #{prodworkSeq}
+	</update>
+
+	<update id="updateProdPlanLotNo2" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+		UPDATE TPR301M SET ITEM_LOT_NO = #{lotNo}
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
 	</update>
 
 	

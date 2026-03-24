@@ -215,11 +215,17 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	 */
 	@Override
 	@Transactional
-	public void updateProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList) throws Exception {
+	public void updateProductionPlan(ProductionPlanMaster master, List<ProductionPlan> planList, List<ProductionPlanReference> references) throws Exception {
 		// 총 계획수량 재계산
 		BigDecimal totalQty = BigDecimal.ZERO;
 		for (ProductionPlan plan : planList) {
 			totalQty = totalQty.add(plan.getPlannedQty());
+			if (!StringUtils.hasText(plan.getFactoryCode())) {
+				plan.setFactoryCode(master.getFactoryCode());
+			}
+			if (!StringUtils.hasText(plan.getProdPlanId())) {
+				plan.setProdPlanId(master.getProdPlanId());
+			}
 			if (plan.getPlanGroupId() == null || plan.getPlanGroupId().isEmpty()) {
 				plan.setPlanGroupId(master.getPlanGroupId());
 			}
@@ -232,6 +238,29 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		// 상세 수정
 		for (ProductionPlan plan : planList) {
 			productionPlanDAO.updateProductionPlan(plan);
+		}
+
+		if (references != null && !references.isEmpty()) {
+			// 주문연결(TPR301R) 동기화 - references가 전달된 경우 delete + insert
+			productionPlanDAO.deleteProductionPlanReferenceByPlanId(master);
+
+			List<ProductionPlan> existingPlans = productionPlanDAO.selectProductionPlanByPlanNo(master.getProdPlanId());
+			if (existingPlans == null || existingPlans.isEmpty()) {
+				throw new IllegalStateException("생산계획 참조를 저장할 상세 데이터가 없습니다.");
+			}
+
+			ProductionPlan firstPlan = existingPlans.get(0);
+			for (ProductionPlanReference ref : references) {
+				ref.setFactoryCode(master.getFactoryCode());
+				ref.setProdplanDate(firstPlan.getProdPlanDate());
+				ref.setProdplanSeq(firstPlan.getProdPlanSeq());
+				ref.setOrderQty(master.getTotalPlanQty());
+				ref.setOpmanCode(master.getOpmanCode2());
+				productionPlanDAO.insertProductionPlanReference(ref);
+			}
+		} else {
+			// references가 비어있으면 기존 연결은 유지하고 수량만 갱신
+			productionPlanDAO.updateProductionPlanReferenceQtyByPlanId(master);
 		}
 	}
 

@@ -372,6 +372,19 @@
 		  AND P.PRODPLAN_ID = #{prodPlanId}
 	</delete>
 
+	<!-- 생산계획 참조(주문연결) 수량 갱신 - planId 기준 (TPR301 연계) -->
+	<update id="ProductionPlanDAO.updateProductionPlanReferenceQtyByPlanId" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
+		UPDATE R
+		SET R.ORDER_QTY = ISNULL(#{totalPlanQty}, 0)
+		FROM TPR301R R
+		JOIN TPR301 P
+		  ON P.FACTORY_CODE = R.FACTORY_CODE
+		 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+		 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+		WHERE P.FACTORY_CODE = #{factoryCode}
+		  AND P.PRODPLAN_ID = #{prodPlanId}
+	</update>
+
 	<!-- 생산계획 참조(주문연결) 등록 -->
 	<insert id="ProductionPlanDAO.insertProductionPlanReference" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanReference">
 		INSERT INTO TPR301R (
