@@ -61,6 +61,7 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
   stockQty: yup.string().optional(),
   safetyStock: yup.string().optional(),
   productionPerCycle: yup.string().optional(),
+  cycleTime: yup.string().optional(),
   remark: yup.string().optional(),
   interfaceYn: yup.string().optional(),
   useYn: yup.string().optional(),
@@ -114,6 +115,7 @@ const ItemManagement: React.FC = () => {
       unit: '',
       stockQty: '0',
       safetyStock: '0',
+      cycleTime: '0',
       remark: '',
       interfaceYn: 'N',
       useYn: 'Y',
@@ -185,6 +187,7 @@ const ItemManagement: React.FC = () => {
       unit: '',
       stockQty: '0',
       safetyStock: '0',
+      cycleTime: '0',
       remark: '',
       interfaceYn: 'N',
       useYn: 'Y',
@@ -210,6 +213,7 @@ const ItemManagement: React.FC = () => {
         ...data,
         stockQty: removeCommas(data.stockQty || '0'),
         safetyStock: removeCommas(data.safetyStock || '0'),
+        cycleTime: removeCommas(data.cycleTime || '0'),
       };
 
       if (dialogMode === 'create') {
@@ -287,7 +291,6 @@ const ItemManagement: React.FC = () => {
       field: 'itemCode',
       headerName: '품목코드',
       flex: 1,
-      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -324,8 +327,16 @@ const ItemManagement: React.FC = () => {
       headerAlign: 'center',
     },
     {
-      field: 'stockQty',
-      headerName: '재고수량',
+      field: 'productionPerCycle',
+      headerName: '가공 1회당 생산량',
+      flex: 0.8,
+      align: 'right',
+      headerAlign: 'center',
+      renderCell: (params) => formatNumber(params.value),
+    },
+    {
+      field: 'cycleTime',
+      headerName: '주기시간(초)',
       flex: 0.8,
       align: 'right',
       headerAlign: 'center',
