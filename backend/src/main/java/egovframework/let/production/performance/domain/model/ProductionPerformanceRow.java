@@ -23,6 +23,8 @@ public class ProductionPerformanceRow implements Serializable {
 	private String customerName;
 	private Double orderQty;
 
+	private String lotNo;
+
 	// === 품목 정보 ===
 	private String itemCode;
 	private String itemName;

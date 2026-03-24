@@ -10,6 +10,7 @@
             ISNULL(A.ORDER_NO, '') orderNo,
             ISNULL(A.CUSTOMER_CODE, '') customerCode,
             ISNULL(A1.CUSTOMER_NAME, '') customerName,
+            M.ITEM_LOT_NO lotNo,
             X1.MATERIAL_CODE itemCode, X1.MATERIAL_NAME itemName, X1.MATERIAL_SPEC itemSpec,
             ISNULL(A.ORDER_QTY, 0) orderQty, --수주량
             X.WORK_CODE workCode, X3.WORK_NAME workName,
@@ -47,6 +48,11 @@
         AND X.PRODPLAN_DATE = P.PRODPLAN_DATE
         AND X.PRODPLAN_SEQ = P.PRODPLAN_SEQ
         AND X.PRODWORK_SEQ = P.PRODWORK_SEQ
+
+        LEFT JOIN TPR301M M
+        ON X.FACTORY_CODE = M.FACTORY_CODE
+        AND X.PRODPLAN_DATE = M.PRODPLAN_DATE
+        AND X.PRODPLAN_SEQ = M.PRODPLAN_SEQ
 
         LEFT JOIN TPR301R A
         ON X.FACTORY_CODE = A.FACTORY_CODE
