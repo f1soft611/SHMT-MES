@@ -545,35 +545,46 @@ const ResultRow = ({
           {row.workplaceName}
         </TableCell>
       )}
-      <TableCell
-        align="right"
-        sx={{
-          minWidth: columnWidths.monthTarget,
-        }}
-      >
-        {formatNumber(row.monthTarget)}
-      </TableCell>
-      <TableCell align="right" sx={{ minWidth: columnWidths.monthPlan }}>
-        {formatNumber(row.monthPlan)}
-      </TableCell>
-      <TableCell
-        align="right"
-        sx={{
-          minWidth: columnWidths.orderBacklog,
-        }}
-      >
-        {formatNumber(row.orderBacklog)}
-      </TableCell>
-      <TableCell
-        align="right"
-        sx={{
-          minWidth: columnWidths.nextMonthCarry,
-          backgroundColor: '#FFF0ED',
-          color: 'error.main',
-        }}
-      >
-        {formatNumber(row.nextMonthCarry)}
-      </TableCell>
+      {showWorkplace && (
+        <>
+          <TableCell
+            align="right"
+            rowSpan={rowSpan}
+            sx={{
+              minWidth: columnWidths.monthTarget,
+            }}
+          >
+            {formatNumber(row.monthTarget)}
+          </TableCell>
+          <TableCell
+            align="right"
+            rowSpan={rowSpan}
+            sx={{ minWidth: columnWidths.monthPlan }}
+          >
+            {formatNumber(row.monthPlan)}
+          </TableCell>
+          <TableCell
+            align="right"
+            rowSpan={rowSpan}
+            sx={{
+              minWidth: columnWidths.orderBacklog,
+            }}
+          >
+            {formatNumber(row.orderBacklog)}
+          </TableCell>
+          <TableCell
+            align="right"
+            rowSpan={rowSpan}
+            sx={{
+              minWidth: columnWidths.nextMonthCarry,
+              backgroundColor: '#FFF0ED',
+              color: 'error.main',
+            }}
+          >
+            {formatNumber(row.nextMonthCarry)}
+          </TableCell>
+        </>
+      )}
       <TableCell
         align="center"
         sx={{
