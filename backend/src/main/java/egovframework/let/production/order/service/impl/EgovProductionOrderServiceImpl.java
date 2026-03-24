@@ -157,7 +157,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					first.getProdworkSeq(),
 					"ORDERED"
 			);
-
 //			updatePlanLotNo(
 //					first.getProdplanDate(),
 //					first.getProdplanSeq(),
