@@ -22,6 +22,7 @@ import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BadQtyDialog from "./BadQtyDialog";
 import processService from "../../../services/processService";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import {productionResultService} from "../../../services/productionResultService";
 
 export interface DetailGridRef {
     addRow: () => void;
@@ -48,25 +49,44 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
 
     const [selectedRow, setSelectedRow] = useState<ProductionResultDetail | null>(null);
 
+
+    // 불량상세 목록
     const handleCellClick = async  (params: any) => {
         if (params.field !== "badQty") return;
 
-        setSelectedRow(params.row);
+        const row = params.row;
+        setSelectedRow(row);
 
         try {
-            const data = await processService.getProcessDefects(
-                params.row.workCode
-            );
-
+            const data = await processService.getProcessDefects(params.row.workCode);
             const list = data.result.resultList;
-            setDefectOptions(
-                list.map((d: any) => ({
-                    defectType: d.processDefectId,
-                    defectName: d.defectName,
-                    qty: 0,
-                }))
-            );
 
+            let existing: any[] = [];
+
+            // 신규/기존 분기
+            if (row.tpr601Id?.startsWith("NEW-")) {
+                // 신규 → 현재 row 상태 사용
+                existing = row.badDetails || [];
+            } else {
+                // 기존 → 서버에서 조회
+                const res = await productionResultService.getBadDetails(row);
+                existing = res.result?.resultList ?? [];
+            }
+
+            // merge
+            const merged = list.map((d: any) => {
+                const found = existing.find(
+                    (e: any) => e.qcCode === d.processDefectId
+                );
+
+                return {
+                    qcCode: d.processDefectId,
+                    qcName: d.defectName,
+                    qcQty: found ? found.qcQty : 0,
+                };
+            });
+
+            setDefectOptions(merged);
             setDialogOpen(true);
 
         } catch (e) {
@@ -384,14 +404,30 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                 defectOptions={defectOptions}
                 onSave={(badDetails) => {
                     if (!selectedRow) return;
+                    const prodQty = Number(selectedRow.prodQty ?? 0);
 
-                    const sum = badDetails.reduce((acc, cur) => acc + (cur.qty || 0), 0);
+                    const filtered = badDetails.filter(d => Number(d.qcQty) > 0);
+                    const sum = badDetails.reduce((acc, cur) => acc + (cur.qcQty || 0), 0);
+
+                    if (sum > prodQty) {
+                        showToast({
+                            message: '불량수량이 생산수량보다 클 수 없습니다.',
+                            severity: 'error',
+                        });
+                        return;
+                    }
 
                     // 해당 row badQty 업데이트
                     detailHook.setRows((prev: ProductionResultDetail[]) =>
                         prev.map((r: ProductionResultDetail) =>
                             r.tpr601Id === selectedRow.tpr601Id
-                                ? { ...r, badQty: sum, goodQty:r.prodQty-sum, __isModified: true, }
+                                ? {
+                                    ...r,
+                                    badQty: sum,
+                                    goodQty: prodQty - sum,
+                                    badDetails: filtered,
+                                    __isModified: true,
+                                }
                                 : r
                         )
                     );

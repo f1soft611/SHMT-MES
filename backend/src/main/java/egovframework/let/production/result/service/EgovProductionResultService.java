@@ -1,6 +1,7 @@
 package egovframework.let.production.result.service;
 
 import egovframework.let.common.dto.ListResult;
+import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
 
 import java.util.List;
@@ -50,4 +51,11 @@ public interface EgovProductionResultService {
     ListResult<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception;
 
 
+    /**
+     * 생산실적 불량상세 목록을 조회한다.
+     * @param dto 검색 조건
+     * @return 생산지시 불량 detail 목록
+     * @throws Exception
+     */
+    ListResult<ProdResultBadDetailDto> selectBadDetails(ProdResultBaseDetailDto dto) throws Exception;
 }

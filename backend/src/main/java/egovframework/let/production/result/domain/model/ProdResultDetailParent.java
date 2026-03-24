@@ -12,8 +12,13 @@ public interface ProdResultDetailParent {
     Integer getProdSeq();
     String getTpr601Id();
 
+    String getWorkCode();
+
     // 작업자
     List<String> getWorkerCodes();
+
+    // 불량상세
+    List<ProdResultBadDetailDto> getBadDetails();
 
     // 투입자재
 //    List<ProdResultMaterialDto> getMaterials();

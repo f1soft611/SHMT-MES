@@ -4,7 +4,7 @@ import {
     Button,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import {BadDetail, ProductionResultDetail} from "../../../types/productionResult";
+import {BadDetail} from "../../../types/productionResult";
 
 
 interface Props {
@@ -28,21 +28,21 @@ export default function BadQtyDialog({
 
     const columns: GridColDef[] = [
         {
-            field: "defectType",
+            field: "qcCode",
             headerName: "불량유형 코드",
             width: 120,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "defectName",
+            field: "qcName",
             headerName: "불량유형 이름",
             width: 220,
             headerAlign: "center",
             align: "center",
         },
         {
-            field: "qty",
+            field: "qcQty",
             headerName: "수량",
             width: 200,
             headerAlign: "center",
@@ -68,11 +68,11 @@ export default function BadQtyDialog({
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    getRowId={(row) => row.defectType}
+                    getRowId={(row) => row.qcCode}
                     processRowUpdate={(newRow) => {
                         setRows(prev =>
                             prev.map(r =>
-                                r.defectType === newRow.defectType ? newRow : r
+                                r.qcCode === newRow.qcCode ? newRow : r
                             )
                         );
                         return newRow;

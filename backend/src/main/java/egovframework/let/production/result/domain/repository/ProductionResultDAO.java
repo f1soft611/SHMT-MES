@@ -1,5 +1,6 @@
 package egovframework.let.production.result.domain.repository;
 
+import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
@@ -86,6 +87,16 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		delete("ProductionResultDAO.deleteProductionResultWorker", dto);
 	}
 
+	// 생산실적 - 불량 상세 등록
+	public void insertBadDetail(ProdResultBadDetailDto dto) throws Exception {
+		insert("ProductionResultDAO.insertBadDetail", dto);
+	}
+
+	// 생산실적 - 불량 상세 삭제
+	public void deleteBadDetails(ProdResultDetailParent dto) throws Exception {
+		delete("ProductionResultDAO.deleteBadDetails", dto);
+	}
+
 	// 생산실적 -투입자재 삭제
 	public void deleteProductionResultMaterial(ProdResultDetailParent dto) throws Exception {
 		delete("ProductionResultDAO.deleteProductionResultMaterial", dto);
@@ -101,4 +112,8 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		return selectList("ProductionResultDAO.selectProductionResultDetailList", dto);
 	}
 
+	//생산실적 detail 목록 조회
+	public List<ProdResultBadDetailDto> selectBadDetails(ProdResultBaseDetailDto dto) throws Exception {
+		return selectList("ProductionResultDAO.selectBadDetails", dto);
+	}
 }

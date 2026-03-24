@@ -437,6 +437,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		flagDto.setOrderFlag(orderFlag);
 
 		productionOrderDAO.updateProdPlanOrderFlag(flagDto);
+		productionOrderDAO.updateProdPlanOrderFlag2(flagDto);
 	}
 
 	/**
@@ -457,6 +458,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		lotNoDto.setLotNo(lotNo);
 
 		productionOrderDAO.updateProdPlanLotNo(lotNoDto);
+		productionOrderDAO.updateProdPlanLotNo2(lotNoDto);
 	}
 
 	/**

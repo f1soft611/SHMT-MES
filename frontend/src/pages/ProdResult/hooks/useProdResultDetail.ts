@@ -208,9 +208,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
 
       // 신규
       if (newRows.length > 0) {
-        const { data } = await productionResultService.createProdResult(
-          newRows
-        );
+        const { data } = await productionResultService.createProdResult(newRows);
         if (data.resultCode !== 200) {
           showToast({ message: data.resultMessage, severity: 'error' });
           return;

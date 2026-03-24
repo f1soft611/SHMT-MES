@@ -318,17 +318,56 @@
         AND PROD_SEQ = #{prodSeq}
     </delete>
 
+    <!-- 생산실적 불량 상세 TPR605 저장   -->
+    <insert id="insertBadDetail" parameterType="egovframework.let.production.result.domain.model.ProdResultBaseDetailDto">
+        INSERT INTO TPR605(
+            FACTORY_CODE,
+            PRODPLAN_DATE,
+            PRODPLAN_SEQ,
+            PRODWORK_SEQ,
+            WORK_SEQ,
+            PROD_SEQ,
+            WORK_CODE,
+            QC_CODE,
+            QC_QTY,
+            BAD_SEQ
+        )
+        VALUES (
+            #{factoryCode},
+            #{prodplanDate},
+            #{prodplanSeq},
+            #{prodworkSeq},
+            #{workSeq},
+            #{prodSeq},
+            #{workCode},
+            #{qcCode},
+            #{qcQty},
+            #{badSeq}
+        )
+    </insert>
+
+    <!-- 생산실적 불량 상세 TPR605 삭제   -->
+    <delete id="deleteBadDetails" parameterType="egovframework.let.production.result.domain.model.ProdResultDetailParent">
+        DELETE FROM TPR605
+        WHERE FACTORY_CODE = '000001'
+        AND PRODPLAN_DATE = #{prodplanDate}
+        AND PRODPLAN_SEQ = #{prodplanSeq}
+        AND PRODWORK_SEQ = #{prodworkSeq}
+        AND WORK_SEQ = #{workSeq}
+        AND PROD_SEQ = #{prodSeq}
+    </delete>
+
 
     <!-- 생산실적 투입자재 TPR601M 삭제   -->
     <delete id="deleteProductionResultMaterial"
             parameterType="egovframework.let.production.result.domain.model.ProdResultDetailParent">
         DELETE FROM TPR601M
         WHERE FACTORY_CODE = '000001'
-          AND PRODPLAN_DATE = #{prodplanDate}
-          AND PRODPLAN_SEQ = #{prodplanSeq}
-          AND PRODWORK_SEQ = #{prodworkSeq}
-          AND WORK_SEQ = #{workSeq}
-          AND PROD_SEQ = #{prodSeq}
+        AND PRODPLAN_DATE = #{prodplanDate}
+        AND PRODPLAN_SEQ = #{prodplanSeq}
+        AND PRODWORK_SEQ = #{prodworkSeq}
+        AND WORK_SEQ = #{workSeq}
+        AND PROD_SEQ = #{prodSeq}
     </delete>
 
 
@@ -363,6 +402,23 @@
         AND A.PRODPLAN_SEQ = #{prodplanSeq}
         AND A.PRODWORK_SEQ = #{prodworkSeq}
         AND A.WORK_SEQ = #{workSeq}
+    </select>
+
+
+    <select id="selectBadDetails"
+            parameterType="java.lang.Object"
+            resultType="egovframework.let.production.result.domain.model.ProdResultBadDetailDto">
+        SELECT
+            QC_CODE     AS qcCode,
+            QC_QTY      AS qcQty
+        FROM TPR605
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND PRODPLAN_DATE = #{prodplanDate}
+          AND PRODPLAN_SEQ = #{prodplanSeq}
+          AND PRODWORK_SEQ = #{prodworkSeq}
+          AND WORK_SEQ = #{workSeq}
+          AND PROD_SEQ = #{prodSeq}
+
     </select>
 
 

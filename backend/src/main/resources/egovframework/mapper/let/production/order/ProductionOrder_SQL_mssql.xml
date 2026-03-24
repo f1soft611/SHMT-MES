@@ -374,6 +374,13 @@
 		AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
+	<update id="updateProdPlanOrderFlag2" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+		UPDATE TPR301M SET ORDER_FLAG = #{orderFlag}
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
+	</update>
+
 	<!-- TPR301M LOTNO UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
@@ -383,6 +390,13 @@
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 		  AND PRODWORK_SEQ = #{prodworkSeq}
+	</update>
+
+	<update id="updateProdPlanLotNo2" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+		UPDATE TPR301M SET ITEM_LOT_NO = #{lotNo}
+		WHERE FACTORY_CODE = '000001'
+		  AND PRODPLAN_DATE = #{prodplanDate}
+		  AND PRODPLAN_SEQ = #{prodplanSeq}
 	</update>
 
 	

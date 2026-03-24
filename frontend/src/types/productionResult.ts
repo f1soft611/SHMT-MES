@@ -124,9 +124,9 @@ export interface ProductionResultDetail {
  * 불량유형 디테일
  */
 export interface BadDetail {
-    defectType: string;
-    defectName: string;
-    qty: number;
+    qcCode: string;
+    qcName: string;
+    qcQty: number;
 }
 
 /**
