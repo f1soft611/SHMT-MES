@@ -76,11 +76,11 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
             // merge
             const merged = list.map((d: any) => {
                 const found = existing.find(
-                    (e: any) => e.qcCode === d.processDefectId
+                    (e: any) => e.qcCode === d.defectCode
                 );
 
                 return {
-                    qcCode: d.processDefectId,
+                    qcCode: d.defectCode,
                     qcName: d.defectName,
                     qcQty: found ? found.qcQty : 0,
                 };
