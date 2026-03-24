@@ -19,4 +19,6 @@ public class ProdResultBadDetailDto {
     // === 불량 정보 ===
     private String qcCode;     // QC_CODE
     private Integer qcQty;  // QC_QTY
+
+    private String tpr605Id;
 }
