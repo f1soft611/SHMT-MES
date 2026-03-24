@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   IconButton,
   Paper,
@@ -16,7 +17,14 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import {
+  BarChart as BarChartIcon,
+  ChevronLeft,
+  ChevronRight,
+  ExpandLess,
+  ExpandMore,
+  TableView as TableViewIcon,
+} from '@mui/icons-material';
 import { useProdPlanResult } from './hooks/useProdPlanResult';
 import ProdPlanResultSearchFilter from './components/ProdPlanResultSearchFilter';
 import { ProdPlanResultRow } from '../../types/prodPlanResult';
@@ -90,7 +98,7 @@ const ProdPlanResult: React.FC = () => {
     }
   });
 
-  const [showSearchFields, setShowSearchFields] = React.useState(false);
+  const [showSearchFields, setShowSearchFields] = React.useState(true);
 
   const daysInMonth = useMemo(() => {
     if (!yearMonth) return 31;
@@ -221,13 +229,17 @@ const ProdPlanResult: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               px: 2,
-              pt: 2,
-              pb: 2,
+              py: 1.5,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             }}
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              월별 집계
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <BarChartIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                월별 집계
+              </Typography>
+            </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant="outlined"
@@ -288,6 +300,13 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.workplace,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 4,
+                        borderRight: '2px solid #bbb',
                       }}
                     >
                       작업장
@@ -296,6 +315,9 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.monthTarget,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                       }}
                     >
                       금월생산목표
@@ -304,6 +326,9 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.monthPlan,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                       }}
                     >
                       금월계획
@@ -312,6 +337,9 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.orderBacklog,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                       }}
                     >
                       수주잔량
@@ -320,6 +348,9 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.nextMonthCarry,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                       }}
                     >
                       차월이월
@@ -328,6 +359,10 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.rowType,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        borderRight: '2px solid #bbb',
                       }}
                     >
                       구분
@@ -336,6 +371,9 @@ const ProdPlanResult: React.FC = () => {
                       align="center"
                       sx={{
                         minWidth: columnWidths.total,
+                        bgcolor: 'grey.100',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                       }}
                     >
                       계
@@ -359,7 +397,9 @@ const ProdPlanResult: React.FC = () => {
                             align="center"
                             sx={{
                               minWidth: columnWidths.day,
-                              backgroundColor: weekend ? '#D9E1F2' : undefined,
+                              bgcolor: weekend ? '#D9E1F2' : 'grey.100',
+                              fontWeight: 600,
+                              fontSize: '0.78rem',
                             }}
                           >
                             {day}
@@ -382,6 +422,8 @@ const ProdPlanResult: React.FC = () => {
                             sx={{
                               minWidth: columnWidths.week,
                               backgroundColor: '#B4C6E7',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
                             }}
                           >
                             <Box
@@ -389,19 +431,24 @@ const ProdPlanResult: React.FC = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: 0.5,
+                                gap: 0.25,
                               }}
                             >
-                              <Typography variant="body2">{label}</Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 700, fontSize: '0.78rem' }}
+                              >
+                                {label}
+                              </Typography>
                               <IconButton
                                 size="small"
                                 onClick={() => toggleWeek(boundaryIndex)}
                                 sx={{ p: 0.25 }}
                               >
                                 {collapsedWeeks.includes(boundaryIndex) ? (
-                                  <ChevronRight fontSize="small" />
+                                  <ExpandMore fontSize="small" />
                                 ) : (
-                                  <ChevronLeft fontSize="small" />
+                                  <ExpandLess fontSize="small" />
                                 )}
                               </IconButton>
                             </Box>
@@ -419,9 +466,22 @@ const ProdPlanResult: React.FC = () => {
                       <TableCell
                         colSpan={7 + daysInMonth + weekBoundaries.length}
                         align="center"
-                        sx={{ height: 120, color: 'text.secondary' }}
+                        sx={{ height: 160, color: 'text.disabled' }}
                       >
-                        조회된 데이터가 없습니다.
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                          }}
+                        >
+                          <TableViewIcon sx={{ fontSize: 48, opacity: 0.35 }} />
+                          <Typography variant="body2">
+                            조회된 데이터가 없습니다. 연월을 선택 후
+                            조회해주세요.
+                          </Typography>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -464,17 +524,22 @@ const ResultRow = ({
   showWorkplace: boolean;
   rowSpan: number;
 }) => {
-  const rateCellStyle =
-    row.rowType === 'RATE' ? { backgroundColor: '#FFC000' } : undefined;
+  const isRate = row.rowType === 'RATE';
 
   return (
-    <TableRow>
+    <TableRow sx={{ bgcolor: isRate ? 'rgba(255,192,0,0.08)' : undefined }}>
       {showWorkplace && (
         <TableCell
           align="center"
           rowSpan={rowSpan}
           sx={{
             minWidth: columnWidths.workplace,
+            position: 'sticky',
+            left: 0,
+            bgcolor: 'background.paper',
+            zIndex: 1,
+            borderRight: '2px solid #bbb',
+            fontWeight: 600,
           }}
         >
           {row.workplaceName}
@@ -503,8 +568,8 @@ const ResultRow = ({
         align="right"
         sx={{
           minWidth: columnWidths.nextMonthCarry,
-          backgroundColor: '#FCE4D6',
-          color: 'red',
+          backgroundColor: '#FFF0ED',
+          color: 'error.main',
         }}
       >
         {formatNumber(row.nextMonthCarry)}
@@ -513,16 +578,17 @@ const ResultRow = ({
         align="center"
         sx={{
           minWidth: columnWidths.rowType,
-          ...rateCellStyle,
+          borderRight: '2px solid #bbb',
         }}
       >
-        {row.rowTypeName}
+        <RowTypeChip rowType={row.rowType} label={row.rowTypeName} />
       </TableCell>
       <TableCell
         align="right"
         sx={{
           minWidth: columnWidths.total,
           backgroundColor: row.rowType === 'RATE' ? '#FFC000' : '#FFFFCC',
+          fontWeight: 600,
         }}
       >
         {formatCellValue(row.total, row.rowType)}
@@ -558,8 +624,11 @@ const ResultRow = ({
             align="right"
             sx={{
               minWidth: columnWidths.day,
-              backgroundColor: isWeekendDay(day) ? '#D9E1F2' : undefined,
-              ...rateCellStyle,
+              backgroundColor: isWeekendDay(day)
+                ? '#D9E1F2'
+                : isRate
+                  ? '#FFC000'
+                  : undefined,
             }}
           >
             {formatCellValue(value, row.rowType)}
@@ -586,6 +655,49 @@ const ResultRow = ({
       })}
     </TableRow>
   );
+};
+
+const RowTypeChip = ({
+  rowType,
+  label,
+}: {
+  rowType: string;
+  label: string;
+}) => {
+  if (rowType === 'PLAN') {
+    return (
+      <Chip
+        label={label}
+        size="small"
+        color="primary"
+        variant="outlined"
+        sx={{ fontSize: '0.7rem', height: 20 }}
+      />
+    );
+  }
+  if (rowType === 'ACTUAL') {
+    return (
+      <Chip
+        label={label}
+        size="small"
+        color="success"
+        variant="filled"
+        sx={{ fontSize: '0.7rem', height: 20 }}
+      />
+    );
+  }
+  if (rowType === 'RATE') {
+    return (
+      <Chip
+        label={label}
+        size="small"
+        color="warning"
+        variant="filled"
+        sx={{ fontSize: '0.7rem', height: 20 }}
+      />
+    );
+  }
+  return <span>{label}</span>;
 };
 
 export default ProdPlanResult;
