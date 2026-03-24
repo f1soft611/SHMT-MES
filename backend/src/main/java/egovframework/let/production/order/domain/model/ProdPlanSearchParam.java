@@ -11,11 +11,17 @@ public class ProdPlanSearchParam implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 조회 시작일 (YYYY-MM-DD) */
+    /** 계획 시작일 (YYYY-MM-DD) */
     private String dateFrom;
 
-    /** 조회 종료일 (YYYY-MM-DD) */
+    /** 계획 종료일 (YYYY-MM-DD) */
     private String dateTo;
+
+    /** 생산 시작일 (YYYY-MM-DD) */
+    private String prodFrom;
+
+    /** 생산 종료일 (YYYY-MM-DD) */
+    private String prodTo;
 
     /** 작업장 코드 */
     private String workplace;

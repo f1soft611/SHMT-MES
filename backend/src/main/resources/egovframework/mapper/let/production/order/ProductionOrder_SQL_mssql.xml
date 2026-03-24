@@ -56,6 +56,12 @@
 		    ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
 		WHERE 1=1
 		    AND CONVERT(date, A.PRODPLAN_DATE, 112) BETWEEN #{dateFrom} AND #{dateTo}
+			<if test="prodFrom != null and prodFrom != ''">
+				AND <![CDATA[ CONVERT(date, A.PROD_DATE, 112) >= #{prodFrom} ]]>
+			</if>
+			<if test="prodTo != null and prodTo != ''">
+				AND <![CDATA[ CONVERT(date, A.PROD_DATE, 112) <= #{prodTo} ]]>
+			</if>
 			<if test="workplace != null and workplace != ''">
 				AND A.WORKCENTER_CODE = #{workplace}
 			</if>
