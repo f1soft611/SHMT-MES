@@ -54,7 +54,7 @@ const SchedulerManagement: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedSchedulerId, setSelectedSchedulerId] = useState<number | null>(
-    null
+    null,
   );
   const [confirmRestart, setConfirmRestart] = useState(false);
   const { showToast } = useToast();
@@ -163,6 +163,8 @@ const SchedulerManagement: React.FC = () => {
     setConfirmRestart(true);
   };
 
+  const healthStatus = healthData?.result;
+
   return (
     <Box>
       <PageHeader
@@ -171,42 +173,51 @@ const SchedulerManagement: React.FC = () => {
         actionsRight={
           <Stack direction="row" spacing={2} alignItems="center">
             {/* Health Status */}
-            {healthData?.result && (
-              <Tooltip
-                title={
+            <Tooltip
+              title={
+                healthStatus ? (
                   <Box>
+                    <div>상태: {getHealthStatusLabel(healthStatus.status)}</div>
                     <div>
-                      상태: {getHealthStatusLabel(healthData.result.status)}
+                      초기화: {healthStatus.isInitialized ? '완료' : '미완료'}
                     </div>
+                    <div>TaskScheduler: {healthStatus.taskSchedulerStatus}</div>
                     <div>
-                      초기화:{' '}
-                      {healthData.result.isInitialized ? '완료' : '미완료'}
+                      등록된 작업: {healthStatus.registeredTasksCount}개
                     </div>
+                    <div>활성 작업: {healthStatus.activeTasksCount}개</div>
                     <div>
-                      TaskScheduler: {healthData.result.taskSchedulerStatus}
+                      DB 활성 스케줄러: {healthStatus.enabledSchedulersInDb}개
                     </div>
-                    <div>
-                      등록된 작업: {healthData.result.registeredTasksCount}개
-                    </div>
-                    <div>활성 작업: {healthData.result.activeTasksCount}개</div>
-                    <div>
-                      DB 활성 스케줄러:{' '}
-                      {healthData.result.enabledSchedulersInDb}개
-                    </div>
-                    <div>확인 시간: {healthData.result.checkTime}</div>
+                    <div>확인 시간: {healthStatus.checkTime}</div>
                   </Box>
+                ) : (
+                  '스케쥴러 상태를 확인 중입니다.'
+                )
+              }
+            >
+              <Chip
+                icon={
+                  healthStatus ? (
+                    getHealthStatusIcon(healthStatus.status)
+                  ) : (
+                    <InfoIcon />
+                  )
                 }
-              >
-                <Chip
-                  icon={getHealthStatusIcon(healthData.result.status)}
-                  label={`상태: ${getHealthStatusLabel(
-                    healthData.result.status
-                  )}`}
-                  color={getHealthStatusColor(healthData.result.status) as any}
-                  size="small"
-                />
-              </Tooltip>
-            )}
+                label={
+                  healthStatus
+                    ? `상태: ${getHealthStatusLabel(healthStatus.status)}`
+                    : '상태 확인 중'
+                }
+                color={
+                  healthStatus
+                    ? (getHealthStatusColor(healthStatus.status) as any)
+                    : 'default'
+                }
+                size="medium"
+                sx={{ height: 36, borderRadius: 1 }}
+              />
+            </Tooltip>
 
             <Button
               variant="contained"
