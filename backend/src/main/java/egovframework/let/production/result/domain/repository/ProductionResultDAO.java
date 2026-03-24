@@ -47,6 +47,11 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		return (Integer)selectOne("ProductionResultDAO.selectProdSeq", params);
 	}
 
+	// 생산실적 TPR605 nextId 가져오기
+	public String selectProdResultBadNextId() throws Exception {
+		return (String)selectOne("ProductionResultDAO.selectProdResultBadNextId");
+	}
+
 	// 생산실적 등록
 	public void insertProductionResult(ProdResultInsertDto dto) throws Exception {
 		insert("ProductionResultDAO.insertProductionResult", dto);

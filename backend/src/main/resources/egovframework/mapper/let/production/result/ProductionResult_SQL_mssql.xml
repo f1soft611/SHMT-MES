@@ -278,6 +278,23 @@
           AND PROD_SEQ = #{prodSeq}
     </select>
 
+    <!-- 생산실적 불량 상세 TPR605 NextId 가져오기    -->
+    <select id="selectProdResultBadNextId"
+            resultType="string">
+        SELECT
+            'QC' + CONVERT(char(8), GETDATE(), 112)
+                + RIGHT('0000' +
+            CAST(
+            ISNULL(
+            MAX(CAST(RIGHT(TPR605ID, 3) AS INT)), 0
+            ) + 1
+            AS varchar),
+            4
+            ) AS NEXT_ID
+        FROM TPR605
+        WHERE TPR605ID LIKE 'QC' + CONVERT(char(8), GETDATE(), 112) + '%'
+    </select>
+
     <!-- 생산실적 작업자 TPR601W 저장   -->
     <insert id="insertProductionResultWorker" parameterType="egovframework.let.production.result.domain.model.ProdResultWorkerDto">
         INSERT INTO TPR601W(
@@ -330,7 +347,8 @@
             WORK_CODE,
             QC_CODE,
             QC_QTY,
-            BAD_SEQ
+            BAD_SEQ,
+            TPR605ID
         )
         VALUES (
             #{factoryCode},
@@ -342,7 +360,8 @@
             #{workCode},
             #{qcCode},
             #{qcQty},
-            #{badSeq}
+            #{badSeq},
+            #{tpr605Id}
         )
     </insert>
 
@@ -417,6 +436,7 @@
     </select>
 
 
+    <!-- 생산실적 불량 detail 조회  -->
     <select id="selectBadDetails"
             parameterType="java.lang.Object"
             resultType="egovframework.let.production.result.domain.model.ProdResultBadDetailDto">

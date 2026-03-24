@@ -190,6 +190,9 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			// DTO 생성
 			ProdResultBadDetailDto dto = new ProdResultBadDetailDto();
 
+			String nextId = productionResultDAO.selectProdResultBadNextId();
+			dto.setTpr605Id(nextId);
+
 			// key 복사
 			dto.setFactoryCode(parent.getFactoryCode());
 			dto.setProdplanDate(parent.getProdplanDate());
