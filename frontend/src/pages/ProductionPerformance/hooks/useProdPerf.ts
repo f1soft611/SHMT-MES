@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import {
   ProdPerfRow,
@@ -9,23 +9,76 @@ import { useFetchWorkplaces } from '../../../hooks/useFetchWorkplaces';
 import { useFetchEquipments } from '../../../hooks/useFetchEquipments';
 import { productionPerformanceService } from '../../../services/productionPerformanceService';
 
-export function useProdPerf() {
-  const { showToast } = useToast();
+const PROD_PERF_SEARCH_SESSION_KEY = 'productionPerformance.search';
 
+const getDefaultSearch = (): ProdPerfSearchParams => {
   const today = new Date().toISOString().slice(0, 10);
-
   const dateTo = new Date();
   dateTo.setDate(dateTo.getDate() + 7);
 
-  /** 검색조건 */
-  const [search, setSearch] = useState<ProdPerfSearchParams>({
+  return {
     workplace: '',
     equipment: '',
     dateFrom: today,
     dateTo: dateTo.toISOString().slice(0, 10),
     completeFrom: '',
     completeTo: '',
-  });
+  };
+};
+
+const getInitialSearch = (): ProdPerfSearchParams => {
+  const defaultSearch = getDefaultSearch();
+
+  try {
+    const savedSearch = sessionStorage.getItem(PROD_PERF_SEARCH_SESSION_KEY);
+    if (!savedSearch) {
+      return defaultSearch;
+    }
+
+    const parsed = JSON.parse(savedSearch);
+    if (!parsed || typeof parsed !== 'object') {
+      return defaultSearch;
+    }
+
+    return {
+      ...defaultSearch,
+      workplace:
+        typeof parsed.workplace === 'string'
+          ? parsed.workplace
+          : defaultSearch.workplace,
+      equipment:
+        typeof parsed.equipment === 'string'
+          ? parsed.equipment
+          : defaultSearch.equipment,
+      dateFrom:
+        typeof parsed.dateFrom === 'string'
+          ? parsed.dateFrom
+          : defaultSearch.dateFrom,
+      dateTo:
+        typeof parsed.dateTo === 'string'
+          ? parsed.dateTo
+          : defaultSearch.dateTo,
+      completeFrom:
+        typeof parsed.completeFrom === 'string'
+          ? parsed.completeFrom
+          : defaultSearch.completeFrom,
+      completeTo:
+        typeof parsed.completeTo === 'string'
+          ? parsed.completeTo
+          : defaultSearch.completeTo,
+    };
+  } catch {
+    return defaultSearch;
+  }
+};
+
+export function useProdPerf() {
+  const { showToast } = useToast();
+
+  /** 검색조건 */
+  const [search, setSearch] = useState<ProdPerfSearchParams>(() =>
+    getInitialSearch(),
+  );
 
   /** 페이징 */
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -77,6 +130,17 @@ export function useProdPerf() {
     setPaginationModel(model);
     onSearch(model);
   };
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        PROD_PERF_SEARCH_SESSION_KEY,
+        JSON.stringify(search),
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [search]);
 
   // 작업장 조회
   const workplaces = useFetchWorkplaces();
