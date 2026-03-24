@@ -43,7 +43,6 @@ const ProdOrder: React.FC = () => {
                 totalCount={prodOrder.prodplanResultCnt}
                 loading={prodOrder.planLoading}
                 onRowClick={prodOrder.handlePlanSelect}
-
                 paginationModel={prodOrder.paginationModel}
                 onPaginationChange={prodOrder.handlePaginationChange}
                 onReload={prodOrder.fetchProdPlan}/>

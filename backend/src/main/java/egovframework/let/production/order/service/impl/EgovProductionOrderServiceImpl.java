@@ -293,6 +293,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			for (ProdOrderRow row : targets) {
 				row.setLotNo(lotNo);
+				row.setProdplanDetailId(plan.getProdplanDetailId());
 			}
 
 
@@ -442,6 +443,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			dto.setNewWorkorderSeq(row.getTpr110dSeq());
 
 			dto.setLotNo(row.getLotNo());
+			dto.setProdplanDetailId(row.getProdplanDetailId());
 
 			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
 			dto.setWorkCodeId(row.getWorkCodeId());
