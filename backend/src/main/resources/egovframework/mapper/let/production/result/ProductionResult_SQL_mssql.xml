@@ -42,6 +42,10 @@
             , A.TPR504ID
             , A.PRODORDER_ID
         FROM TPR504 A
+        LEFT JOIN TPR301M M
+        ON A.FACTORY_CODE = M.FACTORY_CODE
+        AND A.PRODPLAN_DATE = M.PRODPLAN_DATE
+        AND A.PRODPLAN_SEQ = M.PRODPLAN_SEQ
             LEFT JOIN TPR301 A1
             ON A.FACTORY_CODE = A1.FACTORY_CODE
             AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
@@ -73,6 +77,9 @@
         <if test="equipment != null and equipment != ''">
             AND A.EQUIP_SYS_CD = #{equipment}
         </if>
+        <if test="lotNo != null and lotNo != ''">
+            AND M.ITEM_LOT_NO LIKE CONCAT('%', #{lotNo}, '%')
+        </if>
         <if test="keyword != null and keyword != ''">
             AND (
                 C.MATERIAL_CODE     LIKE '%' + #{keyword} + '%'
@@ -96,6 +103,10 @@
             resultType="int">
         SELECT COUNT(*)
         FROM TPR504 A
+        LEFT JOIN TPR301M M
+        ON A.FACTORY_CODE = M.FACTORY_CODE
+        AND A.PRODPLAN_DATE = M.PRODPLAN_DATE
+        AND A.PRODPLAN_SEQ = M.PRODPLAN_SEQ
         LEFT JOIN TPR301 A1
         ON A.FACTORY_CODE = A1.FACTORY_CODE
         AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
@@ -123,6 +134,9 @@
         </if>
         <if test="equipment != null and equipment != ''">
             AND A.EQUIP_SYS_CD = #{equipment}
+        </if>
+        <if test="lotNo != null and lotNo != ''">
+            AND M.ITEM_LOT_NO LIKE CONCAT('%', #{lotNo}, '%')
         </if>
         <if test="keyword != null and keyword != ''">
             AND (

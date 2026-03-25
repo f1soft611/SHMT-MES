@@ -78,6 +78,7 @@ export function useProductionResult(rowData: ProdPlanRow | null) {
 
     pagination: prodOrder.paginationModel,
     onPaginationChange: prodOrder.onPaginationChange,
+    onFilterChange: prodOrder.onFilterChange,
 
     workplaces: wpfetchHook.workplaces,
     refetchWorkplaces: wpfetchHook.refetchWorkplaces,
