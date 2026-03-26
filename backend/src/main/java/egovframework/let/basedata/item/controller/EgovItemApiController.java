@@ -66,6 +66,8 @@ public class EgovItemApiController {
             @ModelAttribute ItemVO itemVO,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+        itemVO.setFactoryCode(user.getFactoryCode());
+
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(itemVO.getPageIndex());
         paginationInfo.setRecordCountPerPage(
@@ -143,6 +145,7 @@ public class EgovItemApiController {
             return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
         }
 
+        item.setFactoryCode(user.getFactoryCode());
         item.setRegUserId(user.getUniqId());
         itemService.insertItem(item);
 
@@ -171,6 +174,29 @@ public class EgovItemApiController {
             @RequestBody Item item,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+        // itemId가 없으면 기존 품목 조회하여 itemId 확보
+        String itemId = item.getItemId();
+        if (itemId == null || itemId.isEmpty()) {
+            Item existingItem = itemService.selectItem(itemCode);
+            if (existingItem == null) {
+                Map<String, Object> notFoundMap = new HashMap<>();
+                notFoundMap.put("message", "존재하지 않는 품목입니다.");
+                return resultVoHelper.buildFromMap(notFoundMap, ResponseCode.BUSINESS_ERROR);
+            }
+            itemId = existingItem.getItemId();
+            item.setItemId(itemId);
+        }
+
+        // 품목 코드 중복 체크 (수정 시 — 자기 자신 제외)
+        if (itemService.isItemCodeExistsForUpdate(itemId, itemCode)) {
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("message", "이미 존재하는 품목 코드입니다.");
+            errorMap.put("duplicateField", "itemCode");
+            errorMap.put("duplicateValue", itemCode);
+            return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+        }
+
+        item.setFactoryCode(user.getFactoryCode());
         item.setItemCode(itemCode);
         item.setUpdUserId(user.getUniqId());
         itemService.updateItem(item);
@@ -199,7 +225,7 @@ public class EgovItemApiController {
             @PathVariable String itemCode,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-        itemService.deleteItem(itemCode);
+        itemService.deleteItem(itemCode, user.getUniqId());
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("message", "품목이 삭제되었습니다.");

@@ -86,8 +86,8 @@ public class ItemDAO extends EgovAbstractMapper {
      * @param itemId
      * @throws Exception
      */
-    public void deleteItem(String itemId) throws Exception {
-        delete("ItemDAO.deleteItem", itemId);
+    public void deleteItem(Map<String, String> params) throws Exception {
+        delete("ItemDAO.deleteItem", params);
     }
 
     /**

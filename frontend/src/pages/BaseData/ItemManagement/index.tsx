@@ -222,10 +222,22 @@ const ItemManagement: React.FC = () => {
           showToast({ message: '품목이 등록되었습니다.', severity: 'success' });
         } else {
           showToast({ message: result.result.message, severity: 'error' });
+          return;
         }
       } else {
-        await itemService.updateItem(saveData.itemCode!, saveData);
-        showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
+        const result = await itemService.updateItem(
+          saveData.itemCode!,
+          saveData,
+        );
+        if (result.resultCode === 200) {
+          showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
+        } else {
+          showToast({
+            message: result.result?.message || '수정에 실패했습니다.',
+            severity: 'error',
+          });
+          return;
+        }
       }
       handleCloseDialog();
       // 저장 후 현재 검색 조건으로 다시 조회
@@ -269,7 +281,9 @@ const ItemManagement: React.FC = () => {
     }
   };
 
-  const getItemTypeColor = (itemType: string) => {
+  const getItemTypeColor = (
+    itemType: string,
+  ): 'primary' | 'success' | 'info' | 'warning' | 'secondary' | 'default' => {
     switch (itemType) {
       case 'PRODUCT':
         return 'primary';
@@ -314,7 +328,7 @@ const ItemManagement: React.FC = () => {
       renderCell: (params) => (
         <Chip
           label={getItemTypeLabel(params.value || 'PRODUCT')}
-          color={getItemTypeColor(params.value || 'PRODUCT') as any}
+          color={getItemTypeColor(params.value || 'PRODUCT')}
           size="small"
         />
       ),
