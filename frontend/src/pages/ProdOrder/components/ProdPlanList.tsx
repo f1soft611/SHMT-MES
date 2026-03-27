@@ -151,6 +151,13 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             align: "center",
         },
         {
+            field: "prodDate",
+            headerName: "생산시작일",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
+        {
             field: "workcenterName",
             headerName: "작업장",
             width: 100,

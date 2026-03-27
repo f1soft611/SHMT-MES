@@ -12,6 +12,8 @@ export interface ProdPlanSearchParams {
     equipment?: string;
     dateFrom: string;   // YYYYMMDD
     dateTo: string;     // YYYYMMDD
+    prodFrom?: string;   // YYYYMMDD
+    prodTo?: string;     // YYYYMMDD
     orderFlag?:string;
     page?: number;
     size?: number;

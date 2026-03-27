@@ -16,6 +16,8 @@
 		<result property="productionPerCycle" column="ITEM_ONE_PER_QTY"/>
 		<result property="cycleTime" column="ITEM_CT_TIME"/>
 		<result property="remark" column="ETC"/>
+		<result property="processFlowCodes" column="PROCESS_FLOW_CODES"/>
+		<result property="processFlowNames" column="PROCESS_FLOW_NAMES"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
 		<result property="useYn" column="DELETE_FLAG"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
@@ -39,6 +41,22 @@
 		ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
 		ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
 		ETC,
+		ISNULL(STUFF((
+			SELECT ',' + FI.WORK_ORDER
+			FROM TPR112 FI
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_CODES,
+		ISNULL(STUFF((
+			SELECT ',' + ISNULL(PF.WORK_ORDER_NM, '')
+			FROM TPR112 FI
+			LEFT JOIN TPR110 PF
+				ON PF.WORK_ORDER_ID = FI.WORK_ORDER_ID
+				AND PF.FACTORY_CODE = A.FACTORY_CODE
+				AND ISNULL(PF.DELETE_FLAG, '') != '1'
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_NAMES,
 		INTERFACE_YN,
 		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
 		OPMAN_CODE,
@@ -67,9 +85,14 @@
 		<if test="itemType != null and itemType != ''">
 			AND MATERIAL_FLAG = #{itemType}
 		</if>
-		<if test="useYn != null and useYn != ''">
-			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
-		</if>
+		<choose>
+			<when test="useYn != null and useYn != ''">
+				AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
+			</when>
+			<otherwise>
+				AND DELETE_FLAG != '1'
+			</otherwise>
+		</choose>
 
 		<!-- 공정 등록 여부 -->
 		<if test="inProcessFlowYn != null">
@@ -87,7 +110,6 @@
 				<when test="inProcessFlowYn == 2">
 					AND EXISTS (
 					SELECT 1
-					FROM TPR_FLOW_ITEM FI
 					FROM TPR112 FI
 					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
 					)
@@ -127,9 +149,14 @@
 		<if test="itemType != null and itemType != ''">
 			AND MATERIAL_FLAG = #{itemType}
 		</if>
-		<if test="useYn != null and useYn != ''">
-			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
-		</if>
+		<choose>
+			<when test="useYn != null and useYn != ''">
+				AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
+			</when>
+			<otherwise>
+				AND DELETE_FLAG != '1'
+			</otherwise>
+		</choose>
 		<!-- 공정 등록 여부 -->
 		<if test="inProcessFlowYn != null">
 			<choose>
@@ -154,7 +181,6 @@
 				<!-- 0: 전체 → 조건 없음 -->
 			</choose>
 		</if>
-		AND DELETE_FLAG != '1'
 	</select>
 
 	<select id="ItemDAO.selectItem" parameterType="string" resultMap="itemResult">
@@ -241,13 +267,12 @@
 		    AND MATERIAL_CODE = #{itemCode}
 	</update>
 
-	<delete id="ItemDAO.deleteItem" parameterType="string">
--- 		DELETE FROM TCO403
+	<delete id="ItemDAO.deleteItem" parameterType="map">
 		UPDATE TCO403
 		    SET
-				DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
-				DELETE_DATE = CASE WHEN #{useYn} = 'Y' THEN '' ELSE GETDATE() END,
-				OPMAN_CODE2 = 'SYSTEM',
+				DELETE_FLAG = '1',
+				DELETE_DATE = GETDATE(),
+				OPMAN_CODE2 = #{userId},
 				OPTIME2 = GETDATE()
 		WHERE MATERIAL_CODE = #{itemCode}
 	</delete>
@@ -264,6 +289,7 @@
 		SELECT COUNT(*) AS CNT
 		FROM TCO403
 		WHERE MATERIAL_CODE = #{itemCode}
+		AND MATERIAL_ID != #{itemId}
 	</select>
 
 </mapper>

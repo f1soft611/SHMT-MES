@@ -23,10 +23,5 @@
 			</choose>
 	</select>
 
-	<!-- 재고 목록 총 건수 조회 (Java에서 처리하므로 사용되지 않음) -->
-	<!-- ERP 프로시저가 페이징을 지원하지 않으므로, Service 계층에서 Java로 페이징 처리 -->
-	<select id="StockInquiryDAO.selectStockListCount" parameterType="egovframework.let.production.stock.domain.model.StockInquiryVO" resultType="int">
-		SELECT 0 AS count_placeholder
-	</select>
 
 </mapper>

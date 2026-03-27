@@ -61,7 +61,7 @@ public interface EgovItemService {
 	 * @param itemId
 	 * @exception Exception
 	 */
-	public void deleteItem(String itemId) throws Exception;
+	public void deleteItem(String itemCode, String userId) throws Exception;
 
 	/**
 	 * 품목 코드 존재 여부 확인

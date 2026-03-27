@@ -106,6 +106,20 @@ public class EquipmentDAO extends EgovAbstractMapper {
     }
 
     /**
+     * PLC 주소 중복 체크
+     */
+    public int selectPlcAddressCheck(String plcAddress) {
+        return selectOne("EquipmentDAO.selectPlcAddressCheck", plcAddress);
+    }
+
+    /**
+     * PLC 주소 중복 체크 (수정 시)
+     */
+    public int selectPlcAddressCheckForUpdate(Map<String, String> params) {
+        return selectOne("EquipmentDAO.selectPlcAddressCheckForUpdate", params);
+    }
+
+    /**
      * 작업장별 설비목록 리스트
      */
     public List<WorkcenterEquipRow> selectEquipmentListByWorkplaceCode(String code) throws Exception {
