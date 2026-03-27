@@ -12,6 +12,9 @@ public class ProdResultSearchDto {
     private String equipment;
     private String keyword;
 
+    private String lotNo;
+
+
     // paging
     private Integer offset;
     private Integer size;

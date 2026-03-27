@@ -38,10 +38,34 @@ export function useProdOrder() {
     pageSize: 20
   });
 
+  const [filter, setFilter] = useState<any>({});
+
   // 데이터 상태
   const [rows, setRows] = useState<ProdResultOrderRow[]>([]);
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+
+  /** ======================
+   *  데이터그리드 필터링
+   *  ====================== */
+  const onFilterChange = (model: any) => {
+    const item = model.items?.[0];
+
+    let nextFilter: any = {};
+
+    if (item?.field === 'lotNo' && item?.value) {
+      nextFilter.lotNo = item.value;
+    }
+
+    setFilter(nextFilter);
+
+    // 필터 변경 시 첫 페이지로
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+  };
 
 
   /** ======================
@@ -52,6 +76,7 @@ export function useProdOrder() {
     try {
       const params = {
         ...searchParams,
+        ...filter,
         page: paginationModel.page,
         size: paginationModel.pageSize,
       };
@@ -155,5 +180,6 @@ export function useProdOrder() {
     // 페이징
     paginationModel,
     onPaginationChange,
+    onFilterChange,
   };
 }

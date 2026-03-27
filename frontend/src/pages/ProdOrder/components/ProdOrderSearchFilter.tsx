@@ -206,62 +206,13 @@ const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChan
                         onChange={(e) => onChange('dateTo', e.target.value)}
                         InputLabelProps={{ shrink: true }}
                     />
-
                     <TextField
-                        sx={{ width: 140 }}
-                        ref={anchorRef}
                         label="생산 시작일"
-                        placeholder="YYYY-MM-DD"
+                        type="date"
                         value={search.prodFrom}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                const formatted = formatDateOnEnter(search.prodFrom ?? "");
-                                onChange("prodFrom", formatted);
-                            }
-                        }}
-                        onChange={(e) => {
-                            const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 8);
-                            onChange('prodFrom', v);
-                        }}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end" sx={{ ml: 0}}>
-                                    <IconButton
-                                        sx={{ p: 0 }}
-                                        size="small"
-                                        onClick={() => setOpenCalendar(true)}
-                                    >
-                                        <CalendarTodayIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
+                        onChange={(e) => onChange('prodFrom', e.target.value)}
                         InputLabelProps={{ shrink: true }}
                     />
-                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
-                        <DatePicker
-                            open={openCalendar}
-                            onClose={() => setOpenCalendar(false)}
-                            value={search.prodFrom ? dayjs(search.prodFrom, "YYYYMMDD") : null}
-                            onChange={(value) => {
-                                if (!value) return;
-                                const formatted = dayjs(value).format("YYYY-MM-DD");
-                                onChange("prodFrom", formatted);
-                            }}
-                            enableAccessibleFieldDOMStructure={false}
-                            slotProps={{
-                                actionBar: {
-                                    actions: ['today']
-                                },
-                                popper: {
-                                    anchorEl: anchorRef.current
-                                },
-                                textField: {
-                                    sx: { display: "none" }
-                                }
-                            }}
-                        />
-                    </LocalizationProvider>
                     <TextField
                         label="생산 종료일"
                         type="date"

@@ -50,6 +50,8 @@ export default function ProdOrderDialog({
         { field: 'prodorderId'},
         { field: 'orderSeq'},
         { field: 'tpr110dSeq'},
+        { field: 'itemCtTime'},
+        { field: 'itemOnePerQty'},
         {
             field: "add",
             headerName: "분할",
@@ -430,6 +432,8 @@ export default function ProdOrderDialog({
                                 prodorderId: false,
                                 orderSeq: false,
                                 tpr110dSeq: false,
+                                itemCtTime: false,
+                                itemOnePerQty: false
                             }}   // 화면에서만 숨김
                             processRowUpdate={onProcessRowUpdate}
                             isCellEditable={(params) => {
