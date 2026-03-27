@@ -24,6 +24,8 @@ public class ProdOrderInsertDto {
     private Integer itemUnitId;
     private Integer prodCodeId;
     private String equipmentCode;
+    private Integer itemCtTime;
+    private Integer itemOnePerQty;
 
     private String lotNo;
     private int orderQty;

@@ -343,7 +343,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			int cnt = productionOrderDAO.selectProdResultCount(dto);
 			if (cnt > 0) {
 				throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다. \n" +
-						"생산지시번호 : "+plan.getProdplanId());
+						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
 			// 2. 생산지시 삭제
@@ -418,6 +418,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setOpmanCode(plan.getOpmanCode());
 		dto.setTpr110dSeq(row.getTpr110dSeq());
 
+		dto.setItemCtTime(row.getItemCtTime());
+		dto.setItemOnePerQty(row.getItemOnePerQty());
+
 		return dto;
 	}
 
@@ -444,6 +447,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			dto.setLotNo(row.getLotNo());
 			dto.setProdplanDetailId(row.getProdplanDetailId());
+
+			dto.setItemCtTime(row.getItemCtTime());
+			dto.setItemOnePerQty(row.getItemOnePerQty());
 
 			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
 			dto.setWorkCodeId(row.getWorkCodeId());

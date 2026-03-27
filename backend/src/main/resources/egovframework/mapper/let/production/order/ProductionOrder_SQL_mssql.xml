@@ -135,6 +135,8 @@
 			F1.MATERIAL_CODE AS PROD_CODE,
 			F1.MATERIAL_NAME,
 			F1.MATERIAL_SPEC,
+			F1.ITEM_CT_TIME,
+			F1.ITEM_ONE_PER_QTY,
 			F2.CODE_NM AS MATERIAL_UNIT,
 			F1.UNIT AS MATERIAL_UNIT_ID,
 			D.WORK_CODE,
@@ -347,7 +349,9 @@
 			OPTIME,
 		    TPR504ID,
 		    BIGO,
-		    TPR110D_SEQ
+		    TPR110D_SEQ,
+			ITEM_CT_TIME,
+			ITEM_ONE_PER_QTY
 		)
 		VALUES (
 			'000001',
@@ -370,7 +374,9 @@
 			GETDATE(),
 			#{prodorderId},
 			#{bigo},
-			#{tpr110dSeq}
+			#{tpr110dSeq},
+			#{itemCtTime},
+			#{itemOnePerQty}
 		);
 	</insert>
 

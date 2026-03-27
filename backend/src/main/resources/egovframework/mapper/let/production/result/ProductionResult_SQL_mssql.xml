@@ -87,6 +87,7 @@
                 OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
                 OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
                 OR A.PRODPLAN_ID    LIKE '%' + #{keyword} + '%'
+                OR M.ITEM_LOT_NO    LIKE '%' + #{keyword} + '%'
             )
         </if>
         ORDER BY ORDER_NO, ORDER_SEQNO, ORDER_HISTNO
@@ -145,6 +146,7 @@
             OR D.EQUIPMENT_NAME LIKE '%' + #{keyword} + '%'
             OR B.WORK_NAME      LIKE '%' + #{keyword} + '%'
             OR A.PRODPLAN_ID    LIKE '%' + #{keyword} + '%'
+            OR M.ITEM_LOT_NO    LIKE '%' + #{keyword} + '%'
             )
         </if>
     </select>

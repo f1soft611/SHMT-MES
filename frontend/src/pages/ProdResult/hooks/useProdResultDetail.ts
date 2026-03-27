@@ -191,6 +191,28 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
       return false;
     }
 
+    const targetRows = [...newRows, ...modifiedRows];
+
+    // 🔥 추가: goodQty 검증
+    const invalidRow = targetRows.find((r) => Number(r.prodQty ?? 0) <= 0);
+    if (invalidRow) {
+      showToast({
+        message: '생산수량은 0보다 커야 합니다.',
+        severity: 'warning',
+      });
+      setSaving(false);
+      return false;
+    }
+
+    if (newRows.length === 0 && modifiedRows.length === 0) {
+      showToast({
+        message: '저장할 변경사항이 없습니다.',
+        severity: 'info',
+      });
+      setSaving(false);
+      return false;
+    }
+
     let lastMessage = '저장되었습니다';
 
     try {

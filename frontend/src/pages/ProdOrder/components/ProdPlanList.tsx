@@ -32,11 +32,13 @@ function ProductionActionCell({
     icon,
     color = "primary",
     onClick,
+    disabled = false,
 }: {
     row: ProdPlanRow;
     icon: React.ReactNode;
     color?: "primary" | "inherit" | "secondary" | "default";
     onClick: (row: ProdPlanRow) => void;
+    disabled?: boolean;
 }) {
     return (
         <Box
@@ -55,6 +57,7 @@ function ProductionActionCell({
                         e.stopPropagation();
                         onClick(row);
                     }}
+                    disabled={disabled}
                 >
                     {icon}
                 </IconButton>
@@ -214,13 +217,15 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            renderCell: (params) => (
-                <ProductionActionCell
+            renderCell: (params) => {
+                return (
+                    <ProductionActionCell
                     row={params.row as ProdPlanRow}
-                    icon={<AssignmentAddIcon />}
+                    icon={<AssignmentAddIcon/>}
                     onClick={onRowClick}
-                />
-            ),
+                    disabled={false} />
+                )
+            }
         },
         {
             field: "actionResult",
@@ -228,17 +233,22 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             sortable: false,
             headerAlign: 'center',
             align: 'center',
-            renderCell: (params) => (
-                <ProductionActionCell
-                    row={params.row as ProdPlanRow}
-                    icon={<InputIcon />}
-                    onClick={(row) =>
-                        navigate("/prod/results", {
-                            state: { rowData: row },
-                        })
-                    }
-                />
-            ),
+            renderCell: (params) => {
+                const row = params.row as ProdPlanRow;
+                const isEnabled = row.orderFlag === 'ORDERED';
+                return (
+                    <ProductionActionCell
+                        row={params.row as ProdPlanRow}
+                        icon={<InputIcon />}
+                        onClick={(row) =>
+                            navigate("/prod/results", {
+                                state: { rowData: row },
+                            })
+                        }
+                        disabled={!isEnabled}
+                    />
+                )
+            }
         },
     ];
 

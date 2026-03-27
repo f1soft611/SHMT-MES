@@ -121,7 +121,7 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loadin
                     />
                     <TextField
                         label="통합검색"
-                        placeholder="품목명 / 품목코드"
+                        placeholder="품목명 / 품목코드 / LotNo"
                         value={search.keyword}
                         onChange={(e) => onChange('keyword', e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && onSearch()}
