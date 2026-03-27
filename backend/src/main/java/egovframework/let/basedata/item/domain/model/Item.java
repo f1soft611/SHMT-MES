@@ -69,6 +69,9 @@ public class Item implements Serializable {
 	@Schema(description = "비고")
 	private String remark = "";
 
+	@Schema(description = "등록된 공정")
+	private String processFlow = "";
+
 	@Schema(description = "인터페이스 여부 (Y/N)")
 	private String interfaceYn = "";
 

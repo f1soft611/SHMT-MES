@@ -15,6 +15,7 @@
 		<result property="safetyStock" column="SAFETY_STOCK"/>
 		<result property="productionPerCycle" column="PRODUCTION_PER_CYCLE"/>
 		<result property="remark" column="ETC"/>
+		<result property="processFlow" column="PROCESSFLOW"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
 		<result property="useYn" column="DELETE_FLAG"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
@@ -25,7 +26,7 @@
 
 	<select id="ItemDAO.selectItemList" parameterType="egovframework.let.basedata.item.domain.model.ItemVO" resultMap="itemResult">
 		SELECT
-		FACTORY_CODE,
+		A.FACTORY_CODE,
 		MATERIAL_ID,
 		MATERIAL_CODE,
 		MATERIAL_NAME,
@@ -36,17 +37,20 @@
 		STOCK_QTY,
 		SAFETY_STOCK,		ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,		ETC,
 		INTERFACE_YN,
-		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
-		OPMAN_CODE,
-		CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
-		OPMAN_CODE2,
-		CONVERT(VARCHAR(19), OPTIME2, 120) AS OPTIME2
+		B1.WORK_ORDER_NM AS PROCESSFLOW,
+		CASE WHEN ISNULL(A.DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
+		A.OPMAN_CODE,
+		CONVERT(VARCHAR(19), A.OPTIME, 120) AS OPTIME,
+		A.OPMAN_CODE2,
+		CONVERT(VARCHAR(19), A.OPTIME2, 120) AS OPTIME2
 		FROM TCO403 A
 			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1
 			ON CODE1.CODE_ID = 'COM007'
 			AND CODE1.CODE = A.UNIT
+			LEFT JOIN TPR112 B ON A.MATERIAL_ID = B.PROD_CODE_ID
+			LEFT JOIN TPR110 B1 ON B.WORK_ORDER = B1.WORK_ORDER
 		WHERE 1=1
-		AND FACTORY_CODE = #{factoryCode}
+		AND A.FACTORY_CODE = #{factoryCode}
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == 1">
@@ -64,7 +68,7 @@
 			AND MATERIAL_FLAG = #{itemType}
 		</if>
 		<if test="useYn != null and useYn != ''">
-			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
+			AND A.DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
 		</if>
 
 		<!-- 공정 등록 여부 -->
