@@ -64,6 +64,12 @@ const columnWidths = {
   week: 115,
 };
 
+const tableFontSizes = {
+  header: '0.84rem',
+  body: '0.8rem',
+  chip: '0.74rem',
+};
+
 const getWeekIndex = (day: number, boundaries: number[]) => {
   for (let i = 0; i < boundaries.length; i += 1) {
     if (day <= boundaries[i]) return i;
@@ -291,6 +297,7 @@ const ProdPlanResult: React.FC = () => {
                   '& .MuiTableCell-root': {
                     border: '1px solid #c7c7c7',
                     whiteSpace: 'nowrap',
+                    fontSize: tableFontSizes.body,
                   },
                 }}
               >
@@ -302,7 +309,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.workplace,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                         position: 'sticky',
                         left: 0,
                         zIndex: 4,
@@ -317,7 +324,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.monthTarget,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                       }}
                     >
                       금월생산목표
@@ -328,7 +335,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.monthPlan,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                       }}
                     >
                       금월계획
@@ -339,7 +346,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.orderBacklog,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                       }}
                     >
                       수주잔량
@@ -350,7 +357,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.nextMonthCarry,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                       }}
                     >
                       차월이월
@@ -361,7 +368,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.rowType,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                         borderRight: '2px solid #bbb',
                       }}
                     >
@@ -373,7 +380,7 @@ const ProdPlanResult: React.FC = () => {
                         minWidth: columnWidths.total,
                         bgcolor: 'grey.100',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: tableFontSizes.header,
                       }}
                     >
                       계
@@ -399,7 +406,7 @@ const ProdPlanResult: React.FC = () => {
                               minWidth: columnWidths.day,
                               bgcolor: weekend ? '#D9E1F2' : 'grey.100',
                               fontWeight: 600,
-                              fontSize: '0.78rem',
+                              fontSize: tableFontSizes.header,
                             }}
                           >
                             {day}
@@ -423,7 +430,7 @@ const ProdPlanResult: React.FC = () => {
                               minWidth: columnWidths.week,
                               backgroundColor: '#B4C6E7',
                               fontWeight: 700,
-                              fontSize: '0.78rem',
+                              fontSize: tableFontSizes.header,
                             }}
                           >
                             <Box
@@ -436,7 +443,10 @@ const ProdPlanResult: React.FC = () => {
                             >
                               <Typography
                                 variant="body2"
-                                sx={{ fontWeight: 700, fontSize: '0.78rem' }}
+                                sx={{
+                                  fontWeight: 700,
+                                  fontSize: tableFontSizes.header,
+                                }}
                               >
                                 {label}
                               </Typography>
@@ -682,7 +692,7 @@ const RowTypeChip = ({
         size="small"
         color="primary"
         variant="outlined"
-        sx={{ fontSize: '0.7rem', height: 20 }}
+        sx={{ fontSize: tableFontSizes.chip, height: 20 }}
       />
     );
   }
@@ -693,7 +703,7 @@ const RowTypeChip = ({
         size="small"
         color="success"
         variant="filled"
-        sx={{ fontSize: '0.7rem', height: 20 }}
+        sx={{ fontSize: tableFontSizes.chip, height: 20 }}
       />
     );
   }
@@ -704,7 +714,7 @@ const RowTypeChip = ({
         size="small"
         color="warning"
         variant="filled"
-        sx={{ fontSize: '0.7rem', height: 20 }}
+        sx={{ fontSize: tableFontSizes.chip, height: 20 }}
       />
     );
   }

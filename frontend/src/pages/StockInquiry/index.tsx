@@ -154,22 +154,16 @@ const StockInquiryPage: React.FC = () => {
     {
       field: 'itemSeq',
       headerName: '품목코드',
+      width: 120,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: 'itemNo',
-      headerName: '품번',
+      headerName: '품목번호',
       width: 250,
       headerAlign: 'center',
     },
-    // {
-    //   field: 'itemName',
-    //   headerName: '품명',
-    //   width: 200,
-    //   align: 'center',
-    //   headerAlign: 'center',
-    // },
     {
       field: 'whSeq',
       headerName: '창고코드',
