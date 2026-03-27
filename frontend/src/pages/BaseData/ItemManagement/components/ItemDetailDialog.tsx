@@ -227,6 +227,33 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
               )}
             />
             <Controller
+              name="cycleTime"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="주기시간(초)"
+                  value={formatNumber(field.value)}
+                  onChange={(e) => {
+                    const value = removeCommas(e.target.value);
+                    if (/^\d*$/.test(value)) {
+                      field.onChange(value);
+                    }
+                  }}
+                  inputProps={{
+                    inputMode: 'numeric',
+                    pattern: '[0-9,]*',
+                    style: { textAlign: 'right' },
+                  }}
+                  error={!!errors.cycleTime}
+                  helperText={errors.cycleTime?.message}
+                />
+              )}
+            />
+          </Stack>
+          <Stack direction="row" spacing={2}>
+            <Controller
               name="useYn"
               control={control}
               render={({ field }) => (

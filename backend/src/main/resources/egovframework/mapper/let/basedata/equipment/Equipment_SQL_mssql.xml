@@ -198,6 +198,25 @@
 		WHERE EQUIP_CD = #{equipCd}
 	</select>
 
+	<!-- PLC 주소 중복 체크 -->
+	<select id="EquipmentDAO.selectPlcAddressCheck" parameterType="string" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TPR151
+		WHERE LTRIM(RTRIM(ISNULL(PLC_ADDRESS, ''))) = LTRIM(RTRIM(#{plcAddress}))
+		AND LTRIM(RTRIM(ISNULL(PLC_ADDRESS, ''))) != ''
+		AND USE_FLAG = 'Y'
+	</select>
+
+	<!-- PLC 주소 중복 체크 (수정 시) -->
+	<select id="EquipmentDAO.selectPlcAddressCheckForUpdate" parameterType="map" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TPR151
+		WHERE LTRIM(RTRIM(ISNULL(PLC_ADDRESS, ''))) = LTRIM(RTRIM(#{plcAddress}))
+		AND LTRIM(RTRIM(ISNULL(PLC_ADDRESS, ''))) != ''
+		AND EQUIP_SYS_CD != #{equipmentId}
+		AND USE_FLAG = 'Y'
+	</select>
+
 	<!-- 작업장 코드 주어졌을때 설비 목록 -->
 	<select id="selectEquipmentListByWorkplaceCode"
 			parameterType="string"

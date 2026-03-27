@@ -13,7 +13,10 @@ export interface Item {
   stockQty?: string;
   safetyStock?: string;
   productionPerCycle?: string;
+  cycleTime?: string;
   remark?: string;
+  processFlowCodes?: string;
+  processFlowNames?: string;
   interfaceYn?: string;
   useYn?: string;
   regUserId?: string;
@@ -38,7 +41,10 @@ export interface ItemType {
   stockQty?: string;
   safetyStock?: string;
   productionPerCycle?: string;
+  cycleTime?: string;
   remark?: string;
+  processFlowCodes?: string;
+  processFlowNames?: string;
   interfaceYn?: string;
   useYn?: string;
   regUserId?: string;

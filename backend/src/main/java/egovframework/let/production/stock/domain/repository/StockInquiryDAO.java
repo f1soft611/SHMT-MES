@@ -47,14 +47,4 @@ public class StockInquiryDAO extends EgovAbstractMapper {
 		return selectList("StockInquiryDAO.selectStockList", searchVO);
 	}
 
-	/**
-	 * 재고 목록의 총 건수를 조회한다.
-	 * XML 매퍼의 'StockInquiryDAO.selectStockListCount' ID를 호출한다.
-	 * @param searchVO 검색 조건
-	 * @return 총 건수
-	 * @throws Exception SQL 실행 중 오류 발생 시
-	 */
-	public int selectStockListCount(StockInquiryVO searchVO) throws Exception {
-		return selectOne("StockInquiryDAO.selectStockListCount", searchVO);
-	}
 }

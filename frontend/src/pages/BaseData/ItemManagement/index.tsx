@@ -61,7 +61,10 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
   stockQty: yup.string().optional(),
   safetyStock: yup.string().optional(),
   productionPerCycle: yup.string().optional(),
+  cycleTime: yup.string().optional(),
   remark: yup.string().optional(),
+  processFlowCodes: yup.string().optional(),
+  processFlowNames: yup.string().optional(),
   interfaceYn: yup.string().optional(),
   useYn: yup.string().optional(),
   regUserId: yup.string().optional(),
@@ -114,7 +117,10 @@ const ItemManagement: React.FC = () => {
       unit: '',
       stockQty: '0',
       safetyStock: '0',
+      cycleTime: '0',
       remark: '',
+      processFlowCodes: '',
+      processFlowNames: '',
       interfaceYn: 'N',
       useYn: 'Y',
     },
@@ -185,7 +191,10 @@ const ItemManagement: React.FC = () => {
       unit: '',
       stockQty: '0',
       safetyStock: '0',
+      cycleTime: '0',
       remark: '',
+      processFlowCodes: '',
+      processFlowNames: '',
       interfaceYn: 'N',
       useYn: 'Y',
     });
@@ -210,6 +219,7 @@ const ItemManagement: React.FC = () => {
         ...data,
         stockQty: removeCommas(data.stockQty || '0'),
         safetyStock: removeCommas(data.safetyStock || '0'),
+        cycleTime: removeCommas(data.cycleTime || '0'),
       };
 
       if (dialogMode === 'create') {
@@ -218,10 +228,22 @@ const ItemManagement: React.FC = () => {
           showToast({ message: '품목이 등록되었습니다.', severity: 'success' });
         } else {
           showToast({ message: result.result.message, severity: 'error' });
+          return;
         }
       } else {
-        await itemService.updateItem(saveData.itemCode!, saveData);
-        showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
+        const result = await itemService.updateItem(
+          saveData.itemCode!,
+          saveData,
+        );
+        if (result.resultCode === 200) {
+          showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
+        } else {
+          showToast({
+            message: result.result?.message || '수정에 실패했습니다.',
+            severity: 'error',
+          });
+          return;
+        }
       }
       handleCloseDialog();
       // 저장 후 현재 검색 조건으로 다시 조회
@@ -265,7 +287,9 @@ const ItemManagement: React.FC = () => {
     }
   };
 
-  const getItemTypeColor = (itemType: string) => {
+  const getItemTypeColor = (
+    itemType: string,
+  ): 'primary' | 'success' | 'info' | 'warning' | 'secondary' | 'default' => {
     switch (itemType) {
       case 'PRODUCT':
         return 'primary';
@@ -287,7 +311,6 @@ const ItemManagement: React.FC = () => {
       field: 'itemCode',
       headerName: '품목코드',
       flex: 1,
-      align: 'center',
       headerAlign: 'center',
     },
     {
@@ -295,6 +318,20 @@ const ItemManagement: React.FC = () => {
       headerName: '품목명',
       flex: 1.2,
       headerAlign: 'center',
+    },
+    // {
+    //   field: 'processFlowCodes',
+    //   headerName: '공정흐름 코드',
+    //   flex: 1.1,
+    //   headerAlign: 'center',
+    //   renderCell: (params) => params.value || '-',
+    // },
+    {
+      field: 'processFlowNames',
+      headerName: '공정흐름명',
+      flex: 1.3,
+      headerAlign: 'center',
+      renderCell: (params) => params.value || '-',
     },
     {
       field: 'specification',
@@ -311,7 +348,7 @@ const ItemManagement: React.FC = () => {
       renderCell: (params) => (
         <Chip
           label={getItemTypeLabel(params.value || 'PRODUCT')}
-          color={getItemTypeColor(params.value || 'PRODUCT') as any}
+          color={getItemTypeColor(params.value || 'PRODUCT')}
           size="small"
         />
       ),

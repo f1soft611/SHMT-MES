@@ -205,6 +205,18 @@ const EquipmentManagement: React.FC = () => {
     resetEquipmentForm();
   };
 
+  const getSaveErrorMessage = (response: {
+    result?: {
+      duplicateField?: string;
+      message?: string;
+    };
+  }): string => {
+    if (response.result?.duplicateField === 'plcAddress') {
+      return '이미 사용 중인 PLC 주소입니다.';
+    }
+    return response.result?.message || '저장에 실패했습니다.';
+  };
+
   const handleSave = async (data: Equipment) => {
     try {
       // 설비 코드가 입력되지 않았으면 설비ID를 사용
@@ -218,13 +230,25 @@ const EquipmentManagement: React.FC = () => {
           showToast({ message: '설비가 등록되었습니다.', severity: 'success' });
         } else {
           showToast({
-            message: result.result?.message || '등록에 실패했습니다.',
+            message: getSaveErrorMessage(result),
             severity: 'error',
           });
+          return;
         }
       } else {
-        await equipmentService.updateEquipment(data.equipCd!, data);
-        showToast({ message: '설비가 수정되었습니다.', severity: 'success' });
+        const result = await equipmentService.updateEquipment(
+          data.equipCd!,
+          data,
+        );
+        if (result.resultCode === 200) {
+          showToast({ message: '설비가 수정되었습니다.', severity: 'success' });
+        } else {
+          showToast({
+            message: getSaveErrorMessage(result),
+            severity: 'error',
+          });
+          return;
+        }
       }
       handleCloseDialog();
       fetchEquipments();
