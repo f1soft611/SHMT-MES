@@ -125,6 +125,21 @@ public class EgovEquipmentServiceImpl extends EgovAbstractServiceImpl implements
 		int count = equipmentDAO.selectEquipmentCodeCheckForUpdate(params);
 		return count > 0;
 	}
+
+	@Override
+	public boolean isPlcAddressExists(String plcAddress) throws Exception {
+		int count = equipmentDAO.selectPlcAddressCheck(plcAddress);
+		return count > 0;
+	}
+
+	@Override
+	public boolean isPlcAddressExistsForUpdate(String equipmentId, String plcAddress) throws Exception {
+		Map<String, String> params = new HashMap<>();
+		params.put("equipmentId", equipmentId);
+		params.put("plcAddress", plcAddress);
+		int count = equipmentDAO.selectPlcAddressCheckForUpdate(params);
+		return count > 0;
+	}
 	/**
 	 * 작업장별 설비목록 리스트
 	 */

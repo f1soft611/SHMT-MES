@@ -15,6 +15,8 @@ export interface Item {
   productionPerCycle?: string;
   cycleTime?: string;
   remark?: string;
+  processFlowCodes?: string;
+  processFlowNames?: string;
   interfaceYn?: string;
   useYn?: string;
   regUserId?: string;
@@ -41,6 +43,8 @@ export interface ItemType {
   productionPerCycle?: string;
   cycleTime?: string;
   remark?: string;
+  processFlowCodes?: string;
+  processFlowNames?: string;
   interfaceYn?: string;
   useYn?: string;
   regUserId?: string;

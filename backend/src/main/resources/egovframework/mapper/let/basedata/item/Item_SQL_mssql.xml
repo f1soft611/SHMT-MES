@@ -16,6 +16,8 @@
 		<result property="productionPerCycle" column="ITEM_ONE_PER_QTY"/>
 		<result property="cycleTime" column="ITEM_CT_TIME"/>
 		<result property="remark" column="ETC"/>
+		<result property="processFlowCodes" column="PROCESS_FLOW_CODES"/>
+		<result property="processFlowNames" column="PROCESS_FLOW_NAMES"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
 		<result property="useYn" column="DELETE_FLAG"/>
 		<result property="regUserId" column="OPMAN_CODE"/>
@@ -39,6 +41,22 @@
 		ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
 		ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
 		ETC,
+		ISNULL(STUFF((
+			SELECT ',' + FI.WORK_ORDER
+			FROM TPR112 FI
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_CODES,
+		ISNULL(STUFF((
+			SELECT ',' + ISNULL(PF.WORK_ORDER_NM, '')
+			FROM TPR112 FI
+			LEFT JOIN TPR110 PF
+				ON PF.WORK_ORDER_ID = FI.WORK_ORDER_ID
+				AND PF.FACTORY_CODE = A.FACTORY_CODE
+				AND ISNULL(PF.DELETE_FLAG, '') != '1'
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_NAMES,
 		INTERFACE_YN,
 		CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
 		OPMAN_CODE,
