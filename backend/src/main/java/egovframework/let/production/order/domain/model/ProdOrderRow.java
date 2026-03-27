@@ -49,6 +49,9 @@ public class ProdOrderRow implements Serializable {
 
     private String materialName;
     private String materialSpec;
+    private Integer itemCtTime;
+    private Integer itemOnePerQty;
+
     private String materialUnit;
     private Integer materialUnitId;
 

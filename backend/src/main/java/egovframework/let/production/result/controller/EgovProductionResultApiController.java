@@ -71,7 +71,7 @@ public class EgovProductionResultApiController {
 	public ResultVO selectProductionOrderList(
 			@ModelAttribute ProdResultSearchDto searchVO,
 			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "20") int size,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
 		searchVO.setOffset(page * size);

@@ -153,6 +153,8 @@ export interface ProductionResultSearchParams {
     // 키워드 (품목명, 공정명, 설비명, 계획ID 등 서버에서 통합 처리)
     keyword?: string;
 
+    lotNo?: string;
+
     // 페이징 (컨트롤러에서 offset 계산)
     page?: number;
     size?: number;

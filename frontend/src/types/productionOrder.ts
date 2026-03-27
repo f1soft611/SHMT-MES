@@ -94,6 +94,8 @@ export interface ProdOrderRow {
     prodCode: string;
     materialName: string;
     materialSpec: string;
+    itemCtTime: number;
+    itemOnePerQty: number;
     materialUnit: string;
     orderFlag: string;
     lotNo: string;
@@ -130,6 +132,9 @@ export interface ProdOrderInsertDto {
     itemUnitId: number;
     prodCodeId: string;
     equipmentCode?: string;
+
+    itemCtTime: number;
+    itemOnePerQty:number;
 
     lotNo?: string;
     orderQty: number;

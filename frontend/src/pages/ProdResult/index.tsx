@@ -47,6 +47,7 @@ const ProductionResult = () => {
                         totalCount={rs.rowCount}
                         paginationModel={rs.pagination}
                         onPaginationChange={rs.onPaginationChange}
+                        onFilterChange={rs.onFilterChange}
                         onRowClick={rs.handleRowClick} />
 
                     <ProdResultList

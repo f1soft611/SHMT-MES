@@ -53,6 +53,9 @@ export function useProdOrder() {
         prodCodeId: row.prodCodeId,
         equipmentCode: row.equipmentCode,
 
+        itemCtTime: row.itemCtTime,
+        itemOnePerQty: row.itemOnePerQty,
+
         lotNo: row.lotNo,
         orderQty: row.orderQty,
         bigo: row.bigo,

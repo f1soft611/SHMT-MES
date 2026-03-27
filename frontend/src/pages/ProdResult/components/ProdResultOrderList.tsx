@@ -13,6 +13,7 @@ interface Props {
     totalCount: number;
     paginationModel: GridPaginationModel;
     onPaginationChange: (model: GridPaginationModel) => void;
+    onFilterChange: (model: any) => void;
     onRowClick: (row: ProdResultOrderRow) => void;
 }
 
@@ -24,7 +25,7 @@ const numberCol: Partial<GridColDef> = {
 };
 
 
-export default function ProdResultOrderList({rows, loading, totalCount, paginationModel, onPaginationChange, onRowClick}: Props) {
+export default function ProdResultOrderList({rows, loading, totalCount, paginationModel, onPaginationChange, onFilterChange, onRowClick}: Props) {
 
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
@@ -107,6 +108,8 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
                             pageSizeOptions={[10, 20, 50]}
                             paginationModel={paginationModel}
                             onPaginationModelChange={onPaginationChange}
+                            filterMode="server"
+                            onFilterModelChange={onFilterChange}
                             rowHeight={30}
                             columnHeaderHeight={35}
                             sx={{
