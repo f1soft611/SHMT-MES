@@ -56,6 +56,24 @@ const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 const VIEW_DAYS_OPTIONS = [7, 14, 21, 28];
 const DEFAULT_VIEW_DAYS = 14;
 
+const extractApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as {
+      response?: { data?: { message?: string; error?: string } };
+      message?: string;
+    };
+
+    return (
+      apiError.response?.data?.message ||
+      apiError.response?.data?.error ||
+      apiError.message ||
+      fallback
+    );
+  }
+
+  return fallback;
+};
+
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
   const getMonday = (date: Date): Date => {
@@ -846,8 +864,13 @@ const ProductionPlan: React.FC = () => {
           });
         }
       } catch (error) {
+        const errorMessage = extractApiErrorMessage(
+          error,
+          '생산계획 수정 중 오류가 발생했습니다.',
+        );
+
         showToast({
-          message: '생산계획 수정 중 오류가 발생했습니다.',
+          message: errorMessage,
           severity: 'error',
         });
       }
@@ -904,13 +927,11 @@ const ProductionPlan: React.FC = () => {
           severity: 'error',
         });
       }
-    } catch (error: any) {
-      // 백엔드에서 반환된 에러 메시지 추출
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        '생산계획 삭제 중 오류가 발생했습니다.';
+    } catch (error) {
+      const errorMessage = extractApiErrorMessage(
+        error,
+        '생산계획 삭제 중 오류가 발생했습니다.',
+      );
 
       showToast({
         message: errorMessage,

@@ -289,4 +289,14 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 		return update("ProductionPlanDAO.updateProductionPlanDateOnly", plan);
 	}
 
+	/**
+	 * 생산계획 기준으로 생산지시일(WORKDT_DATE)을 일괄 수정한다.
+	 * @param master factoryCode, prodPlanId, planDate, opmanCode2 포함
+	 * @return 수정(UPDATE) 결과
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int updateProductionOrderWorkDateByPlanId(ProductionPlanMaster master) throws Exception {
+		return update("ProductionPlanDAO.updateProductionOrderWorkDateByPlanId", master);
+	}
+
 }
