@@ -338,6 +338,28 @@
 		  AND PRODPLAN_ID = #{prodPlanId}
 	</update>
 
+	<!-- 생산계획 지시상태 조회 (ORDERED 여부 확인) -->
+	<select id="ProductionPlanDAO.selectProductionPlanOrderFlag"
+			parameterType="egovframework.let.production.plan.domain.model.ProductionPlan"
+			resultType="string">
+		SELECT TOP 1 ISNULL(ORDER_FLAG, 'PLANNED')
+		FROM TPR301
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PRODPLAN_ID = #{prodPlanId}
+	</select>
+
+	<!-- 생산계획 날짜 전용 수정 (지시 완료 상태에서 허용) -->
+	<update id="ProductionPlanDAO.updateProductionPlanDateOnly"
+			parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		UPDATE TPR301
+		SET
+			PROD_DATE = #{planDate},
+			OPMAN_CODE2 = #{opmanCode2},
+			OPTIME2 = GETDATE()
+		WHERE FACTORY_CODE = #{factoryCode}
+		  AND PRODPLAN_ID = #{prodPlanId}
+	</update>
+
 	<!-- 생산계획 마스터 삭제 (물리적 삭제) -->
 	<update id="ProductionPlanDAO.deleteProductionPlanMaster" parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
 		DELETE FROM TPR301M

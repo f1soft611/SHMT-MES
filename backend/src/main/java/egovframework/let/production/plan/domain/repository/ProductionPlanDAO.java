@@ -269,4 +269,24 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 		return selectOne("ProductionPlanDAO.selectProductionResultCount", master);
 	}
 
+	/**
+	 * 생산계획 지시상태(ORDER_FLAG)를 조회한다.
+	 * @param plan factoryCode, prodPlanId 포함
+	 * @return ORDER_FLAG 값 (PLANNED 또는 ORDERED)
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public String selectProductionPlanOrderFlag(ProductionPlan plan) throws Exception {
+		return selectOne("ProductionPlanDAO.selectProductionPlanOrderFlag", plan);
+	}
+
+	/**
+	 * 생산계획 날짜만 수정한다. (지시 완료 상태에서 허용)
+	 * @param plan factoryCode, prodPlanId, planDate, opmanCode2 포함
+	 * @return 수정(UPDATE) 결과, 성공 시 1
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int updateProductionPlanDateOnly(ProductionPlan plan) throws Exception {
+		return update("ProductionPlanDAO.updateProductionPlanDateOnly", plan);
+	}
+
 }

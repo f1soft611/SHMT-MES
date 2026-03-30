@@ -160,8 +160,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     dialogMode === 'edit' &&
     !!formData.planGroupId &&
     (formData.totalGroupCount ?? formData.createDays ?? 1) > 1;
-  const canEditPlanDate =
-    dialogMode === 'edit' && !isOrderedPlan && !isGroupedPlan;
+  const canEditPlanDate = dialogMode === 'edit' && !isGroupedPlan;
   const canEditPlan = dialogMode === 'create' || !isOrderedPlan;
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
@@ -392,7 +391,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     }}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                      생산지시 완료된 계획은 변경할 수 없습니다.
+                      생산지시 완료된 계획은 계획일만 변경 가능합니다.
                     </Typography>
                   </Box>
                 )}
@@ -1111,7 +1110,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
               type="submit"
               variant="contained"
               color="primary"
-              disabled={!canEditPlan && dialogMode === 'edit'}
+              disabled={!canEditPlan && !isOrderedPlan && dialogMode === 'edit'}
             >
               저장
             </Button>
