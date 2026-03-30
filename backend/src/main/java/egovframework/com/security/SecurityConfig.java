@@ -75,6 +75,7 @@ public class SecurityConfig {
     };
     private static final String[] ORIGINS_WHITELIST = {
             "http://localhost:3000",
+            "https://shmt-mes.vercel.app",
     };
 
     @Bean
@@ -87,7 +88,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(Arrays.asList(ORIGINS_WHITELIST));
-        configuration.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 
@@ -130,6 +131,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                    .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // CORS preflight 요청 허용
                         .antMatchers("/admin/**").hasRole("ADMIN") // 관리자 페이지는 ADMIN만 접근
                         .antMatchers(HttpMethod.PATCH, "/members/password").hasAnyRole("ADMIN", "USER") // 비밀번호 변경은 모든 인증된 사용자 접근 가능
                         .antMatchers("/members/**").hasRole("ADMIN") // 회원 관리는 ADMIN만 접근

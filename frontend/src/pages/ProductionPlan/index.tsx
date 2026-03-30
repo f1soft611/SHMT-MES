@@ -56,6 +56,24 @@ const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 const VIEW_DAYS_OPTIONS = [7, 14, 21, 28];
 const DEFAULT_VIEW_DAYS = 14;
 
+const extractApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as {
+      response?: { data?: { message?: string; error?: string } };
+      message?: string;
+    };
+
+    return (
+      apiError.response?.data?.message ||
+      apiError.response?.data?.error ||
+      apiError.message ||
+      fallback
+    );
+  }
+
+  return fallback;
+};
+
 const ProductionPlan: React.FC = () => {
   // 날짜 유틸리티 함수
   const getMonday = (date: Date): Date => {
@@ -220,6 +238,7 @@ const ProductionPlan: React.FC = () => {
   const [expandedEquipments, setExpandedEquipments] = useState<Set<string>>(
     new Set(),
   );
+  const isSearchFilterVisible = false;
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   const [compactMode, setCompactMode] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -761,15 +780,6 @@ const ProductionPlan: React.FC = () => {
           return;
         }
 
-        if (formData.orderFlag === 'ORDERED') {
-          showToast({
-            message:
-              '생산지시가 완료된 계획은 수정할 수 없습니다. 먼저 생산지시를 취소해주세요.',
-            severity: 'error',
-          });
-          return;
-        }
-
         const requestData: ProductionPlanRequest = {
           master: {
             planNo: formData.planNo,
@@ -854,8 +864,13 @@ const ProductionPlan: React.FC = () => {
           });
         }
       } catch (error) {
+        const errorMessage = extractApiErrorMessage(
+          error,
+          '생산계획 수정 중 오류가 발생했습니다.',
+        );
+
         showToast({
-          message: '생산계획 수정 중 오류가 발생했습니다.',
+          message: errorMessage,
           severity: 'error',
         });
       }
@@ -912,13 +927,11 @@ const ProductionPlan: React.FC = () => {
           severity: 'error',
         });
       }
-    } catch (error: any) {
-      // 백엔드에서 반환된 에러 메시지 추출
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        '생산계획 삭제 중 오류가 발생했습니다.';
+    } catch (error) {
+      const errorMessage = extractApiErrorMessage(
+        error,
+        '생산계획 삭제 중 오류가 발생했습니다.',
+      );
 
       showToast({
         message: errorMessage,
@@ -1200,20 +1213,22 @@ const ProductionPlan: React.FC = () => {
                 <ViewCompactIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="검색 필터">
-              <IconButton
-                onClick={() => setShowSearchPanel(!showSearchPanel)}
-                sx={{
-                  bgcolor: showSearchPanel ? 'primary.main' : 'grey.100',
-                  color: showSearchPanel ? 'white' : 'text.secondary',
-                  '&:hover': {
-                    bgcolor: showSearchPanel ? 'primary.dark' : 'grey.200',
-                  },
-                }}
-              >
-                <FilterListIcon />
-              </IconButton>
-            </Tooltip>
+            {isSearchFilterVisible && (
+              <Tooltip title="검색 필터">
+                <IconButton
+                  onClick={() => setShowSearchPanel(!showSearchPanel)}
+                  sx={{
+                    bgcolor: showSearchPanel ? 'primary.main' : 'grey.100',
+                    color: showSearchPanel ? 'white' : 'text.secondary',
+                    '&:hover': {
+                      bgcolor: showSearchPanel ? 'primary.dark' : 'grey.200',
+                    },
+                  }}
+                >
+                  <FilterListIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             <Tooltip title="새로고침">
               <IconButton
                 onClick={() => {
@@ -1238,63 +1253,69 @@ const ProductionPlan: React.FC = () => {
       {/* 연속 보기 기간은 상단 '보기 기간' 셀렉터에서 변경 */}
 
       {/* 검색 영역 */}
-      <Collapse in={showSearchPanel}>
-        <Card sx={{ mb: 1, boxShadow: 1 }}>
-          <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                fontWeight: 600,
-              }}
-            >
-              <FilterListIcon color="primary" />
-              검색 필터
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={compactMode ? 1 : 1.5}
-              alignItems="center"
-              flexWrap="wrap"
-            >
-              <TextField
-                size="small"
-                label="품목코드"
-                value={searchValues.itemCode}
-                onChange={(e) => handleSearchChange('itemCode', e.target.value)}
-                sx={{ minWidth: 180 }}
-              />
-              <TextField
-                size="small"
-                label="품목명"
-                value={searchValues.itemName}
-                onChange={(e) => handleSearchChange('itemName', e.target.value)}
-                sx={{ minWidth: 200 }}
-              />
-              <TextField
-                size="small"
-                label="설비"
-                value={searchValues.equipmentCode}
-                onChange={(e) =>
-                  handleSearchChange('equipmentCode', e.target.value)
-                }
-                sx={{ minWidth: 180 }}
-              />
-              <Button
-                variant="contained"
-                size={compactMode ? 'small' : 'medium'}
-                startIcon={<SearchIcon />}
-                onClick={handleSearch}
+      {isSearchFilterVisible && (
+        <Collapse in={showSearchPanel}>
+          <Card sx={{ mb: 1, boxShadow: 1 }}>
+            <CardContent sx={{ p: compactMode ? 1 : 1.5 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  fontWeight: 600,
+                }}
               >
-                검색
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Collapse>
+                <FilterListIcon color="primary" />
+                검색 필터
+              </Typography>
+              <Stack
+                direction="row"
+                spacing={compactMode ? 1 : 1.5}
+                alignItems="center"
+                flexWrap="wrap"
+              >
+                <TextField
+                  size="small"
+                  label="품목코드"
+                  value={searchValues.itemCode}
+                  onChange={(e) =>
+                    handleSearchChange('itemCode', e.target.value)
+                  }
+                  sx={{ minWidth: 180 }}
+                />
+                <TextField
+                  size="small"
+                  label="품목명"
+                  value={searchValues.itemName}
+                  onChange={(e) =>
+                    handleSearchChange('itemName', e.target.value)
+                  }
+                  sx={{ minWidth: 200 }}
+                />
+                <TextField
+                  size="small"
+                  label="설비"
+                  value={searchValues.equipmentCode}
+                  onChange={(e) =>
+                    handleSearchChange('equipmentCode', e.target.value)
+                  }
+                  sx={{ minWidth: 180 }}
+                />
+                <Button
+                  variant="contained"
+                  size={compactMode ? 'small' : 'medium'}
+                  startIcon={<SearchIcon />}
+                  onClick={handleSearch}
+                >
+                  검색
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Collapse>
+      )}
 
       {/* 주간 네비게이션 */}
       <WeekNavigator

@@ -1,0 +1,109 @@
+version: 1
+name: feature-plan-chain-state
+storage:
+  primary: document-frontmatter
+  secondary: session-memory
+fields:
+  chain_state_version:
+    type: integer
+    required: true
+    allowed:
+      min: 1
+  workflow_state:
+    type: string
+    required: true
+    enum:
+      - STEP_1_LEADER
+      - STEP_2_BACKEND
+      - STEP_3_FRONTEND
+      - STEP_4_QUALITY
+      - STEP_5_SECURITY
+      - STEP_6_REPORT
+      - REPORT_DONE
+  current_step:
+    type: string
+    required: true
+  completed_steps:
+    type: array
+    required: true
+    items:
+      type: string
+  execution_timestamp:
+    type: string
+    required: true
+    format: date-time
+  input_signature:
+    type: string
+    required: true
+    format: sha256-hex
+  replay_mode:
+    type: string
+    required: true
+    enum:
+      - reuse
+      - regenerate
+  last_error_signature:
+    type: string
+    required: false
+    format: sha256-hex
+  feedback_applied:
+    type: string
+    required: true
+    enum:
+      - applied
+      - not_applied
+  skip_decisions:
+    type: array
+    required: true
+    items:
+      type: object
+      required:
+        - step
+        - mode
+        - reason
+        - replacement_validation
+      properties:
+        step:
+          type: string
+          enum:
+            - STEP_3_FRONTEND
+            - STEP_5_SECURITY
+        mode:
+          type: string
+          enum:
+            - skip
+            - lighten
+        reason:
+          type: string
+        replacement_validation:
+          type: string
+        residual_risk:
+          type: string
+error_pattern:
+  type: object
+  required:
+    - error_signature
+    - step_id
+    - error_type
+    - avoid_rule
+    - recorded_at
+    - ttl_days
+  properties:
+    error_signature:
+      type: string
+      format: sha256-hex
+    step_id:
+      type: string
+    error_type:
+      type: string
+    avoid_rule:
+      type: string
+    recorded_at:
+      type: string
+      format: date-time
+    ttl_days:
+      type: integer
+      default: 14
+
+# Execution command
+# node .github/skills/feature-plan-6step/tools/state-validator.mjs --report 문서/검증/<report-file>.md --schema .github/skills/feature-plan-6step/state-schema.yaml

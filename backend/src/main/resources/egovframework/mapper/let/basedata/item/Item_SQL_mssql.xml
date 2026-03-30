@@ -85,7 +85,10 @@
 			</choose>
 		</if>
 		<if test="itemType != null and itemType != ''">
-			AND MATERIAL_FLAG = #{itemType}
+			AND MATERIAL_FLAG IN
+			<foreach item="type" collection="itemType.split(',')" open="(" separator="," close=")">
+				#{type}
+			</foreach>
 		</if>
 		<if test="useYn != null and useYn != ''">
 			AND A.DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
@@ -116,7 +119,7 @@
 			</choose>
 		</if>
 
-		ORDER BY OPTIME DESC
+		ORDER BY A.MATERIAL_ID DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
@@ -144,7 +147,10 @@
 			</choose>
 		</if>
 		<if test="itemType != null and itemType != ''">
-			AND MATERIAL_FLAG = #{itemType}
+			AND MATERIAL_FLAG IN
+			<foreach item="type" collection="itemType.split(',')" open="(" separator="," close=")">
+				#{type}
+			</foreach>
 		</if>
 		<choose>
 			<when test="useYn != null and useYn != ''">

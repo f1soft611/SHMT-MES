@@ -1,6 +1,5 @@
 ---
-description: 'Use when: editing frontend/backend source in SHMT-MES; enforce minimal code style and repository conventions'
-applyTo: 'frontend/src/**/*.{ts,tsx,js,jsx},backend/src/main/java/**/*.java,backend/src/main/resources/egovframework/mapper/**/*.xml'
+description: 'Use when: checking SHMT-MES 공통 최소 스타일 원칙이 필요한 경우. 상세 규칙은 frontend-style.instructions.md / backend-style.instructions.md를 우선 적용'
 ---
 
 # SHMT-MES 최소 스타일 지침
@@ -10,17 +9,11 @@ applyTo: 'frontend/src/**/*.{ts,tsx,js,jsx},backend/src/main/java/**/*.java,back
 - 기존 구조/명명 규칙을 우선 유지하고, 변경 범위는 요청한 기능으로 한정한다.
 - 규칙이 충돌하면 `.github/copilot-instructions.md`를 최우선 기준으로 따른다.
 
-## 프론트엔드
+## 적용 방식
 
-- `any` 타입 사용 금지, 가능한 구체 타입/인터페이스를 사용한다.
-- API 호출은 `src/util/axios.ts`의 `apiClient` 단일 인스턴스를 사용한다.
-- 컴포넌트 파일은 PascalCase, 서비스/유틸은 기존 camelCase 패턴을 유지한다.
-
-## 백엔드
-
-- 레이어 순서를 유지한다: Controller → Service → DAO → MyBatis XML.
-- 트랜잭션은 Service 레이어에 적용하고 DAO에 부여하지 않는다.
-- 멀티 DB 환경을 고려해 SQL 변경 시 해당 도메인의 DB별 매퍼 일관성을 확인한다.
+- 프론트 소스 변경은 `frontend-style.instructions.md`를 우선 따른다.
+- 백엔드/매퍼 변경은 `backend-style.instructions.md`를 우선 따른다.
+- 이 파일은 공통 원칙의 기준점으로만 사용한다.
 
 ## 변경 품질
 

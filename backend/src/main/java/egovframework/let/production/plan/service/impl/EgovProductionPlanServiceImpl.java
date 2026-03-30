@@ -231,7 +231,25 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			}
 		}
 		master.setTotalPlanQty(totalQty);
-		
+
+		// 지시 완료(ORDERED) 상태 확인 - 해당 상태에서는 생산계획일만 수정 허용
+		if (!planList.isEmpty()) {
+			String currentOrderFlag = productionPlanDAO.selectProductionPlanOrderFlag(planList.get(0));
+			if ("ORDERED".equals(currentOrderFlag)) {
+				int productionResultCount = productionPlanDAO.selectProductionResultCount(master);
+				if (productionResultCount > 0) {
+					throw new RuntimeException("생산실적이 등록된 계획은 계획일을 수정할 수 없습니다.");
+				}
+
+				for (ProductionPlan plan : planList) {
+					productionPlanDAO.updateProductionPlanDateOnly(plan);
+				}
+				productionPlanDAO.updateProductionPlanMaster(master);
+				productionPlanDAO.updateProductionOrderWorkDateByPlanId(master);
+				return; // PROD_DATE 변경은 TPR301R 참조에 영향 없으므로 references 처리 불필요
+			}
+		}
+
 		// 마스터 수정
 		productionPlanDAO.updateProductionPlanMaster(master);
 		
