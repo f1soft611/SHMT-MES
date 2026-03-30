@@ -70,6 +70,12 @@ const tableFontSizes = {
   chip: '0.74rem',
 };
 
+const tableRowHeights = {
+  header: 48,
+  body: 52,
+  empty: 180,
+};
+
 const getWeekIndex = (day: number, boundaries: number[]) => {
   for (let i = 0; i < boundaries.length; i += 1) {
     if (day <= boundaries[i]) return i;
@@ -286,7 +292,7 @@ const ProdPlanResult: React.FC = () => {
               ref={tableContainerRef}
               sx={{
                 overflowX: 'auto',
-                maxHeight: 620,
+                maxHeight: 'calc(100vh - 300px)',
               }}
             >
               <Table
@@ -298,11 +304,12 @@ const ProdPlanResult: React.FC = () => {
                     border: '1px solid #c7c7c7',
                     whiteSpace: 'nowrap',
                     fontSize: tableFontSizes.body,
+                    padding: '12px 8px',
                   },
                 }}
               >
                 <TableHead>
-                  <TableRow>
+                  <TableRow sx={{ minHeight: tableRowHeights.header }}>
                     <TableCell
                       align="center"
                       sx={{
@@ -472,11 +479,14 @@ const ProdPlanResult: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {rows.length === 0 ? (
-                    <TableRow>
+                    <TableRow sx={{ minHeight: tableRowHeights.empty }}>
                       <TableCell
                         colSpan={7 + daysInMonth + weekBoundaries.length}
                         align="center"
-                        sx={{ height: 160, color: 'text.disabled' }}
+                        sx={{
+                          height: tableRowHeights.empty,
+                          color: 'text.disabled',
+                        }}
                       >
                         <Box
                           sx={{
@@ -537,7 +547,12 @@ const ResultRow = ({
   const isRate = row.rowType === 'RATE';
 
   return (
-    <TableRow sx={{ bgcolor: isRate ? 'rgba(255,192,0,0.08)' : undefined }}>
+    <TableRow
+      sx={{
+        bgcolor: isRate ? 'rgba(255,192,0,0.08)' : undefined,
+        minHeight: 52,
+      }}
+    >
       {showWorkplace && (
         <TableCell
           align="center"
