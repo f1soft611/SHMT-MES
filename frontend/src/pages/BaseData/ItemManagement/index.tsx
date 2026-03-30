@@ -33,6 +33,22 @@ import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { usePermissions } from '../../../contexts/PermissionContext';
 
+const DEFAULT_ITEM_TYPES = ['PRODUCT', 'HALF_PRODUCT'];
+
+interface ItemSearchState {
+  searchCnd: string;
+  searchWrd: string;
+  itemType: string;
+  useYn: string;
+}
+
+interface ItemInputState {
+  searchCnd: string;
+  searchWrd: string;
+  itemType: string[];
+  useYn: string;
+}
+
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
   if (!value && value !== 0) return '';
@@ -127,18 +143,18 @@ const ItemManagement: React.FC = () => {
   });
 
   // 실제 검색에 사용되는 파라미터
-  const [searchParams, setSearchParams] = useState({
+  const [searchParams, setSearchParams] = useState<ItemSearchState>({
     searchCnd: '1',
     searchWrd: '',
-    itemType: '',
+    itemType: DEFAULT_ITEM_TYPES.join(','),
     useYn: 'Y',
   });
 
   // 입력 필드용 상태 (화면 입력용)
-  const [inputValues, setInputValues] = useState({
+  const [inputValues, setInputValues] = useState<ItemInputState>({
     searchCnd: '1',
     searchWrd: '',
-    itemType: '',
+    itemType: DEFAULT_ITEM_TYPES,
     useYn: 'Y',
   });
 
@@ -170,11 +186,19 @@ const ItemManagement: React.FC = () => {
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
-    setSearchParams({ ...inputValues });
+    setSearchParams({
+      searchCnd: inputValues.searchCnd,
+      searchWrd: inputValues.searchWrd,
+      itemType: inputValues.itemType.join(','),
+      useYn: inputValues.useYn,
+    });
     setPaginationModel({ ...paginationModel, page: 0 });
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (
+    field: keyof ItemInputState,
+    value: string | string[],
+  ) => {
     setInputValues({
       ...inputValues,
       [field]: value,
@@ -485,11 +509,22 @@ const ItemManagement: React.FC = () => {
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>품목타입</InputLabel>
             <Select
+              multiple
               value={inputValues.itemType}
               label="품목타입"
-              onChange={(e) => handleInputChange('itemType', e.target.value)}
+              renderValue={(selected) =>
+                (selected as string[])
+                  .map((value) => getItemTypeLabel(value))
+                  .join(', ')
+              }
+              onChange={(e) => {
+                const { value } = e.target;
+                handleInputChange(
+                  'itemType',
+                  typeof value === 'string' ? value.split(',') : value,
+                );
+              }}
             >
-              <MenuItem value="">전체</MenuItem>
               <MenuItem value="PRODUCT">제품</MenuItem>
               <MenuItem value="1">상품</MenuItem>
               <MenuItem value="HALF_PRODUCT">반제품</MenuItem>
