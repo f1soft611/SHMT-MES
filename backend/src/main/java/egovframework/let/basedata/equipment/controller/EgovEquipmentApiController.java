@@ -135,6 +135,16 @@ public class EgovEquipmentApiController {
             @RequestBody Equipment equipment,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+                String plcAddress = equipment.getPlcAddress() == null ? "" : equipment.getPlcAddress().trim();
+                if (!plcAddress.isEmpty() && equipmentService.isPlcAddressExists(plcAddress)) {
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", "이미 사용 중인 PLC 주소입니다.");
+                        errorMap.put("duplicateField", "plcAddress");
+                        errorMap.put("duplicateValue", plcAddress);
+
+                        return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+                }
+
         // 설비 코드 중복 체크
         if (equipmentService.isEquipmentCodeExists(equipment.getEquipSysCd(), equipment.getEquipCd())) {
             Map<String, Object> errorMap = new HashMap<>();
@@ -145,6 +155,7 @@ public class EgovEquipmentApiController {
             return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
         }
 
+        equipment.setPlcAddress(plcAddress);
         equipment.setRegUserId(user.getUniqId());
         equipmentService.insertEquipment(equipment);
 
@@ -174,6 +185,22 @@ public class EgovEquipmentApiController {
             @RequestBody Equipment equipment,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
+                String plcAddress = equipment.getPlcAddress() == null ? "" : equipment.getPlcAddress().trim();
+                String equipmentId = equipment.getEquipmentId() == null ? "" : equipment.getEquipmentId().trim();
+                if (equipmentId.isEmpty()) {
+                        equipmentId = equipment.getEquipSysCd() == null ? "" : equipment.getEquipSysCd().trim();
+                }
+                if (!plcAddress.isEmpty() && !equipmentId.isEmpty()
+                                && equipmentService.isPlcAddressExistsForUpdate(equipmentId, plcAddress)) {
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", "이미 사용 중인 PLC 주소입니다.");
+                        errorMap.put("duplicateField", "plcAddress");
+                        errorMap.put("duplicateValue", plcAddress);
+
+                        return resultVoHelper.buildFromMap(errorMap, ResponseCode.INPUT_CHECK_ERROR);
+                }
+
+                equipment.setPlcAddress(plcAddress);
         equipment.setEquipCd(equipCd);
         equipment.setUpdUserId(user.getUniqId());
         equipmentService.updateEquipment(equipment);

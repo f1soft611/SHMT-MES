@@ -85,6 +85,23 @@ public interface EgovEquipmentService {
 	 */
 	boolean isEquipmentCodeExistsForUpdate(String equipmentId, String equipSysCd, String equipCd) throws Exception;
 
+	/**
+	 * PLC 주소 중복 체크
+	 * @param plcAddress PLC 주소
+	 * @return 중복 여부
+	 * @throws Exception
+	 */
+	boolean isPlcAddressExists(String plcAddress) throws Exception;
+
+	/**
+	 * PLC 주소 중복 체크 (수정 시)
+	 * @param equipmentId 설비 ID
+	 * @param plcAddress PLC 주소
+	 * @return 중복 여부
+	 * @throws Exception
+	 */
+	boolean isPlcAddressExistsForUpdate(String equipmentId, String plcAddress) throws Exception;
+
 
 	/**
 	 * 작업장별 설비목록 리스트

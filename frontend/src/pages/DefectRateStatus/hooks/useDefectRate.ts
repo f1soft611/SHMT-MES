@@ -11,16 +11,14 @@ import { productionDefectRateService } from '../../../services/productionDefectR
 import commonCodeService from '../../../services/commonCodeService';
 import { CommonDetailCode } from '../../../types/commonCode';
 
-export function useDefectRate() {
-  const { showToast } = useToast();
+const DEFECT_RATE_SEARCH_SESSION_KEY = 'defectRateStatus.search';
 
+const getDefaultSearch = (): ProductionDefectRateSearchParams => {
   const today = new Date().toISOString().slice(0, 10);
-
   const dateTo = new Date();
   dateTo.setDate(dateTo.getDate() + 7);
 
-  /** 검색조건 */
-  const [search, setSearch] = useState<ProductionDefectRateSearchParams>({
+  return {
     workplace: '',
     equipment: '',
     defectCode: '',
@@ -28,7 +26,66 @@ export function useDefectRate() {
     dateTo: dateTo.toISOString().slice(0, 10),
     completeFrom: '',
     completeTo: '',
-  });
+  };
+};
+
+const getInitialSearch = (): ProductionDefectRateSearchParams => {
+  const defaultSearch = getDefaultSearch();
+
+  try {
+    const savedSearch = sessionStorage.getItem(DEFECT_RATE_SEARCH_SESSION_KEY);
+    if (!savedSearch) {
+      return defaultSearch;
+    }
+
+    const parsed = JSON.parse(savedSearch);
+    if (!parsed || typeof parsed !== 'object') {
+      return defaultSearch;
+    }
+
+    return {
+      ...defaultSearch,
+      workplace:
+        typeof parsed.workplace === 'string'
+          ? parsed.workplace
+          : defaultSearch.workplace,
+      equipment:
+        typeof parsed.equipment === 'string'
+          ? parsed.equipment
+          : defaultSearch.equipment,
+      defectCode:
+        typeof parsed.defectCode === 'string'
+          ? parsed.defectCode
+          : defaultSearch.defectCode,
+      dateFrom:
+        typeof parsed.dateFrom === 'string'
+          ? parsed.dateFrom
+          : defaultSearch.dateFrom,
+      dateTo:
+        typeof parsed.dateTo === 'string'
+          ? parsed.dateTo
+          : defaultSearch.dateTo,
+      completeFrom:
+        typeof parsed.completeFrom === 'string'
+          ? parsed.completeFrom
+          : defaultSearch.completeFrom,
+      completeTo:
+        typeof parsed.completeTo === 'string'
+          ? parsed.completeTo
+          : defaultSearch.completeTo,
+    };
+  } catch {
+    return defaultSearch;
+  }
+};
+
+export function useDefectRate() {
+  const { showToast } = useToast();
+
+  /** 검색조건 */
+  const [search, setSearch] = useState<ProductionDefectRateSearchParams>(() =>
+    getInitialSearch(),
+  );
 
   const [defectTypes, setDefectTypes] = useState<CommonDetailCode[]>([]);
 
@@ -85,6 +142,17 @@ export function useDefectRate() {
     setPaginationModel(model);
     onSearch(model);
   };
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        DEFECT_RATE_SEARCH_SESSION_KEY,
+        JSON.stringify(search),
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [search]);
 
   useEffect(() => {
     const fetchDefectTypes = async () => {

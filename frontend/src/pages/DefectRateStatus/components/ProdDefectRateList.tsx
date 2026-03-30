@@ -76,7 +76,7 @@ const ProdDefectRateList = ({
     },
     {
       field: 'lotNo',
-      headerName: 'lotNo',
+      headerName: '제품LOT No',
       width: 100,
       headerAlign: 'center',
       align: 'center',

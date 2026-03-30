@@ -13,7 +13,8 @@
 		<result property="unitName" column="UNIT_NAME"/>
 		<result property="stockQty" column="STOCK_QTY"/>
 		<result property="safetyStock" column="SAFETY_STOCK"/>
-		<result property="productionPerCycle" column="PRODUCTION_PER_CYCLE"/>
+		<result property="productionPerCycle" column="ITEM_ONE_PER_QTY"/>
+		<result property="cycleTime" column="ITEM_CT_TIME"/>
 		<result property="remark" column="ETC"/>
 		<result property="processFlow" column="PROCESSFLOW"/>
 		<result property="interfaceYn" column="INTERFACE_YN"/>
@@ -35,7 +36,26 @@
 		UNIT,
 		ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
 		STOCK_QTY,
-		SAFETY_STOCK,		ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,		ETC,
+		SAFETY_STOCK,
+		ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
+		ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
+		ETC,
+		ISNULL(STUFF((
+			SELECT ',' + FI.WORK_ORDER
+			FROM TPR112 FI
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_CODES,
+		ISNULL(STUFF((
+			SELECT ',' + ISNULL(PF.WORK_ORDER_NM, '')
+			FROM TPR112 FI
+			LEFT JOIN TPR110 PF
+				ON PF.WORK_ORDER_ID = FI.WORK_ORDER_ID
+				AND PF.FACTORY_CODE = A.FACTORY_CODE
+				AND ISNULL(PF.DELETE_FLAG, '') != '1'
+			WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+			FOR XML PATH(''), TYPE
+		).value('.', 'NVARCHAR(MAX)'), 1, 1, ''), '') AS PROCESS_FLOW_NAMES,
 		INTERFACE_YN,
 		B1.WORK_ORDER_NM AS PROCESSFLOW,
 		CASE WHEN ISNULL(A.DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
@@ -87,7 +107,6 @@
 				<when test="inProcessFlowYn == 2">
 					AND EXISTS (
 					SELECT 1
-					FROM TPR_FLOW_ITEM FI
 					FROM TPR112 FI
 					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
 					)
@@ -127,9 +146,14 @@
 		<if test="itemType != null and itemType != ''">
 			AND MATERIAL_FLAG = #{itemType}
 		</if>
-		<if test="useYn != null and useYn != ''">
-			AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
-		</if>
+		<choose>
+			<when test="useYn != null and useYn != ''">
+				AND DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
+			</when>
+			<otherwise>
+				AND DELETE_FLAG != '1'
+			</otherwise>
+		</choose>
 		<!-- 공정 등록 여부 -->
 		<if test="inProcessFlowYn != null">
 			<choose>
@@ -154,7 +178,6 @@
 				<!-- 0: 전체 → 조건 없음 -->
 			</choose>
 		</if>
-		AND DELETE_FLAG != '1'
 	</select>
 
 	<select id="ItemDAO.selectItem" parameterType="string" resultMap="itemResult">
@@ -168,7 +191,8 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			ISNULL(PRODUCTION_PER_CYCLE, '0') AS PRODUCTION_PER_CYCLE,
+			ISNULL(ITEM_ONE_PER_QTY, '0') AS ITEM_ONE_PER_QTY,
+			ISNULL(ITEM_CT_TIME, '0') AS ITEM_CT_TIME,
 			ETC,
 			INTERFACE_YN,
 			CASE WHEN ISNULL(DELETE_FLAG, '0') = '1' THEN 'N' ELSE 'Y' END AS DELETE_FLAG,
@@ -191,7 +215,8 @@
 			UNIT,
 			STOCK_QTY,
 			SAFETY_STOCK,
-			PRODUCTION_PER_CYCLE,
+			ITEM_ONE_PER_QTY,
+			ITEM_CT_TIME,
 			ETC,
 			INTERFACE_YN,
 			DELETE_FLAG,
@@ -208,6 +233,7 @@
 					 ISNULL(#{stockQty}, '0'),
 					 ISNULL(#{safetyStock}, '0'),
 					 ISNULL(#{productionPerCycle}, '0'),
+					 ISNULL(#{cycleTime}, '0'),
 					 #{remark},
 					 ISNULL(#{interfaceYn}, 'N'),
 					 CASE WHEN ISNULL(#{useYn}, 'N') = 'Y' THEN '0' ELSE '1' END,
@@ -226,7 +252,8 @@
 			UNIT = #{unit},
 			STOCK_QTY = #{stockQty},
 			SAFETY_STOCK = #{safetyStock},
-			PRODUCTION_PER_CYCLE = #{productionPerCycle},
+			ITEM_ONE_PER_QTY = #{productionPerCycle},
+			ITEM_CT_TIME = #{cycleTime},
 			ETC = #{remark},
 			INTERFACE_YN = #{interfaceYn},
 			DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
@@ -237,13 +264,12 @@
 		    AND MATERIAL_CODE = #{itemCode}
 	</update>
 
-	<delete id="ItemDAO.deleteItem" parameterType="string">
--- 		DELETE FROM TCO403
+	<delete id="ItemDAO.deleteItem" parameterType="map">
 		UPDATE TCO403
 		    SET
-				DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END,
-				DELETE_DATE = CASE WHEN #{useYn} = 'Y' THEN '' ELSE GETDATE() END,
-				OPMAN_CODE2 = 'SYSTEM',
+				DELETE_FLAG = '1',
+				DELETE_DATE = GETDATE(),
+				OPMAN_CODE2 = #{userId},
 				OPTIME2 = GETDATE()
 		WHERE MATERIAL_CODE = #{itemCode}
 	</delete>
@@ -260,6 +286,7 @@
 		SELECT COUNT(*) AS CNT
 		FROM TCO403
 		WHERE MATERIAL_CODE = #{itemCode}
+		AND MATERIAL_ID != #{itemId}
 	</select>
 
 </mapper>

@@ -440,12 +440,15 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		for (WorkplaceMonthlyAggregate aggregate : workplaceMap.values()) {
 			ProductionPlanMonthlyOrderSummary summary = orderMap.get(aggregate.workplaceCode);
 			BigDecimal orderQty = summary != null ? defaultNumber(summary.getOrderQty()) : BigDecimal.ZERO;
-			BigDecimal backlogQty = summary != null ? defaultNumber(summary.getBacklogQty()) : BigDecimal.ZERO;
 			BigDecimal totalPlan = aggregate.getTotalPlan();
 			BigDecimal totalActual = aggregate.getTotalActual();
 
 			BigDecimal monthTarget = orderQty.compareTo(BigDecimal.ZERO) > 0 ? orderQty : totalPlan;
 			BigDecimal monthPlan = totalPlan;
+			BigDecimal backlogQty = monthTarget.subtract(monthPlan);
+			if (backlogQty.compareTo(BigDecimal.ZERO) < 0) {
+				backlogQty = BigDecimal.ZERO;
+			}
 
 			ProductionPlanMonthlyResultRow planRow = buildResultRow(
 				aggregate,

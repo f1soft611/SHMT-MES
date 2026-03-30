@@ -88,8 +88,11 @@ public class EgovItemServiceImpl extends EgovAbstractServiceImpl implements Egov
 	 */
 	@Override
 	@Transactional
-	public void deleteItem(String itemId) throws Exception {
-		itemDAO.deleteItem(itemId);
+	public void deleteItem(String itemCode, String userId) throws Exception {
+		Map<String, String> params = new HashMap<>();
+		params.put("itemCode", itemCode);
+		params.put("userId", userId);
+		itemDAO.deleteItem(params);
 	}
 
 	@Override
