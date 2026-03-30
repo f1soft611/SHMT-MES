@@ -61,7 +61,7 @@ export default function ProdOrderDialog({
             sortable: false,
             renderCell: (params) => {
                 const isNew = params.row._isNew === true;
-                const disabled = params.row.RST_CNT > 0;
+                const disabled = params.row.rstCnt > 0;
                 return (
                     <IconButton
                         size="small"
@@ -312,22 +312,22 @@ export default function ProdOrderDialog({
                                 </Typography>
                             </Box>
 
-                            <Divider
-                                orientation="vertical"
-                                flexItem
-                                sx={{ mx: 0.3, opacity: 1 }}
+                            {/*<Divider*/}
+                            {/*    orientation="vertical"*/}
+                            {/*    flexItem*/}
+                            {/*    sx={{ mx: 0.3, opacity: 1 }}*/}
 
-                            />
+                            {/*/>*/}
 
-                            {/* 생산계획 ID */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                    생산계획 ID
-                                </Typography>
-                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                    {plan.prodplanDetailId}
-                                </Typography>
-                            </Box>
+                            {/*/!* 생산계획 ID *!/*/}
+                            {/*<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>*/}
+                            {/*    <Typography variant="caption" color="text.secondary">*/}
+                            {/*        생산계획 ID*/}
+                            {/*    </Typography>*/}
+                            {/*    <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>*/}
+                            {/*        {plan.prodplanDetailId}*/}
+                            {/*    </Typography>*/}
+                            {/*</Box>*/}
 
                             <Divider
                                 orientation="vertical"

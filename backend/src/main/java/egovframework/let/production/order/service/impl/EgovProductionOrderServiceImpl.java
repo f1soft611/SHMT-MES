@@ -126,24 +126,29 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		Map<String, String> lotMap = new HashMap<>();
 
+		String lotNo = null;
+
         for (ProdOrderInsertDto dto : prodOrderList) {
+			
+			if (dto.getLotNo() != null && !dto.getLotNo().isEmpty()) {
+				lotNo = dto.getLotNo();
+			}else{
+				String itemCode = dto.getItemCode();
 
-			String itemCode = dto.getItemCode();
+				// 이미 채번된 품목이면 재사용
+				lotNo = lotMap.get(itemCode);
+				if (lotNo == null) {
+					lotNo = egovConditionalIdService.getNextStringId(
+							"TPR301M",
+							itemCode,
+							year,
+							itemCode + "-"+year,
+							3,
+							'0'
+					);
 
-			// 이미 채번된 품목이면 재사용
-			String lotNo = lotMap.get(itemCode);
-
-			if (lotNo == null) {
-				lotNo = egovConditionalIdService.getNextStringId(
-						"TPR301M",
-						itemCode,
-						year,
-						itemCode + "-"+year,
-						3,
-						'0'
-				);
-
-				lotMap.put(itemCode, lotNo);
+					lotMap.put(itemCode, lotNo);
+				}
 			}
 
 			dto.setLotNo(lotNo);
