@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "harness:run": "node .github/skills/feature-plan-6step/tools/harness-runner.mjs",
+    "harness:gate-check": "node .github/skills/feature-plan-6step/tools/gate-checker.mjs",
+    "harness:state-validate": "node .github/skills/feature-plan-6step/tools/state-validator.mjs",
+    "harness:branch-decide": "node .github/skills/feature-plan-6step/tools/branch-decider.mjs"
+  },
   "dependencies": {
     "html2canvas": "^1.4.1"
   },
