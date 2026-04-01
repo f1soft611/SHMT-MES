@@ -103,6 +103,7 @@ export interface ProdOrderRow {
     bigo: string;
     lastFlag:string;
     customerCode:number;
+    copyRow:number;
     opmanCode2: string;
     optime2: number;
     rstCnt: number;
@@ -163,6 +164,7 @@ export interface ProdOrderDeleteDto {
     prodplanDate: string; // yyyyMMdd
     prodplanSeq: number;
     prodworkSeq: number;
+    prodorderId?: string; // 단건 삭제 시 사용
 }
 
 export type OrderFlag = "PLANNED" | "ORDERED";

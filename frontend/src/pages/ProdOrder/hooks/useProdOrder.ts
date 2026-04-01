@@ -241,12 +241,40 @@ export function useProdOrder() {
     };
 
     /** ======================
-     *  행 삭제 (로컬)
+     *  행 삭제
+     *  - 신규(_isNew) → 로컬에서만 제거
+     *  - 기존(저장된 분할건) → 서버 요청 후 로컬 제거
      *  ====================== */
-    const handleRemoveRow  = (index: number) => {
-        setLocalRows(prev =>
-            prev.filter((_, i) => i !== index)
-        );
+    const handleRemoveRow = async (index: number) => {
+        const target = localRows[index];
+        if (!target) return;
+
+        // 신규 → 바로 제거
+        if (target._isNew === true) {
+            setLocalRows(prev => prev.filter((_, i) => i !== index));
+            return;
+        }
+
+        // 기존 행 → 서버 삭제 요청
+        try {
+            const deleteDto = {
+                prodplanDate: target.prodplanDate,
+                prodplanSeq: target.prodplanSeq,
+                prodworkSeq: target.prodworkSeq,
+                prodorderId: target.prodorderId,
+            };
+
+            const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+            if (data.resultCode !== 200) {
+                showToast({ message: data.resultMessage, severity: 'error' });
+                return;
+            }
+
+            setLocalRows(prev => prev.filter((_, i) => i !== index));
+            showToast({ message: data.resultMessage, severity: 'success' });
+        } catch (e) {
+            showToast({ message: '행 삭제 중 오류가 발생했습니다.', severity: 'error' });
+        }
     }
 
     /** ======================
