@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   Box,
   Card,
@@ -33,6 +33,21 @@ const ProdDefectRateList = ({
   paginationModel,
   onPaginationChange,
 }: Props) => {
+
+  const firstRowKeys = useMemo(() => {
+    const seen = new Set<string>();
+    const first = new Set<string>();
+    rows.forEach((row) => {
+      const groupKey = `${row.tpr504Id ?? ''}_${row.prodSeq ?? ''}`;
+      const rowKey = `${groupKey}_${row.badSeq ?? ''}_${row.qcCode ?? ''}`;
+      if (!seen.has(groupKey)) {
+        seen.add(groupKey);
+        first.add(rowKey);
+      }
+    });
+    return first;
+  }, [rows]);
+
   const columns: GridColDef[] = [
     {
       field: 'orderNo',
@@ -157,8 +172,12 @@ const ProdDefectRateList = ({
       width: 90,
       headerAlign: 'center',
       align: 'center',
-      valueFormatter: (value) =>
-          value != null ? `${Number(value).toFixed(1)}%` : '0.0%',
+      renderCell: (params) => {
+        const rowKey = `${params.row.tpr504Id ?? ''}_${params.row.prodSeq ?? ''}_${params.row.badSeq ?? ''}_${params.row.qcCode ?? ''}`;
+        if (!firstRowKeys.has(rowKey)) return '';
+        const value = params.value;
+        return value != null ? `${Number(value).toFixed(1)}%` : '0.0%';
+      },
     },
     {
       field: 'qcCode',
