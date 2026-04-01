@@ -33,6 +33,10 @@
                 WHEN ISNULL(S.PROD_QTY,0) = 0 THEN 0
                 ELSE ISNULL(D.QC_QTY,0) * 100.0 / ISNULL(S.PROD_QTY,0)
             END defectRate,
+            CASE
+                WHEN ISNULL(S.PROD_QTY,0) = 0 THEN 0
+                ELSE ISNULL(S.BAD_QTY,0) * 100.0 / ISNULL(S.PROD_QTY,0)
+            END defectRateTotal,
             X.FACTORY_CODE,
             X.PRODPLAN_DATE,
             X.PRODPLAN_SEQ,

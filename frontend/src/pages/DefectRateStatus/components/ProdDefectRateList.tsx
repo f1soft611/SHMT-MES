@@ -152,6 +152,15 @@ const ProdDefectRateList = ({
       ...numberCol,
     },
     {
+      field: 'defectRateTotal',
+      headerName: '총불량률(%)',
+      width: 90,
+      headerAlign: 'center',
+      align: 'center',
+      valueFormatter: (value) =>
+          value != null ? `${Number(value).toFixed(1)}%` : '0.0%',
+    },
+    {
       field: 'qcCode',
       headerName: '불량코드',
       width: 100,

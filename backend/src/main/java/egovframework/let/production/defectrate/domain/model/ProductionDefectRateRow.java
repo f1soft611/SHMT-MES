@@ -59,6 +59,7 @@ public class ProductionDefectRateRow implements Serializable {
 	private Double remainQty;
 	private Double rate;
 	private Double defectRate;
+	private Double defectRateTotal;
 
 
 	// === 참조 ID ===
