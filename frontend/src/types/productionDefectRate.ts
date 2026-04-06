@@ -59,6 +59,7 @@ export interface ProductionDefectRateRow {
   remainQty?: number;
   rate?: number;
   defectRate?: number;
+  defectRateTotal?: number;
 
   // === 불량 상세 ===
   badSeq?: number;
