@@ -108,15 +108,22 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "orderFlag",
             headerName: "지시상태",
-            width: 100,
+            width: 90,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => {
-                const isOrdered = params.value === 'ORDERED';
+                const value = params.value;
+                const labelMap: Record<string, string> = {
+                    ORDERED: "지시완료",
+                    PLANNED: "계획완료",
+                };
+
+                const label = labelMap[value] ?? value;
+
                 return (
                     <Chip
-                        label={params.value}
-                        color={isOrdered ? 'primary' : 'default'}
+                        label={label}
+                        color={value === 'ORDERED' ? 'primary' : 'default'}
                         size="small"
                     />
                 );
@@ -125,7 +132,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "orderGubun",
             headerName: "의뢰구분",
-            width: 100,
+            width: 80,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => {
@@ -146,16 +153,16 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
             headerAlign: "center",
             align: "center",
         },
-        {
-            field: "prodplanDate",
-            headerName: "생산계획일",
-            width: 100,
-            headerAlign: "center",
-            align: "center",
-        },
+        // {
+        //     field: "prodplanDate",
+        //     headerName: "생산계획일",
+        //     width: 100,
+        //     headerAlign: "center",
+        //     align: "center",
+        // },
         {
             field: "prodDate",
-            headerName: "생산시작일",
+            headerName: "생산계획일",
             width: 100,
             headerAlign: "center",
             align: "center",
@@ -163,7 +170,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "workcenterName",
             headerName: "작업장",
-            width: 100,
+            width: 80,
             headerAlign: "center",
             align: "center",
         },
@@ -177,14 +184,14 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "lotNo",
             headerName: "제품 LOT No",
-            width: 100,
+            width: 150,
             headerAlign: "center",
             align: "center",
         },
         {
             field: "itemName",
             headerName: "품목명",
-            width: 250,
+            width: 200,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => decodeHtml(params.value ?? ''),
@@ -214,6 +221,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "actionOrder",
             headerName: "생산지시",
+            width: 80,
             sortable: false,
             headerAlign: 'center',
             align: 'center',
@@ -230,6 +238,7 @@ const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, 
         {
             field: "actionResult",
             headerName: "생산실적",
+            width: 80,
             sortable: false,
             headerAlign: 'center',
             align: 'center',

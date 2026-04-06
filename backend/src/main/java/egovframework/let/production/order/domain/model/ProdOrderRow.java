@@ -64,6 +64,8 @@ public class ProdOrderRow implements Serializable {
 
     private Integer customerCode;
 
+    private Integer copyRow;
+
     private String opmanCode2;
     private String optime2;
 

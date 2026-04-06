@@ -40,6 +40,7 @@ export default function ProdOrderDialog({
 }:Props){
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [removeTargetIndex, setRemoveTargetIndex] = useState<number | null>(null);
 
     const columns: GridColDef[] =[
         { field: 'prodplanId'},
@@ -61,24 +62,28 @@ export default function ProdOrderDialog({
             sortable: false,
             renderCell: (params) => {
                 const isNew = params.row._isNew === true;
-                const disabled = params.row.RST_CNT > 0;
+                const canDelete = isNew || (params.row.copyRow ?? 0) > 1;
+                const disabled = params.row.rstCnt > 0;
                 return (
                     <IconButton
                         size="small"
-                        color={isNew ? "error" : "primary"}
+                        color={canDelete ? "error" : "primary"}
                         disabled={disabled}
                         onClick={() => {
-                            const index =
-                                params.api.getRowIndexRelativeToVisibleRows(params.id);
+                            const index = params.api.getRowIndexRelativeToVisibleRows(params.id);
 
-                            if (isNew) {
-                                onRemoveRow(index);   // 행 삭제
+                            if (canDelete) {
+                                if (isNew) {
+                                    onRemoveRow(index);   // 신규 → 로컬 즉시 삭제
+                                } else {
+                                    setRemoveTargetIndex(index);  // 기존 → 컨펌
+                                }
                             } else {
                                 onAddRow(index);      // 행 분할
                             }
                         }}
                     >
-                        {isNew ? (
+                        {canDelete ? (
                             <RemoveIcon fontSize="small" />
                         ) : (
                             <AddIcon fontSize="small" />
@@ -312,22 +317,22 @@ export default function ProdOrderDialog({
                                 </Typography>
                             </Box>
 
-                            <Divider
-                                orientation="vertical"
-                                flexItem
-                                sx={{ mx: 0.3, opacity: 1 }}
+                            {/*<Divider*/}
+                            {/*    orientation="vertical"*/}
+                            {/*    flexItem*/}
+                            {/*    sx={{ mx: 0.3, opacity: 1 }}*/}
 
-                            />
+                            {/*/>*/}
 
-                            {/* 생산계획 ID */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary">
-                                    생산계획 ID
-                                </Typography>
-                                <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>
-                                    {plan.prodplanDetailId}
-                                </Typography>
-                            </Box>
+                            {/*/!* 생산계획 ID *!/*/}
+                            {/*<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>*/}
+                            {/*    <Typography variant="caption" color="text.secondary">*/}
+                            {/*        생산계획 ID*/}
+                            {/*    </Typography>*/}
+                            {/*    <Typography fontWeight={600} sx={{fontSize: '0.9rem', }}>*/}
+                            {/*        {plan.prodplanDetailId}*/}
+                            {/*    </Typography>*/}
+                            {/*</Box>*/}
 
                             <Divider
                                 orientation="vertical"
@@ -469,6 +474,21 @@ export default function ProdOrderDialog({
                     <Button onClick={onClose}>취소</Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmDialog
+                open={removeTargetIndex !== null}
+                title="행 삭제"
+                message="저장된 분할 행을 삭제하시겠습니까?"
+                confirmText="삭제"
+                cancelText="닫기"
+                onClose={() => setRemoveTargetIndex(null)}
+                onConfirm={async () => {
+                    if (removeTargetIndex !== null) {
+                        await onRemoveRow(removeTargetIndex);
+                    }
+                    setRemoveTargetIndex(null);
+                }}
+            />
 
             <ConfirmDialog
                 open={deleteConfirmOpen}
