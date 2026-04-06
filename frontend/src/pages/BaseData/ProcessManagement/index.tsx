@@ -236,16 +236,16 @@ const ProcessManagement: React.FC = () => {
 
   const handleSave = async (data: Process) => {
     try {
-      // 공정 코드가 입력되지 않았으면 공정ID를 사용
-      if (!data.processCode && data.processId) {
-        data.processCode = data.processId;
-      }
+      const payload: Process =
+        !data.processCode && data.processId
+          ? { ...data, processCode: data.processId }
+          : { ...data };
 
       let isSuccess = false;
       let errorMessage = '저장에 실패했습니다.';
 
       if (dialogMode === 'create') {
-        const result = await processService.createProcess(data);
+        const result = await processService.createProcess(payload);
         if (result.resultCode === 200) {
           isSuccess = true;
           showToast({ message: '공정이 등록되었습니다.', severity: 'success' });
@@ -253,9 +253,18 @@ const ProcessManagement: React.FC = () => {
           errorMessage = result.result?.message || errorMessage;
         }
       } else {
+        if (!payload.processId) {
+          showToast({
+            message:
+              '수정 대상 공정 ID가 없습니다. 목록을 새로고침한 뒤 다시 시도해주세요.',
+            severity: 'error',
+          });
+          return;
+        }
+
         const result = await processService.updateProcess(
-          data.processId!,
-          data,
+          payload.processId,
+          payload,
         );
         if (result.resultCode === 200) {
           isSuccess = true;

@@ -763,11 +763,13 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       onClose={handleClose}
       maxWidth="xl"
       fullWidth
-      PaperProps={
-        {
-          // sx: { height: '85vh' },
-        }
-      }
+      PaperProps={{
+        sx: {
+          height: '90vh',
+          display: 'flex',
+          overflow: 'hidden',
+        },
+      }}
     >
       <DialogTitle
         sx={{
@@ -888,9 +890,23 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
       {/* DataGrid 영역 */}
       <DialogContent
-        sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}
+        sx={{
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
       >
-        <Box sx={{ flexGrow: 1, width: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+          }}
+        >
           <DataGrid
             rows={requests}
             columns={columns}
@@ -908,6 +924,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             onRowSelectionModelChange={handleRowSelectionModelChange}
             disableRowSelectionOnClick={false}
             sx={{
+              height: '100%',
+              width: '100%',
+              minHeight: 0,
               // border: 'none',
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
