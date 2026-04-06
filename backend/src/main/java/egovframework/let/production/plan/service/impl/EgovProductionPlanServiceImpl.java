@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ import java.time.YearMonth;
 @Service("egovProductionPlanService")
 @RequiredArgsConstructor
 public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl implements EgovProductionPlanService {
+	private static final int DEFAULT_DELIVERY_BUSINESS_DAYS = 8;
+	private static final DateTimeFormatter BASIC_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 	private final ProductionPlanDAO productionPlanDAO;
 	private final EgovConditionalIdService egovConditionalIdService;
@@ -97,8 +100,8 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			? totalQty.divide(new BigDecimal(createDays), 0, RoundingMode.DOWN)
 			: totalQty;
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-		LocalDate startDate = LocalDate.parse(master.getPlanDate(), formatter);
+		LocalDate startDate = LocalDate.parse(master.getPlanDate(), BASIC_DATE_FORMATTER);
+		String defaultDeliveryDate = resolveDefaultDeliveryDate(master.getPlanDate(), basePlan.getDeliveryDate());
 
 		// 마스터 등록 (여기서 selectKey로 prodPlanSeq가 설정됨)
 		productionPlanDAO.insertProductionPlanMaster(master);
@@ -115,7 +118,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			String planDetailId = egovProdPlanDetailIdgenService.getNextStringId();
 
 			LocalDate currentDate = startDate.plusDays(i);
-			plan.setPlanDate(currentDate.format(formatter));
+			plan.setPlanDate(currentDate.format(BASIC_DATE_FORMATTER));
 			plan.setProdPlanDate(master.getProdPlanDate());
 			plan.setProdPlanSeq(master.getProdPlanSeq()); // 이제 selectKey로 설정된 값 사용
 			plan.setProdPlanId(planId); // TPR301M의 ID (PL)
@@ -125,6 +128,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			plan.setGroupSeq(i + 1);
 			plan.setCreateDays(createDays);
 			plan.setOpmanCode(master.getOpmanCode());
+			plan.setDeliveryDate(defaultDeliveryDate);
 
 			// 마지막 건에 나머지 보정
 			if (i == createDays - 1) {
@@ -162,12 +166,52 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		if (StringUtils.hasText(master.getIdCondition2())) {
 			return master.getIdCondition2().trim();
 		}
-
 		if (!StringUtils.hasText(master.getPlanDate()) || master.getPlanDate().length() < 6) {
 			throw new IllegalArgumentException("planDate must be yyyyMMDD format when idCondition2 is omitted");
 		}
 
 		return master.getPlanDate().substring(0, 6);
+	}
+
+	private String resolveDefaultDeliveryDate(String planDate, String deliveryDate) {
+		if (StringUtils.hasText(deliveryDate)) {
+			return normalizeBasicDate(deliveryDate);
+		}
+
+		return calculateDefaultDeliveryDate(planDate);
+	}
+
+	private String calculateDefaultDeliveryDate(String planDate) {
+		String normalizedPlanDate = normalizeBasicDate(planDate);
+		LocalDate currentDate = LocalDate.parse(normalizedPlanDate, BASIC_DATE_FORMATTER);
+		int businessDayCount = isBusinessDay(currentDate) ? 1 : 0;
+
+		while (businessDayCount < DEFAULT_DELIVERY_BUSINESS_DAYS) {
+			currentDate = currentDate.plusDays(1);
+			if (isBusinessDay(currentDate)) {
+				businessDayCount++;
+			}
+		}
+
+		return currentDate.format(BASIC_DATE_FORMATTER);
+	}
+
+	private String normalizeBasicDate(String value) {
+		if (!StringUtils.hasText(value)) {
+			throw new IllegalArgumentException("planDate must not be blank when deliveryDate is omitted");
+		}
+
+		String normalizedValue = value.trim().replace("-", "");
+		if (normalizedValue.length() != 8) {
+			throw new IllegalArgumentException("date must be yyyyMMdd or yyyy-MM-dd format");
+		}
+
+		return normalizedValue;
+	}
+
+	private boolean isBusinessDay(LocalDate date) {
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
 	}
 
 	/**
@@ -229,10 +273,11 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 			if (plan.getPlanGroupId() == null || plan.getPlanGroupId().isEmpty()) {
 				plan.setPlanGroupId(master.getPlanGroupId());
 			}
+			plan.setDeliveryDate(resolveDefaultDeliveryDate(master.getPlanDate(), plan.getDeliveryDate()));
 		}
 		master.setTotalPlanQty(totalQty);
 
-		// 지시 완료(ORDERED) 상태 확인 - 해당 상태에서는 생산계획일만 수정 허용
+		// 지시 완료(ORDERED) 상태 확인 - 생산계획일과 백엔드가 보정한 납기일만 동기화
 		if (!planList.isEmpty()) {
 			String currentOrderFlag = productionPlanDAO.selectProductionPlanOrderFlag(planList.get(0));
 			if ("ORDERED".equals(currentOrderFlag)) {
