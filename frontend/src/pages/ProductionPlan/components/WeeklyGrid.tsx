@@ -25,8 +25,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
-  ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
   ViewWeek as ViewWeekIcon,
 } from '@mui/icons-material';
 import { Equipment } from '../../../types/equipment';
@@ -98,7 +98,6 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   setActiveGroupId,
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
-  const topScrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollWidth, setScrollWidth] = useState(0);
   const [clientWidth, setClientWidth] = useState(0);
   // 스타일 상수
@@ -113,6 +112,31 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   const hasRenderedData = equipments.length > 0 || plans.length > 0;
   const showInitialSkeleton = loading && !hasRenderedData;
   const showRefreshingIndicator = loading && hasRenderedData;
+  const canScrollHorizontally = scrollWidth > clientWidth + 1;
+
+  const tableScrollbarSx = {
+    '&::-webkit-scrollbar': {
+      height: 10,
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: '#edf2f7',
+      borderRadius: 999,
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: '#6f8fb7',
+      borderRadius: 999,
+      border: '2px solid #edf2f7',
+      minWidth: 40,
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      backgroundColor: '#4b709e',
+    },
+    '&::-webkit-scrollbar-thumb:active': {
+      backgroundColor: '#365985',
+    },
+    scrollbarColor: '#6f8fb7 #edf2f7',
+    scrollbarWidth: 'thin',
+  };
 
   const visibleDayColumns = useMemo(() => {
     return weekDays.flatMap((day, dayIndex) => {
@@ -151,13 +175,11 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
 
   useEffect(() => {
     const container = tableContainerRef.current;
-    const topScroll = topScrollRef.current;
-    if (!container || !topScroll) return;
+    if (!container) return;
 
     const updateSizes = () => {
       setScrollWidth(container.scrollWidth);
       setClientWidth(container.clientWidth);
-      topScroll.scrollLeft = container.scrollLeft;
     };
 
     updateSizes();
@@ -165,64 +187,6 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
   }, [weekDays, equipments, loading, compactMode, visibleDays]);
-
-  const syncHorizontalScroll = (scrollLeft: number) => {
-    const container = tableContainerRef.current;
-    const topScroll = topScrollRef.current;
-    if (!container) {
-      return;
-    }
-
-    container.scrollLeft = scrollLeft;
-    if (topScroll && topScroll.scrollLeft !== scrollLeft) {
-      topScroll.scrollLeft = scrollLeft;
-    }
-  };
-
-  const moveHorizontalScroll = (delta: number): boolean => {
-    const container = tableContainerRef.current;
-    if (!container || delta === 0) {
-      return false;
-    }
-
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
-    if (maxScrollLeft <= 0) {
-      return false;
-    }
-
-    const nextLeft = Math.max(
-      0,
-      Math.min(maxScrollLeft, container.scrollLeft + delta),
-    );
-
-    if (nextLeft === container.scrollLeft) {
-      return false;
-    }
-
-    syncHorizontalScroll(nextLeft);
-    return true;
-  };
-
-  const handleTopScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    syncHorizontalScroll(event.currentTarget.scrollLeft);
-  };
-
-  const handleTopScrollWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    const horizontalDelta =
-      Math.abs(event.deltaX) > Math.abs(event.deltaY)
-        ? event.deltaX
-        : event.deltaY;
-
-    if (moveHorizontalScroll(horizontalDelta)) {
-      event.preventDefault();
-    }
-  };
-
-  const handleTableScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const topScroll = topScrollRef.current;
-    if (!topScroll) return;
-    topScroll.scrollLeft = event.currentTarget.scrollLeft;
-  };
 
   const handleTableWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     const container = tableContainerRef.current;
@@ -248,24 +212,58 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       return;
     }
 
-    if (moveHorizontalScroll(horizontalDelta)) {
+    const nextLeft = Math.max(
+      0,
+      Math.min(maxScrollLeft, container.scrollLeft + horizontalDelta),
+    );
+
+    if (nextLeft !== container.scrollLeft) {
+      container.scrollLeft = nextLeft;
       event.preventDefault();
     }
+  };
+
+  const scrollButtonSx = {
+    border: '1px solid',
+    borderColor: canScrollHorizontally ? 'rgba(25, 118, 210, 0.24)' : 'divider',
+    bgcolor: canScrollHorizontally ? '#f6f9fe' : 'grey.100',
+    color: canScrollHorizontally ? 'primary.main' : 'text.secondary',
+    flexShrink: 0,
+    boxShadow: canScrollHorizontally
+      ? '0 3px 8px rgba(19, 63, 117, 0.1)'
+      : 'none',
+    transition:
+      'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+    '&:hover': {
+      bgcolor: canScrollHorizontally ? '#ebf2fb' : 'grey.200',
+      borderColor: canScrollHorizontally ? 'primary.main' : 'divider',
+      boxShadow: canScrollHorizontally
+        ? '0 5px 12px rgba(19, 63, 117, 0.16)'
+        : 'none',
+    },
   };
 
   const scrollByAmount = (direction: 'left' | 'right') => {
     const container = tableContainerRef.current;
     if (!container) return;
+
     const headerCell = container.querySelector(
       'th[data-day-col="true"]',
     ) as HTMLElement | null;
     const dayWidth = headerCell?.offsetWidth || dayColMinWidth;
-    const scrollStepDays = 1;
-    const delta =
-      direction === 'left'
-        ? -dayWidth * scrollStepDays
-        : dayWidth * scrollStepDays;
-    moveHorizontalScroll(delta);
+    const delta = direction === 'left' ? -dayWidth : dayWidth;
+    const maxScrollLeft = Math.max(
+      0,
+      container.scrollWidth - container.clientWidth,
+    );
+    const nextLeft = Math.max(
+      0,
+      Math.min(maxScrollLeft, container.scrollLeft + delta),
+    );
+
+    if (nextLeft !== container.scrollLeft) {
+      container.scrollTo({ left: nextLeft, behavior: 'smooth' });
+    }
   };
 
   // 그룹별 고유 색상 생성 (planGroupId 기반)
@@ -319,79 +317,82 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 1,
-          px: 1,
-          py: 0.5,
+          px: 1.5,
+          py: 0.875,
+          minWidth: 0,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          bgcolor: 'background.paper',
+          bgcolor: '#f7f9fc',
         }}
       >
         <Tooltip title="왼쪽으로 1일 이동">
-          <IconButton
-            size="small"
-            onClick={() => scrollByAmount('left')}
-            sx={{ bgcolor: 'grey.100' }}
-          >
-            <ChevronLeftIcon fontSize="small" />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => scrollByAmount('left')}
+              disabled={!canScrollHorizontally}
+              sx={scrollButtonSx}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+          </span>
         </Tooltip>
         <Box
-          ref={topScrollRef}
-          onScroll={handleTopScroll}
-          onWheel={handleTopScrollWheel}
           sx={{
             flex: 1,
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            height: 16,
-            cursor: 'ew-resize',
-            '&::-webkit-scrollbar': {
-              height: 10,
-            },
-            '&::-webkit-scrollbar-track': {
-              bgcolor: 'grey.200',
-              borderRadius: 999,
-            },
-            '&::-webkit-scrollbar-thumb': {
-              bgcolor: 'grey.500',
-              borderRadius: 999,
-            },
-            scrollbarColor: '#9e9e9e #eeeeee',
-            scrollbarWidth: 'thin',
+            minWidth: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
           }}
         >
-          <Box sx={{ width: scrollWidth, height: 1, minWidth: clientWidth }} />
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: '#29486e',
+              letterSpacing: '0.02em',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            가로 탐색
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {canScrollHorizontally
+              ? 'Shift + 휠로 가로 이동할 수 있습니다.'
+              : '현재 범위가 화면에 모두 표시됩니다.'}
+          </Typography>
         </Box>
         <Tooltip title="오른쪽으로 1일 이동">
-          <IconButton
-            size="small"
-            onClick={() => scrollByAmount('right')}
-            sx={{ bgcolor: 'grey.100' }}
-          >
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
+          <span>
+            <IconButton
+              size="small"
+              onClick={() => scrollByAmount('right')}
+              disabled={!canScrollHorizontally}
+              sx={scrollButtonSx}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+          </span>
         </Tooltip>
       </Box>
       <TableContainer
         ref={tableContainerRef}
-        onScroll={handleTableScroll}
         onWheel={handleTableWheel}
         sx={{
           height: '100%',
           overflowX: 'auto',
-          '&::-webkit-scrollbar': {
-            height: 10,
-          },
-          '&::-webkit-scrollbar-track': {
-            bgcolor: 'grey.200',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            bgcolor: 'grey.500',
-            borderRadius: 999,
-          },
-          scrollbarColor: '#9e9e9e #eeeeee',
-          scrollbarWidth: 'thin',
+          ...tableScrollbarSx,
         }}
       >
         <Table
