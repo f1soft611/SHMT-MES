@@ -499,17 +499,14 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleNextWeek = () => {
-    const newDate = addDays(currentWeekStart, 7);
-    setCurrentWeekStart(newDate);
-    try {
-      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
-    } catch (error) {
-      // Error saving week start to sessionStorage
-    }
+    updateCurrentWeekStart(addDays(currentWeekStart, 7));
   };
 
   const handlePrevWeek = () => {
-    const newDate = addDays(currentWeekStart, -7);
+    updateCurrentWeekStart(addDays(currentWeekStart, -7));
+  };
+
+  const updateCurrentWeekStart = (newDate: Date) => {
     setCurrentWeekStart(newDate);
     try {
       sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
@@ -519,13 +516,7 @@ const ProductionPlan: React.FC = () => {
   };
 
   const handleToday = () => {
-    const newDate = getMonday(getServerDate());
-    setCurrentWeekStart(newDate);
-    try {
-      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
-    } catch (error) {
-      // Error saving week start to sessionStorage
-    }
+    updateCurrentWeekStart(getMonday(getServerDate()));
   };
 
   const handleCapture = async () => {

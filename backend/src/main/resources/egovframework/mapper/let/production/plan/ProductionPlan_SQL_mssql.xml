@@ -599,6 +599,7 @@
 			ISNULL(CODE1.CODE_NM, '') AS UNIT_NAME,
 			T.CUSTOMER_CODE,
 			C.CUSTOMER_NAME,
+			ISNULL(T.BIGO, '') AS REMARK,
 			T.EMPLYR_ID AS REGISTRANT,
 			CONVERT(VARCHAR(10), T.OPTIME, 108) AS REGIST_TIME,
 			CONVERT(VARCHAR(8), T.OPTIME, 112) AS REGIST_DATE,
@@ -655,21 +656,40 @@
 				  AND ISNULL(PF.DELETE_FLAG, '') != '1'
 			)
 		</if>
-		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
-		AND T.ORDER_QTY > ISNULL(
-			(
-				SELECT SUM(R.ORDER_QTY)
-				FROM TPR301R R
-				JOIN TPR301 P
-				  ON P.FACTORY_CODE = R.FACTORY_CODE
-				 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
-				 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
-				WHERE R.FACTORY_CODE = T.FACTORY_CODE
-				  AND R.ORDER_NO = T.ORDER_NO
-				  AND R.ORDER_SEQNO = T.ORDER_SEQNO
-				  AND R.ORDER_HISTNO = T.ORDER_HISTNO
-				  AND P.ITEM_CODE = T.ITEM_CODE
-			), 0)
+		<choose>
+			<when test="allocationStatus == 'UNPLANNED'">
+				AND T.ORDER_QTY > ISNULL(
+					(
+						SELECT SUM(R.ORDER_QTY)
+						FROM TPR301R R
+						JOIN TPR301 P
+						  ON P.FACTORY_CODE = R.FACTORY_CODE
+						 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+						 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+						WHERE R.FACTORY_CODE = T.FACTORY_CODE
+						  AND R.ORDER_NO = T.ORDER_NO
+						  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+						  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+						  AND P.ITEM_CODE = T.ITEM_CODE
+					), 0)
+			</when>
+			<when test="allocationStatus == 'PLANNED'">
+				AND T.ORDER_QTY &lt;= ISNULL(
+					(
+						SELECT SUM(R.ORDER_QTY)
+						FROM TPR301R R
+						JOIN TPR301 P
+						  ON P.FACTORY_CODE = R.FACTORY_CODE
+						 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+						 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+						WHERE R.FACTORY_CODE = T.FACTORY_CODE
+						  AND R.ORDER_NO = T.ORDER_NO
+						  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+						  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+						  AND P.ITEM_CODE = T.ITEM_CODE
+					), 0)
+			</when>
+		</choose>
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">
@@ -725,21 +745,40 @@
 				  AND ISNULL(PF.DELETE_FLAG, '') != '1'
 			)
 		</if>
-		-- 생산의뢰량 대비 계획량이 미달인 경우만 조회 (동일/초과 시 제외)
-		AND T.ORDER_QTY > ISNULL(
-			(
-				SELECT SUM(R.ORDER_QTY)
-				FROM TPR301R R
-				JOIN TPR301 P
-				  ON P.FACTORY_CODE = R.FACTORY_CODE
-				 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
-				 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
-				WHERE R.FACTORY_CODE = T.FACTORY_CODE
-				  AND R.ORDER_NO = T.ORDER_NO
-				  AND R.ORDER_SEQNO = T.ORDER_SEQNO
-				  AND R.ORDER_HISTNO = T.ORDER_HISTNO
-				  AND P.ITEM_CODE = T.ITEM_CODE
-			), 0)
+		<choose>
+			<when test="allocationStatus == 'UNPLANNED'">
+				AND T.ORDER_QTY > ISNULL(
+					(
+						SELECT SUM(R.ORDER_QTY)
+						FROM TPR301R R
+						JOIN TPR301 P
+						  ON P.FACTORY_CODE = R.FACTORY_CODE
+						 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+						 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+						WHERE R.FACTORY_CODE = T.FACTORY_CODE
+						  AND R.ORDER_NO = T.ORDER_NO
+						  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+						  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+						  AND P.ITEM_CODE = T.ITEM_CODE
+					), 0)
+			</when>
+			<when test="allocationStatus == 'PLANNED'">
+				AND T.ORDER_QTY &lt;= ISNULL(
+					(
+						SELECT SUM(R.ORDER_QTY)
+						FROM TPR301R R
+						JOIN TPR301 P
+						  ON P.FACTORY_CODE = R.FACTORY_CODE
+						 AND P.PRODPLAN_DATE = R.PRODPLAN_DATE
+						 AND P.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+						WHERE R.FACTORY_CODE = T.FACTORY_CODE
+						  AND R.ORDER_NO = T.ORDER_NO
+						  AND R.ORDER_SEQNO = T.ORDER_SEQNO
+						  AND R.ORDER_HISTNO = T.ORDER_HISTNO
+						  AND P.ITEM_CODE = T.ITEM_CODE
+					), 0)
+			</when>
+		</choose>
 		<if test="searchCnd != null and searchCnd != '' and searchWrd != null and searchWrd != ''">
 			<choose>
 				<when test="searchCnd == '1' or searchCnd == 1">

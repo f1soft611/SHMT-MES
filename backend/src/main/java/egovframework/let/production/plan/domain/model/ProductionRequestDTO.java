@@ -40,6 +40,7 @@ public class ProductionRequestDTO {
     private String registDate;          // 등록일자 (DELIVERY_DATE or 별도 필드)
     private String customerCode;        // 거래처 코드 (ORDER 테이블과 조인 시)
     private String customerName;        // 거래처명 (ORDER 테이블과 조인 시)
+    private String remark;              // 비고
     
     // 계획 할당 관련 추가 정보
     private Double allocatedQty;        // 할당된 계획 수량 (TPR301R의 ORDER_QTY 합계)

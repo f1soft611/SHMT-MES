@@ -19,6 +19,7 @@ import {
   Select,
   MenuItem,
   LinearProgress,
+  Tooltip,
 } from '@mui/material';
 import {
   DataGrid,
@@ -32,14 +33,60 @@ import {
   Close as CloseIcon,
   FilterList as FilterListIcon,
   Add as AddIcon,
+  OpenInFull as OpenInFullIcon,
+  CloseFullscreen as CloseFullscreenIcon,
 } from '@mui/icons-material';
 import { productionRequestService } from '../../../services/productionRequestService';
-import { ProductionRequest } from '../../../types/productionRequest';
+import {
+  ProductionRequest,
+  ProductionRequestAllocationStatus,
+} from '../../../types/productionRequest';
 import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
+
+interface ProductionRequestSearchState {
+  searchCnd: string;
+  searchWrd: string;
+  dateFrom: string;
+  dateTo: string;
+  workplaceCode: string;
+  allocationStatus: ProductionRequestAllocationStatus;
+}
+
+const DEFAULT_SEARCH_CND = '4';
+const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus = 'ALL';
+
+const buildSearchState = (
+  workplaceCode?: string,
+): ProductionRequestSearchState => ({
+  searchCnd: DEFAULT_SEARCH_CND,
+  searchWrd: '',
+  dateFrom: '',
+  dateTo: '',
+  workplaceCode: workplaceCode || '',
+  allocationStatus: DEFAULT_ALLOCATION_STATUS,
+});
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (typeof error === 'object' && error !== null) {
+    const apiError = error as {
+      message?: string;
+      response?: { data?: { message?: string; error?: string } };
+    };
+
+    return (
+      apiError.response?.data?.message ||
+      apiError.response?.data?.error ||
+      apiError.message ||
+      fallback
+    );
+  }
+
+  return fallback;
+};
 
 interface ProductionRequestDialogProps {
   open: boolean;
@@ -73,6 +120,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const { showToast } = useToast();
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [registerProgress, setRegisterProgress] = useState({
     current: 0,
@@ -86,22 +134,15 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const [error, setError] = useState<string>('');
 
   // 검색 조건 (실제 조회에 사용)
-  const [searchParams, setSearchParams] = useState({
-    searchCnd: '4',
-    searchWrd: '',
-    dateFrom: '',
-    dateTo: '',
-    workplaceCode: workplaceCode || '',
-  });
+  const [searchParams, setSearchParams] =
+    useState<ProductionRequestSearchState>(() =>
+      buildSearchState(workplaceCode),
+    );
 
   // 입력 필드용 상태 (화면 입력용)
-  const [inputValues, setInputValues] = useState({
-    searchCnd: '4',
-    searchWrd: '',
-    dateFrom: '',
-    dateTo: '',
-    workplaceCode: workplaceCode || '',
-  });
+  const [inputValues, setInputValues] = useState<ProductionRequestSearchState>(
+    () => buildSearchState(workplaceCode),
+  );
 
   // 페이지네이션
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -192,7 +233,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         prev.searchWrd === inputValues.searchWrd &&
         prev.dateFrom === inputValues.dateFrom &&
         prev.dateTo === inputValues.dateTo &&
-        prev.workplaceCode === inputValues.workplaceCode
+        prev.workplaceCode === inputValues.workplaceCode &&
+        prev.allocationStatus === inputValues.allocationStatus
       ) {
         return prev;
       }
@@ -210,21 +252,33 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     });
   }, [inputValues]);
 
-  const handleInputChange = useCallback((field: string, value: string) => {
-    setInputValues((prev) => {
-      if (prev[field as keyof typeof prev] === value) {
-        return prev;
-      }
-      return {
-        ...prev,
-        [field]: value,
-      };
-    });
-  }, []);
+  const handleInputChange = useCallback(
+    <K extends keyof ProductionRequestSearchState>(
+      field: K,
+      value: ProductionRequestSearchState[K],
+    ) => {
+      setInputValues((prev) => {
+        if (prev[field] === value) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [field]: value,
+        };
+      });
+    },
+    [],
+  );
 
   const getRequestRowId = useCallback(
     (request: ProductionRequest): GridRowId =>
       `${request.orderNo}-${request.orderSeqno}-${request.orderHistno}-${request.itemCode}`,
+    [],
+  );
+
+  const isRequestSelectable = useCallback(
+    (request: ProductionRequest): boolean =>
+      Number(request.remainingQty ?? 0) > 0,
     [],
   );
 
@@ -378,22 +432,11 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   const handleClose = useCallback(() => {
     onClose();
+    setFullScreen(false);
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
-    setInputValues({
-      searchCnd: '4',
-      searchWrd: '',
-      dateFrom: '',
-      dateTo: '',
-      workplaceCode: workplaceCode || '',
-    });
-    setSearchParams({
-      searchCnd: '4',
-      searchWrd: '',
-      dateFrom: '',
-      dateTo: '',
-      workplaceCode: workplaceCode || '',
-    });
+    setInputValues(buildSearchState(workplaceCode));
+    setSearchParams(buildSearchState(workplaceCode));
     setPaginationModel({ page: 0, pageSize: 100 });
   }, [onClose, workplaceCode]);
 
@@ -404,8 +447,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     if (Array.isArray(selectionModel)) {
       selectedIds = selectionModel;
     } else if (selectionModel && typeof selectionModel === 'object') {
-      const modelType = (selectionModel as any).type;
-      const ids = (selectionModel as any).ids;
+      const { type: modelType, ids } = selectionModel;
 
       if (modelType === 'exclude') {
         // type이 'exclude'이고 ids가 비어있으면 전체 선택
@@ -443,13 +485,17 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
     requests.forEach((request) => {
       const requestRowKey = String(getRequestRowId(request));
-      if (selectedKeySet.has(requestRowKey)) {
+      if (selectedKeySet.has(requestRowKey) && isRequestSelectable(request)) {
         selectedItems.push(request);
       }
     });
 
     if (selectedItems.length === 0) {
-      setError('선택한 생산의뢰를 찾을 수 없습니다.');
+      setError('등록 가능한 남은 수량이 있는 생산의뢰를 선택해주세요.');
+      showToast({
+        message: '등록 가능한 남은 수량이 있는 생산의뢰를 선택해주세요.',
+        severity: 'warning',
+      });
       return;
     }
 
@@ -531,9 +577,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             failCount++;
             errors.push(`${item.orderNo}: ${response.message}`);
           }
-        } catch (err: any) {
+        } catch (err) {
           failCount++;
-          errors.push(`${item.orderNo}: ${err.message || '등록 실패'}`);
+          errors.push(`${item.orderNo}: ${getErrorMessage(err, '등록 실패')}`);
         }
       }
 
@@ -549,7 +595,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           onRegisterComplete();
         } else {
           // 기존 방식 유지 (호환성)
-          onSelect(selectedItems as any);
+          onSelect(selectedItems);
         }
       } else {
         const errorMsg = errors.join('\n');
@@ -564,12 +610,12 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           if (onRegisterComplete) {
             onRegisterComplete();
           } else {
-            onSelect(selectedItems as any);
+            onSelect(selectedItems);
           }
         }
       }
-    } catch (error: any) {
-      setError('생산계획 등록 중 오류가 발생했습니다.');
+    } catch (error) {
+      setError(getErrorMessage(error, '생산계획 등록 중 오류가 발생했습니다.'));
     } finally {
       setRegistering(false);
       setRegisterProgress({ current: 0, total: 0 });
@@ -578,6 +624,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     selectionModel,
     requests,
     getRequestRowId,
+    isRequestSelectable,
     workplaceCode,
     selectedDate,
     equipmentId,
@@ -606,19 +653,27 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const columns: GridColDef[] = useMemo(
     () => [
       {
-        field: 'orderNo',
-        headerName: '생산의뢰번호',
-        width: 150,
-        align: 'center',
-        headerAlign: 'center',
-      },
-      {
         field: 'prodPlanDate',
         headerName: '생산의뢰일',
         width: 130,
         align: 'center',
         headerAlign: 'center',
         valueFormatter: (value) => formatDate(value),
+      },
+      {
+        field: 'itemName',
+        headerName: '품명',
+        flex: 1,
+        minWidth: 180,
+        headerAlign: 'center',
+      },
+      {
+        field: 'itemNo',
+        headerName: '품번',
+        width: 130,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => value || '-',
       },
       {
         field: 'customerName',
@@ -628,68 +683,16 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         valueFormatter: (value) => value || '-',
       },
       {
-        field: 'itemCode',
-        headerName: '품목코드',
-        width: 130,
-        align: 'center',
-        headerAlign: 'center',
-        renderCell: (params) => (
-          <Chip
-            label={params.value}
-            size="small"
-            color="primary"
-            variant="outlined"
-          />
-        ),
-      },
-      {
-        field: 'itemNo',
-        headerName: '품목번호',
-        width: 130,
-        align: 'center',
+        field: 'remark',
+        headerName: '비고',
+        flex: 1,
+        minWidth: 180,
         headerAlign: 'center',
         valueFormatter: (value) => value || '-',
-      },
-      {
-        field: 'itemFlag',
-        headerName: '품목구분',
-        width: 100,
-        align: 'center',
-        headerAlign: 'center',
-        renderCell: (params) => {
-          const flag = params.value;
-          const label = flag === '2' ? '제품' : flag === '4' ? '반제품' : '-';
-          const color =
-            flag === '2' ? 'success' : flag === '4' ? 'warning' : 'default';
-          return <Chip label={label} size="small" color={color} />;
-        },
-      },
-      {
-        field: 'itemName',
-        headerName: '품목명',
-        flex: 1,
-        minWidth: 150,
-        headerAlign: 'center',
-      },
-      {
-        field: 'specification',
-        headerName: '규격',
-        flex: 1,
-        minWidth: 150,
-        headerAlign: 'center',
-        valueFormatter: (value) => value || '-',
-      },
-      {
-        field: 'unit',
-        headerName: '단위',
-        width: 80,
-        align: 'center',
-        headerAlign: 'center',
-        valueFormatter: (value) => value || 'EA',
       },
       {
         field: 'orderQty',
-        headerName: '생산의뢰량',
+        headerName: '수량',
         width: 120,
         align: 'right',
         headerAlign: 'center',
@@ -717,7 +720,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       },
       {
         field: 'remainingQty',
-        headerName: '남은수량',
+        headerName: '남은량',
         width: 120,
         align: 'right',
         headerAlign: 'center',
@@ -730,6 +733,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         ),
       },
       {
+        field: 'orderNo',
+        headerName: '의뢰번호',
+        width: 150,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (value) => value || '-',
+      },
+      {
         field: 'deliveryDate',
         headerName: '납기일',
         width: 130,
@@ -737,22 +748,6 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         headerAlign: 'center',
         valueFormatter: (value) => formatDate(value),
       },
-      // {
-      //   field: 'registrant',
-      //   headerName: '등록자',
-      //   width: 100,
-      //   align: 'center',
-      //   headerAlign: 'center',
-      //   valueFormatter: (value) => value || '-',
-      // },
-      // {
-      //   field: 'registTime',
-      //   headerName: '등록시간',
-      //   width: 100,
-      //   align: 'center',
-      //   headerAlign: 'center',
-      //   valueFormatter: (value) => value || '-',
-      // },
     ],
     [formatDate],
   );
@@ -761,11 +756,12 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="xl"
+      fullScreen={fullScreen}
+      maxWidth={fullScreen ? false : 'xl'}
       fullWidth
       PaperProps={{
         sx: {
-          height: '90vh',
+          height: fullScreen ? '100vh' : '90vh',
           display: 'flex',
           overflow: 'hidden',
         },
@@ -785,9 +781,26 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Typography variant="h6" component="span">
           생산의뢰 연동
         </Typography>
-        <IconButton onClick={handleClose} sx={{ color: 'white' }} size="small">
-          <CloseIcon />
-        </IconButton>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Tooltip
+            title={fullScreen ? '기본 크기로 보기' : '전체화면으로 보기'}
+          >
+            <IconButton
+              onClick={() => setFullScreen((prev) => !prev)}
+              sx={{ color: 'white' }}
+              size="small"
+            >
+              {fullScreen ? <CloseFullscreenIcon /> : <OpenInFullIcon />}
+            </IconButton>
+          </Tooltip>
+          <IconButton
+            onClick={handleClose}
+            sx={{ color: 'white' }}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        </Stack>
       </DialogTitle>
       <Divider />
 
@@ -807,7 +820,13 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           <FilterListIcon color="primary" />
           검색 필터
         </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+        >
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>검색 조건</InputLabel>
             <Select
@@ -827,8 +846,25 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             value={inputValues.searchWrd}
             onChange={(e) => handleInputChange('searchWrd', e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            sx={{ flex: 1 }}
+            sx={{ flex: 1, minWidth: 220 }}
           />
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>조회 옵션</InputLabel>
+            <Select
+              value={inputValues.allocationStatus}
+              label="조회 옵션"
+              onChange={(e) =>
+                handleInputChange(
+                  'allocationStatus',
+                  e.target.value as ProductionRequestAllocationStatus,
+                )
+              }
+            >
+              <MenuItem value="ALL">전체 조회</MenuItem>
+              <MenuItem value="UNPLANNED">미계획건만</MenuItem>
+              <MenuItem value="PLANNED">계획건만</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             size="small"
             label="납기일 From"
@@ -920,6 +956,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             loading={loading}
             checkboxSelection={true}
             disableMultipleRowSelection={!multiSelect}
+            disableColumnMenu
+            isRowSelectable={(params) => isRequestSelectable(params.row)}
             rowSelectionModel={selectionModel}
             onRowSelectionModelChange={handleRowSelectionModelChange}
             disableRowSelectionOnClick={false}

@@ -127,10 +127,56 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     return () => resizeObserver.disconnect();
   }, [weekDays, equipments, loading, compactMode, visibleDays]);
 
-  const handleTopScroll = (event: React.UIEvent<HTMLDivElement>) => {
+  const syncHorizontalScroll = (scrollLeft: number) => {
     const container = tableContainerRef.current;
-    if (!container) return;
-    container.scrollLeft = event.currentTarget.scrollLeft;
+    const topScroll = topScrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.scrollLeft = scrollLeft;
+    if (topScroll && topScroll.scrollLeft !== scrollLeft) {
+      topScroll.scrollLeft = scrollLeft;
+    }
+  };
+
+  const moveHorizontalScroll = (delta: number): boolean => {
+    const container = tableContainerRef.current;
+    if (!container || delta === 0) {
+      return false;
+    }
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    if (maxScrollLeft <= 0) {
+      return false;
+    }
+
+    const nextLeft = Math.max(
+      0,
+      Math.min(maxScrollLeft, container.scrollLeft + delta),
+    );
+
+    if (nextLeft === container.scrollLeft) {
+      return false;
+    }
+
+    syncHorizontalScroll(nextLeft);
+    return true;
+  };
+
+  const handleTopScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    syncHorizontalScroll(event.currentTarget.scrollLeft);
+  };
+
+  const handleTopScrollWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const horizontalDelta =
+      Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ? event.deltaX
+        : event.deltaY;
+
+    if (moveHorizontalScroll(horizontalDelta)) {
+      event.preventDefault();
+    }
   };
 
   const handleTableScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -139,9 +185,37 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     topScroll.scrollLeft = event.currentTarget.scrollLeft;
   };
 
+  const handleTableWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const container = tableContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const useHorizontalScroll =
+      event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+
+    if (!useHorizontalScroll) {
+      return;
+    }
+
+    const horizontalDelta = event.deltaX || event.deltaY;
+
+    if (horizontalDelta === 0) {
+      return;
+    }
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    if (maxScrollLeft <= 0) {
+      return;
+    }
+
+    if (moveHorizontalScroll(horizontalDelta)) {
+      event.preventDefault();
+    }
+  };
+
   const scrollByAmount = (direction: 'left' | 'right') => {
     const container = tableContainerRef.current;
-    const topScroll = topScrollRef.current;
     if (!container) return;
     const headerCell = container.querySelector(
       'th[data-day-col="true"]',
@@ -152,15 +226,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       direction === 'left'
         ? -dayWidth * scrollStepDays
         : dayWidth * scrollStepDays;
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
-    const nextLeft = Math.max(
-      0,
-      Math.min(maxScrollLeft, container.scrollLeft + delta),
-    );
-    container.scrollLeft = nextLeft;
-    if (topScroll) {
-      topScroll.scrollLeft = nextLeft;
-    }
+    moveHorizontalScroll(delta);
   };
 
   // 그룹별 고유 색상 생성 (planGroupId 기반)
@@ -233,11 +299,26 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         <Box
           ref={topScrollRef}
           onScroll={handleTopScroll}
+          onWheel={handleTopScrollWheel}
           sx={{
             flex: 1,
             overflowX: 'auto',
             overflowY: 'hidden',
-            height: 12,
+            height: 16,
+            cursor: 'ew-resize',
+            '&::-webkit-scrollbar': {
+              height: 10,
+            },
+            '&::-webkit-scrollbar-track': {
+              bgcolor: 'grey.200',
+              borderRadius: 999,
+            },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: 'grey.500',
+              borderRadius: 999,
+            },
+            scrollbarColor: '#9e9e9e #eeeeee',
+            scrollbarWidth: 'thin',
           }}
         >
           <Box sx={{ width: scrollWidth, height: 1, minWidth: clientWidth }} />
@@ -255,7 +336,23 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       <TableContainer
         ref={tableContainerRef}
         onScroll={handleTableScroll}
-        sx={{ height: '100%', overflowX: 'auto' }}
+        onWheel={handleTableWheel}
+        sx={{
+          height: '100%',
+          overflowX: 'auto',
+          '&::-webkit-scrollbar': {
+            height: 10,
+          },
+          '&::-webkit-scrollbar-track': {
+            bgcolor: 'grey.200',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            bgcolor: 'grey.500',
+            borderRadius: 999,
+          },
+          scrollbarColor: '#9e9e9e #eeeeee',
+          scrollbarWidth: 'thin',
+        }}
       >
         <Table
           stickyHeader
