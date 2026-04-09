@@ -64,6 +64,7 @@ public class ProductionRequestVO extends ComDefaultVO {
     private String dateTo;          // 종료일자 (납기일 기준)
     private String closingFlag;     // 마감여부
     private String workplaceCode;   // 작업장코드
+    private String allocationStatus = "ALL"; // 조회 옵션 (ALL/UNPLANNED/PLANNED)
 
     /**
      * toString 메소드를 대치한다.

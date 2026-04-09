@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   Box,
   Button,
@@ -55,6 +61,43 @@ const SESSION_KEY_SELECTED_WORKPLACE = 'productionPlan_selectedWorkplace';
 
 const VIEW_DAYS_OPTIONS = [7, 14, 21, 28];
 const DEFAULT_VIEW_DAYS = 14;
+const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+const SHIFT_LABEL_MAP: Record<string, string> = {
+  A: '1교대',
+  B: '2교대',
+  C: '3교대',
+  D: '주간',
+  N: '야간',
+  DAY: '주간',
+  NIGHT: '야간',
+};
+const SHIFT_COLOR_MAP: Record<
+  string,
+  'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
+> = {
+  A: 'primary',
+  B: 'success',
+  C: 'info',
+  D: 'warning',
+  N: 'secondary',
+  DAY: 'warning',
+  NIGHT: 'secondary',
+};
+const SHIFT_BORDER_COLOR_MAP: Record<string, string> = {
+  A: 'primary.main',
+  B: 'success.main',
+  C: 'info.main',
+  D: 'warning.main',
+  N: 'secondary.main',
+  DAY: 'warning.main',
+  NIGHT: 'secondary.main',
+};
+const EMPTY_PLANS: ProductionPlanData[] = [];
+
+type PlanSummary = {
+  totalPlans: number;
+  totalQty: number;
+};
 
 const extractApiErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null) {
@@ -74,106 +117,67 @@ const extractApiErrorMessage = (error: unknown, fallback: string): string => {
   return fallback;
 };
 
+const getMonday = (date: Date): Date => {
+  const normalizedDate = new Date(date);
+  const day = normalizedDate.getDay();
+  const diff = normalizedDate.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(normalizedDate.setDate(diff));
+};
+
+const formatDate = (date: Date, format: string): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dayName = DAY_NAMES[date.getDay()];
+
+  return format
+    .replace('YYYY', String(year))
+    .replace('MM', month)
+    .replace('DD', day)
+    .replace('ddd', dayName);
+};
+
+const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const isSameDay = (date1: Date, date2: Date): boolean => {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+};
+
+const isWeekend = (date: Date): boolean => {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+};
+
+const getShiftLabel = (shift?: string): string => {
+  return shift ? SHIFT_LABEL_MAP[shift] || shift : '-';
+};
+
+const getShiftColor = (
+  shift?: string,
+):
+  | 'default'
+  | 'primary'
+  | 'secondary'
+  | 'error'
+  | 'info'
+  | 'success'
+  | 'warning' => {
+  return shift ? SHIFT_COLOR_MAP[shift] || 'default' : 'default';
+};
+
+const getShiftBorderColor = (shift?: string): string => {
+  return shift ? SHIFT_BORDER_COLOR_MAP[shift] || 'grey.400' : 'grey.400';
+};
+
 const ProductionPlan: React.FC = () => {
-  // 날짜 유틸리티 함수
-  const getMonday = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-  };
-
-  const formatDate = (date: Date, format: string): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-    const dayName = dayNames[date.getDay()];
-
-    return format
-      .replace('YYYY', String(year))
-      .replace('MM', month)
-      .replace('DD', day)
-      .replace('ddd', dayName);
-  };
-
-  const addDays = (date: Date, days: number): Date => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  };
-
-  const isSameDay = (date1: Date, date2: Date): boolean => {
-    return (
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate()
-    );
-  };
-
-  const isWeekend = (date: Date): boolean => {
-    const day = date.getDay();
-    return day === 0 || day === 6;
-  };
-
-  // 근무구분 표시 헬퍼 함수
-  const getShiftLabel = (shift?: string): string => {
-    const shiftMap: { [key: string]: string } = {
-      A: '1교대',
-      B: '2교대',
-      C: '3교대',
-      D: '주간',
-      N: '야간',
-      DAY: '주간',
-      NIGHT: '야간',
-    };
-    return shift ? shiftMap[shift] || shift : '-';
-  };
-
-  const getShiftColor = (
-    shift?: string,
-  ):
-    | 'default'
-    | 'primary'
-    | 'secondary'
-    | 'error'
-    | 'info'
-    | 'success'
-    | 'warning' => {
-    const colorMap: {
-      [key: string]:
-        | 'default'
-        | 'primary'
-        | 'secondary'
-        | 'error'
-        | 'info'
-        | 'success'
-        | 'warning';
-    } = {
-      A: 'primary', // 1교대 - 파랑
-      B: 'success', // 2교대 - 초록
-      C: 'info', // 3교대 - 하늘
-      D: 'warning', // 주간 - 주황
-      N: 'secondary', // 야간 - 보라
-      DAY: 'warning',
-      NIGHT: 'secondary',
-    };
-    return shift ? colorMap[shift] || 'default' : 'default';
-  };
-
-  const getShiftBorderColor = (shift?: string): string => {
-    const borderColorMap: { [key: string]: string } = {
-      A: 'primary.main', // 1교대
-      B: 'success.main', // 2교대
-      C: 'info.main', // 3교대
-      D: 'warning.main', // 주간
-      N: 'secondary.main', // 야간
-      DAY: 'warning.main',
-      NIGHT: 'secondary.main',
-    };
-    return shift ? borderColorMap[shift] || 'grey.400' : 'grey.400';
-  };
-
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     // 세션스토리지에서 마지막 주간 시작일 불러오기
     try {
@@ -244,6 +248,7 @@ const ProductionPlan: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const weeklyGridRef = useRef<HTMLDivElement>(null);
+  const latestWeeklyPlansRequestRef = useRef(0);
 
   const loadViewDaysFromStorage = (): number => {
     try {
@@ -283,6 +288,21 @@ const ProductionPlan: React.FC = () => {
   const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>(() =>
     loadSelectedWeekdaysFromStorage(),
   );
+
+  const workplaceByCode = useMemo(() => {
+    return new Map(
+      workplaces.map((workplace) => [workplace.workplaceCode, workplace]),
+    );
+  }, [workplaces]);
+
+  const equipmentByCode = useMemo(() => {
+    return new Map(
+      equipments.map((equipment) => [equipment.equipCd || '', equipment]),
+    );
+  }, [equipments]);
+
+  const selectedWorkplaceName =
+    workplaceByCode.get(selectedWorkplace)?.workplaceName || '';
 
   const loadEquipments = useCallback(async () => {
     try {
@@ -368,6 +388,9 @@ const ProductionPlan: React.FC = () => {
 
     const weekStart = currentWeekStart;
     const weekEnd = addDays(currentWeekStart, viewDays - 1);
+    const requestId = latestWeeklyPlansRequestRef.current + 1;
+
+    latestWeeklyPlansRequestRef.current = requestId;
 
     setLoading(true);
     try {
@@ -376,6 +399,10 @@ const ProductionPlan: React.FC = () => {
         startDate: formatDate(weekStart, 'YYYYMMDD'),
         endDate: formatDate(weekEnd, 'YYYYMMDD'),
       });
+
+      if (requestId !== latestWeeklyPlansRequestRef.current) {
+        return;
+      }
 
       if (response.resultCode === 200 && response.result?.equipmentPlans) {
         // API 응답에서 설비 목록 추출
@@ -414,12 +441,18 @@ const ProductionPlan: React.FC = () => {
         setEquipmentProcessMap(new Map());
       }
     } catch (error) {
+      if (requestId !== latestWeeklyPlansRequestRef.current) {
+        return;
+      }
+
       showToast({
         message: '생산계획 조회에 실패했습니다.',
         severity: 'error',
       });
     } finally {
-      setLoading(false);
+      if (requestId === latestWeeklyPlansRequestRef.current) {
+        setLoading(false);
+      }
     }
   }, [currentWeekStart, selectedWorkplace, showToast, viewDays]);
 
@@ -452,15 +485,17 @@ const ProductionPlan: React.FC = () => {
     loadWeeklyPlans();
   }, [loadWeeklyPlans]);
 
-  const toggleEquipment = (equipmentCode: string) => {
-    const newExpanded = new Set(expandedEquipments);
-    if (newExpanded.has(equipmentCode)) {
-      newExpanded.delete(equipmentCode);
-    } else {
-      newExpanded.add(equipmentCode);
-    }
-    setExpandedEquipments(newExpanded);
-  };
+  const toggleEquipment = useCallback((equipmentCode: string) => {
+    setExpandedEquipments((prev) => {
+      const nextExpanded = new Set(prev);
+      if (nextExpanded.has(equipmentCode)) {
+        nextExpanded.delete(equipmentCode);
+      } else {
+        nextExpanded.add(equipmentCode);
+      }
+      return nextExpanded;
+    });
+  }, []);
 
   const getRangeDays = (start: Date, length: number): Date[] => {
     const days: Date[] = [];
@@ -470,65 +505,91 @@ const ProductionPlan: React.FC = () => {
     return days;
   };
 
-  const weekDays = getRangeDays(currentWeekStart, viewDays);
-  const visibleDays = weekDays.map((day) =>
-    selectedWeekdays.includes(day.getDay()),
+  const weekDays = useMemo(
+    () => getRangeDays(currentWeekStart, viewDays),
+    [currentWeekStart, viewDays],
   );
 
-  const handleWeekdayToggle = (
-    event: React.MouseEvent<HTMLElement>,
-    newWeekdays: number[],
-  ) => {
-    if (newWeekdays.length === 0) {
-      // 최소 1개는 선택되어야 함
-      showToast({
-        message: '최소 1개의 요일을 선택해야 합니다.',
-        severity: 'warning',
-      });
-      return;
-    }
-    setSelectedWeekdays(newWeekdays);
-    try {
-      localStorage.setItem(
-        STORAGE_KEY_SELECTED_WEEKDAYS,
-        JSON.stringify(newWeekdays),
-      );
-    } catch (error) {
-      // Error saving selected weekdays to localStorage
-    }
-  };
+  const visibleDays = useMemo(
+    () => weekDays.map((day) => selectedWeekdays.includes(day.getDay())),
+    [selectedWeekdays, weekDays],
+  );
 
-  const handleNextWeek = () => {
-    const newDate = addDays(currentWeekStart, 7);
+  const planIndexes = useMemo(() => {
+    const summaryByDate = new Map<string, PlanSummary>();
+    const plansByDateAndEquipment = new Map<string, ProductionPlanData[]>();
+
+    plans.forEach((plan) => {
+      const dateSummary = summaryByDate.get(plan.date) || {
+        totalPlans: 0,
+        totalQty: 0,
+      };
+
+      dateSummary.totalPlans += 1;
+      dateSummary.totalQty += plan.plannedQty;
+      summaryByDate.set(plan.date, dateSummary);
+
+      const dateEquipmentKey = `${plan.date}::${plan.equipmentCode}`;
+      const existingPlans = plansByDateAndEquipment.get(dateEquipmentKey);
+
+      if (existingPlans) {
+        existingPlans.push(plan);
+      } else {
+        plansByDateAndEquipment.set(dateEquipmentKey, [plan]);
+      }
+    });
+
+    return {
+      summaryByDate,
+      plansByDateAndEquipment,
+    };
+  }, [plans]);
+
+  const handleWeekdayToggle = useCallback(
+    (event: React.MouseEvent<HTMLElement>, newWeekdays: number[]) => {
+      if (newWeekdays.length === 0) {
+        // 최소 1개는 선택되어야 함
+        showToast({
+          message: '최소 1개의 요일을 선택해야 합니다.',
+          severity: 'warning',
+        });
+        return;
+      }
+      setSelectedWeekdays(newWeekdays);
+      try {
+        localStorage.setItem(
+          STORAGE_KEY_SELECTED_WEEKDAYS,
+          JSON.stringify(newWeekdays),
+        );
+      } catch (error) {
+        // Error saving selected weekdays to localStorage
+      }
+    },
+    [showToast],
+  );
+
+  const updateCurrentWeekStart = useCallback((newDate: Date) => {
     setCurrentWeekStart(newDate);
     try {
       sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
     } catch (error) {
       // Error saving week start to sessionStorage
     }
-  };
+  }, []);
 
-  const handlePrevWeek = () => {
-    const newDate = addDays(currentWeekStart, -7);
-    setCurrentWeekStart(newDate);
-    try {
-      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
-    } catch (error) {
-      // Error saving week start to sessionStorage
-    }
-  };
+  const handleNextWeek = useCallback(() => {
+    updateCurrentWeekStart(addDays(currentWeekStart, 7));
+  }, [currentWeekStart, updateCurrentWeekStart]);
 
-  const handleToday = () => {
-    const newDate = getMonday(getServerDate());
-    setCurrentWeekStart(newDate);
-    try {
-      sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
-    } catch (error) {
-      // Error saving week start to sessionStorage
-    }
-  };
+  const handlePrevWeek = useCallback(() => {
+    updateCurrentWeekStart(addDays(currentWeekStart, -7));
+  }, [currentWeekStart, updateCurrentWeekStart]);
 
-  const handleCapture = async () => {
+  const handleToday = useCallback(() => {
+    updateCurrentWeekStart(getMonday(getServerDate()));
+  }, [updateCurrentWeekStart]);
+
+  const handleCapture = useCallback(async () => {
     if (!weeklyGridRef.current) return;
 
     try {
@@ -593,106 +654,118 @@ const ProductionPlan: React.FC = () => {
         severity: 'error',
       });
     }
-  };
+  }, [currentWeekStart, showToast, viewDays]);
 
-  const handleOpenCreateDialog = (date: string, equipmentCode?: string) => {
-    if (!selectedWorkplace) {
-      showToast({
-        message: '먼저 작업장을 선택해주세요.',
-        severity: 'error',
+  const handleOpenCreateDialog = useCallback(
+    (date: string, equipmentCode?: string) => {
+      if (!selectedWorkplace) {
+        showToast({
+          message: '먼저 작업장을 선택해주세요.',
+          severity: 'error',
+        });
+        return;
+      }
+
+      // 설비에 매핑된 공정코드 찾기
+      const processCode = equipmentCode
+        ? equipmentProcessMap.get(equipmentCode) || ''
+        : '';
+      const processName = equipmentCode
+        ? equipmentProcessMap.get(equipmentCode + 'NAME') || ''
+        : '';
+
+      setDialogMode('create');
+      setSelectedDate(date);
+      setFormData({
+        date,
+        itemCode: '',
+        itemName: '',
+        plannedQty: 0,
+        equipmentId:
+          equipmentByCode.get(equipmentCode || '')?.equipmentId || '',
+        equipmentCode: equipmentCode || '',
+        equipmentName:
+          equipmentByCode.get(equipmentCode || '')?.equipmentName || '',
+        shift: '',
+        remark: '',
+        workplaceCode: selectedWorkplace,
+        workplaceName: selectedWorkplaceName,
+        processCode: processCode,
+        processName: processName,
       });
-      return;
-    }
+      setOpenDialog(true);
+    },
+    [
+      equipmentByCode,
+      equipmentProcessMap,
+      selectedWorkplace,
+      selectedWorkplaceName,
+      showToast,
+    ],
+  );
 
-    // 설비에 매핑된 공정코드 찾기
-    const processCode = equipmentCode
-      ? equipmentProcessMap.get(equipmentCode) || ''
-      : '';
-    const processName = equipmentCode
-      ? equipmentProcessMap.get(equipmentCode + 'NAME') || ''
-      : '';
+  const handleOpenEditDialog = useCallback(
+    (plan: ProductionPlanData) => {
+      // 공정 정보가 없으면 설비 코드로부터 찾기
+      let processCode = plan.processCode || '';
+      let processName = plan.processName || '';
 
-    setDialogMode('create');
-    setSelectedDate(date);
-    setFormData({
-      date,
-      itemCode: '',
-      itemName: '',
-      plannedQty: 0,
-      equipmentId:
-        equipments.find((e) => e.equipCd === equipmentCode)?.equipmentId || '',
-      equipmentCode: equipmentCode || '',
-      equipmentName:
-        equipments.find((e) => e.equipCd === equipmentCode)?.equipmentName ||
-        '',
-      shift: '',
-      remark: '',
-      workplaceCode: selectedWorkplace,
-      workplaceName:
-        workplaces.find((w) => w.workplaceCode === selectedWorkplace)
-          ?.workplaceName || '',
-      processCode: processCode,
-      processName: processName,
-    });
-    setOpenDialog(true);
-  };
+      if (!processCode && plan.equipmentCode) {
+        processCode = equipmentProcessMap.get(plan.equipmentCode) || '';
+        processName =
+          equipmentProcessMap.get(plan.equipmentCode + 'NAME') || '';
+      }
 
-  const handleOpenEditDialog = (plan: ProductionPlanData) => {
-    // 공정 정보가 없으면 설비 코드로부터 찾기
-    let processCode = plan.processCode || '';
-    let processName = plan.processName || '';
+      setDialogMode('edit');
+      // 수정 모드에서는 작업장과 공정 정보를 포함하여 전달
+      setFormData({
+        ...plan,
+        workplaceCode: plan.workplaceCode || selectedWorkplace,
+        workplaceName: plan.workplaceName || selectedWorkplaceName,
+        processCode: processCode,
+        processName: processName,
+        deliveryDate: plan.deliveryDate, // 납기일 포함
+      });
+      setOpenDialog(true);
+    },
+    [equipmentProcessMap, selectedWorkplace, selectedWorkplaceName],
+  );
 
-    if (!processCode && plan.equipmentCode) {
-      processCode = equipmentProcessMap.get(plan.equipmentCode) || '';
-      processName = equipmentProcessMap.get(plan.equipmentCode + 'NAME') || '';
-    }
-
-    setDialogMode('edit');
-    // 수정 모드에서는 작업장과 공정 정보를 포함하여 전달
-    setFormData({
-      ...plan,
-      workplaceCode: plan.workplaceCode || selectedWorkplace,
-      workplaceName:
-        plan.workplaceName ||
-        workplaces.find((w) => w.workplaceCode === selectedWorkplace)
-          ?.workplaceName ||
-        '',
-      processCode: processCode,
-      processName: processName,
-      deliveryDate: plan.deliveryDate, // 납기일 포함
-    });
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setOpenDialog(false);
-  };
+  }, []);
 
   // 넓은 시그니처 허용 (JSX 전달 시 string|number|symbol 형태 요구되는 경우 대응)
-  const handleChange = (
-    field: keyof ProductionPlanData | string | number | symbol,
-    value: any,
-  ) => {
-    setFormData({
-      ...formData,
-      [field as keyof ProductionPlanData]: value,
-    });
-  };
+  const handleChange = useCallback(
+    (
+      field: keyof ProductionPlanData | string | number | symbol,
+      value: any,
+    ) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field as keyof ProductionPlanData]: value,
+      }));
+    },
+    [],
+  );
 
-  const handleBatchChange = (updates: Partial<ProductionPlanData>) => {
-    setFormData((prev: ProductionPlanData) => ({ ...prev, ...updates }));
-  };
+  const handleBatchChange = useCallback(
+    (updates: Partial<ProductionPlanData>) => {
+      setFormData((prev: ProductionPlanData) => ({ ...prev, ...updates }));
+    },
+    [],
+  );
 
-  const handleSearchChange = (field: string, value: string) => {
-    setSearchValues({ ...searchValues, [field]: value });
-  };
+  const handleSearchChange = useCallback((field: string, value: string) => {
+    setSearchValues((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     showToast({
       message: '검색 기능은 백엔드 연동 후 구현됩니다.',
       severity: 'success',
     });
-  };
+  }, [showToast]);
 
   const handleSave = async (data: ProductionPlanData, references?: any[]) => {
     const mappedProcessCode = data.equipmentCode
@@ -877,36 +950,39 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  const handleDelete = async (plan: ProductionPlanData) => {
-    if (!plan.planNo) {
-      showToast({
-        message: '삭제할 계획 정보가 없습니다.',
-        severity: 'error',
-      });
-      return;
-    }
+  const handleDelete = useCallback(
+    async (plan: ProductionPlanData) => {
+      if (!plan.planNo) {
+        showToast({
+          message: '삭제할 계획 정보가 없습니다.',
+          severity: 'error',
+        });
+        return;
+      }
 
-    // 1. 생산지시 여부 확인
-    if (plan.orderFlag === 'ORDERED') {
-      showToast({
-        message:
-          '생산지시가 완료된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.',
-        severity: 'error',
-      });
-      return;
-    }
+      // 1. 생산지시 여부 확인
+      if (plan.orderFlag === 'ORDERED') {
+        showToast({
+          message:
+            '생산지시가 완료된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.',
+          severity: 'error',
+        });
+        return;
+      }
 
-    // 2. 생산실적 여부 확인
-    if (plan.actualQty && plan.actualQty > 0) {
-      showToast({
-        message: '생산실적이 등록된 계획은 삭제할 수 없습니다.',
-        severity: 'error',
-      });
-      return;
-    }
+      // 2. 생산실적 여부 확인
+      if (plan.actualQty && plan.actualQty > 0) {
+        showToast({
+          message: '생산실적이 등록된 계획은 삭제할 수 없습니다.',
+          severity: 'error',
+        });
+        return;
+      }
 
-    setConfirmDelete({ open: true, plan });
-  };
+      setConfirmDelete({ open: true, plan });
+    },
+    [showToast],
+  );
 
   const executeDelete = async () => {
     if (!confirmDelete.plan || !confirmDelete.plan.planNo) return;
@@ -942,21 +1018,60 @@ const ProductionPlan: React.FC = () => {
     }
   };
 
-  const getPlansForDateAndEquipment = (date: string, equipmentCode: string) => {
-    return plans.filter(
-      (p) => p.date === date && p.equipmentCode === equipmentCode,
-    );
-  };
+  const getPlansForDateAndEquipment = useCallback(
+    (date: string, equipmentCode: string) => {
+      return (
+        planIndexes.plansByDateAndEquipment.get(`${date}::${equipmentCode}`) ||
+        EMPTY_PLANS
+      );
+    },
+    [planIndexes.plansByDateAndEquipment],
+  );
 
-  const getTotalPlansForDate = (date: string) => {
-    return plans.filter((p) => p.date === date).length;
-  };
+  const getTotalPlansForDate = useCallback(
+    (date: string) => planIndexes.summaryByDate.get(date)?.totalPlans || 0,
+    [planIndexes.summaryByDate],
+  );
 
-  const getTotalQtyForDate = (date: string) => {
-    return plans
-      .filter((p) => p.date === date)
-      .reduce((sum, p) => sum + p.plannedQty, 0);
-  };
+  const getTotalQtyForDate = useCallback(
+    (date: string) => planIndexes.summaryByDate.get(date)?.totalQty || 0,
+    [planIndexes.summaryByDate],
+  );
+
+  const handleWorkplaceChange = useCallback((newWorkplace: string) => {
+    setSelectedWorkplace(newWorkplace);
+
+    try {
+      if (newWorkplace) {
+        sessionStorage.setItem(SESSION_KEY_SELECTED_WORKPLACE, newWorkplace);
+      } else {
+        sessionStorage.removeItem(SESSION_KEY_SELECTED_WORKPLACE);
+      }
+    } catch (error) {
+      // Error saving workplace to sessionStorage
+    }
+  }, []);
+
+  const handleViewDaysChange = useCallback((nextValue: number) => {
+    setViewDays(nextValue);
+
+    try {
+      localStorage.setItem(STORAGE_KEY_VIEW_DAYS, String(nextValue));
+    } catch (error) {
+      // Error saving view days to localStorage
+    }
+  }, []);
+
+  const handleToggleCompactMode = useCallback(() => {
+    setCompactMode((prev) => !prev);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    loadWorkplaces();
+    if (selectedWorkplace) {
+      loadWeeklyPlans();
+    }
+  }, [loadWeeklyPlans, loadWorkplaces, selectedWorkplace]);
 
   const sectionGap = compactMode ? 1 : 2;
   const headerTitleVariant: 'h4' | 'h5' = compactMode ? 'h5' : 'h4';
@@ -1037,23 +1152,7 @@ const ProductionPlan: React.FC = () => {
               <InputLabel>작업장 선택 *</InputLabel>
               <Select
                 value={selectedWorkplace}
-                onChange={(e) => {
-                  const newWorkplace = e.target.value;
-                  setSelectedWorkplace(newWorkplace);
-                  // 세션스토리지에 저장
-                  try {
-                    if (newWorkplace) {
-                      sessionStorage.setItem(
-                        SESSION_KEY_SELECTED_WORKPLACE,
-                        newWorkplace,
-                      );
-                    } else {
-                      sessionStorage.removeItem(SESSION_KEY_SELECTED_WORKPLACE);
-                    }
-                  } catch (error) {
-                    // Error saving workplace to sessionStorage
-                  }
-                }}
+                onChange={(e) => handleWorkplaceChange(e.target.value)}
                 label="작업장 선택 *"
                 required
                 sx={{
@@ -1127,18 +1226,7 @@ const ProductionPlan: React.FC = () => {
               <Select
                 label="보기 기간"
                 value={viewDays}
-                onChange={(e) => {
-                  const nextValue = Number(e.target.value);
-                  setViewDays(nextValue);
-                  try {
-                    localStorage.setItem(
-                      STORAGE_KEY_VIEW_DAYS,
-                      String(nextValue),
-                    );
-                  } catch (error) {
-                    // Error saving view days to localStorage
-                  }
-                }}
+                onChange={(e) => handleViewDaysChange(Number(e.target.value))}
               >
                 {VIEW_DAYS_OPTIONS.map((days) => (
                   <MenuItem key={days} value={days}>
@@ -1201,7 +1289,7 @@ const ProductionPlan: React.FC = () => {
             </ToggleButtonGroup>
             <Tooltip title={compactMode ? '기본 모드' : 'Compact 모드'}>
               <IconButton
-                onClick={() => setCompactMode((prev) => !prev)}
+                onClick={handleToggleCompactMode}
                 sx={{
                   bgcolor: compactMode ? 'primary.main' : 'grey.100',
                   color: compactMode ? 'white' : 'text.secondary',
@@ -1231,12 +1319,7 @@ const ProductionPlan: React.FC = () => {
             )}
             <Tooltip title="새로고침">
               <IconButton
-                onClick={() => {
-                  loadWorkplaces();
-                  if (selectedWorkplace) {
-                    loadWeeklyPlans();
-                  }
-                }}
+                onClick={handleRefresh}
                 sx={{
                   bgcolor: 'grey.100',
                   color: 'text.secondary',
@@ -1322,6 +1405,7 @@ const ProductionPlan: React.FC = () => {
         currentWeekStart={currentWeekStart}
         viewDays={viewDays}
         compactMode={compactMode}
+        loading={loading}
         onPrevWeek={handlePrevWeek}
         onNextWeek={handleNextWeek}
         onToday={handleToday}
