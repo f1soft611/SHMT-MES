@@ -57,7 +57,8 @@ interface ProductionRequestSearchState {
 }
 
 const DEFAULT_SEARCH_CND = '4';
-const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus = 'ALL';
+const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus =
+  'UNPLANNED';
 
 const buildSearchState = (
   workplaceCode?: string,

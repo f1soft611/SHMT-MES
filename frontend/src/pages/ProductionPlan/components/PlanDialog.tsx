@@ -23,6 +23,7 @@ import Draggable from 'react-draggable';
 import {
   Link as LinkIcon,
   Inventory as InventoryIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -368,10 +369,22 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
             color: 'white',
             fontWeight: 700,
             fontSize: '1.25rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             cursor: 'move',
           }}
         >
-          {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
+          <Typography variant="h6" component="span" sx={{ fontWeight: 700 }}>
+            {dialogMode === 'create' ? '생산계획 등록' : '생산계획 수정'}
+          </Typography>
+          <Button
+            onClick={handleDialogClose}
+            color="inherit"
+            sx={{ minWidth: 'auto', p: 0.5, color: 'inherit' }}
+          >
+            <CloseIcon fontSize="small" />
+          </Button>
         </DialogTitle>
         <Divider />
         <form onSubmit={handleSubmit(handleFormSubmit)}>

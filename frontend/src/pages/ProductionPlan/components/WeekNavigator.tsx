@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ interface WeekNavigatorProps {
   currentWeekStart: Date;
   viewDays: number;
   compactMode: boolean;
+  loading: boolean;
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onToday: () => void;
@@ -32,6 +33,7 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   currentWeekStart,
   viewDays,
   compactMode,
+  loading,
   onPrevWeek,
   onNextWeek,
   onToday,
@@ -66,6 +68,7 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <Tooltip title="이전 기간">
               <IconButton
                 onClick={onPrevWeek}
+                disabled={loading}
                 sx={{
                   width: 42,
                   height: 42,
@@ -107,13 +110,16 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
                   fontWeight: 500,
                 }}
               >
-                연속 {viewDays}일 보기
+                {loading
+                  ? '일정을 새로 불러오는 중'
+                  : `연속 ${viewDays}일 보기`}
               </Typography>
             </Box>
 
             <Tooltip title="다음 기간">
               <IconButton
                 onClick={onNextWeek}
+                disabled={loading}
                 sx={{
                   width: 42,
                   height: 42,
@@ -138,6 +144,7 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <Button
               variant="contained"
               onClick={onToday}
+              disabled={loading}
               startIcon={<CalendarTodayIcon />}
               sx={{
                 minWidth: 108,
@@ -159,6 +166,7 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
             <Button
               variant="contained"
               onClick={onCapture}
+              disabled={loading}
               startIcon={<CameraAltIcon />}
               sx={{
                 minWidth: 108,
@@ -183,4 +191,4 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   );
 };
 
-export default WeekNavigator;
+export default memo(WeekNavigator);
