@@ -57,7 +57,9 @@ public class ProcessDAO extends EgovAbstractMapper {
      * @throws Exception
      */
     public Process selectProcess(String processId) throws Exception {
-        return selectOne("ProcessDAO.selectProcess", processId);
+        Process process = new Process();
+        process.setProcessId(processId);
+        return selectOne("ProcessDAO.selectProcess", process);
     }
 
     /**

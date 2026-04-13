@@ -1,5 +1,29 @@
 import apiClient from '../api';
 
+interface UserApiResponse extends Omit<User, 'email'> {
+  email?: string;
+  mberEmailAdres?: string;
+}
+
+interface UserPayload extends Omit<UserFormData, 'email'> {
+  email?: string;
+  mberEmailAdres?: string;
+}
+
+const normalizeUser = (user: UserApiResponse): User => ({
+  ...user,
+  email: user.email ?? user.mberEmailAdres ?? '',
+});
+
+const toUserPayload = (userData: UserFormData): UserPayload => {
+  const { email, ...rest } = userData;
+
+  return {
+    ...rest,
+    mberEmailAdres: email,
+  };
+};
+
 export interface User {
   uniqId: string;
   mberId: string;
@@ -90,7 +114,12 @@ class UserService {
     }
 
     const response = await apiClient.get(`/members?${params.toString()}`);
-    return response.data.result;
+    return {
+      ...response.data.result,
+      resultList: response.data.result.resultList.map((user: UserApiResponse) =>
+        normalizeUser(user),
+      ),
+    };
   }
 
   /**
@@ -98,7 +127,7 @@ class UserService {
    */
   async getUserDetail(uniqId: string): Promise<User> {
     const response = await apiClient.get(`/members/update/${uniqId}`);
-    return response.data.result.mberManageVO;
+    return normalizeUser(response.data.result.mberManageVO);
   }
 
   /**
@@ -118,14 +147,14 @@ class UserService {
    * 사용자를 등록한다
    */
   async createUser(userData: UserFormData): Promise<void> {
-    await apiClient.post('/members/insert', userData);
+    await apiClient.post('/members/insert', toUserPayload(userData));
   }
 
   /**
    * 사용자 정보를 수정한다
    */
   async updateUser(userData: UserFormData & { uniqId: string }): Promise<void> {
-    await apiClient.put('/members/update', userData);
+    await apiClient.put('/members/update', toUserPayload(userData));
   }
 
   /**

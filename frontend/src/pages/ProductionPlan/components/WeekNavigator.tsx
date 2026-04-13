@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   Box,
   Button,
@@ -10,8 +10,8 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  NavigateBefore as NavigateBeforeIcon,
-  NavigateNext as NavigateNextIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
   CalendarToday as CalendarTodayIcon,
   CameraAlt as CameraAltIcon,
 } from '@mui/icons-material';
@@ -20,6 +20,7 @@ interface WeekNavigatorProps {
   currentWeekStart: Date;
   viewDays: number;
   compactMode: boolean;
+  loading: boolean;
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onToday: () => void;
@@ -32,6 +33,7 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   currentWeekStart,
   viewDays,
   compactMode,
+  loading,
   onPrevWeek,
   onNextWeek,
   onToday,
@@ -40,83 +42,153 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({
   addDays,
 }) => {
   return (
-    <Card sx={{ mb: 1, boxShadow: 1 }}>
+    <Card
+      sx={{
+        mb: 1,
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+        boxShadow: 'none',
+      }}
+    >
       <CardContent
         sx={{
-          pt: compactMode ? 1 : 1.5,
-          '&:last-child': { pb: compactMode ? 1 : 1.5 },
+          px: compactMode ? 1.5 : 2,
+          py: compactMode ? 1.25 : 1.5,
+          '&:last-child': { pb: compactMode ? 1.25 : 1.5 },
         }}
       >
         <Stack
-          direction="row"
-          spacing={compactMode ? 1 : 1.5}
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={compactMode ? 1.25 : 2}
           alignItems="center"
           justifyContent="center"
         >
-          <Tooltip title="이전 주">
-            <IconButton
-              onClick={onPrevWeek}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Tooltip title="이전 기간">
+              <IconButton
+                onClick={onPrevWeek}
+                disabled={loading}
+                sx={{
+                  width: 42,
+                  height: 42,
+                  bgcolor: '#133f7c',
+                  color: 'common.white',
+                  '&:hover': { bgcolor: '#0f3364' },
+                }}
+              >
+                <ChevronLeftIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Box
               sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
+                minWidth: { xs: '100%', md: compactMode ? 260 : 360 },
+                textAlign: 'center',
               }}
             >
-              <NavigateBeforeIcon />
-            </IconButton>
-          </Tooltip>
+              <Typography
+                variant={compactMode ? 'h6' : 'h5'}
+                sx={{
+                  fontWeight: 800,
+                  color: '#133f7c',
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
+                {formatDate(
+                  addDays(currentWeekStart, viewDays - 1),
+                  'MM월 DD일',
+                )}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 0.5,
+                  color: 'text.secondary',
+                  fontWeight: 500,
+                }}
+              >
+                {loading
+                  ? '일정을 새로 불러오는 중'
+                  : `연속 ${viewDays}일 보기`}
+              </Typography>
+            </Box>
 
-          <Box sx={{ textAlign: 'center', minWidth: compactMode ? 260 : 350 }}>
-            <Typography
-              variant={compactMode ? 'h6' : 'h5'}
-              sx={{ fontWeight: 700, color: 'primary.main' }}
-            >
-              {formatDate(currentWeekStart, 'YYYY년 MM월 DD일')} ~{' '}
-              {formatDate(addDays(currentWeekStart, viewDays - 1), 'MM월 DD일')}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.25 }}
-            >
-              연속 {viewDays}일 보기
-            </Typography>
-          </Box>
+            <Tooltip title="다음 기간">
+              <IconButton
+                onClick={onNextWeek}
+                disabled={loading}
+                sx={{
+                  width: 42,
+                  height: 42,
+                  bgcolor: '#133f7c',
+                  color: 'common.white',
+                  '&:hover': { bgcolor: '#0f3364' },
+                }}
+              >
+                <ChevronRightIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
-          <Tooltip title="다음 주">
-            <IconButton
-              onClick={onNextWeek}
+          <Stack
+            direction="row"
+            spacing={1.25}
+            alignItems="center"
+            justifyContent="center"
+            flexWrap="wrap"
+            sx={{ width: { xs: '100%', md: 'auto' } }}
+          >
+            <Button
+              variant="contained"
+              onClick={onToday}
+              disabled={loading}
+              startIcon={<CalendarTodayIcon />}
               sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
+                minWidth: 108,
+                height: 42,
+                px: 2,
+                borderRadius: 1.5,
+                bgcolor: '#f57c00',
+                boxShadow: 'none',
+                fontWeight: 700,
+                '&:hover': {
+                  bgcolor: '#d96d00',
+                  boxShadow: 'none',
+                },
               }}
             >
-              <NavigateNextIcon />
-            </IconButton>
-          </Tooltip>
+              오늘
+            </Button>
 
-          <Button
-            variant="contained"
-            color="warning"
-            startIcon={<CalendarTodayIcon />}
-            onClick={onToday}
-          >
-            오늘
-          </Button>
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<CameraAltIcon />}
-            onClick={onCapture}
-          >
-            캡쳐
-          </Button>
+            <Button
+              variant="contained"
+              onClick={onCapture}
+              disabled={loading}
+              startIcon={<CameraAltIcon />}
+              sx={{
+                minWidth: 108,
+                height: 42,
+                px: 2,
+                borderRadius: 1.5,
+                bgcolor: '#133f7c',
+                boxShadow: 'none',
+                fontWeight: 700,
+                '&:hover': {
+                  bgcolor: '#0f3364',
+                  boxShadow: 'none',
+                },
+              }}
+            >
+              캡쳐
+            </Button>
+          </Stack>
         </Stack>
       </CardContent>
     </Card>
   );
 };
 
-export default WeekNavigator;
+export default memo(WeekNavigator);

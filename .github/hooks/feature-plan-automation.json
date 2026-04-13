@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "node .github/skills/feature-plan-6step/tools/auto-run-hook.mjs",
+        "timeout": 60
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node .github/skills/feature-plan-6step/tools/auto-run-hook.mjs",
+        "timeout": 60
+      }
+    ]
+  }
+}

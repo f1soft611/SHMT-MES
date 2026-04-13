@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -102,6 +104,7 @@ public class MberManageVO extends UserDefaultVO implements Serializable{
 	private String zip="";
 
 	@Schema(description = "이메일주소")
+	@JsonAlias("email")
 	private String mberEmailAdres="";
 	
 	/**

@@ -63,5 +63,4 @@ backend/backend-prod
 문서/*.md
 backend/backend-dev
 .github/copilot-instructions.md
-/CLAUDE.md
-/.claude/launch.json
+문서/검증/*.md

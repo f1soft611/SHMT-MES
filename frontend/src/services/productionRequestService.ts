@@ -34,9 +34,9 @@ class ProductionRequestService {
   async getProductionRequestList(
     page: number = 0,
     pageSize: number = 10,
-    searchParams?: ProductionRequestSearchParams
+    searchParams?: ProductionRequestSearchParams,
   ): Promise<ProductionRequestListResponse> {
-    const params: any = {
+    const params: Record<string, string | number> = {
       pageIndex: page + 1,
       pageUnit: pageSize,
     };
@@ -52,6 +52,9 @@ class ProductionRequestService {
       if (searchParams.itemName) params.itemName = searchParams.itemName;
       if (searchParams.workplaceCode)
         params.workplaceCode = searchParams.workplaceCode;
+      if (searchParams.allocationStatus) {
+        params.allocationStatus = searchParams.allocationStatus;
+      }
       // 날짜는 YYYY-MM-DD 입력 가능 -> YYYYMMDD로 변환
       if (searchParams.dateFrom)
         params.dateFrom = searchParams.dateFrom.replace(/-/g, '');
@@ -70,10 +73,10 @@ class ProductionRequestService {
     factoryCode: string,
     orderNo: string,
     orderHistno: number,
-    orderSeqno: number
+    orderSeqno: number,
   ): Promise<ProductionRequestDetailResponse> {
     const response = await api.get(
-      `/api/production-requests/${factoryCode}/${orderNo}/${orderHistno}/${orderSeqno}`
+      `/api/production-requests/${factoryCode}/${orderNo}/${orderHistno}/${orderSeqno}`,
     );
     return response.data;
   }
@@ -82,11 +85,11 @@ class ProductionRequestService {
    * 생산의뢰 검색 (상세검색)
    */
   async searchProductionRequests(
-    searchParams: ProductionRequestSearchParams
+    searchParams: ProductionRequestSearchParams,
   ): Promise<ProductionRequestListResponse> {
     const response = await api.post(
       '/api/production-requests/search',
-      searchParams
+      searchParams,
     );
     return response.data;
   }
