@@ -42,7 +42,8 @@ export interface ProdResultOrderRow {
     equipSysCdNm: string;
 
     // === 수량 ===
-    prodQty: number;
+    orderQty: number;
+    prodQty: number | null;
     goodQty: number | null;
     badQty: number | null;
     rcvQty: number | null;

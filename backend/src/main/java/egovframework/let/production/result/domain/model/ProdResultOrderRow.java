@@ -37,7 +37,10 @@ public class ProdResultOrderRow {
     private String equipSysCd;
     private String equipSysCdNm;
 
+    private Double orderQty;
     private Double prodQty;
+    private Double gootQty;
+    private Double badQty;
 
     private String orderFlag;
     private Integer workorderSeq;
