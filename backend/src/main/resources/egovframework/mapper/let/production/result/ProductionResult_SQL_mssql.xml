@@ -13,6 +13,9 @@
             , A.PRODPLAN_SEQ
             , A.PRODWORK_SEQ
             , CAST(A.WORK_SEQ AS INT) AS WORK_SEQ
+            , ISNULL(P.GOOD_QTY, 0) AS GOOD_QTY
+            , ISNULL(P.BAD_QTY, 0)  AS BAD_QTY
+            , ISNULL(P.PROD_QTY, 0) AS PROD_QTY
             , A.WORKDT_DATE
             , A1.WORKCENTER_CODE
             , A2.WORKCENTER_NAME
@@ -28,7 +31,7 @@
             , ISNULL(C1.MATERIAL_SPEC, '') AS PROD_SPEC
             , ISNULL(A.EQUIP_SYS_CD, '') AS EQUIP_SYS_CD
             , ISNULL(D.EQUIPMENT_NAME, '') AS EQUIP_SYS_CD_NM
-            , A.PROD_QTY
+            , A.PROD_QTY AS ORDER_QTY
             , A.ORDER_FLAG
             , A.WORKORDER_SEQ
             , A.LOT_NO
@@ -42,6 +45,30 @@
             , A.TPR504ID
             , A.PRODORDER_ID
         FROM TPR504 A
+
+        LEFT JOIN (
+            SELECT
+            FACTORY_CODE,
+            PRODPLAN_DATE,
+            PRODPLAN_SEQ,
+            PRODWORK_SEQ,
+            WORK_SEQ,
+            SUM(GOOD_QTY) AS GOOD_QTY,
+            SUM(BAD_QTY)  AS BAD_QTY,
+            SUM(PROD_QTY) AS PROD_QTY
+            FROM TPR601
+            GROUP BY
+            FACTORY_CODE,
+            PRODPLAN_DATE,
+            PRODPLAN_SEQ,
+            PRODWORK_SEQ,
+            WORK_SEQ
+        ) P
+        ON A.FACTORY_CODE  = P.FACTORY_CODE
+        AND A.PRODPLAN_DATE = P.PRODPLAN_DATE
+        AND A.PRODPLAN_SEQ  = P.PRODPLAN_SEQ
+        AND A.PRODWORK_SEQ  = P.PRODWORK_SEQ
+
         LEFT JOIN TPR301M M
         ON A.FACTORY_CODE = M.FACTORY_CODE
         AND A.PRODPLAN_DATE = M.PRODPLAN_DATE

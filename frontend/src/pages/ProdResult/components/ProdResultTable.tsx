@@ -206,7 +206,16 @@ function ProdResultRow({ row }: { row: ProdResultOrderRow }) {
                     <EllipsisCell value={row.prodSpec}/>
                 </TableCell>
                 <TableCell align="right" sx={{ padding: "0 2px" }}>
-                    {row.prodQty.toLocaleString()}
+                    {row.orderQty.toLocaleString()}
+                </TableCell>
+                <TableCell align="right" sx={{ padding: "0 2px" }}>
+                    {(row.prodQty ?? 0).toLocaleString()}
+                </TableCell>
+                <TableCell align="right" sx={{ padding: "0 2px" }}>
+                    {(row.goodQty ?? 0).toLocaleString()}
+                </TableCell>
+                <TableCell align="right" sx={{ padding: "0 2px" }}>
+                    {(row.badQty ?? 0).toLocaleString()}
                 </TableCell>
                 <TableCell align="center" sx={{ padding: "0 2px" }}>
                     <EllipsisCell value={row.bigo}/>
