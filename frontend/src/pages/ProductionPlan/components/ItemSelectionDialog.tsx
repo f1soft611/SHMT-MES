@@ -21,6 +21,7 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 import itemService from '../../../services/itemService';
 import { Item } from '../../../types/item';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface ItemSelectionDialogProps {
   open: boolean;
@@ -161,6 +162,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       flex: 1,
       align: 'left',
       headerAlign: 'center',
+      renderCell: (params) => decodeHtml(params.value ?? ''),
     },
     {
       field: 'specification',

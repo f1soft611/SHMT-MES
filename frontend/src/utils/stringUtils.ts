@@ -1,9 +1,9 @@
 export const decodeHtml = (str?: string | null): string => {
-    if (!str) return '';
+  if (!str) return '';
 
-    return str
+  return str
     .replace(/&Oslash;/g, 'Ø')
-    .replace(/&Prime;/g, '″')
+    .replace(/&Prime;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, '<')

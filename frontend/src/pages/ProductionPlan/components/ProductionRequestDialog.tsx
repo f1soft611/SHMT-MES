@@ -46,6 +46,7 @@ import productionPlanService, {
 } from '../../../services/productionPlanService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface ProductionRequestSearchState {
   searchCnd: string;
@@ -667,6 +668,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         flex: 1,
         minWidth: 180,
         headerAlign: 'center',
+        renderCell: (params) => decodeHtml(params.value ?? ''),
       },
       {
         field: 'itemNo',

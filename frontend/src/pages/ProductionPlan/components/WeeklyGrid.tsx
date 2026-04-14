@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { Equipment } from '../../../types/equipment';
 import { ProductionPlanData } from '../../../types/productionPlan';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface WeeklyGridProps {
   weeklyGridRef: React.RefObject<HTMLDivElement | null>;
@@ -806,7 +807,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                         color: 'text.primary',
                                                       }}
                                                     >
-                                                      {plan.itemName}
+                                                      {decodeHtml(
+                                                        plan.itemName,
+                                                      )}
                                                       {(plan.itemDisplayCode ||
                                                         plan.itemCode) && (
                                                         <Typography
