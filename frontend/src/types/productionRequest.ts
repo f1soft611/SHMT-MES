@@ -15,12 +15,14 @@ export interface ProductionRequest {
   orderAmount?: number; // ORDER_AMOUNT: money
   shipOrderQty?: number; // SHIP_ORDER_QTY: float(15)
   closingFlag?: string; // CLOSING_FLAG: char(1)
+  prodPlanDate?: string; // PROD_PLAN_DATE: char(8)
   deliveryDate?: string; // DELIVERY_DATE: char(8)
   closingDate?: string; // CLOSING_DATE: char(8)
   vatFlag?: string; // VAT_FLAG: char(1)
   opmanCode?: string; // OPMAN_CODE: varchar(10)
   optime?: string; // OPTIME: char(12)
   itemCode?: string; // ITEM_CODE: varchar(15) (FK)
+  itemNo?: string; // ITEM_NO: 품목번호
 
   // 생산의뢰 팝업에 표시할 추가 정보
   itemName?: string; // 품목명 (조인하여 가져올 데이터)
