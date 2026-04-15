@@ -10,10 +10,10 @@ export interface ProductionOrder {
 export interface ProdPlanSearchParams {
     workplace?: string;
     equipment?: string;
-    dateFrom: string;   // YYYYMMDD
-    dateTo: string;     // YYYYMMDD
-    prodFrom?: string;   // YYYYMMDD
-    prodTo?: string;     // YYYYMMDD
+    dateFrom: string;   // YYYY-MM-DD
+    dateTo: string;     // YYYY-MM-DD
+    prodFrom?: string;   // YYYY-MM-DD
+    prodTo?: string;     // YYYY-MM-DD
     orderFlag?:string;
     page?: number;
     size?: number;
