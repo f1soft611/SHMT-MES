@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import {GridPaginationModel} from "@mui/x-data-grid";
+import dayjs from 'dayjs';
 import { productionResultService } from '../../../services/productionResultService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
   ProdResultOrderRow,
   ProductionResultSearchForm,
 } from '../../../types/productionResult';
-import {GridPaginationModel} from "@mui/x-data-grid";
 
 export function useProdOrder() {
   const { showToast } = useToast();
@@ -22,7 +23,7 @@ export function useProdOrder() {
     dateTo: dateToStr,
     workplace: '',
     equipment: '',
-    keyword: '', //통합검색
+    keyword: '',
   });
 
   /**
@@ -35,9 +36,8 @@ export function useProdOrder() {
   /** 페이징 */
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
-    pageSize: 20
+    pageSize: 20,
   });
-
   const [filter, setFilter] = useState<any>({});
 
   // 데이터 상태
@@ -92,9 +92,9 @@ export function useProdOrder() {
 
       setRows(rows);
       setRowCount(response.result?.resultCnt ?? 0);
-    } catch (err: any) {
+    } catch (_err: any) {
       showToast({
-        message: '생산지시 목록 조회 실패',
+        message: '생산실적 목록 조회 실패',
         severity: 'error',
       });
       setRows([]);
@@ -104,42 +104,59 @@ export function useProdOrder() {
     }
   };
 
-  // /** ======================
-  //  *  페이지 변경
-  //  *  ====================== */
-  // const handlePageChange = (page: number) => {
-  //   setPagination((prev) => ({ ...prev, page }));
-  // };
-  //
-  // /** ======================
-  //  *  페이지 사이즈 변경
-  //  *  ====================== */
-  // const handlePageSizeChange = (pageSize: number) => {
-  //   setPagination({ page: 0, pageSize });
-  // };
-
-  /** ======================
-   *  페이지 변경
-   *  ====================== */
   const onPaginationChange = (model: GridPaginationModel) => {
     setPaginationModel(model);
-    // onSearch(model);
   };
 
-  /** ======================
-   *  검색 조건 변경
-   *  ====================== */
+  const isCompleteDate = (value?: string) => {
+    if (!value) {
+      return false;
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && dayjs(value, 'YYYY-MM-DD', true).isValid();
+  };
+
   const handleSearchChange = (name: string, value: string) => {
-    setSearch((prev) => ({ ...prev, [name]: value }));
+    setSearch((prev) => {
+      const next = { ...prev, [name]: value };
+
+      if (name === 'dateFrom' && isCompleteDate(value) && isCompleteDate(next.dateTo) && dayjs(value).isAfter(dayjs(next.dateTo), 'day')) {
+        next.dateTo = value;
+        showToast({
+          message: '시작일이 종료일보다 늦어 종료일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      if (name === 'dateTo' && isCompleteDate(value) && isCompleteDate(next.dateFrom) && dayjs(value).isBefore(dayjs(next.dateFrom), 'day')) {
+        next.dateFrom = value;
+        showToast({
+          message: '종료일이 시작일보다 빨라 시작일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      return next;
+    });
   };
 
-  /** ======================
-   *  검색 버튼 클릭
-   *  - 날짜 포맷 변환 (YYYY-MM-DD → YYYYMMDD)
-   *  - 검색 파라미터 확정
-   *  - 페이지 초기화
-   *  ====================== */
+  const validateDateRange = () => {
+    if (search.dateFrom && search.dateTo && dayjs(search.dateFrom).isAfter(dayjs(search.dateTo), 'day')) {
+      showToast({
+        message: '시작일은 종료일보다 늦을 수 없습니다.',
+        severity: 'error',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSearch = () => {
+    if (!validateDateRange()) {
+      return;
+    }
+
     setLoading(true);
     const toYYYYMMDD = (v: string) => v.replaceAll('-', '');
     const model = { ...paginationModel, page: 0 };
