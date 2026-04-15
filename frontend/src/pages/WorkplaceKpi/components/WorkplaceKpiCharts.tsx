@@ -46,8 +46,20 @@ const WorkplaceKpiCharts: React.FC<Props> = ({ summaryRows }) => {
       (acc, r) => acc + (r.totalBadQty ?? 0),
       0,
     );
+    const totalWorkTime = summaryRows.reduce(
+      (acc, r) => acc + (r.totalWorkTime ?? 0),
+      0,
+    );
     const avgBad = totalProd > 0 ? (totalBad / totalProd) * 100 : 0;
-    return { totalProd, totalGood, totalBad, avgBad };
+    const avgQtyPerHour = totalWorkTime > 0 ? totalProd / totalWorkTime : 0;
+    return {
+      totalProd,
+      totalGood,
+      totalBad,
+      avgBad,
+      totalWorkTime,
+      avgQtyPerHour,
+    };
   }, [summaryRows]);
 
   /** 차트 데이터: 날짜 기준 집계 합산 */
@@ -103,41 +115,63 @@ const WorkplaceKpiCharts: React.FC<Props> = ({ summaryRows }) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* KPI 카드 */}
-      <Stack direction="row" spacing={1.5} useFlexGap flexWrap="wrap">
-        <Card sx={{ ...kpiCardSx, bgcolor: '#e3f2fd' }}>
-          <Typography variant="caption" color="text.secondary">
-            총 생산수량
-          </Typography>
-          <Typography variant="h6" fontWeight={700} color="primary.main">
-            {kpi.totalProd.toLocaleString()}
-          </Typography>
-        </Card>
-        <Card sx={{ ...kpiCardSx, bgcolor: '#e8f5e9' }}>
-          <Typography variant="caption" color="text.secondary">
-            총 양품수량
-          </Typography>
-          <Typography variant="h6" fontWeight={700} color="success.main">
-            {kpi.totalGood.toLocaleString()}
-          </Typography>
-        </Card>
-        <Card sx={{ ...kpiCardSx, bgcolor: '#fce4ec' }}>
-          <Typography variant="caption" color="text.secondary">
-            총 불량수량
-          </Typography>
-          <Typography variant="h6" fontWeight={700} color="error.main">
-            {kpi.totalBad.toLocaleString()}
-          </Typography>
-        </Card>
-        <Card sx={{ ...kpiCardSx, bgcolor: '#fff8e1' }}>
-          <Typography variant="caption" color="text.secondary">
-            평균 불량률
-          </Typography>
-          <Typography variant="h6" fontWeight={700} color="warning.main">
-            {kpi.avgBad.toFixed(2)}%
-          </Typography>
-        </Card>
-      </Stack>
+      {/* KPI 카드 - 2행 × 3열 */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {/* Row 1: 생산·작업시간·시간당생산 */}
+        <Stack direction="row" spacing={1} useFlexGap>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#e3f2fd' }}>
+            <Typography variant="caption" color="text.secondary">
+              총 생산수량
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="primary.main">
+              {kpi.totalProd.toLocaleString()}
+            </Typography>
+          </Card>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#e8eaf6' }}>
+            <Typography variant="caption" color="text.secondary">
+              총 작업시간(h)
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="#3949ab">
+              {kpi.totalWorkTime.toFixed(1)}
+            </Typography>
+          </Card>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#e0f7fa' }}>
+            <Typography variant="caption" color="text.secondary">
+              시간당 생산
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="#00838f">
+              {kpi.avgQtyPerHour.toFixed(1)}
+            </Typography>
+          </Card>
+        </Stack>
+        {/* Row 2: 양품·불량·불량률 */}
+        <Stack direction="row" spacing={1} useFlexGap>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#e8f5e9' }}>
+            <Typography variant="caption" color="text.secondary">
+              총 양품수량
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="success.main">
+              {kpi.totalGood.toLocaleString()}
+            </Typography>
+          </Card>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#fce4ec' }}>
+            <Typography variant="caption" color="text.secondary">
+              총 불량수량
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="error.main">
+              {kpi.totalBad.toLocaleString()}
+            </Typography>
+          </Card>
+          <Card sx={{ ...kpiCardSx, bgcolor: '#fff8e1' }}>
+            <Typography variant="caption" color="text.secondary">
+              평균 불량률
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="warning.main">
+              {kpi.avgBad.toFixed(2)}%
+            </Typography>
+          </Card>
+        </Stack>
+      </Box>
 
       {summaryRows.length === 0 ? (
         <Box
