@@ -10,6 +10,7 @@ export interface ServiceProductionPlan {
   planNo?: string;
   planDate?: string;
   planSeq?: number;
+  prodworkSeq?: number;
   itemCode: string;
   itemDisplayCode?: string;
   itemName: string;
@@ -100,29 +101,30 @@ export const toProductionPlanData = (
     equipmentId: extras?.equipmentId || plan.equipmentId,
     equipmentCode: extras?.equipmentCode || plan.equipmentCode || '',
     equipmentName: extras?.equipmentName || plan.equipmentName,
-    shift: plan.shift,
-    remark: plan.remark,
-    orderNo: plan.orderNo,
-    orderSeqno: plan.orderSeqno,
-    orderHistno: plan.orderHistno,
-    workplaceCode: extras?.workplaceCode || plan.workplaceCode,
-    workplaceName: extras?.workplaceName || plan.workplaceName,
-    processCode: plan.processCode,
-    processName: plan.processName,
-    workerCode: plan.workerCode,
-    workerName: plan.workerName,
-    customerCode: plan.customerCode,
-    customerName: plan.customerName,
+    shift: plan.shift ?? undefined,
+    remark: plan.remark ?? undefined,
+    orderNo: plan.orderNo ?? undefined,
+    orderSeqno: plan.orderSeqno ?? undefined,
+    orderHistno: plan.orderHistno ?? undefined,
+    workplaceCode: (extras?.workplaceCode || plan.workplaceCode) ?? undefined,
+    workplaceName: (extras?.workplaceName || plan.workplaceName) ?? undefined,
+    processCode: plan.processCode ?? undefined,
+    processName: plan.processName ?? undefined,
+    workerCode: plan.workerCode ?? undefined,
+    workerName: plan.workerName ?? undefined,
+    customerCode: plan.customerCode ?? undefined,
+    customerName: plan.customerName ?? undefined,
     deliveryDate: plan.deliveryDate
       ? plan.deliveryDate.includes('-')
         ? plan.deliveryDate
         : normalizeDate(plan.deliveryDate)
       : undefined,
-    planNo: planNo,
-    planSeq: planSeq,
-    factoryCode: plan.factoryCode,
-    lotNo: plan.lotNo,
-    useYn: plan.useYn,
+    planNo: planNo ?? undefined,
+    planSeq: planSeq ?? undefined,
+    prodworkSeq: plan.prodworkSeq ?? undefined,
+    factoryCode: plan.factoryCode ?? undefined,
+    lotNo: plan.lotNo ?? undefined,
+    useYn: plan.useYn ?? undefined,
     createDays: plan.createDays,
     planGroupId: plan.planGroupId,
     groupSeq: plan.groupSeq,

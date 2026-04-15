@@ -93,38 +93,48 @@ const productionPlanSchema = yup.object({
     .min(1, '생성일수는 1 이상이어야 합니다.')
     .max(30, '생성일수는 30일 이하로 입력해주세요.')
     .typeError('생성일수는 숫자여야 합니다.'),
-  equipmentId: yup.string().notRequired(),
+  equipmentId: yup.string().nullable().optional(),
   equipmentCode: yup.string().required('설비는 필수입니다.'),
-  equipmentName: yup.string(),
-  shift: yup.string().notRequired(),
-  remark: yup.string().notRequired().default(''),
-  orderNo: yup.string(),
-  orderSeqno: yup.number(),
-  orderHistno: yup.number(),
-  workplaceCode: yup.string(),
-  workplaceName: yup.string(),
-  workerCode: yup.string().notRequired(),
-  workerName: yup.string(),
-  customerCode: yup.string(),
-  customerName: yup.string(),
-  additionalCustomers: yup.array().of(yup.string().required()),
+  equipmentName: yup.string().nullable().optional(),
+  shift: yup.string().nullable().optional(),
+  remark: yup.string().nullable().optional().default(''),
+  orderNo: yup.string().nullable().optional(),
+  orderSeqno: yup.number().nullable().optional(),
+  orderHistno: yup.number().nullable().optional(),
+  workplaceCode: yup.string().nullable().optional(),
+  workplaceName: yup.string().nullable().optional(),
+  workerCode: yup.string().nullable().optional(),
+  workerName: yup.string().nullable().optional(),
+  customerCode: yup.string().nullable().optional(),
+  customerName: yup.string().nullable().optional(),
+  additionalCustomers: yup
+    .array()
+    .of(yup.string().required())
+    .nullable()
+    .optional(),
   deliveryDate: yup
     .string()
-    .matches(/^\d{4}-\d{2}-\d{2}$/, '납기일은 YYYY-MM-DD 형식이어야 합니다.')
-    .test('valid-date', '유효한 날짜를 입력하세요', function (value) {
-      if (!value) return true; // 선택입니다
-      const date = new Date(value);
-      return !isNaN(date.getTime());
-    }),
+    .nullable()
+    .optional()
+    .test(
+      'valid-date-format',
+      '납기일은 YYYY-MM-DD 형식이어야 합니다.',
+      function (value) {
+        if (!value) return true; // 선택 항목
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      },
+    ),
   // 선택적 확장/백엔드 매핑 필드
-  processCode: yup.string(),
-  processName: yup.string(),
-  planNo: yup.string(),
-  planSeq: yup.number().notRequired(),
-  factoryCode: yup.string(),
-  actualQty: yup.number(),
-  lotNo: yup.string(),
-  useYn: yup.string(),
+  processCode: yup.string().nullable().optional(),
+  processName: yup.string().nullable().optional(),
+  planNo: yup.string().nullable().optional(),
+  planSeq: yup.number().nullable().optional(),
+  factoryCode: yup.string().nullable().optional(),
+  actualQty: yup.number().nullable().optional(),
+  lotNo: yup.string().nullable().optional(),
+  useYn: yup.string().nullable().optional(),
 });
 
 interface PlanDialogProps {

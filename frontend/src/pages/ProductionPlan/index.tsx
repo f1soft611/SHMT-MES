@@ -868,6 +868,7 @@ const ProductionPlan: React.FC = () => {
             {
               planNo: formData.planNo,
               planSeq: formData.planSeq,
+              prodworkSeq: formData.prodworkSeq,
               planDate: data.date.replace(/-/g, ''),
               itemCode: data.itemCode,
               itemName: data.itemName,

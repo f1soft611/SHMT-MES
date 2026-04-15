@@ -31,8 +31,9 @@ import PermissionManagement from './pages/Admin/PermissionManagement';
 import UserManagement from './pages/Admin/UserManagement';
 import LoginHistoryManagement from './pages/Admin/LoginHistoryManagement';
 import ProcessFlowManagement from './pages/BaseData/ProcessFlowManagement';
-import ProductionPerformance from "./pages/ProductionPerformance";
-import DefectRateStatus from "./pages/DefectRateStatus";
+import ProductionPerformance from './pages/ProductionPerformance';
+import DefectRateStatus from './pages/DefectRateStatus';
+import WorkplaceKpi from './pages/WorkplaceKpi';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -122,12 +123,16 @@ function App() {
                             element={<StockInquiry />}
                           />
                           <Route
-                              path={URL.PROD_PERF}
-                              element={<ProductionPerformance />}
+                            path={URL.PROD_PERF}
+                            element={<ProductionPerformance />}
                           />
                           <Route
-                              path={URL.DEFECT_RATE}
-                              element={<DefectRateStatus />}
+                            path={URL.DEFECT_RATE}
+                            element={<DefectRateStatus />}
+                          />
+                          <Route
+                            path={URL.WORKPLACE_KPI}
+                            element={<WorkplaceKpi />}
                           />
                           {/* <Route
                           path={URL.INTERFACE}

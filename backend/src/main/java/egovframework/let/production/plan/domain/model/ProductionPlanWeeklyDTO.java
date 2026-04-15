@@ -106,6 +106,11 @@ public class ProductionPlanWeeklyDTO {
          * 계획순번
          */
         private Integer prodplanSeq;
+
+        /**
+         * 작업순번 (TPR301 행 식별키)
+         */
+        private Integer prodworkSeq;
         
         /**
          * 품목코드 (시퀀스/ID)
@@ -121,6 +126,11 @@ public class ProductionPlanWeeklyDTO {
          * 품목명
          */
         private String itemName;
+
+        /**
+         * 제품 LOT No
+         */
+        private String lotNo;
         
         /**
          * 계획수량

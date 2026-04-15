@@ -336,6 +336,7 @@
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		  AND PRODPLAN_ID = #{prodPlanId}
+		  AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
 	<!-- 생산계획 지시상태 조회 (ORDERED 여부 확인) -->
@@ -359,6 +360,7 @@
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
 		  AND PRODPLAN_ID = #{prodPlanId}
+		  AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
 	<!-- 생산계획 기준 생산지시일(WORKDT_DATE) 동기화 -->
@@ -470,6 +472,7 @@
 			D.ITEM_CODE,
 			COALESCE(I.MATERIAL_CODE, D.ITEM_CODE) AS ITEM_DISPLAY_CODE,
 			D.ITEM_NAME,
+			M.ITEM_LOT_NO AS LOT_NO,
 			D.PROD_QTY AS PLANNED_QTY,
 			0 AS ACTUAL_Qty,
 			D.WORKER_TYPE AS SHIFT,

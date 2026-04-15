@@ -38,6 +38,7 @@ export interface ProductionPlanData {
   // 백엔드 원본 필드(선택적으로 활용)
   planNo?: string;
   planSeq?: number;
+  prodworkSeq?: number;
   factoryCode?: string;
   actualQty?: number;
   lotNo?: string;

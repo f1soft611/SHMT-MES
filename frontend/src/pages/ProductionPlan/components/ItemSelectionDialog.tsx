@@ -11,6 +11,9 @@ import {
   Stack,
   Divider,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import {
   DataGrid,
@@ -21,6 +24,7 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 import itemService from '../../../services/itemService';
 import { Item } from '../../../types/item';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface ItemSelectionDialogProps {
   open: boolean;
@@ -41,6 +45,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
   });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [actualSearchKeyword, setActualSearchKeyword] = useState('');
+  const [searchCnd, setSearchCnd] = useState<'1' | '2'>('1');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
@@ -52,7 +57,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
         setLoading(true);
         setError('');
         const response = await itemService.getItemList(page, pageSize, {
-          searchCnd: '1', // 품목번호 검색',
+          searchCnd: searchCnd,
           searchWrd: actualSearchKeyword,
           useYn: 'Y',
         });
@@ -77,7 +82,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     if (open) {
       loadItems();
     }
-  }, [open, page, pageSize, actualSearchKeyword]);
+  }, [open, page, pageSize, actualSearchKeyword, searchCnd]);
 
   const handleSearch = () => {
     setPage(0);
@@ -107,6 +112,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setSearchKeyword('');
     setActualSearchKeyword('');
+    setSearchCnd('1');
     setPage(0);
     setError('');
     onClose();
@@ -161,6 +167,7 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
       flex: 1,
       align: 'left',
       headerAlign: 'center',
+      renderCell: (params) => decodeHtml(params.value ?? ''),
     },
     {
       field: 'specification',
@@ -211,9 +218,20 @@ const ItemSelectionDialog: React.FC<ItemSelectionDialogProps> = ({
         <Stack spacing={2}>
           {/* 검색 영역 */}
           <Box sx={{ display: 'flex', gap: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 110 }}>
+              <Select
+                value={searchCnd}
+                onChange={(e) => setSearchCnd(e.target.value as '1' | '2')}
+              >
+                <MenuItem value="1">품목번호</MenuItem>
+                <MenuItem value="2">품목명</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               size="small"
-              placeholder="품목번호로 검색"
+              placeholder={
+                searchCnd === '1' ? '품목번호로 검색' : '품목명으로 검색'
+              }
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onKeyDown={(e) => {
