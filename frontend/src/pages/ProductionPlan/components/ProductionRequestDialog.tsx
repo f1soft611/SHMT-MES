@@ -33,6 +33,7 @@ import {
   Close as CloseIcon,
   FilterList as FilterListIcon,
   Add as AddIcon,
+  FileDownload as FileDownloadIcon,
   OpenInFull as OpenInFullIcon,
   CloseFullscreen as CloseFullscreenIcon,
 } from '@mui/icons-material';
@@ -46,6 +47,7 @@ import productionPlanService, {
 } from '../../../services/productionPlanService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface ProductionRequestSearchState {
   searchCnd: string;
@@ -59,6 +61,20 @@ interface ProductionRequestSearchState {
 const DEFAULT_SEARCH_CND = '4';
 const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus =
   'UNPLANNED';
+const EXPORT_SHEET_NAME = '생산의뢰';
+
+interface ProductionRequestExcelRow {
+  생산의뢰일: string;
+  품명: string;
+  품번: string;
+  거래처: string;
+  비고: string;
+  수량: number;
+  할당량: number;
+  남은량: number;
+  의뢰번호: string;
+  납기일: string;
+}
 
 const buildSearchState = (
   workplaceCode?: string,
@@ -123,6 +139,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
   const [registering, setRegistering] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [registerProgress, setRegisterProgress] = useState({
     current: 0,
     total: 0,
@@ -650,6 +667,115 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     return dateStr;
   }, []);
 
+  const buildExcelRows = useCallback(
+    (targetRequests: ProductionRequest[]): ProductionRequestExcelRow[] =>
+      targetRequests.map((request) => ({
+        생산의뢰일: formatDate(request.prodPlanDate),
+        품명: decodeHtml(request.itemName ?? ''),
+        품번: request.itemNo || '-',
+        거래처: request.customerName || '-',
+        비고: request.remark || '-',
+        수량: Number(request.orderQty ?? 0),
+        할당량: Number(request.allocatedQty ?? 0),
+        남은량: Number(request.remainingQty ?? 0),
+        의뢰번호: request.orderNo || '-',
+        납기일: formatDate(request.deliveryDate),
+      })),
+    [formatDate],
+  );
+
+  const getExportFileName = useCallback(() => {
+    const now = new Date();
+    const pad = (value: number): string => String(value).padStart(2, '0');
+
+    return `생산의뢰_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
+      now.getDate(),
+    )}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(
+      now.getSeconds(),
+    )}.xlsx`;
+  }, []);
+
+  const handleExportExcel = useCallback(async () => {
+    if (loading || exporting || registering) {
+      return;
+    }
+
+    if (totalCount === 0) {
+      showToast({
+        message: '다운로드할 생산의뢰 내역이 없습니다.',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    setExporting(true);
+
+    try {
+      const exportPageSize = Math.max(totalCount, paginationModel.pageSize, 1);
+      const response = await productionRequestService.getProductionRequestList(
+        0,
+        exportPageSize,
+        searchParams,
+      );
+      const exportRequests = response.result?.resultList ?? [];
+
+      if (exportRequests.length === 0) {
+        showToast({
+          message: '다운로드할 생산의뢰 내역이 없습니다.',
+          severity: 'warning',
+        });
+        return;
+      }
+
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(
+        buildExcelRows(exportRequests),
+      );
+
+      worksheet['!cols'] = [
+        { wch: 14 },
+        { wch: 28 },
+        { wch: 16 },
+        { wch: 20 },
+        { wch: 28 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 18 },
+        { wch: 14 },
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, EXPORT_SHEET_NAME);
+      XLSX.writeFile(workbook, getExportFileName());
+
+      showToast({
+        message: `${exportRequests.length}건의 생산의뢰 내역을 엑셀로 다운로드했습니다.`,
+        severity: 'success',
+      });
+    } catch (error) {
+      showToast({
+        message: getErrorMessage(
+          error,
+          '엑셀 다운로드 중 오류가 발생했습니다.',
+        ),
+        severity: 'error',
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    buildExcelRows,
+    exporting,
+    getExportFileName,
+    loading,
+    paginationModel.pageSize,
+    registering,
+    searchParams,
+    showToast,
+    totalCount,
+  ]);
+
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = useMemo(
     () => [
@@ -667,6 +793,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         flex: 1,
         minWidth: 180,
         headerAlign: 'center',
+        renderCell: (params) => decodeHtml(params.value ?? ''),
       },
       {
         field: 'itemNo',
@@ -783,6 +910,18 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           생산의뢰 연동
         </Typography>
         <Stack direction="row" spacing={0.5} alignItems="center">
+          <Tooltip title="엑셀 다운로드">
+            <span>
+              <IconButton
+                onClick={handleExportExcel}
+                sx={{ color: 'white' }}
+                size="small"
+                disabled={loading || registering || exporting}
+              >
+                <FileDownloadIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
           <Tooltip
             title={fullScreen ? '기본 크기로 보기' : '전체화면으로 보기'}
           >
@@ -925,6 +1064,21 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         </Box>
       )}
 
+      {exporting && (
+        <Box sx={{ px: 2, pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Typography
+              variant="body2"
+              color="primary"
+              sx={{ fontWeight: 600 }}
+            >
+              생산의뢰 내역 엑셀 생성 중...
+            </Typography>
+          </Box>
+          <LinearProgress sx={{ height: 8, borderRadius: 1 }} />
+        </Box>
+      )}
+
       {/* DataGrid 영역 */}
       <DialogContent
         sx={{
@@ -988,12 +1142,12 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Button
           onClick={handleRegisterProductionPlans}
           variant="contained"
-          disabled={registering}
+          disabled={registering || exporting}
           startIcon={<AddIcon />}
         >
           {registering ? '등록 중...' : '등록'}
         </Button>
-        <Button onClick={handleClose} disabled={registering}>
+        <Button onClick={handleClose} disabled={registering || exporting}>
           취소
         </Button>
       </DialogActions>

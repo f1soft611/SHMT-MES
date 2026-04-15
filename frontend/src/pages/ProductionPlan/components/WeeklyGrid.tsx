@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { Equipment } from '../../../types/equipment';
 import { ProductionPlanData } from '../../../types/productionPlan';
+import { decodeHtml } from '../../../utils/stringUtils';
 
 interface WeeklyGridProps {
   weeklyGridRef: React.RefObject<HTMLDivElement | null>;
@@ -746,6 +747,11 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                           isGrouped &&
                                           plan.planGroupId === activeGroupId;
 
+                                        const planDisplayCode =
+                                          plan.lotNo?.trim() ||
+                                          plan.itemDisplayCode ||
+                                          plan.itemCode;
+
                                         return (
                                           <Card
                                             key={plan.id}
@@ -806,9 +812,10 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                         color: 'text.primary',
                                                       }}
                                                     >
-                                                      {plan.itemName}
-                                                      {(plan.itemDisplayCode ||
-                                                        plan.itemCode) && (
+                                                      {decodeHtml(
+                                                        plan.itemName,
+                                                      )}
+                                                      {planDisplayCode && (
                                                         <Typography
                                                           component="span"
                                                           variant="body2"
@@ -823,10 +830,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                             fontWeight: 500,
                                                           }}
                                                         >
-                                                          (
-                                                          {plan.itemDisplayCode ||
-                                                            plan.itemCode}
-                                                          )
+                                                          ({planDisplayCode})
                                                         </Typography>
                                                       )}
                                                     </Typography>

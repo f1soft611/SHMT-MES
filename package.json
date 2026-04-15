@@ -6,7 +6,9 @@
     "harness:branch-decide": "node .github/skills/feature-plan-6step/tools/branch-decider.mjs"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1"
+    "@types/recharts": "^1.8.29",
+    "html2canvas": "^1.4.1",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@types/html2canvas": "^0.5.35"

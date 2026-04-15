@@ -121,6 +121,11 @@ public class ProductionPlanWeeklyDTO {
          * 품목명
          */
         private String itemName;
+
+        /**
+         * 제품 LOT No
+         */
+        private String lotNo;
         
         /**
          * 계획수량
