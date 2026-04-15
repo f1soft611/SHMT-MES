@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { GridPaginationModel } from '@mui/x-data-grid';
+import dayjs from 'dayjs';
 import { productionOrderService } from '../../../services/productionOrderService';
-import {ProdPlanRow, ProdPlanSearchParams} from "../../../types/productionOrder";
-import {useToast} from "../../../components/common/Feedback/ToastProvider";
+import { ProdPlanRow, ProdPlanSearchParams } from '../../../types/productionOrder';
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
 export function useProdPlan() {
 
@@ -21,7 +22,7 @@ export function useProdPlan() {
     dateTo: dateToStr,
     prodFrom: '',
     prodTo: '',
-    orderFlag: 'PLANNED'
+    orderFlag: 'PLANNED',
   });
 
   // 페이징
@@ -55,7 +56,7 @@ export function useProdPlan() {
         size: paginationModel.pageSize,
       });
 
-      if(data.resultCode !== 200){
+      if (data.resultCode !== 200) {
         showToast({ message: data.resultMessage, severity: 'error' });
         return;
       }
@@ -79,19 +80,79 @@ export function useProdPlan() {
     setPaginationModel(model);
   };
 
-  /** ======================
-   *  검색 조건 변경
-   *  ====================== */
-  const handleSearchChange = (name: string, value: string) => {
-    setSearch((prev) => ({ ...prev, [name]: value }));
+  const isCompleteDate = (value?: string) => {
+    if (!value) {
+      return false;
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && dayjs(value, 'YYYY-MM-DD', true).isValid();
   };
 
-  /** ======================
-   *  검색 실행
-   *  - page 초기화
-   *  - searchTrigger 증가로 조회 유도
-   *  ====================== */
+  const handleSearchChange = (name: string, value: string) => {
+    setSearch((prev) => {
+      const next = { ...prev, [name]: value };
+
+      if (name === 'dateFrom' && isCompleteDate(value) && isCompleteDate(next.dateTo) && dayjs(value).isAfter(dayjs(next.dateTo), 'day')) {
+        next.dateTo = value;
+        showToast({
+          message: '계획 생성일 시작이 종료일보다 늦어 종료일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      if (name === 'dateTo' && isCompleteDate(value) && isCompleteDate(next.dateFrom) && dayjs(value).isBefore(dayjs(next.dateFrom), 'day')) {
+        next.dateFrom = value;
+        showToast({
+          message: '계획 생성일 종료가 시작일보다 빨라 시작일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      if (name === 'prodFrom' && isCompleteDate(value) && isCompleteDate(next.prodTo) && dayjs(value).isAfter(dayjs(next.prodTo), 'day')) {
+        next.prodTo = value;
+        showToast({
+          message: '생산 시작일 시작이 종료일보다 늦어 종료일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      if (name === 'prodTo' && isCompleteDate(value) && isCompleteDate(next.prodFrom) && dayjs(value).isBefore(dayjs(next.prodFrom), 'day')) {
+        next.prodFrom = value;
+        showToast({
+          message: '생산 시작일 종료가 시작일보다 빨라 시작일을 같은 날짜로 맞췄습니다.',
+          severity: 'warning',
+        });
+      }
+
+      return next;
+    });
+  };
+
+  const validateDateRange = () => {
+    if (search.dateFrom && search.dateTo && dayjs(search.dateFrom).isAfter(dayjs(search.dateTo), 'day')) {
+      showToast({
+        message: '계획 생성일 시작은 종료일보다 늦을 수 없습니다.',
+        severity: 'error',
+      });
+      return false;
+    }
+
+    if (search.prodFrom && search.prodTo && dayjs(search.prodFrom).isAfter(dayjs(search.prodTo), 'day')) {
+      showToast({
+        message: '생산 시작일 시작은 종료일보다 늦을 수 없습니다.',
+        severity: 'error',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSearch = () => {
+    if (!validateDateRange()) {
+      return;
+    }
+
     setPaginationModel((p) => ({ ...p, page: 0 }));
     setSearchTrigger((t) => t + 1);
   };

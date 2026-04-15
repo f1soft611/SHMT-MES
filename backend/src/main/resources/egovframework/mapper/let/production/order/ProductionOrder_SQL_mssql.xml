@@ -55,7 +55,7 @@
 		LEFT JOIN TPR151 D
 		    ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
 		WHERE 1=1
-		    AND CONVERT(date, A.PROD_DATE, 112) BETWEEN #{dateFrom} AND #{dateTo}
+		    AND CONVERT(date, A.OPTIME, 112) BETWEEN #{dateFrom} AND #{dateTo}
 			<if test="prodFrom != null and prodFrom != ''">
 				AND <![CDATA[ CONVERT(date, A.PROD_DATE, 112) >= #{prodFrom} ]]>
 			</if>
