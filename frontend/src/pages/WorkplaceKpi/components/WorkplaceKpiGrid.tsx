@@ -20,13 +20,13 @@ const numCol: Partial<GridColDef> = {
 };
 
 const columns: GridColDef[] = [
-  {
-    field: 'workcenterCode',
-    headerName: '작업장',
-    width: 90,
-    headerAlign: 'center',
-    align: 'center',
-  },
+  //   {
+  //     field: 'workcenterCode',
+  //     headerName: '작업장',
+  //     width: 90,
+  //     headerAlign: 'center',
+  //     align: 'center',
+  //   },
   {
     field: 'processType',
     headerName: '공정',
@@ -37,7 +37,7 @@ const columns: GridColDef[] = [
   {
     field: 'workDate',
     headerName: '작업일',
-    width: 100,
+    width: 120,
     headerAlign: 'center',
     align: 'center',
     valueFormatter: (value: string) =>
@@ -77,6 +77,8 @@ const columns: GridColDef[] = [
     type: 'number',
     headerAlign: 'center',
     align: 'right',
+    valueGetter: (_value: number, row: WorkplaceKpiRow) =>
+      row.prodQty > 0 ? (row.badQty / row.prodQty) * 100 : 0,
     valueFormatter: (value: number) =>
       value != null ? `${value.toFixed(2)}%` : '0.00%',
   },

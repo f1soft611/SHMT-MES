@@ -27,7 +27,7 @@ export default function WorkplaceKpi() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 150px)',
+        height: 'calc(100vh - 120px)',
         minHeight: 640,
       }}
     >
