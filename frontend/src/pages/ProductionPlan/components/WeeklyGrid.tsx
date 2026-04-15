@@ -891,7 +891,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                         fontWeight: 600,
                                                       }}
                                                     />
-                                                    {plan.workerName && (
+                                                    {!!plan.workerName?.trim() && (
                                                       <Chip
                                                         label={plan.workerName}
                                                         size="small"
@@ -903,15 +903,17 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                         }}
                                                       />
                                                     )}
-                                                    <Chip
-                                                      label={getShiftLabel(
-                                                        plan.shift,
-                                                      )}
-                                                      size="small"
-                                                      color={getShiftColor(
-                                                        plan.shift,
-                                                      )}
-                                                    />
+                                                    {!!plan.shift?.trim() && (
+                                                      <Chip
+                                                        label={getShiftLabel(
+                                                          plan.shift,
+                                                        )}
+                                                        size="small"
+                                                        color={getShiftColor(
+                                                          plan.shift,
+                                                        )}
+                                                      />
+                                                    )}
                                                     {plan.orderFlag ===
                                                       'ORDERED' && (
                                                       <Chip
