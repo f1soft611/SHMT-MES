@@ -29,7 +29,7 @@ const columns: GridColDef[] = [
   //   },
   {
     field: 'processType',
-    headerName: '공정',
+    headerName: '작업장',
     width: 70,
     headerAlign: 'center',
     align: 'center',
