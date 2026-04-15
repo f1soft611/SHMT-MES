@@ -4,6 +4,7 @@ export interface ProductionPlan {
   factoryCode?: string;
   planNo?: string;
   planSeq?: number;
+  prodworkSeq?: number;
   planDate: string;
   itemCode: string;
   itemName: string;

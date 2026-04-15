@@ -49,6 +49,9 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "생산계획순번")
 	private int prodPlanSeq = 0;
 
+	@Schema(description = "생산작업순번 (TPR301 행 식별키)")
+	private Integer prodworkSeq = 0;
+
 	@Schema(description = "생산계획일자 (YYYYMMDD)")
 	private String planDate = "";
 
