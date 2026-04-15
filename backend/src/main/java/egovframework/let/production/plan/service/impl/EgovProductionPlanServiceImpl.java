@@ -411,6 +411,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.itemCode((String) row.get("itemCode"))
 						.itemDisplayCode((String) row.get("itemDisplayCode"))
 						.itemName((String) row.get("itemName"))
+						.lotNo((String) row.get("lotNo"))
 						.plannedQty(row.get("plannedQty") != null ? ((Number) row.get("plannedQty")).doubleValue() : 0.0)
 						.actualQty(row.get("actualQty") != null ? ((Number) row.get("actualQty")).doubleValue() : 0.0)
 						.shift((String) row.get("shift"))

@@ -747,6 +747,11 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                           isGrouped &&
                                           plan.planGroupId === activeGroupId;
 
+                                        const planDisplayCode =
+                                          plan.lotNo?.trim() ||
+                                          plan.itemDisplayCode ||
+                                          plan.itemCode;
+
                                         return (
                                           <Card
                                             key={plan.id}
@@ -810,8 +815,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                       {decodeHtml(
                                                         plan.itemName,
                                                       )}
-                                                      {(plan.itemDisplayCode ||
-                                                        plan.itemCode) && (
+                                                      {planDisplayCode && (
                                                         <Typography
                                                           component="span"
                                                           variant="body2"
@@ -826,10 +830,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                                             fontWeight: 500,
                                                           }}
                                                         >
-                                                          (
-                                                          {plan.itemDisplayCode ||
-                                                            plan.itemCode}
-                                                          )
+                                                          ({planDisplayCode})
                                                         </Typography>
                                                       )}
                                                     </Typography>
