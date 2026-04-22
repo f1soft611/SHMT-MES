@@ -569,6 +569,11 @@ const ProductionPlan: React.FC = () => {
   );
 
   const updateCurrentWeekStart = useCallback((newDate: Date) => {
+    // 이전/다음/오늘 이동 시 달력 즉시 초기화 → 스켈레톤 표시
+    setEquipments([]);
+    setPlans([]);
+    setExpandedEquipments(new Set());
+    setLoading(true);
     setCurrentWeekStart(newDate);
     try {
       sessionStorage.setItem(SESSION_KEY_WEEK_START, newDate.toISOString());
