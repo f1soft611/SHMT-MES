@@ -137,6 +137,7 @@ const WorkplaceKpiSearchFilter: React.FC<Props> = ({
           startIcon={<UploadIcon />}
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
+          sx={{ display: 'none' }}
         >
           {uploading ? '업로드 중...' : '엑셀 업로드'}
         </Button>
