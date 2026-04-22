@@ -4,7 +4,7 @@ import { authService } from '../services/authService';
 // Axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
-  timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '10000'),
+  timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || '30000', 10),
 });
 
 // 토큰 리프레쉬 중인지 추적하는 변수
