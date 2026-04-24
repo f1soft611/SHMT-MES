@@ -156,7 +156,7 @@ const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
             onChange={(e) => setNewPassword(e.target.value)}
             fullWidth
             required
-            helperText="6자 이상 입력해주세요"
+            helperText="영문자 + 숫자 + 특수문자 조합으로 8자 이상 입력해주세요"
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
