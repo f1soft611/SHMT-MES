@@ -46,7 +46,9 @@
             PROD_PLAN_DATE,
             END_DATE,
             OPMAN_CODE,
-            OPTIME
+            OPTIME,
+            REQ_TYPE,
+            REQ_TYPE_NAME
         ) VALUES (
             #{factoryCode},
             #{prodReqNo},
@@ -105,7 +107,9 @@
             #{reqDate},
             #{endDate},
             'INTERFACE',
-            GETDATE()
+            GETDATE(),
+            #{reqType},
+            #{reqTypeName}
         )
     </insert>
 
@@ -163,7 +167,9 @@
             PROD_PLAN_DATE = #{reqDate},
             END_DATE = #{endDate},
             OPMAN_CODE2 = 'INTERFACE',
-            OPTIME2 = GETDATE()
+            OPTIME2 = GETDATE(),
+            REQ_TYPE = #{reqType},
+            REQ_TYPE_NAME = #{reqTypeName}
         WHERE FACTORY_CODE = #{factoryCode}
           AND ORDER_NO = #{prodReqNo}
           AND ORDER_SEQNO = #{prodReqSeq}

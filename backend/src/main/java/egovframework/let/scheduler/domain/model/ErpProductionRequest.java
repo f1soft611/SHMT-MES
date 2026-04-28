@@ -143,4 +143,14 @@ public class ErpProductionRequest implements Serializable {
 	 * 0: 제품, 4: 반제품
 	 */
 	private Integer itemFlag;
+
+	/**
+	 * 의뢰 구분 코드 (ReqType) - VARCHAR(20)
+	 */
+	private String reqType;
+
+	/**
+	 * 의뢰 구분명 (ReqTypeName) - NVARCHAR(100)
+	 */
+	private String reqTypeName;
 }

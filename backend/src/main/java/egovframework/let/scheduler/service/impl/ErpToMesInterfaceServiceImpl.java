@@ -443,6 +443,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"      JoinItem.LastDateTime, " +
 
 						// Join 된 Item (제품/반제품 둘 다)
+						"      JoinItem.ReqType, " +
+						"      JoinItem.ReqTypeName, " +
 						"      JoinItem.JoinItemSeq AS semiItemSeq, " +
 						"      JoinItem.JoinItemNo AS semiItemNo, " +
 						"      JoinItem.JoinItemName AS semiItemName, " +
@@ -468,6 +470,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
+						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           PRI.ItemSeq AS JoinItemSeq, " +
 						"           PRI.ItemNo AS JoinItemNo, " +
 						"           PRI.ItemName AS JoinItemName, " +
@@ -496,6 +500,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
+						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           C.ItemSeq AS JoinItemSeq, " +
 						"           C.ItemNo AS JoinItemNo, " +
 						"           C.ItemName AS JoinItemName, " +
@@ -529,6 +535,8 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
+						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           C2.ItemSeq AS JoinItemSeq, " +
 						"           C2.ItemNo AS JoinItemNo, " +
 						"           C2.ItemName AS JoinItemName, " +
@@ -586,6 +594,9 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			prodReq.setSemiItemName(rs.getString("SemiItemName"));
 			prodReq.setSemiSpec(rs.getString("SemiSpec"));
 			prodReq.setItemFlag(rs.getInt("ItemFlag"));
+			// 의뢰 구분 정보 매핑
+			prodReq.setReqType(rs.getString("ReqType"));
+			prodReq.setReqTypeName(rs.getString("ReqTypeName"));
 
 			return prodReq;
 		}

@@ -50,6 +50,7 @@ class ProductionRequestService {
       if (searchParams.orderNo) params.orderNo = searchParams.orderNo;
       if (searchParams.itemCode) params.itemCode = searchParams.itemCode;
       if (searchParams.itemName) params.itemName = searchParams.itemName;
+      if (searchParams.reqType) params.reqType = searchParams.reqType;
       if (searchParams.workplaceCode)
         params.workplaceCode = searchParams.workplaceCode;
       if (searchParams.allocationStatus) {
