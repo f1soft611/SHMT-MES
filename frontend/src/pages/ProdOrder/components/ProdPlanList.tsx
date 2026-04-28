@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
-import {DataGrid, GridColDef, GridPaginationModel} from '@mui/x-data-grid';
+import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import {
     Box, Stack,
     Card, CardContent, CardActions, IconButton, Chip, CircularProgress,
@@ -16,16 +16,7 @@ import {useToast} from "../../../components/common/Feedback/ToastProvider";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BulkSaveToolbar from "./BulkSaveToolbar";
 import { useBulkProdOrder } from "../hooks/useBulkProdOrder";
-
-interface Props {
-    rows: ProdPlanRow[];
-    loading: boolean;
-    onRowClick: (row: ProdPlanRow) => void;
-    paginationModel: GridPaginationModel;
-    totalCount: number;
-    onPaginationChange: (model: GridPaginationModel) => void;
-    onReload: () => void;
-}
+import {useProdOrderStore} from "../store/useProdOrderStore";
 
 function ProductionActionCell({
     row,
@@ -67,7 +58,14 @@ function ProductionActionCell({
 }
 
 
-const ProdPlanList = ({ rows, loading, onRowClick, paginationModel, totalCount, onPaginationChange, onReload }: Props) => {
+const ProdPlanList = () => {
+    const rows = useProdOrderStore(s => s.planRows);
+    const totalCount = useProdOrderStore(s => s.prodplanResultCnt);
+    const loading = useProdOrderStore(s => s.planLoading);
+    const onRowClick = useProdOrderStore(s => s.handlePlanSelect);
+    const paginationModel = useProdOrderStore(s => s.paginationModel);
+    const onPaginationChange = useProdOrderStore(s => s.handlePaginationChange);
+    const onReload = useProdOrderStore(s => s.fetchProdPlan);
 
     const { showToast } = useToast();
     const navigate = useNavigate();

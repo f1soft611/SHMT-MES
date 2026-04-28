@@ -21,22 +21,17 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
-import {EquipmentInfo} from "../../../types/equipment";
-import {ProdPlanSearchParams} from "../../../types/productionOrder";
-import {Workplace} from "../../../types/workplace";
-
-interface Props {
-    loading: boolean;
-    workplaces: Workplace[];
-    equipments: EquipmentInfo[];
-    search: ProdPlanSearchParams;
-    onChange: (name: string, value: string) => void;
-    onSearch: () => void;
-}
+import {useProdOrderStore} from "../store/useProdOrderStore";
 
 type DateFieldName = "dateFrom" | "dateTo" | "prodFrom" | "prodTo";
 
-const ProdOrderSearchFilter = ({ loading, workplaces, equipments, search, onChange, onSearch }: Props) => {
+const ProdOrderSearchFilter = () => {
+    const loading = useProdOrderStore(s => s.planLoading);
+    const workplaces = useProdOrderStore(s => s.workplaces);
+    const equipments = useProdOrderStore(s => s.equipments);
+    const search = useProdOrderStore(s => s.search);
+    const onChange = useProdOrderStore(s => s.handleSearchChange);
+    const onSearch = useProdOrderStore(s => s.handleSearch);
     const [openCalendarField, setOpenCalendarField] = useState<DateFieldName | null>(null);
     const anchorRefs = useRef<Record<DateFieldName, HTMLDivElement | null>>({
         dateFrom: null,
