@@ -7,23 +7,37 @@ import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
 import egovframework.let.common.dto.ListResult;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
-import egovframework.let.production.order.domain.model.*;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.egovframe.rte.fdl.property.EgovPropertyService;
+import egovframework.let.production.order.domain.model.ProdOrderDeleteDto;
+import egovframework.let.production.order.domain.model.ProdOrderInsertDto;
+import egovframework.let.production.order.domain.model.ProdOrderRow;
+import egovframework.let.production.order.domain.model.ProdOrderSearchParam;
+import egovframework.let.production.order.domain.model.ProdOrderUpdateDto;
+import egovframework.let.production.order.domain.model.ProdPlanKeyDto;
+import egovframework.let.production.order.domain.model.ProdPlanRow;
+import egovframework.let.production.order.domain.model.ProdPlanSearchParam;
+import egovframework.let.production.order.domain.model.ProductionOrderVO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 생산 지시를 관리하기 위한 컨트롤러 클래스
@@ -41,6 +55,8 @@ import java.util.Map;
  *
  * </pre>
  */
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/production-orders")
@@ -48,6 +64,7 @@ import java.util.Map;
 public class EgovProductionOrderApiController {
 
     public static final String HEADER_STRING = "Authorization";
+
     private final EgovJwtTokenUtil jwtTokenUtil;
     private final ResultVoHelper resultVoHelper;
     private final EgovProductionOrderService productionOrderService;
@@ -71,28 +88,19 @@ public class EgovProductionOrderApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
     @GetMapping
-    public ResultVO selectProductionOrderList(@ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
-                                        @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
-            throws Exception {
+    public ResultVO selectProductionOrderList(
+            @ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
 
-//        BbsDetailResponse response = bbsAttrbService.selectBBSMasterInf(boardMasterSearchVO.getBbsId(), user.getUniqId(), BbsDetailRequestType.DETAIL);
         PaginationInfo paginationInfo = new PaginationInfo();
         paginationInfo.setCurrentPageNo(boardMasterSearchVO.getPageIndex());
         paginationInfo.setRecordCountPerPage(propertyService.getInt("Globals.pageUnit"));
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
-//
+
         ProductionOrderVO productionOrderVO = new ProductionOrderVO();
-//        boardVO.setPageIndex(boardMasterSearchVO.getPageIndex());
-//        boardVO.setBbsId(boardMasterSearchVO.getBbsId());
-//        boardVO.setSearchCnd(boardMasterSearchVO.getSearchCnd());
-//        boardVO.setSearchWrd(boardMasterSearchVO.getSearchWrd());
-//
-//        boardVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
-//        boardVO.setLastIndex(paginationInfo.getLastRecordIndex());
-//        boardVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
-//
         Map<String, Object> resultMap = productionOrderService.selectProductionOrderList(productionOrderVO, "");
-        int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));
+        int totCnt = Integer.parseInt((String) resultMap.get("resultCnt"));
         paginationInfo.setTotalRecordCount(totCnt);
         resultMap.put("productionOrderVO", productionOrderVO);
         resultMap.put("paginationInfo", paginationInfo);
@@ -128,7 +136,6 @@ public class EgovProductionOrderApiController {
         resultMap.put("user", user);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
-
     }
 
     /**
@@ -149,7 +156,6 @@ public class EgovProductionOrderApiController {
         resultMap.put("resultList", data.getResultList());
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
-
     }
 
 
@@ -173,7 +179,6 @@ public class EgovProductionOrderApiController {
         resultMap.put("user", user);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
-
     }
 
 
@@ -181,8 +186,8 @@ public class EgovProductionOrderApiController {
      * 생산지시 저장
      */
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "저장 성공"),
-            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+            @ApiResponse(responseCode = "200", description = "success"),
+            @ApiResponse(responseCode = "403", description = "forbidden")
     })
     @PostMapping
     public ResultVO createProductionOrders(
@@ -200,7 +205,6 @@ public class EgovProductionOrderApiController {
 
         productionOrderService.insertProductionOrders(orders);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 등록이 완료되었습니다.");
-
     }
 
     /**
@@ -226,9 +230,7 @@ public class EgovProductionOrderApiController {
 
         productionOrderService.updateProductionOrders(orders);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 수정이 완료되었습니다.");
-
     }
-
 
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "저장 성공"),
@@ -247,9 +249,7 @@ public class EgovProductionOrderApiController {
         order.setOpmanCode(user.getUniqId());
         productionOrderService.deleteProductionOrder(order);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 삭제가 완료되었습니다.");
-
     }
-
 
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "저장 성공"),
@@ -264,11 +264,20 @@ public class EgovProductionOrderApiController {
         for (ProdPlanKeyDto dto : plans) {
             dto.setOpmanCode(user.getUniqId());
         }
-        productionOrderService.bulkCreateProductionOrders(plans);
+
+        boolean erpIfFailed = productionOrderService.bulkCreateProductionOrders(plans);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산계획 일괄지시 성공" );
+        resultMap.put("erpIfFailed", erpIfFailed);
+
+        return resultVoHelper.buildFromMap(
+                resultMap,
+                ResponseCode.SUCCESS,
+                erpIfFailed
+                        ? "생산지시는 저장되었지만 인터페이스 전송에 실패했습니다."
+                        : "생산계획 일괄지시가 완료되었습니다."
+        );
     }
 
     @ApiResponses(value = {
@@ -284,12 +293,11 @@ public class EgovProductionOrderApiController {
         for (ProdPlanKeyDto dto : plans) {
             dto.setOpmanCode(user.getUniqId());
         }
+
         productionOrderService.bulkCancelProductionOrders(plans);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소 성공" );
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소가 완료되었습니다.");
     }
-
-
 }
