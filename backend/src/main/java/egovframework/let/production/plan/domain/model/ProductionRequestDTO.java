@@ -45,4 +45,8 @@ public class ProductionRequestDTO {
     // 계획 할당 관련 추가 정보
     private Double allocatedQty;        // 할당된 계획 수량 (TPR301R의 ORDER_QTY 합계)
     private Double remainingQty;        // 남은 수량 (ORDER_QTY - 할당된 수량)
+    
+    // 의뢰 구분 정보
+    private String reqType;             // 의뢰 구분 코드 (REQ_TYPE)
+    private String reqTypeName;         // 의뢰 구분명 (REQ_TYPE_NAME 또는 코드명)
 }

@@ -56,6 +56,7 @@ interface ProductionRequestSearchState {
   dateTo: string;
   workplaceCode: string;
   allocationStatus: ProductionRequestAllocationStatus;
+  reqType: string;
 }
 
 const DEFAULT_SEARCH_CND = '4';
@@ -72,6 +73,7 @@ interface ProductionRequestExcelRow {
   수량: number;
   할당량: number;
   남은량: number;
+  의뢰구분명: string;
   의뢰번호: string;
   납기일: string;
 }
@@ -85,6 +87,7 @@ const buildSearchState = (
   dateTo: '',
   workplaceCode: workplaceCode || '',
   allocationStatus: DEFAULT_ALLOCATION_STATUS,
+  reqType: '',
 });
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
@@ -252,7 +255,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         prev.dateFrom === inputValues.dateFrom &&
         prev.dateTo === inputValues.dateTo &&
         prev.workplaceCode === inputValues.workplaceCode &&
-        prev.allocationStatus === inputValues.allocationStatus
+        prev.allocationStatus === inputValues.allocationStatus &&
+        prev.reqType === inputValues.reqType
       ) {
         return prev;
       }
@@ -678,6 +682,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         수량: Number(request.orderQty ?? 0),
         할당량: Number(request.allocatedQty ?? 0),
         남은량: Number(request.remainingQty ?? 0),
+        의뢰구분명: request.reqTypeName || '-',
         의뢰번호: request.orderNo || '-',
         납기일: formatDate(request.deliveryDate),
       })),
@@ -861,6 +866,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         ),
       },
       {
+        field: 'reqTypeName',
+        headerName: '의뢰구분명',
+        width: 120,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => params.row.reqTypeName || '-',
+      },
+      {
         field: 'orderNo',
         headerName: '의뢰번호',
         width: 150,
@@ -1003,6 +1016,18 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               <MenuItem value="ALL">전체 조회</MenuItem>
               <MenuItem value="UNPLANNED">미계획건만</MenuItem>
               <MenuItem value="PLANNED">계획건만</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>의뢰구분</InputLabel>
+            <Select
+              value={inputValues.reqType}
+              label="의뢰구분"
+              onChange={(e) => handleInputChange('reqType', e.target.value)}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="6009001">양산</MenuItem>
+              <MenuItem value="6009003">샘플</MenuItem>
             </Select>
           </FormControl>
           <TextField
