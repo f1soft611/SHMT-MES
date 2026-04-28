@@ -15,7 +15,7 @@ export function useBulkProdOrder(
         if (selectedRows.length === 0) return;
 
         const targets = selectedRows.filter(
-            row => row.orderFlag !== 'ORDERED'
+            row => row.orderFlag !== "ORDERED"
         );
 
         if (targets.length === 0) return;
@@ -25,7 +25,7 @@ export function useBulkProdOrder(
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
-            prodplanDetailId: row.prodplanDetailId
+            prodplanDetailId: row.prodplanDetailId,
         }));
 
         try {
@@ -39,13 +39,15 @@ export function useBulkProdOrder(
                 return;
             }
 
+            const erpIfFailed = Boolean(response.data.result?.erpIfFailed);
+
             showToast({
-                message: response.data.resultMessage ?? "저장 성공",
-                severity: "success",
+                message: response.data.resultMessage ?? "Saved successfully.",
+                severity: erpIfFailed ? "warning" : "success",
             });
             clear();
             onReload();
-        } catch (e){
+        } catch (e) {
             showToast({
                 message: "서버 오류가 발생했습니다.",
                 severity: "error",
@@ -53,7 +55,6 @@ export function useBulkProdOrder(
         } finally {
             setBulkLoading(false);
         }
-
     };
 
 
@@ -61,7 +62,7 @@ export function useBulkProdOrder(
     const handleBulkCancel = async () => {
         // 이미 지시된 것만 취소 대상
         const targets = selectedRows.filter(
-            row => row.orderFlag === 'ORDERED'
+            row => row.orderFlag === "ORDERED"
         );
 
         if (targets.length === 0) {
@@ -110,12 +111,11 @@ export function useBulkProdOrder(
         } finally {
             setBulkLoading(false);
         }
-
-    }
+    };
 
     return {
         handleBulkOrder,
         handleBulkCancel,
-        bulkLoading
+        bulkLoading,
     };
 }

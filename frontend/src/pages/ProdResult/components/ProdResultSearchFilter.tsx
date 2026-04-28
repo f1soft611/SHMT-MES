@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import { useRef, useState } from "react";
 import {
     Button,
     FormControl,
@@ -17,30 +17,22 @@ import {
     FilterList as FilterListIcon,
     Search as SearchIcon,
 } from '@mui/icons-material';
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
-import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
-import {Workplace} from "../../../types/workplace";
-
-interface Props {
-    workplaces: Workplace[];
-    search: {
-        workplace: string;
-        equipment: string;
-        dateFrom: string;
-        dateTo: string;
-        keyword: string;
-    };
-    onChange: (name: string, value: string) => void;
-    onSearch: () => void;
-    loading: boolean;
-}
+import { useFetchEquipments } from "../../../hooks/useFetchEquipments";
+import { useProdResultStore } from "../store/useProdResultStore";
 
 type DateFieldName = "dateFrom" | "dateTo";
 
-const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loading }: Props) => {
+const ProdResultSearchFilter = () => {
+    const workplaces = useProdResultStore(s => s.workplaces);
+    const search = useProdResultStore(s => s.search);
+    const loading = useProdResultStore(s => s.loading);
+    const onChange = useProdResultStore(s => s.handleSearchChange);
+    const onSearch = useProdResultStore(s => s.handleSearch);
+
     const [openCalendarField, setOpenCalendarField] = useState<DateFieldName | null>(null);
     const anchorRefs = useRef<Record<DateFieldName, HTMLDivElement | null>>({
         dateFrom: null,
@@ -170,9 +162,9 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loadin
         );
     }
 
-    return(
+    return (
         <>
-            <Paper sx={{p: 2, mb: 2}}>
+            <Paper sx={{ p: 2, mb: 2 }}>
                 <Typography
                     variant="h6"
                     sx={{
@@ -257,17 +249,16 @@ const ProdResultSearchFilter = ({ workplaces, search, onChange, onSearch, loadin
                     <Button
                         variant="contained"
                         color="primary"
-                        startIcon={<SearchIcon/>}
+                        startIcon={<SearchIcon />}
                         onClick={onSearch}
                         disabled={loading}
                     >
                         검색
                     </Button>
-
                 </Stack>
             </Paper>
         </>
-    )
-}
+    );
+};
 
 export default ProdResultSearchFilter;
