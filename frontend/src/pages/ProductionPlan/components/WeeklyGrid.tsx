@@ -599,6 +599,44 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     [setActiveGroupId],
   );
 
+  // 설비별 주간 합계 계산
+  const equipmentWeeklyStats = useMemo(() => {
+    const stats = new Map<string, { count: number; qty: number }>();
+
+    equipments.forEach((equipment) => {
+      let totalCount = 0;
+      let totalQty = 0;
+
+      weekDays.forEach((day, dayIndex) => {
+        if (!visibleDays[dayIndex]) return; // 숨김 요일 제외
+
+        const dateStr = formatDate(day, 'YYYY-MM-DD');
+        const dayPlans = getPlansForDateAndEquipment(
+          dateStr,
+          equipment.equipCd || '',
+        );
+
+        totalCount += dayPlans.length;
+        totalQty += dayPlans.reduce(
+          (sum, plan) => sum + (plan.plannedQty ?? 0),
+          0,
+        );
+      });
+
+      if (equipment.equipCd) {
+        stats.set(equipment.equipCd, { count: totalCount, qty: totalQty });
+      }
+    });
+
+    return stats;
+  }, [
+    equipments,
+    weekDays,
+    visibleDays,
+    formatDate,
+    getPlansForDateAndEquipment,
+  ]);
+
   return (
     <Paper
       ref={weeklyGridRef}
@@ -935,6 +973,54 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                               size="small"
                               sx={{ mt: 0.25 }}
                             />
+                            {(() => {
+                              const stats = equipmentWeeklyStats.get(
+                                equipment.equipCd || '',
+                              );
+                              if (
+                                !stats ||
+                                (stats.count === 0 && stats.qty === 0)
+                              ) {
+                                return null; // 0값 숨김
+                              }
+
+                              return (
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    gap: 0.5,
+                                    mt: 0.5,
+                                    flexWrap: 'wrap',
+                                  }}
+                                >
+                                  {stats.count > 0 && (
+                                    <Chip
+                                      label={`${stats.count}건`}
+                                      size="small"
+                                      color="error"
+                                      sx={{
+                                        fontSize: compactMode
+                                          ? '0.7rem'
+                                          : '0.75rem',
+                                        fontWeight: 600,
+                                      }}
+                                    />
+                                  )}
+                                  {stats.qty > 0 && (
+                                    <Chip
+                                      label={`${stats.qty.toLocaleString()}개`}
+                                      size="small"
+                                      sx={{
+                                        fontSize: compactMode
+                                          ? '0.7rem'
+                                          : '0.75rem',
+                                        fontWeight: 600,
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                              );
+                            })()}
                           </Box>
                         </Box>
                       </TableCell>

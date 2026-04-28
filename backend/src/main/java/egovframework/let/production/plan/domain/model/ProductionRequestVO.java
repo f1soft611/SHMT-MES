@@ -65,6 +65,7 @@ public class ProductionRequestVO extends ComDefaultVO {
     private String closingFlag;     // 마감여부
     private String workplaceCode;   // 작업장코드
     private String allocationStatus = "ALL"; // 조회 옵션 (ALL/UNPLANNED/PLANNED)
+    private String reqType;         // 의뢰 구분 코드 (필터)
 
     /**
      * toString 메소드를 대치한다.

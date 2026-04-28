@@ -663,7 +663,14 @@
 					  AND R.ORDER_HISTNO = T.ORDER_HISTNO
 					  AND P.ITEM_CODE = T.ITEM_CODE
 				), 0
-			) AS REMAINING_QTY
+			) AS REMAINING_QTY,
+		-- 의뢰 구분 정보
+			ISNULL(T.REQ_TYPE, '') AS REQ_TYPE,
+			CASE
+				WHEN T.REQ_TYPE = '6009001' THEN N'양산'
+				WHEN T.REQ_TYPE = '6009003' THEN N'샘플'
+				ELSE ISNULL(T.REQ_TYPE_NAME, '')
+			END AS REQ_TYPE_NAME
 		FROM TSA308 T
 			LEFT JOIN TCO601 C ON T.FACTORY_CODE = C.FACTORY_CODE AND T.CUSTOMER_CODE = C.CUSTOMER_CODE
 			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1 ON CODE1.CODE_ID = 'COM007' AND CODE1.CODE = T.UNIT_CODE
@@ -743,6 +750,10 @@
 		</if>
 		<if test="dateTo != null and dateTo != ''">
 			AND T.DELIVERY_DATE &lt;= #{dateTo}
+		</if>
+		<!-- 의뢰 구분 필터 (reqType) -->
+		<if test="reqType != null and reqType != ''">
+			AND T.REQ_TYPE = #{reqType}
 		</if>
 		ORDER BY T.ORDER_NO DESC, T.ORDER_SEQNO, T.ORDER_HISTNO, T.ITEM_FLAG ASC
 		OFFSET #{firstIndex} ROWS
@@ -832,6 +843,10 @@
 		</if>
 		<if test="dateTo != null and dateTo != ''">
 			AND T.DELIVERY_DATE &lt;= #{dateTo}
+		</if>
+		<!-- 의뢰 구분 필터 (reqType) -->
+		<if test="reqType != null and reqType != ''">
+			AND T.REQ_TYPE = #{reqType}
 		</if>
 	</select>
 

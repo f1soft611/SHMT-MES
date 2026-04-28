@@ -38,6 +38,10 @@ export interface ProductionRequest {
   // 계획 할당 관련 추가 정보
   allocatedQty?: number; // 할당된 계획 수량 (TPR301R의 ORDER_QTY 합계)
   remainingQty?: number; // 남은 수량 (ORDER_QTY - 할당된 수량)
+
+  // 의뢰 구분 정보
+  reqType?: string; // 의뢰 구분 코드
+  reqTypeName?: string; // 의뢰 구분명
 }
 
 export type ProductionRequestAllocationStatus = 'ALL' | 'UNPLANNED' | 'PLANNED';
@@ -80,6 +84,7 @@ export interface ProductionRequestSearchParams {
   orderNo?: string;
   itemCode?: string;
   itemName?: string;
+  reqType?: string;
   searchCnd?: string; // 1: itemCode, 2: itemName, 3: orderNo
   searchWrd?: string; // 검색어
   dateFrom?: string;
