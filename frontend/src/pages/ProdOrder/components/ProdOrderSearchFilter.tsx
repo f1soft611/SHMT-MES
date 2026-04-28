@@ -1,5 +1,6 @@
 import {useRef, useState} from "react";
 import {
+    Box,
     Button,
     FormControl,
     IconButton,
@@ -25,13 +26,35 @@ import {useProdOrderStore} from "../store/useProdOrderStore";
 
 type DateFieldName = "dateFrom" | "dateTo" | "prodFrom" | "prodTo";
 
+const filterFieldStyles = {
+    "& .MuiFormControl-root, & .MuiTextField-root": {
+        minWidth: 110,
+    },
+    "& .MuiInputBase-root": {
+        height: 32,
+        fontSize: "0.8rem",
+    },
+    "& .MuiInputLabel-root": {
+        fontSize: "0.8rem",
+    },
+    "& .MuiMenuItem-root": {
+        fontSize: "0.8rem",
+    },
+    "& .MuiButton-root": {
+        height: 32,
+        minWidth: 80,
+        fontSize: "0.8rem",
+        padding: "0 10px",
+    },
+} as const;
+
 const ProdOrderSearchFilter = () => {
-    const loading = useProdOrderStore(s => s.planLoading);
-    const workplaces = useProdOrderStore(s => s.workplaces);
-    const equipments = useProdOrderStore(s => s.equipments);
-    const search = useProdOrderStore(s => s.search);
-    const onChange = useProdOrderStore(s => s.handleSearchChange);
-    const onSearch = useProdOrderStore(s => s.handleSearch);
+    const loading = useProdOrderStore((s) => s.planLoading);
+    const workplaces = useProdOrderStore((s) => s.workplaces);
+    const equipments = useProdOrderStore((s) => s.equipments);
+    const search = useProdOrderStore((s) => s.search);
+    const onChange = useProdOrderStore((s) => s.handleSearchChange);
+    const onSearch = useProdOrderStore((s) => s.handleSearch);
     const [openCalendarField, setOpenCalendarField] = useState<DateFieldName | null>(null);
     const anchorRefs = useRef<Record<DateFieldName, HTMLDivElement | null>>({
         dateFrom: null,
@@ -101,7 +124,7 @@ const ProdOrderSearchFilter = () => {
         return (
             <>
                 <TextField
-                    sx={{ width: 140 }}
+                    sx={{width: 140}}
                     ref={(element) => {
                         anchorRefs.current[fieldName] = element;
                     }}
@@ -120,18 +143,18 @@ const ProdOrderSearchFilter = () => {
                     }}
                     InputProps={{
                         endAdornment: (
-                            <InputAdornment position="end" sx={{ ml: 0 }}>
+                            <InputAdornment position="end" sx={{ml: 0}}>
                                 <IconButton
-                                    sx={{ p: 0 }}
+                                    sx={{p: 0}}
                                     size="small"
                                     onClick={() => setOpenCalendarField(fieldName)}
                                 >
-                                    <CalendarTodayIcon sx={{ fontSize: 18 }} />
+                                    <CalendarTodayIcon sx={{fontSize: 18}}/>
                                 </IconButton>
                             </InputAdornment>
                         ),
                     }}
-                    InputLabelProps={{ shrink: true }}
+                    InputLabelProps={{shrink: true}}
                 />
                 <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
                     <DatePicker
@@ -153,7 +176,7 @@ const ProdOrderSearchFilter = () => {
                                 anchorEl: anchorRefs.current[fieldName],
                             },
                             textField: {
-                                sx: { display: "none" },
+                                sx: {display: "none"},
                             },
                         }}
                     />
@@ -163,48 +186,25 @@ const ProdOrderSearchFilter = () => {
     }
 
     return (
-        <>
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        mb: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        fontWeight: 600,
-                        fontSize: "1rem",
-                    }}
-                >
-                    <FilterListIcon color="primary" />검색 필터
-                </Typography>
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{
-                        "& .MuiFormControl-root, & .MuiTextField-root": {
-                            minWidth: 110,
-                        },
-                        "& .MuiInputBase-root": {
-                            height: 32,
-                            fontSize: "0.8rem",
-                        },
-                        "& .MuiInputLabel-root": {
-                            fontSize: "0.8rem",
-                        },
-                        "& .MuiMenuItem-root": {
-                            fontSize: "0.8rem",
-                        },
-                        "& .MuiButton-root": {
-                            height: 32,
-                            minWidth: 80,
-                            fontSize: "0.8rem",
-                            padding: "0 10px",
-                        },
-                    }}
-                >
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+        <Paper sx={{p: 2, mb: 2}}>
+            <Typography
+                variant="h6"
+                sx={{
+                    mb: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                }}
+            >
+                <FilterListIcon color="primary"/>
+                검색 필터
+            </Typography>
+
+            <Box sx={filterFieldStyles}>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <FormControl size="small" sx={{minWidth: 120}}>
                         <InputLabel>작업장</InputLabel>
                         <Select
                             value={search.workplace ?? ""}
@@ -231,7 +231,7 @@ const ProdOrderSearchFilter = () => {
                         </Select>
                     </FormControl>
 
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{minWidth: 120}}>
                         <InputLabel>설비</InputLabel>
                         <Select
                             value={search.equipment ?? ""}
@@ -262,30 +262,46 @@ const ProdOrderSearchFilter = () => {
                     {renderDateField("prodFrom", "생산 시작일 시작")}
                     {renderDateField("prodTo", "생산 시작일 종료")}
 
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <FormControl size="small" sx={{minWidth: 200}}>
                         <InputLabel>지시상태</InputLabel>
                         <Select
-                            value={search.orderFlag}
+                            value={search.orderFlag ?? ""}
                             label="지시상태"
                             onChange={(e) => onChange("orderFlag", e.target.value)}
                         >
-                            <MenuItem value="" sx={{ fontSize: 13 }}>전체</MenuItem>
-                            <MenuItem value="ORDERED" sx={{ fontSize: 13 }}>지시 완료</MenuItem>
-                            <MenuItem value="PLANNED" sx={{ fontSize: 13 }}>계획 상태</MenuItem>
+                            <MenuItem value="" sx={{fontSize: 13}}>전체</MenuItem>
+                            <MenuItem value="ORDERED" sx={{fontSize: 13}}>지시 완료</MenuItem>
+                            <MenuItem value="PLANNED" sx={{fontSize: 13}}>계획 상태</MenuItem>
                         </Select>
                     </FormControl>
+
+                    <TextField
+                        size="small"
+                        sx={{minWidth: 280}}
+                        label="통합검색"
+                        placeholder="품목명 / 품목코드 / LOT 번호"
+                        value={search.keyword ?? ""}
+                        onChange={(e) => onChange("keyword", e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                onSearch();
+                            }
+                        }}
+                        InputLabelProps={{shrink: true}}
+                    />
+
                     <Button
                         variant="contained"
                         color="primary"
-                        startIcon={<SearchIcon />}
+                        startIcon={<SearchIcon/>}
                         onClick={onSearch}
                         disabled={loading}
                     >
                         검색
                     </Button>
                 </Stack>
-            </Paper>
-        </>
+            </Box>
+        </Paper>
     );
 };
 

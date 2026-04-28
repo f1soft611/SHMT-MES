@@ -257,6 +257,13 @@ const ProdPlanList = () => {
                 )
             }
         },
+        {
+            field: "i/fFlag",
+            headerName: "인터페이스 여부",
+            width: 100,
+            headerAlign: "center",
+            align: "center",
+        },
     ];
 
     return(

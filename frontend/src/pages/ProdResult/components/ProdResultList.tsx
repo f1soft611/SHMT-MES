@@ -23,6 +23,7 @@ import BadQtyDialog from "./BadQtyDialog";
 import processService from "../../../services/processService";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
 import {productionResultService} from "../../../services/productionResultService";
+import {useProdResultStore} from "../store/useProdResultStore";
 
 export interface DetailGridRef {
     addRow: () => void;
@@ -31,10 +32,12 @@ export interface DetailGridRef {
 }
 
 interface Props {
-    parentRow: ProdResultOrderRow | null;
+    parentRow?: ProdResultOrderRow | null;
 }
 
-const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
+const ProdResultList = forwardRef<DetailGridRef, Props>(({ parentRow: parentRowProp }, ref) => {
+    const storeSelectedRow = useProdResultStore(s => s.selectedRow);
+    const parentRow = parentRowProp !== undefined ? parentRowProp : storeSelectedRow;
 
     const detailHook = useProdResultDetail(parentRow);
 
@@ -138,11 +141,30 @@ const ProdResultList = forwardRef<DetailGridRef, Props>(({parentRow}, ref) => {
                 }}
                 ampm={false}
                 format="YYYY-MM-DD HH:mm"
+                enableAccessibleFieldDOMStructure={false}
                 slotProps={{
                     textField: {
                         size: "small",
                         fullWidth: true,
                         variant: "outlined",
+                        sx: {
+                            "& .MuiInputBase-root": {
+                                height: 30,
+                                fontSize: 12.5,
+                                alignItems: "center",
+                            },
+                            "& .MuiInputBase-input": {
+                                height: "30px",
+                                padding: "0 8px",
+                                boxSizing: "border-box",
+                            },
+                            "& .MuiIconButton-root": {
+                                padding: "4px",
+                            },
+                            "& .MuiSvgIcon-root": {
+                                fontSize: 18,
+                            },
+                        },
                     },
                 }}
             />

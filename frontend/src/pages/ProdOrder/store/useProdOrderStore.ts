@@ -37,7 +37,7 @@ export const useProdOrderStore = create<ProdOrderStoreState>()(() => ({
     planLoading: false,
     prodplanResultCnt: 0,
     paginationModel: { page: 0, pageSize: 10 },
-    search: { dateFrom: '', dateTo: '' },
+    search: { dateFrom: '', dateTo: '', keyword: '' },
     selectedPlan: null,
     localRows: [],
     orderResultCnt: 0,
