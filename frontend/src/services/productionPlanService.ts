@@ -61,6 +61,17 @@ export interface ProductionPlanRequest {
   references?: any[];
 }
 
+export interface ProductionPlanDeleteFailureDetail {
+  planNo: string;
+  reason: string;
+}
+
+export interface ProductionPlanBatchDeleteResult {
+  deletedCount: number;
+  failedCount: number;
+  failureDetails: ProductionPlanDeleteFailureDetail[];
+}
+
 const productionPlanService = {
   getProductionPlans: async (params: any) => {
     const response = await api.get('/api/production-plans', { params });
@@ -84,6 +95,13 @@ const productionPlanService = {
 
   deleteProductionPlan: async (planNo: string) => {
     const response = await api.delete(`/api/production-plans/${planNo}`);
+    return response.data;
+  },
+
+  deleteProductionPlans: async (planNos: string[]) => {
+    const response = await api.post('/api/production-plans/batch-delete', {
+      planNos,
+    });
     return response.data;
   },
 

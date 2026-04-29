@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   Collapse,
   IconButton,
@@ -22,6 +23,8 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
+  CheckBoxOutlined as CheckBoxOutlinedIcon,
+  // DeleteSweep as DeleteSweepIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
@@ -56,6 +59,9 @@ interface PlanCardProps {
   getShiftLabel: (shift?: string) => string;
   getShiftColor: (shift?: string) => ChipColor;
   getShiftBorderColor: (shift?: string) => string;
+  showSelectionCheckbox: boolean;
+  isSelected: boolean;
+  onToggleSelect: (plan: ProductionPlanData) => void;
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
   handleDelete: (plan: ProductionPlanData) => void;
   onGroupClick: (groupId: string) => void;
@@ -75,6 +81,9 @@ const PlanCard = memo<PlanCardProps>(
     getShiftLabel,
     getShiftColor,
     getShiftBorderColor,
+    showSelectionCheckbox,
+    isSelected,
+    onToggleSelect,
     handleOpenEditDialog,
     handleDelete,
     onGroupClick,
@@ -306,6 +315,30 @@ const PlanCard = memo<PlanCardProps>(
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+              {showSelectionCheckbox && (
+                <Tooltip title="선택">
+                  <Checkbox
+                    size="small"
+                    checked={isSelected}
+                    disabled={
+                      !plan.planNo ||
+                      plan.orderFlag === 'ORDERED' ||
+                      (plan.actualQty ?? 0) > 0
+                    }
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      onToggleSelect(plan);
+                    }}
+                    sx={{
+                      p: 0.25,
+                      bgcolor: 'grey.100',
+                      borderRadius: 1,
+                      '&:hover': { bgcolor: 'grey.200' },
+                    }}
+                  />
+                </Tooltip>
+              )}
             </Box>
           </Box>
         </CardContent>
@@ -346,6 +379,13 @@ interface WeeklyGridProps {
     dateStr: string,
     equipmentCode: string,
   ) => ProductionPlanData[];
+  isSelectionMode: boolean;
+  selectionScopeKey: string | null;
+  onActivateSelectionScope: (scopeKey: string) => void;
+  onToggleSelectionMode: (enabled: boolean) => void;
+  onOpenBatchDelete: (planNos?: string[]) => void;
+  selectedPlanNos: Set<string>;
+  onTogglePlanSelection: (plan: ProductionPlanData) => void;
   toggleEquipment: (equipmentCode: string) => void;
   handleOpenCreateDialog: (date: string, equipmentCode?: string) => void;
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
@@ -373,6 +413,13 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   getTotalPlansForDate,
   getTotalQtyForDate,
   getPlansForDateAndEquipment,
+  isSelectionMode,
+  selectionScopeKey,
+  onActivateSelectionScope,
+  onToggleSelectionMode,
+  onOpenBatchDelete,
+  selectedPlanNos,
+  onTogglePlanSelection,
   toggleEquipment,
   handleOpenCreateDialog,
   handleOpenEditDialog,
@@ -1026,11 +1073,23 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                       </TableCell>
                       {visibleDayColumns.map(
                         ({ dateStr, isWeekendDay, dayColWidth }) => {
+                          const selectionCellKey = `${equipment.equipCd || ''}::${dateStr}`;
                           const dayPlans = getPlansForDateAndEquipment(
                             dateStr,
                             equipment.equipCd || '',
                           );
                           const hasPlans = dayPlans.length > 0;
+                          const isActiveSelectionCell =
+                            isSelectionMode &&
+                            selectionScopeKey === selectionCellKey;
+                          const selectedPlanNosInCell = dayPlans
+                            .map((plan) => plan.planNo)
+                            .filter(
+                              (planNo): planNo is string =>
+                                !!planNo && selectedPlanNos.has(planNo),
+                            );
+                          const hasSelectedPlansInCell =
+                            selectedPlanNosInCell.length > 0;
 
                           return (
                             <TableCell
@@ -1066,21 +1125,69 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                   }}
                                 >
                                   {hasPlans ? (
-                                    <Button
-                                      fullWidth
-                                      size="small"
-                                      startIcon={<AddIcon />}
-                                      onClick={() =>
-                                        handleOpenCreateDialog(
-                                          dateStr,
-                                          equipment.equipCd,
-                                        )
-                                      }
-                                      variant="contained"
+                                    <Stack
+                                      direction="row"
+                                      spacing={0.75}
                                       sx={{ mb: compactMode ? 0.75 : 1 }}
                                     >
-                                      계획 추가
-                                    </Button>
+                                      <Button
+                                        fullWidth
+                                        size="small"
+                                        startIcon={<AddIcon />}
+                                        onClick={() =>
+                                          handleOpenCreateDialog(
+                                            dateStr,
+                                            equipment.equipCd,
+                                          )
+                                        }
+                                        variant="contained"
+                                      >
+                                        계획 추가
+                                      </Button>
+                                      {!isActiveSelectionCell && (
+                                        <Button
+                                          size="small"
+                                          variant="outlined"
+                                          startIcon={<CheckBoxOutlinedIcon />}
+                                          onClick={() =>
+                                            onActivateSelectionScope(
+                                              selectionCellKey,
+                                            )
+                                          }
+                                          sx={{ whiteSpace: 'nowrap' }}
+                                        >
+                                          선택
+                                        </Button>
+                                      )}
+                                      {isActiveSelectionCell && (
+                                        <Button
+                                          size="small"
+                                          variant="outlined"
+                                          onClick={() =>
+                                            onToggleSelectionMode(false)
+                                          }
+                                          sx={{ whiteSpace: 'nowrap' }}
+                                        >
+                                          선택 종료
+                                        </Button>
+                                      )}
+                                      {hasSelectedPlansInCell && (
+                                        <Button
+                                          size="small"
+                                          color="error"
+                                          variant="outlined"
+                                          // startIcon={<DeleteSweepIcon />}
+                                          onClick={() =>
+                                            onOpenBatchDelete(
+                                              selectedPlanNosInCell,
+                                            )
+                                          }
+                                          sx={{ whiteSpace: 'nowrap' }}
+                                        >
+                                          선택 삭제
+                                        </Button>
+                                      )}
+                                    </Stack>
                                   ) : (
                                     <Tooltip title="계획 추가">
                                       <IconButton
@@ -1142,6 +1249,16 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                             getShiftColor={getShiftColor}
                                             getShiftBorderColor={
                                               getShiftBorderColor
+                                            }
+                                            showSelectionCheckbox={
+                                              isActiveSelectionCell
+                                            }
+                                            isSelected={
+                                              !!plan.planNo &&
+                                              selectedPlanNos.has(plan.planNo)
+                                            }
+                                            onToggleSelect={
+                                              onTogglePlanSelection
                                             }
                                             handleOpenEditDialog={
                                               handleOpenEditDialog

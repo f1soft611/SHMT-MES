@@ -8,6 +8,7 @@ import React, {
 import {
   Box,
   Button,
+  Chip,
   Paper,
   Stack,
   TextField,
@@ -35,6 +36,8 @@ import {
 import equipmentService from '../../services/equipmentService';
 import workplaceService from '../../services/workplaceService';
 import productionPlanService, {
+  ProductionPlanBatchDeleteResult,
+  ProductionPlanDeleteFailureDetail,
   ProductionPlanRequest,
 } from '../../services/productionPlanService';
 import { Equipment } from '../../types/equipment';
@@ -177,6 +180,15 @@ const getShiftBorderColor = (shift?: string): string => {
   return shift ? SHIFT_BORDER_COLOR_MAP[shift] || 'grey.400' : 'grey.400';
 };
 
+const getWeekdayLabelFromDate = (dateString: string): string => {
+  const parsedDate = new Date(dateString);
+  if (isNaN(parsedDate.getTime())) {
+    return '-';
+  }
+
+  return `${DAY_NAMES[parsedDate.getDay()]}요일`;
+};
+
 const ProductionPlan: React.FC = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     // 세션스토리지에서 마지막 주간 시작일 불러오기
@@ -201,6 +213,17 @@ const ProductionPlan: React.FC = () => {
     open: boolean;
     plan?: ProductionPlanData;
   }>({ open: false });
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState<{
+    open: boolean;
+    planNos: string[];
+  }>({ open: false, planNos: [] });
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectionScopeKey, setSelectionScopeKey] = useState<string | null>(
+    null,
+  );
+  const [selectedPlanNos, setSelectedPlanNos] = useState<Set<string>>(
+    new Set(),
+  );
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState<ProductionPlanData>({
@@ -543,6 +566,69 @@ const ProductionPlan: React.FC = () => {
       summaryByDate,
       plansByDateAndEquipment,
     };
+  }, [plans]);
+
+  const selectedPlans = useMemo(() => {
+    if (selectedPlanNos.size === 0) {
+      return [] as ProductionPlanData[];
+    }
+
+    return plans.filter(
+      (plan) => !!plan.planNo && selectedPlanNos.has(plan.planNo),
+    );
+  }, [plans, selectedPlanNos]);
+
+  const batchDeleteSummaryRows = useMemo(() => {
+    const summaryMap = new Map<
+      string,
+      { equipmentName: string; weekday: string; count: number }
+    >();
+
+    selectedPlans.forEach((plan) => {
+      const equipmentName = plan.equipmentName || plan.equipmentCode || '-';
+      const weekday = getWeekdayLabelFromDate(plan.date);
+      const summaryKey = `${equipmentName}::${weekday}`;
+      const existing = summaryMap.get(summaryKey);
+
+      if (existing) {
+        existing.count += 1;
+      } else {
+        summaryMap.set(summaryKey, {
+          equipmentName,
+          weekday,
+          count: 1,
+        });
+      }
+    });
+
+    return Array.from(summaryMap.values()).sort((a, b) => {
+      if (a.equipmentName === b.equipmentName) {
+        return a.weekday.localeCompare(b.weekday);
+      }
+      return a.equipmentName.localeCompare(b.equipmentName);
+    });
+  }, [selectedPlans]);
+
+  useEffect(() => {
+    const availablePlanNos = new Set(
+      plans
+        .map((plan) => plan.planNo)
+        .filter((planNo): planNo is string => !!planNo),
+    );
+
+    setSelectedPlanNos((prev) => {
+      if (prev.size === 0) {
+        return prev;
+      }
+
+      const next = new Set<string>();
+      prev.forEach((planNo) => {
+        if (availablePlanNos.has(planNo)) {
+          next.add(planNo);
+        }
+      });
+      return next;
+    });
   }, [plans]);
 
   const handleWeekdayToggle = useCallback(
@@ -989,6 +1075,139 @@ const ProductionPlan: React.FC = () => {
     },
     [showToast],
   );
+
+  const handleTogglePlanSelection = useCallback(
+    (plan: ProductionPlanData) => {
+      if (!plan.planNo) {
+        showToast({
+          message: '계획번호가 없는 데이터는 선택할 수 없습니다.',
+          severity: 'warning',
+        });
+        return;
+      }
+
+      setSelectedPlanNos((prev) => {
+        const next = new Set(prev);
+        if (next.has(plan.planNo as string)) {
+          next.delete(plan.planNo as string);
+        } else {
+          next.add(plan.planNo as string);
+        }
+        return next;
+      });
+    },
+    [showToast],
+  );
+
+  const handleToggleSelectionMode = useCallback((enabled: boolean) => {
+    setIsSelectionMode(enabled);
+
+    if (!enabled) {
+      setSelectionScopeKey(null);
+      setSelectedPlanNos(new Set());
+    }
+  }, []);
+
+  const handleActivateSelectionScope = useCallback((scopeKey: string) => {
+    setIsSelectionMode(true);
+    setSelectionScopeKey(scopeKey);
+    setSelectedPlanNos(new Set());
+  }, []);
+
+  const handleOpenBatchDelete = useCallback(
+    (planNos?: string[]) => {
+      const targetPlanNos =
+        planNos && planNos.length > 0 ? planNos : Array.from(selectedPlanNos);
+
+      if (targetPlanNos.length === 0) {
+        showToast({
+          message: '삭제할 생산계획을 먼저 선택해주세요.',
+          severity: 'warning',
+        });
+        return;
+      }
+
+      setConfirmBatchDelete({
+        open: true,
+        planNos: targetPlanNos,
+      });
+    },
+    [selectedPlanNos, showToast],
+  );
+
+  const executeBatchDelete = useCallback(async () => {
+    if (confirmBatchDelete.planNos.length === 0) {
+      setConfirmBatchDelete({ open: false, planNos: [] });
+      return;
+    }
+
+    try {
+      const response = await productionPlanService.deleteProductionPlans(
+        confirmBatchDelete.planNos,
+      );
+
+      if (response.resultCode !== 200) {
+        showToast({
+          message: response.message || '생산계획 일괄 삭제에 실패했습니다.',
+          severity: 'error',
+        });
+        return;
+      }
+
+      const result = (response.result || {}) as ProductionPlanBatchDeleteResult;
+      const deletedCount = Number(result.deletedCount || 0);
+      const failedCount = Number(result.failedCount || 0);
+      const failureDetails = (result.failureDetails ||
+        []) as ProductionPlanDeleteFailureDetail[];
+
+      if (deletedCount > 0 && failedCount === 0) {
+        showToast({
+          message: `${deletedCount}건의 생산계획을 삭제했습니다.`,
+          severity: 'success',
+        });
+      } else if (deletedCount > 0 && failedCount > 0) {
+        const firstFailure = failureDetails[0];
+        const failureMessage = firstFailure
+          ? ` (예: ${firstFailure.planNo || '-'} - ${firstFailure.reason})`
+          : '';
+        showToast({
+          message: `부분 삭제 완료: 성공 ${deletedCount}건, 실패 ${failedCount}건${failureMessage}`,
+          severity: 'warning',
+        });
+      } else if (failedCount > 0) {
+        const firstFailure = failureDetails[0];
+        const failureMessage = firstFailure
+          ? `${firstFailure.planNo || '-'} - ${firstFailure.reason}`
+          : '삭제 조건을 만족한 계획이 없습니다.';
+        showToast({
+          message: `삭제 실패 ${failedCount}건: ${failureMessage}`,
+          severity: 'warning',
+        });
+      } else {
+        showToast({
+          message: '삭제 가능한 생산계획이 없습니다.',
+          severity: 'warning',
+        });
+      }
+
+      setSelectedPlanNos(new Set());
+      setSelectionScopeKey(null);
+      setIsSelectionMode(false);
+      loadWeeklyPlans();
+    } catch (error) {
+      const errorMessage = extractApiErrorMessage(
+        error,
+        '생산계획 일괄 삭제 중 오류가 발생했습니다.',
+      );
+
+      showToast({
+        message: errorMessage,
+        severity: 'error',
+      });
+    } finally {
+      setConfirmBatchDelete({ open: false, planNos: [] });
+    }
+  }, [confirmBatchDelete.planNos, loadWeeklyPlans, showToast]);
 
   const executeDelete = async () => {
     if (!confirmDelete.plan || !confirmDelete.plan.planNo) return;
@@ -1441,6 +1660,13 @@ const ProductionPlan: React.FC = () => {
         getTotalPlansForDate={getTotalPlansForDate}
         getTotalQtyForDate={getTotalQtyForDate}
         getPlansForDateAndEquipment={getPlansForDateAndEquipment}
+        isSelectionMode={isSelectionMode}
+        selectionScopeKey={selectionScopeKey}
+        onActivateSelectionScope={handleActivateSelectionScope}
+        onToggleSelectionMode={handleToggleSelectionMode}
+        onOpenBatchDelete={handleOpenBatchDelete}
+        selectedPlanNos={selectedPlanNos}
+        onTogglePlanSelection={handleTogglePlanSelection}
         toggleEquipment={toggleEquipment}
         handleOpenCreateDialog={handleOpenCreateDialog}
         handleOpenEditDialog={handleOpenEditDialog}
@@ -1462,6 +1688,71 @@ const ProductionPlan: React.FC = () => {
         onChange={handleChange}
         onBatchChange={handleBatchChange}
         onRefresh={loadWeeklyPlans}
+      />
+
+      <ConfirmDialog
+        open={confirmBatchDelete.open}
+        onClose={() => setConfirmBatchDelete({ open: false, planNos: [] })}
+        title="생산계획 일괄 삭제"
+        message={
+          <Box>
+            <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+              선택한 생산계획 {selectedPlans.length}건을 삭제하시겠습니까?
+            </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 1.5,
+                bgcolor: 'grey.50',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'grey.200',
+                maxHeight: 240,
+                overflowY: 'auto',
+              }}
+            >
+              <Stack spacing={0.75}>
+                {batchDeleteSummaryRows.length > 0 ? (
+                  batchDeleteSummaryRows.map((row) => (
+                    <Box
+                      key={`${row.equipmentName}-${row.weekday}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        {row.equipmentName} / {row.weekday}
+                      </Typography>
+                      <Chip
+                        label={`${row.count}건`}
+                        size="small"
+                        color="error"
+                      />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    선택된 데이터가 없습니다.
+                  </Typography>
+                )}
+              </Stack>
+            </Paper>
+            <Typography
+              variant="body2"
+              sx={{ mt: 2, color: 'error.main', fontWeight: 500 }}
+            >
+              삭제 불가 건(지시/실적 등록)은 실패 목록으로 처리됩니다.
+            </Typography>
+          </Box>
+        }
+        confirmText="일괄 삭제"
+        onConfirm={executeBatchDelete}
       />
 
       {/* 삭제 확인 다이얼로그 */}
