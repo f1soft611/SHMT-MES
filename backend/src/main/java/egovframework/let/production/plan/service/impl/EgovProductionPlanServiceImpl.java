@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.YearMonth;
+import java.util.LinkedHashSet;
 
 /**
  * 생산계획 관리를 위한 서비스 구현 클래스
@@ -333,27 +334,90 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 	@Override
 	@Transactional
 	public void deleteProductionPlan(ProductionPlanMaster master) throws Exception {
-		
-		// 생산지시 확인
+		deleteProductionPlanInternal(master);
+	}
+
+	/**
+	 * 생산계획을 배치 삭제한다. (부분성공 허용)
+	 */
+	@Override
+	@Transactional
+	public Map<String, Object> deleteProductionPlans(List<String> planNos, String factoryCode, String opmanCode2) throws Exception {
+		List<Map<String, String>> failureDetails = new ArrayList<>();
+		int deletedCount = 0;
+
+		if (planNos == null || planNos.isEmpty()) {
+			Map<String, Object> result = new HashMap<>();
+			result.put("deletedCount", 0);
+			result.put("failedCount", 0);
+			result.put("failureDetails", failureDetails);
+			return result;
+		}
+
+		for (String planNo : new LinkedHashSet<>(planNos)) {
+			if (!StringUtils.hasText(planNo)) {
+				addFailureDetail(failureDetails, "", "계획번호가 없습니다.");
+				continue;
+			}
+
+			try {
+				ProductionPlanMaster master = new ProductionPlanMaster();
+				master.setFactoryCode(factoryCode);
+				master.setProdPlanId(planNo);
+				master.setOpmanCode2(opmanCode2);
+
+				deleteProductionPlanInternal(master);
+				deletedCount++;
+			} catch (RuntimeException e) {
+				addFailureDetail(failureDetails, planNo, e.getMessage());
+			}
+		}
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("deletedCount", deletedCount);
+		result.put("failedCount", failureDetails.size());
+		result.put("failureDetails", failureDetails);
+		return result;
+	}
+
+	private void deleteProductionPlanInternal(ProductionPlanMaster master) throws Exception {
+		validateProductionPlanDeletable(master);
+		executeProductionPlanDelete(master);
+	}
+
+	private void validateProductionPlanDeletable(ProductionPlanMaster master) throws Exception {
+		List<ProductionPlan> existingPlans = productionPlanDAO.selectProductionPlanByPlanNo(master.getProdPlanId());
+		if (existingPlans == null || existingPlans.isEmpty()) {
+			throw new RuntimeException("삭제할 생산계획을 찾을 수 없습니다.");
+		}
+
 		int orderCount = productionPlanDAO.selectProductionOrderCount(master);
-		System.out.println("생산지시 개수: " + orderCount);
 		if (orderCount > 0) {
 			throw new RuntimeException("생산지시가 등록된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.");
 		}
-		
-		System.out.println("========== 삭제 유효성 검증 통과 ==========");
-		
-		// 1. 참조 데이터 먼저 삭제 (TPR301R) - planId 기준으로 삭제
+
+		int resultCount = productionPlanDAO.selectProductionResultCount(master);
+		if (resultCount > 0) {
+			throw new RuntimeException("생산실적이 등록된 계획은 삭제할 수 없습니다.");
+		}
+	}
+
+	private void executeProductionPlanDelete(ProductionPlanMaster master) throws Exception {
 		productionPlanDAO.deleteProductionPlanReferenceByPlanId(master);
-		
-		// 2. 상세 데이터 삭제 (TPR301)
+
 		ProductionPlan detailForDelete = new ProductionPlan();
 		detailForDelete.setFactoryCode(master.getFactoryCode());
 		detailForDelete.setProdPlanId(master.getProdPlanId());
 		productionPlanDAO.deleteProductionPlan(detailForDelete);
-		
-		// 3. 마스터 데이터 삭제 (TPR301M)
+
 		productionPlanDAO.deleteProductionPlanMaster(master);
+	}
+
+	private void addFailureDetail(List<Map<String, String>> failureDetails, String planNo, String reason) {
+		Map<String, String> detail = new HashMap<>();
+		detail.put("planNo", planNo);
+		detail.put("reason", reason);
+		failureDetails.add(detail);
 	}
 
 	/**

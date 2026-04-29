@@ -258,6 +258,49 @@ public class EgovProductionPlanApiController {
 	}
 
 	/**
+	 * 생산계획을 배치 삭제한다. (부분성공 허용)
+	 *
+	 * @param requestBody 삭제 요청 정보
+	 * @param user 사용자 정보
+	 * @return ResultVO
+	 * @throws Exception
+	 */
+	@Operation(
+			summary = "생산계획 배치 삭제",
+			description = "선택한 계획번호 목록을 배치 삭제한다. 삭제 불가 건은 실패 목록으로 반환한다.",
+			security = {@SecurityRequirement(name = "Authorization")},
+			tags = {"EgovProductionPlanApiController"}
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "삭제 처리 완료"),
+			@ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+	})
+	@PostMapping(value = "/production-plans/batch-delete")
+	public ResultVO deleteProductionPlans(
+			@RequestBody ProductionPlanBatchDeleteRequest requestBody,
+			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
+
+		Map<String, Object> resultMap = productionPlanService.deleteProductionPlans(
+				requestBody.getPlanNos(),
+				user.getFactoryCode(),
+				user.getUniqId()
+		);
+		resultMap.put("user", user);
+
+		int deletedCount = ((Number) resultMap.getOrDefault("deletedCount", 0)).intValue();
+		int failedCount = ((Number) resultMap.getOrDefault("failedCount", 0)).intValue();
+		if (failedCount == 0) {
+			resultMap.put("message", "선택한 생산계획이 삭제되었습니다.");
+		} else if (deletedCount == 0) {
+			resultMap.put("message", "삭제 가능한 생산계획이 없습니다.");
+		} else {
+			resultMap.put("message", "일부 생산계획만 삭제되었습니다.");
+		}
+
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+	}
+
+	/**
 	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화)
 	 *
 	 * @param workplaceCode 작업장 코드
@@ -381,5 +424,11 @@ public class EgovProductionPlanApiController {
 		private ProductionPlanMaster master;
 		private List<ProductionPlan> details;
 		private List<ProductionPlanReference> references;
+	}
+
+	@Getter
+	@Setter
+	public static class ProductionPlanBatchDeleteRequest {
+		private List<String> planNos;
 	}
 }
