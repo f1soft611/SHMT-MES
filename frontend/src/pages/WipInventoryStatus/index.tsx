@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import WipInventoryStatusList from './components/WipInventoryStatusList';
+import WipInventoryStatusSearchFilter from './components/WipInventoryStatusSearchFilter';
 
 export default function WipInventoryStatus() {
   return (
@@ -20,9 +22,14 @@ export default function WipInventoryStatus() {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5">불량율 현황</Typography>
+          <Typography variant="h5">재공 재고 현황</Typography>
         </Box>
       </Box>
+
+
+      <WipInventoryStatusSearchFilter />
+      
+      <WipInventoryStatusList />
     </Box>
   );
 }
