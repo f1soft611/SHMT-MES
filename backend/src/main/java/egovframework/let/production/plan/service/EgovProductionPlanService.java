@@ -89,6 +89,16 @@ public interface EgovProductionPlanService {
 	void deleteProductionPlan(ProductionPlanMaster master) throws Exception;
 
 	/**
+	 * 생산계획을 배치 삭제한다. (부분성공 허용)
+	 * @param planNos 삭제 대상 계획번호 목록
+	 * @param factoryCode 회사 코드
+	 * @param opmanCode2 수정자 ID
+	 * @return 삭제 결과(deletedCount, failedCount, failureDetails)
+	 * @throws Exception
+	 */
+	Map<String, Object> deleteProductionPlans(List<String> planNos, String factoryCode, String opmanCode2) throws Exception;
+
+	/**
 	 * 작업장별 주간 생산계획을 조회한다. (설비별 그룹화)
 	 * @param searchVO 검색 조건 (workplaceCode, startDate, endDate 필수)
 	 * @return 설비별 주간 계획 데이터
