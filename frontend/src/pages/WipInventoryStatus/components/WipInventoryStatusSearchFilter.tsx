@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { Process } from "../../../types/process";
 import {
   CalendarToday as CalendarTodayIcon,
   FilterList as FilterListIcon,
@@ -45,9 +46,24 @@ const filterFieldStyles = {
   },
 } as const;
 
-const WipInventoryStatusSearchFilter = () => {
+interface Props {
+  searchDate: string;
+  workCode: string;
+  searchKeyword: string;
+  onSearchChange: (name: string, value: string) => void;
+  onSearch: () => void;
+  processOptions: Process[];
+}
+
+const WipInventoryStatusSearchFilter = ({
+  searchDate,
+  workCode,
+  searchKeyword,
+  onSearchChange,
+  onSearch,
+  processOptions,
+}: Props) => {
   const [openCalendar, setOpenCalendar] = useState(false);
-  const [searchDate, setSearchDate] = useState("");
   const dateFieldRef = useRef<HTMLDivElement | null>(null);
 
   function toIsoDate(year: number, month: number, day: number) {
@@ -56,7 +72,6 @@ const WipInventoryStatusSearchFilter = () => {
       "YYYY-MM-DD",
       true,
     );
-
     return candidate.isValid() ? candidate.format("YYYY-MM-DD") : "";
   }
 
@@ -65,9 +80,7 @@ const WipInventoryStatusSearchFilter = () => {
     const digits = trimmed.replace(/[^0-9]/g, "");
     const today = dayjs();
 
-    if (!digits) {
-      return "";
-    }
+    if (!digits) return "";
 
     if (trimmed.includes("-") && trimmed.length === 10) {
       const dashed = dayjs(trimmed, "YYYY-MM-DD", true);
@@ -77,7 +90,6 @@ const WipInventoryStatusSearchFilter = () => {
     if (digits.length <= 2) {
       return toIsoDate(today.year(), today.month() + 1, Number(digits));
     }
-
     if (digits.length === 4) {
       return toIsoDate(
         today.year(),
@@ -85,7 +97,6 @@ const WipInventoryStatusSearchFilter = () => {
         Number(digits.slice(2, 4)),
       );
     }
-
     if (digits.length === 8) {
       return toIsoDate(
         Number(digits.slice(0, 4)),
@@ -93,18 +104,13 @@ const WipInventoryStatusSearchFilter = () => {
         Number(digits.slice(6, 8)),
       );
     }
-
     return "";
   }
 
   function commitDateField(value: string) {
     const normalized = normalizeDateInput(value);
-
-    if (!normalized) {
-      return;
-    }
-
-    setSearchDate(normalized);
+    if (!normalized) return;
+    onSearchChange("searchDate", normalized);
   }
 
   return (
@@ -126,7 +132,6 @@ const WipInventoryStatusSearchFilter = () => {
 
       <Box sx={filterFieldStyles}>
         <Stack direction="row" spacing={1} alignItems="center">
-          {/* 검색 필터 UI 요소들을 여기에 추가 */}
           <TextField
             sx={{ width: 140 }}
             ref={(element) => {
@@ -142,7 +147,8 @@ const WipInventoryStatusSearchFilter = () => {
             }}
             onBlur={() => commitDateField(searchDate)}
             onChange={(e) => {
-              setSearchDate(
+              onSearchChange(
+                "searchDate",
                 e.target.value.replace(/[^0-9-]/g, "").slice(0, 10),
               );
             }}
@@ -168,46 +174,56 @@ const WipInventoryStatusSearchFilter = () => {
               value={searchDate ? dayjs(searchDate) : null}
               onChange={(value) => {
                 if (!value) {
-                  setSearchDate("");
+                  onSearchChange("searchDate", "");
                   setOpenCalendar(false);
                   return;
                 }
-
-                setSearchDate(dayjs(value).format("YYYY-MM-DD"));
+                onSearchChange("searchDate", dayjs(value).format("YYYY-MM-DD"));
                 setOpenCalendar(false);
               }}
               enableAccessibleFieldDOMStructure={false}
               slotProps={{
-                actionBar: {
-                  actions: ["today"],
-                },
-                popper: {
-                  anchorEl: dateFieldRef.current,
-                },
-                textField: {
-                  sx: { display: "none" },
-                },
+                actionBar: { actions: ["today"] },
+                popper: { anchorEl: dateFieldRef.current },
+                textField: { sx: { display: "none" } },
               }}
             />
           </LocalizationProvider>
 
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>공정</InputLabel>
-            <Select label="공정">
+            <Select
+              label="공정"
+              value={workCode}
+              onChange={(e) => onSearchChange("workCode", e.target.value)}
+            >
               <MenuItem value="">전체</MenuItem>
+              {processOptions.map((p) => (
+                <MenuItem key={p.processCode} value={p.processCode ?? ''}>
+                  {p.processName}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
+
           <TextField
             size="small"
             sx={{ minWidth: 280 }}
             label="통합검색"
             placeholder="품목명 / 품목코드"
+            value={searchKeyword}
+            onChange={(e) => onSearchChange("searchKeyword", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSearch();
+            }}
             InputLabelProps={{ shrink: true }}
           />
+
           <Button
             variant="contained"
             color="primary"
             startIcon={<SearchIcon />}
+            onClick={onSearch}
           >
             검색
           </Button>
