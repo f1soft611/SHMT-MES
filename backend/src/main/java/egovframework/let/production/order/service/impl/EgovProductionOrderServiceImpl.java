@@ -170,15 +170,16 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		}
 
 		// ERP IF 배치 전송
-		try {
-			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
-			if (!erpSendSuccess) {
-				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
-			}
-		} catch (Exception e) {
-			// MES 트랜잭션 영향 X
-			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
-		}
+		// TODO : 인터페이스부분 주석
+//		try {
+//			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
+//			if (!erpSendSuccess) {
+//				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
+//			}
+//		} catch (Exception e) {
+//			// MES 트랜잭션 영향 X
+//			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
+//		}
 
 		// 생산계획TPR301 ORDER_FLAG UPDATE
 		if (!prodOrderList.isEmpty()) {
@@ -233,16 +234,17 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		}
 
 		// ERP IF 전송
-		try {
-			ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
-			boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
-			if (!erpSendSuccess) {
-				log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq());
-			}
-		} catch (Exception e) {
-			// MES 트랜잭션 영향 주면 안 됨
-			log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq(), e);
-		}
+		// TODO : 인터페이스부분
+//		try {
+//			ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
+//			boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
+//			if (!erpSendSuccess) {
+//				log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq());
+//			}
+//		} catch (Exception e) {
+//			// MES 트랜잭션 영향 주면 안 됨
+//			log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq(), e);
+//		}
 		// 삭제
 		productionOrderDAO.deleteProductionOrder(dto);
 
@@ -317,20 +319,22 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			List<ErpIFProdOrderDto> ifList = createProductionOrders(plan, targets);
 			try {
 				log.info("[BULK] ERP IF start, size={}", ifList.size());
-				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
-				if (!erpSendSuccess) {
-					erpIfFailed = true;
-					log.warn(
-							"[ERP IF][PROD ORDER][A][BULK] send failed but MES save will continue. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
-							plan.getProdplanDetailId(),
-							plan.getProdplanDate(),
-							plan.getProdplanSeq(),
-							plan.getProdworkSeq(),
-							ifList.size()
-					);
-				} else {
-					log.info("[BULK] ERP IF end, size={}", ifList.size());
-				}
+
+				// TODO : 인터페이스부분
+//				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
+//				if (!erpSendSuccess) {
+//					erpIfFailed = true;
+//					log.warn(
+//							"[ERP IF][PROD ORDER][A][BULK] send failed but MES save will continue. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
+//							plan.getProdplanDetailId(),
+//							plan.getProdplanDate(),
+//							plan.getProdplanSeq(),
+//							plan.getProdworkSeq(),
+//							ifList.size()
+//					);
+//				} else {
+//					log.info("[BULK] ERP IF end, size={}", ifList.size());
+//				}
 			} catch (Exception e) {
 				erpIfFailed = true;
 				log.warn(
