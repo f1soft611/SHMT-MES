@@ -52,7 +52,7 @@ public interface EgovProductionOrderService {
 	void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception;
 
 	// 생산지시 일괄 저장
-	void bulkCreateProductionOrders(List<ProdPlanKeyDto> prodOrderList) throws Exception;
+	boolean bulkCreateProductionOrders(List<ProdPlanKeyDto> prodOrderList) throws Exception;
 
 	// 생산지시 일괄 삭제
 	void bulkCancelProductionOrders(List<ProdPlanKeyDto> prodOrderList) throws Exception;

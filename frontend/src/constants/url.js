@@ -13,6 +13,7 @@ const URL = {
   PRODUCTION_RESULTS: '/prod/results', //생산실적
   PROD_PLAN_RESULT: '/prod/plan-result', //생산계획 대비 실적 현황
   STOCK_INQUIRY: '/prod/stock-inquiry', //재고조회
+  WIP_INVENTORY_STATUS: '/prod/wip-inventory-status', //재공 재고 현황
   PROD_PERF: '/prod/prod-perf', // 생산실적현황
   DEFECT_RATE: '/prod/defect-rate', // 불량율현황
   WORKPLACE_KPI: '/prod/workplace-kpi', // 작업장별 KPI집계

@@ -60,7 +60,21 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
    *  ====================== */
   const addRow = () => {
     if (!parentRow) return;
-    // console.log(parentRow);
+    const now = dayjs();
+    const baseWorkDate = parentRow.workdtDate?.trim();
+    const normalizedWorkDate = baseWorkDate
+      ? (baseWorkDate.includes('-')
+          ? dayjs(baseWorkDate, 'YYYY-MM-DD', true)
+          : dayjs(baseWorkDate, 'YYYYMMDD', true))
+      : null;
+    const defaultDate = normalizedWorkDate?.isValid() ? normalizedWorkDate : now;
+    const defaultDateTime = defaultDate
+      .hour(now.hour())
+      .minute(now.minute())
+      .second(0)
+      .millisecond(0)
+      .format('YYYY-MM-DD HH:mm');
+
     setRows((prev) => [
       ...prev,
       {
@@ -75,8 +89,8 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
         prodSeq: parentRow.prodSeq,
 
         workdtDate: parentRow.workdtDate,
-        prodStime: '',
-        prodEtime: '',
+        prodStime: defaultDateTime,
+        prodEtime: defaultDateTime,
 
         itemCode: parentRow.itemCode,
         workCode: parentRow.workCode,

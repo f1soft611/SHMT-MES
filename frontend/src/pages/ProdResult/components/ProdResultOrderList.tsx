@@ -1,21 +1,12 @@
-import React, {useState} from "react";
-import {DataGrid, GridColDef, GridPaginationModel, GridToolbarContainer} from "@mui/x-data-grid";
+import React, { useState } from "react";
+import { DataGrid, GridColDef, GridToolbarContainer } from "@mui/x-data-grid";
 import {
     Card, CardContent, CardActions, CircularProgress, Box,
 } from "@mui/material";
-import {ProdResultOrderRow} from "../../../types/productionResult";
+import { ProdResultOrderRow } from "../../../types/productionResult";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
-import {formatNumberWithCommas} from "../../../utils/formatUtils";
-
-interface Props {
-    rows: ProdResultOrderRow[];
-    loading: boolean;
-    totalCount: number;
-    paginationModel: GridPaginationModel;
-    onPaginationChange: (model: GridPaginationModel) => void;
-    onFilterChange: (model: any) => void;
-    onRowClick: (row: ProdResultOrderRow) => void;
-}
+import { formatNumberWithCommas } from "../../../utils/formatUtils";
+import { useProdResultStore } from "../store/useProdResultStore";
 
 const numberCol: Partial<GridColDef> = {
     type: "number",
@@ -24,14 +15,19 @@ const numberCol: Partial<GridColDef> = {
     valueFormatter: (value) => formatNumberWithCommas(value),
 };
 
-
-export default function ProdResultOrderList({rows, loading, totalCount, paginationModel, onPaginationChange, onFilterChange, onRowClick}: Props) {
+export default function ProdResultOrderList() {
+    const rows = useProdResultStore(s => s.rows);
+    const loading = useProdResultStore(s => s.loading);
+    const totalCount = useProdResultStore(s => s.rowCount);
+    const paginationModel = useProdResultStore(s => s.pagination);
+    const onPaginationChange = useProdResultStore(s => s.onPaginationChange);
+    const onFilterChange = useProdResultStore(s => s.onFilterChange);
+    const onRowClick = useProdResultStore(s => s.handleRowClick);
 
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
-
     const columns: GridColDef[] = [
-        { field: 'orderNo', headerName: '수주번호', width: 120},
+        { field: 'orderNo', headerName: '수주번호', width: 120 },
         { field: 'customerName', headerName: '거래처', width: 120 },
         { field: 'itemCode', headerName: '제품번호', width: 100 },
         { field: 'itemName', headerName: '제품명', width: 150 },
@@ -42,35 +38,15 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
         { field: 'prodCode', headerName: '생산품목번호', width: 100 },
         { field: 'prodName', headerName: '생산품목명', width: 150 },
         { field: 'prodSpec', headerName: '생산품목규격', width: 150 },
-        {field: 'workdtDate', headerName: '작업시작일', width: 120,},
-        {
-            field: 'orderQty',
-            headerName: '작업지시량',
-            width: 80,
-            ...numberCol,
-        },
-        {
-            field: 'prodQty',
-            headerName: '생산수량',
-            width: 80,
-            ...numberCol,
-        },
-        {
-            field: 'goodQty',
-            headerName: '양품수량',
-            width: 80,
-            ...numberCol,
-        },
-        {
-            field: 'badQty',
-            headerName: '불량수량',
-            width: 80,
-            ...numberCol,
-        },
+        { field: 'workdtDate', headerName: '작업시작일', width: 120 },
+        { field: 'orderQty', headerName: '작업지시량', width: 80, ...numberCol },
+        { field: 'prodQty', headerName: '생산수량', width: 80, ...numberCol },
+        { field: 'goodQty', headerName: '양품수량', width: 80, ...numberCol },
+        { field: 'badQty', headerName: '불량수량', width: 80, ...numberCol },
         { field: 'bigo', headerName: '비고', width: 200 },
     ].map(col => ({
         headerAlign: 'center',
-        align:'center',
+        align: 'center',
         ...col,
     }));
 
@@ -89,14 +65,12 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
                     생산지시 목록
                 </Box>
             </Box>
-
-
         </GridToolbarContainer>
     );
 
-    return(
+    return (
         <>
-            <Card sx={{boxShadow: 2 }}>
+            <Card sx={{ boxShadow: 2 }}>
                 <CardContent sx={{ p: 0, position: 'relative' }}>
                     {loading && (
                         <Box
@@ -118,8 +92,8 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
                             rows={rows}
                             columns={columns}
                             loading={loading}
-                            onRowClick={(params) => onRowClick(params.row)}
-                            getRowId={(row:ProdResultOrderRow) => row.tpr504Id}
+                            onRowClick={(params) => onRowClick(params.row as ProdResultOrderRow)}
+                            getRowId={(row: ProdResultOrderRow) => row.tpr504Id}
                             pagination
                             paginationMode="server"
                             rowCount={totalCount}
@@ -133,7 +107,7 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
                             sx={{
                                 fontSize: 12.5,
                                 "& .MuiDataGrid-cell": {
-                                    padding: "0 2px",     // 셀 패딩 축소
+                                    padding: "0 2px",
                                 },
                                 '& .MuiDataGrid-cell:focus': {
                                     outline: 'none',
@@ -172,5 +146,4 @@ export default function ProdResultOrderList({rows, loading, totalCount, paginati
             />
         </>
     );
-
 }

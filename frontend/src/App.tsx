@@ -34,6 +34,7 @@ import ProcessFlowManagement from './pages/BaseData/ProcessFlowManagement';
 import ProductionPerformance from './pages/ProductionPerformance';
 import DefectRateStatus from './pages/DefectRateStatus';
 import WorkplaceKpi from './pages/WorkplaceKpi';
+import WipInventoryStatus from './pages/WipInventoryStatus';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +134,10 @@ function App() {
                           <Route
                             path={URL.WORKPLACE_KPI}
                             element={<WorkplaceKpi />}
+                          />
+                          <Route
+                            path={URL.WIP_INVENTORY_STATUS}
+                            element={<WipInventoryStatus />}
                           />
                           {/* <Route
                           path={URL.INTERFACE}

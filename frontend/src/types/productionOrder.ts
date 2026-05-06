@@ -10,6 +10,7 @@ export interface ProductionOrder {
 export interface ProdPlanSearchParams {
     workplace?: string;
     equipment?: string;
+    keyword?: string;
     dateFrom: string;   // YYYY-MM-DD
     dateTo: string;     // YYYY-MM-DD
     prodFrom?: string;   // YYYY-MM-DD

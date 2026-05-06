@@ -171,7 +171,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		// ERP IF 배치 전송
 		try {
-			erpIfService.sendProdOrderBatchToErp(erpIfList);
+			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
+			if (!erpSendSuccess) {
+				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
+			}
 		} catch (Exception e) {
 			// MES 트랜잭션 영향 X
 			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
@@ -232,7 +235,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		// ERP IF 전송
 		try {
 			ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
-			erpIfService.sendProdOrderToErp(erpDto);
+			boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
+			if (!erpSendSuccess) {
+				log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq());
+			}
 		} catch (Exception e) {
 			// MES 트랜잭션 영향 주면 안 됨
 			log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq(), e);
@@ -267,8 +273,13 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	@Override
 	@Transactional
-	public void bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
-		if (plans == null || plans.isEmpty()) return;
+	public boolean bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
+		long startedAt = System.currentTimeMillis();
+		log.info("[BULK] service start, planCount={}", plans == null ? 0 : plans.size());
+		boolean erpIfFailed = false;
+
+
+		if (plans == null || plans.isEmpty()) return false;
 
 		String year = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
 
@@ -304,7 +315,35 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			// 3. 생산지시 저장
 			List<ErpIFProdOrderDto> ifList = createProductionOrders(plan, targets);
-			erpIfService.sendProdOrderBatchToErp(ifList);
+			try {
+				log.info("[BULK] ERP IF start, size={}", ifList.size());
+				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
+				if (!erpSendSuccess) {
+					erpIfFailed = true;
+					log.warn(
+							"[ERP IF][PROD ORDER][A][BULK] send failed but MES save will continue. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
+							plan.getProdplanDetailId(),
+							plan.getProdplanDate(),
+							plan.getProdplanSeq(),
+							plan.getProdworkSeq(),
+							ifList.size()
+					);
+				} else {
+					log.info("[BULK] ERP IF end, size={}", ifList.size());
+				}
+			} catch (Exception e) {
+				erpIfFailed = true;
+				log.warn(
+						"[ERP IF][PROD ORDER][A][BULK] send failed. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
+						plan.getProdplanDetailId(),
+						plan.getProdplanDate(),
+						plan.getProdplanSeq(),
+						plan.getProdworkSeq(),
+						ifList.size(),
+						e
+				);
+			}
+
 
 			// 4. 생산계획 order_flag 갱신 TPR301.ORDER_FLAG = ORDERED
 			updatePlanOrderFlag(
@@ -323,6 +362,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		}
 
+		log.info("[BULK] service end, elapsed={}ms", System.currentTimeMillis() - startedAt);
+		return erpIfFailed;
 	}
 
 
