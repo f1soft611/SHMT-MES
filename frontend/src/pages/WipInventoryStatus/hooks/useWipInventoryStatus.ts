@@ -97,7 +97,7 @@ export function useWipInventoryStatus() {
     };
 
     fetchData();
-  }, [paginationModel]);
+  }, [paginationModel, showToast]);
 
   return {
     search,
