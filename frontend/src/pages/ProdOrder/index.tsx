@@ -1,17 +1,13 @@
-import React  from 'react';
+import React from 'react';
 import {Box, Typography} from '@mui/material';
 import ProdOrderSearchFilter from "./components/ProdOrderSearchFilter";
-import {useProductionOrder} from "./hooks/useProductionOrder";
 import ProdPlanList from "./components/ProdPlanList";
 import ProdOrderDialog from "./components/ProdOrderDialog";
-import {usePermissions} from "../../contexts/PermissionContext";
+import {useProdOrderStoreInit} from "./store/useProdOrderStore";
 
-const ProdOrder: React.FC = () => {
+const ProdOrder = () => {
 
-    const prodOrder = useProductionOrder();
-
-    const {hasWritePermission} = usePermissions();
-    const canWrite = hasWritePermission('/prod/order2');
+    useProdOrderStoreInit();
 
     return(
         <Box>
@@ -28,38 +24,9 @@ const ProdOrder: React.FC = () => {
                 </Box>
             </Box>
 
-            {/* 검색 영역 */}
-            <ProdOrderSearchFilter
-                loading={prodOrder.planLoading}
-                workplaces={prodOrder.workplaces}
-                equipments={prodOrder.equipments}
-                search={prodOrder.search}
-                onChange={prodOrder.handleSearchChange}
-                onSearch={prodOrder.handleSearch} />
-
-            {/*생산계획 목록*/}
-            <ProdPlanList
-                rows={prodOrder.planRows}
-                totalCount={prodOrder.prodplanResultCnt}
-                loading={prodOrder.planLoading}
-                onRowClick={prodOrder.handlePlanSelect}
-                paginationModel={prodOrder.paginationModel}
-                onPaginationChange={prodOrder.handlePaginationChange}
-                onReload={prodOrder.fetchProdPlan}/>
-
-
-            <ProdOrderDialog
-                open={prodOrder.open}
-                plan={prodOrder.selectedPlan}
-                rows={prodOrder.localRows}
-                onClose={prodOrder.closeDialog}
-                onSubmit={prodOrder.submit}
-                onDelete={prodOrder.deleteOrder}
-                onAddRow={prodOrder.handleAddRow}
-                onRemoveRow={prodOrder.handleRemoveRow}
-                onProcessRowUpdate={prodOrder.handleProcessRowUpdate}
-                canWrite={canWrite}
-            />
+            <ProdOrderSearchFilter />
+            <ProdPlanList />
+            <ProdOrderDialog />
         </Box>
     )
 }

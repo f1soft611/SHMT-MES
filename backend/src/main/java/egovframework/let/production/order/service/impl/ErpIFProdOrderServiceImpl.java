@@ -40,14 +40,26 @@ public class ErpIFProdOrderServiceImpl implements ErpIFProdOrderService {
     }
 
     @Override
-    public void sendProdOrderToErp(ErpIFProdOrderDto dto) {
-        erpIfDao.insertErpIFProdOrder(dto);
+    public boolean sendProdOrderToErp(ErpIFProdOrderDto dto) {
+        try {
+            erpIfDao.insertErpIFProdOrder(dto);
+            return true;
+        } catch (Exception e) {
+            log.warn("[ERP IF][PROD ORDER][SINGLE] send failed. mesIfKey={}", dto != null ? dto.getMesIfKey() : null, e);
+            return false;
+        }
     }
 
     @Override
-    public void sendProdOrderBatchToErp(List<ErpIFProdOrderDto> list) {
-        if (list == null || list.isEmpty()) return;
-        erpIfDao.insertErpIFProdOrderBatch(list);
+    public boolean sendProdOrderBatchToErp(List<ErpIFProdOrderDto> list) {
+        if (list == null || list.isEmpty()) return true;
+        try {
+            erpIfDao.insertErpIFProdOrderBatch(list);
+            return true;
+        } catch (Exception e) {
+            log.warn("[ERP IF][PROD ORDER][BATCH] send failed. cnt={}", list.size(), e);
+            return false;
+        }
     }
 
     @Override

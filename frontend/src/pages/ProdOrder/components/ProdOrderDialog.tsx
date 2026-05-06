@@ -10,34 +10,25 @@ import {
     Remove as RemoveIcon,
 } from '@mui/icons-material';
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
-import {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
 import { decodeHtml } from '../../../utils/stringUtils';
 import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
+import {useProdOrderStore} from "../store/useProdOrderStore";
+import {usePermissions} from "../../../contexts/PermissionContext";
 
-interface Props {
-    open: boolean;
-    plan: ProdPlanRow | null;
-    rows: ProdOrderRow[];
-
-    onClose: () => void;
-    onSubmit: () => void;
-    onDelete: () => void;
-
-    onAddRow: (index: number) => void;
-    onRemoveRow: (index: number) => void;
-    onProcessRowUpdate: (newRow: ProdOrderRow) => ProdOrderRow;
-    canWrite: boolean;
-}
-
-export default function ProdOrderDialog({
-    open,
-    plan, rows,
-    onClose, onSubmit, onDelete,
-    onAddRow, onRemoveRow,
-    onProcessRowUpdate, canWrite
-}:Props){
+export default function ProdOrderDialog() {
+    const open = useProdOrderStore(s => s.open);
+    const plan = useProdOrderStore(s => s.selectedPlan);
+    const rows = useProdOrderStore(s => s.localRows);
+    const onClose = useProdOrderStore(s => s.closeDialog);
+    const onSubmit = useProdOrderStore(s => s.submit);
+    const onDelete = useProdOrderStore(s => s.deleteOrder);
+    const onAddRow = useProdOrderStore(s => s.handleAddRow);
+    const onRemoveRow = useProdOrderStore(s => s.handleRemoveRow);
+    const onProcessRowUpdate = useProdOrderStore(s => s.handleProcessRowUpdate);
+    const { hasWritePermission } = usePermissions();
+    const canWrite = hasWritePermission('/prod/order2');
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [removeTargetIndex, setRemoveTargetIndex] = useState<number | null>(null);

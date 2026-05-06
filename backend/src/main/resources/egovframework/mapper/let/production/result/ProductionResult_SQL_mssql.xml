@@ -24,7 +24,7 @@
             , ISNULL(A.ITEM_CODE, '') AS ITEM_CODE_ID
             , ISNULL(C.MATERIAL_CODE, '') AS ITEM_CODE
             , ISNULL(C.MATERIAL_NAME, '') AS ITEM_NAME
-            , ISNULL(A.LOT_NO, '') AS LOT_NO
+            , ISNULL(M.ITEM_LOT_NO, '') AS LOT_NO
             , ISNULL(A.PROD_CODE, '') AS PROD_CODE_ID
             , ISNULL(C1.MATERIAL_CODE, '') AS PROD_CODE
             , ISNULL(C1.MATERIAL_NAME, '') AS PROD_NAME

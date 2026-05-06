@@ -18,6 +18,7 @@ export function useProdPlan() {
   const [search, setSearch] = useState<ProdPlanSearchParams>({
     workplace: '',
     equipment: '',
+    keyword: '',
     dateFrom: today,
     dateTo: dateToStr,
     prodFrom: '',

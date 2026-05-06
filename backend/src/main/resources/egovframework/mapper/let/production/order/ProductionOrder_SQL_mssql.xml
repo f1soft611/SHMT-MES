@@ -71,6 +71,13 @@
 			<if test="orderFlag != null and orderFlag != ''">
 				AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
 			</if>
+			<if test="keyword != null and keyword != ''">
+				AND (
+					A.ITEM_NAME LIKE CONCAT('%', #{keyword}, '%')
+				OR 	B1.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
+				OR 	M.ITEM_LOT_NO LIKE CONCAT('%', #{keyword}, '%')
+				)
+			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
@@ -82,6 +89,20 @@
 			resultType="int">
 		SELECT COUNT(*)
 		FROM TPR301 A
+		LEFT JOIN TPR301M M
+		ON A.FACTORY_CODE = M.FACTORY_CODE
+		AND A.PRODPLAN_DATE = M.PRODPLAN_DATE
+		AND A.PRODPLAN_SEQ = M.PRODPLAN_SEQ
+		LEFT JOIN TPR301R R
+		ON A.FACTORY_CODE = R.FACTORY_CODE
+		AND A.PRODPLAN_DATE = R.PRODPLAN_DATE
+		AND A.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+		LEFT JOIN TCO403 B1
+		ON A.ITEM_CODE = B1.MATERIAL_ID
+		LEFT JOIN TPR101 C
+		ON A.WORKCENTER_CODE = C.WORKCENTER_CODE
+		LEFT JOIN TPR151 D
+		ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
 		WHERE 1=1
 		AND CONVERT(date, A.OPTIME, 112) BETWEEN #{dateFrom} AND #{dateTo}
 		<if test="prodFrom != null and prodFrom != ''">
@@ -98,6 +119,13 @@
 		</if>
 		<if test="orderFlag != null and orderFlag != ''">
 			AND ISNULL(A.ORDER_FLAG, 'PLANNED') = #{orderFlag}
+		</if>
+		<if test="keyword != null and keyword != ''">
+			AND (
+			A.ITEM_NAME LIKE CONCAT('%', #{keyword}, '%')
+			OR 	B1.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
+			OR 	M.ITEM_LOT_NO LIKE CONCAT('%', #{keyword}, '%')
+			)
 		</if>
 	</select>
 
