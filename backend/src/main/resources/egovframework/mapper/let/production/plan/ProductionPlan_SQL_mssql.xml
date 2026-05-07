@@ -660,14 +660,11 @@
 			) AS REMAINING_QTY,
 		-- 의뢰 구분 정보
 			ISNULL(T.REQ_TYPE, '') AS REQ_TYPE,
-			CASE
-				WHEN T.REQ_TYPE = '6009001' THEN N'양산'
-				WHEN T.REQ_TYPE = '6009003' THEN N'샘플'
-				ELSE ISNULL(T.REQ_TYPE_NAME, '')
-			END AS REQ_TYPE_NAME
+			ISNULL(CODE_REQ.CODE_NM, ISNULL(T.REQ_TYPE_NAME, '')) AS REQ_TYPE_NAME
 		FROM TSA308 T
 			LEFT JOIN TCO601 C ON T.FACTORY_CODE = C.FACTORY_CODE AND T.CUSTOMER_CODE = C.CUSTOMER_CODE
 			LEFT JOIN MES_CCMMNDETAIL_CODE CODE1 ON CODE1.CODE_ID = 'COM007' AND CODE1.CODE = T.UNIT_CODE
+			LEFT JOIN MES_CCMMNDETAIL_CODE CODE_REQ ON CODE_REQ.CODE_ID = 'COM012' AND CODE_REQ.CODE = T.REQ_TYPE
 		WHERE 1=1
 		AND T.FACTORY_CODE = #{factoryCode}
 		<!-- 작업장 필터 (workplaceCode가 지정된 경우 - 해당 작업장의 공정흐름에 포함된 제품만 조회) -->
@@ -738,12 +735,12 @@
 				</when>
 			</choose>
 		</if>
-		<!-- 납기일 기간 검색 (dateFrom/dateTo) -->
+		<!-- 의뢰일(OPTIME) 기간 검색 (dateFrom/dateTo) -->
 		<if test="dateFrom != null and dateFrom != ''">
-			AND T.DELIVERY_DATE &gt;= #{dateFrom}
+			AND CONVERT(VARCHAR(8), T.PROD_PLAN_DATE, 112) &gt;= #{dateFrom}
 		</if>
 		<if test="dateTo != null and dateTo != ''">
-			AND T.DELIVERY_DATE &lt;= #{dateTo}
+			AND CONVERT(VARCHAR(8), T.PROD_PLAN_DATE, 112) &lt;= #{dateTo}
 		</if>
 		<!-- 의뢰 구분 필터 (reqType) -->
 		<if test="reqType != null and reqType != ''">
@@ -854,12 +851,12 @@
 				</when>
 			</choose>
 		</if>
-		<!-- 납기일 기간 검색 (dateFrom/dateTo) -->
+		<!-- 의뢰일(OPTIME) 기간 검색 (dateFrom/dateTo) -->
 		<if test="dateFrom != null and dateFrom != ''">
-			AND T.DELIVERY_DATE &gt;= #{dateFrom}
+			AND CONVERT(VARCHAR(8), T.PROD_PLAN_DATE, 112) &gt;= #{dateFrom}
 		</if>
 		<if test="dateTo != null and dateTo != ''">
-			AND T.DELIVERY_DATE &lt;= #{dateTo}
+			AND CONVERT(VARCHAR(8), T.PROD_PLAN_DATE, 112) &lt;= #{dateTo}
 		</if>
 		<!-- 의뢰 구분 필터 (reqType) -->
 		<if test="reqType != null and reqType != ''">
