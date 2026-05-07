@@ -47,6 +47,7 @@ import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
 import commonCodeService from '../../../services/commonCodeService';
+import { schedulerService } from '../../../services/schedulerService';
 import DateRangeDialog from '../../Scheduler/components/DateRangeDialog';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
@@ -68,6 +69,7 @@ const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus =
   'UNPLANNED';
 const REQUEST_TYPE_CODE_ID = 'COM012';
 const EXPORT_SHEET_NAME = '생산의뢰';
+const PRODUCTION_REQUEST_SYNC_SCHEDULER_ID = 9;
 
 interface ProductionRequestExcelRow {
   생산의뢰일: string;
@@ -491,6 +493,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const handleClose = useCallback(() => {
     onClose();
     setFullScreen(false);
+    setDateRangeDialogOpen(false);
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
     setInputValues(buildSearchState(workplaceCode));
@@ -742,13 +745,30 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   const handleDateRangeConfirm = useCallback(
     async (fromDate: string, toDate: string) => {
-      // DateRangeDialog 내에서 스케줄러가 실행되고,
-      // 완료 후 이 함수가 호출됨
       setDateRangeDialogOpen(false);
-      // 자동 재조회
-      await loadProductionRequests();
+
+      try {
+        await schedulerService.executeScheduler(
+          PRODUCTION_REQUEST_SYNC_SCHEDULER_ID,
+          fromDate,
+          toDate,
+        );
+        await loadProductionRequests();
+        showToast({
+          message: 'ERP 데이터 동기화가 완료되었습니다.',
+          severity: 'success',
+        });
+      } catch (error) {
+        showToast({
+          message: getErrorMessage(
+            error,
+            'ERP 데이터 동기화 중 오류가 발생했습니다.',
+          ),
+          severity: 'error',
+        });
+      }
     },
-    [loadProductionRequests],
+    [loadProductionRequests, showToast],
   );
 
   const handleExportExcel = useCallback(async () => {
