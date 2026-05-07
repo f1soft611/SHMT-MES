@@ -18,8 +18,12 @@ import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.property.EgovPropertyService;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,10 +40,39 @@ import java.util.Map;
 public class SchedulerConfigApiController {
 
     public static final String HEADER_STRING = "Authorization";
+        private static final long MAX_EXECUTION_RANGE_DAYS = 31;
     private final EgovJwtTokenUtil jwtTokenUtil;
     private final ResultVoHelper resultVoHelper;
     private final SchedulerConfigService schedulerConfigService;
     private final EgovPropertyService propertyService;
+
+        private void validateExecutionDateRange(String fromDate, String toDate) {
+                if ((fromDate == null || fromDate.trim().isEmpty()) && (toDate == null || toDate.trim().isEmpty())) {
+                        return;
+                }
+
+                if (fromDate == null || fromDate.trim().isEmpty() || toDate == null || toDate.trim().isEmpty()) {
+                        throw new IllegalStateException("시작 날짜와 종료 날짜를 모두 입력해주세요.");
+                }
+
+                final LocalDate from;
+                final LocalDate to;
+                try {
+                        from = LocalDate.parse(fromDate);
+                        to = LocalDate.parse(toDate);
+                } catch (DateTimeParseException e) {
+                        throw new IllegalStateException("날짜 형식이 올바르지 않습니다. (yyyy-MM-dd)");
+                }
+
+                if (from.isAfter(to)) {
+                        throw new IllegalStateException("시작 날짜는 종료 날짜보다 늦을 수 없습니다.");
+                }
+
+                long periodDays = ChronoUnit.DAYS.between(from, to) + 1;
+                if (periodDays > MAX_EXECUTION_RANGE_DAYS) {
+                        throw new IllegalStateException("조회 기간은 최대 " + MAX_EXECUTION_RANGE_DAYS + "일까지 가능합니다.");
+                }
+        }
 
     /**
      * 스케쥴러 목록을 조회한다.
@@ -253,12 +286,15 @@ public class SchedulerConfigApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님"),
             @ApiResponse(responseCode = "404", description = "스케쥴러를 찾을 수 없음")
     })
+        @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @PostMapping("/{schedulerId}/execute")
     public ResultVO executeScheduler(@Parameter(description = "스케쥴러 ID") @PathVariable Long schedulerId,
                                       @Parameter(description = "조회 시작 날짜 (yyyy-MM-dd)") @RequestParam(required = false) String fromDate,
                                       @Parameter(description = "조회 종료 날짜 (yyyy-MM-dd)") @RequestParam(required = false) String toDate,
                                       @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
             throws Exception {
+
+                validateExecutionDateRange(fromDate, toDate);
 
         schedulerConfigService.executeSchedulerManually(schedulerId, fromDate, toDate);
 

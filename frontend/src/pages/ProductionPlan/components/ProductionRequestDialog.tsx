@@ -163,6 +163,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     ids: new Set<GridRowId>(),
   });
   const [error, setError] = useState<string>('');
+  const [syncingScheduler, setSyncingScheduler] = useState(false);
   const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
 
   // 검색 조건 (실제 조회에 사용)
@@ -493,6 +494,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const handleClose = useCallback(() => {
     onClose();
     setFullScreen(false);
+    setSyncingScheduler(false);
     setDateRangeDialogOpen(false);
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
@@ -745,7 +747,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   const handleDateRangeConfirm = useCallback(
     async (fromDate: string, toDate: string) => {
-      setDateRangeDialogOpen(false);
+      setSyncingScheduler(true);
 
       try {
         await schedulerService.executeScheduler(
@@ -760,12 +762,12 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         });
       } catch (error) {
         showToast({
-          message: getErrorMessage(
-            error,
-            'ERP 데이터 동기화 중 오류가 발생했습니다.',
-          ),
+          message:
+            'ERP 데이터 동기화 실행에 실패했습니다. 잠시 후 다시 시도해주세요.',
           severity: 'error',
         });
+      } finally {
+        setSyncingScheduler(false);
       }
     },
     [loadProductionRequests, showToast],
@@ -999,7 +1001,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               onClick={handleOpenDateRangeDialog}
               sx={{ color: 'white' }}
               size="small"
-              disabled={loading || registering || exporting}
+              disabled={loading || registering || exporting || syncingScheduler}
             >
               <RefreshIcon />
             </IconButton>
@@ -1010,7 +1012,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
                 onClick={handleExportExcel}
                 sx={{ color: 'white' }}
                 size="small"
-                disabled={loading || registering || exporting}
+                disabled={
+                  loading || registering || exporting || syncingScheduler
+                }
               >
                 <FileDownloadIcon />
               </IconButton>
@@ -1251,12 +1255,15 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Button
           onClick={handleRegisterProductionPlans}
           variant="contained"
-          disabled={registering || exporting}
+          disabled={registering || exporting || syncingScheduler}
           startIcon={<AddIcon />}
         >
           {registering ? '등록 중...' : '등록'}
         </Button>
-        <Button onClick={handleClose} disabled={registering || exporting}>
+        <Button
+          onClick={handleClose}
+          disabled={registering || exporting || syncingScheduler}
+        >
           취소
         </Button>
       </DialogActions>
