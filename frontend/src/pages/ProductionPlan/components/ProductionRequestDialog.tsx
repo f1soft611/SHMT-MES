@@ -36,6 +36,7 @@ import {
   FileDownload as FileDownloadIcon,
   OpenInFull as OpenInFullIcon,
   CloseFullscreen as CloseFullscreenIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { productionRequestService } from '../../../services/productionRequestService';
 import {
@@ -46,6 +47,7 @@ import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
 import commonCodeService from '../../../services/commonCodeService';
+import DateRangeDialog from '../../Scheduler/components/DateRangeDialog';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
 import { decodeHtml } from '../../../utils/stringUtils';
@@ -159,6 +161,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     ids: new Set<GridRowId>(),
   });
   const [error, setError] = useState<string>('');
+  const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
 
   // 검색 조건 (실제 조회에 사용)
   const [searchParams, setSearchParams] =
@@ -733,6 +736,21 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     )}.xlsx`;
   }, []);
 
+  const handleOpenDateRangeDialog = useCallback(() => {
+    setDateRangeDialogOpen(true);
+  }, []);
+
+  const handleDateRangeConfirm = useCallback(
+    async (fromDate: string, toDate: string) => {
+      // DateRangeDialog 내에서 스케줄러가 실행되고,
+      // 완료 후 이 함수가 호출됨
+      setDateRangeDialogOpen(false);
+      // 자동 재조회
+      await loadProductionRequests();
+    },
+    [loadProductionRequests],
+  );
+
   const handleExportExcel = useCallback(async () => {
     if (loading || exporting || registering) {
       return;
@@ -956,6 +974,16 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           생산의뢰 연동
         </Typography>
         <Stack direction="row" spacing={0.5} alignItems="center">
+          <Tooltip title="ERP 데이터 동기화">
+            <IconButton
+              onClick={handleOpenDateRangeDialog}
+              sx={{ color: 'white' }}
+              size="small"
+              disabled={loading || registering || exporting}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="엑셀 다운로드">
             <span>
               <IconButton
@@ -1212,6 +1240,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           취소
         </Button>
       </DialogActions>
+
+      {/* ERP 데이터 동기화 - 스케줄러 실행 팝업 */}
+      <DateRangeDialog
+        open={dateRangeDialogOpen}
+        onClose={() => setDateRangeDialogOpen(false)}
+        onConfirm={handleDateRangeConfirm}
+        schedulerName="생산의뢰 데이터 동기화"
+      />
     </Dialog>
   );
 };
