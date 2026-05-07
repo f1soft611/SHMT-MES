@@ -45,9 +45,11 @@ import {
 import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
+import commonCodeService from '../../../services/commonCodeService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
 import { decodeHtml } from '../../../utils/stringUtils';
+import { CommonDetailCode } from '../../../types/commonCode';
 
 interface ProductionRequestSearchState {
   searchCnd: string;
@@ -62,6 +64,7 @@ interface ProductionRequestSearchState {
 const DEFAULT_SEARCH_CND = '4';
 const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus =
   'UNPLANNED';
+const REQUEST_TYPE_CODE_ID = 'COM012';
 const EXPORT_SHEET_NAME = '생산의뢰';
 
 interface ProductionRequestExcelRow {
@@ -143,6 +146,9 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const [fullScreen, setFullScreen] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [requestTypeCodes, setRequestTypeCodes] = useState<CommonDetailCode[]>(
+    [],
+  );
   const [registerProgress, setRegisterProgress] = useState({
     current: 0,
     total: 0,
@@ -220,6 +226,33 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
       loadProductionRequests();
     }
   }, [open, loadProductionRequests]);
+
+  useEffect(() => {
+    const loadRequestTypeCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          REQUEST_TYPE_CODE_ID,
+          'Y',
+        );
+        const detailCodeList = response.result?.detailCodeList;
+        if (response.resultCode === 200 && Array.isArray(detailCodeList)) {
+          setRequestTypeCodes(detailCodeList);
+          return;
+        }
+        setRequestTypeCodes([]);
+      } catch (error) {
+        setRequestTypeCodes([]);
+        showToast({
+          message: '의뢰구분 공통코드를 불러오지 못했습니다.',
+          severity: 'warning',
+        });
+      }
+    };
+
+    if (open) {
+      loadRequestTypeCodes();
+    }
+  }, [open, showToast]);
 
   // workplaceCode 변경 시 검색 조건 업데이트
   useEffect(() => {
@@ -1026,13 +1059,16 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               onChange={(e) => handleInputChange('reqType', e.target.value)}
             >
               <MenuItem value="">전체</MenuItem>
-              <MenuItem value="6009001">양산</MenuItem>
-              <MenuItem value="6009003">샘플</MenuItem>
+              {requestTypeCodes.map((code) => (
+                <MenuItem key={code.code} value={code.code}>
+                  {code.codeNm}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
           <TextField
             size="small"
-            label="납기일 From"
+            label="의뢰일 From"
             type="date"
             value={inputValues.dateFrom}
             onChange={(e) => handleInputChange('dateFrom', e.target.value)}
@@ -1042,7 +1078,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           <Typography sx={{ color: 'text.secondary' }}>~</Typography>
           <TextField
             size="small"
-            label="납기일 To"
+            label="의뢰일 To"
             type="date"
             value={inputValues.dateTo}
             onChange={(e) => handleInputChange('dateTo', e.target.value)}
