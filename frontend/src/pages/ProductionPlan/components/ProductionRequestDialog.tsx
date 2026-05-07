@@ -36,6 +36,7 @@ import {
   FileDownload as FileDownloadIcon,
   OpenInFull as OpenInFullIcon,
   CloseFullscreen as CloseFullscreenIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { productionRequestService } from '../../../services/productionRequestService';
 import {
@@ -46,6 +47,8 @@ import productionPlanService, {
   ProductionPlanRequest,
 } from '../../../services/productionPlanService';
 import commonCodeService from '../../../services/commonCodeService';
+import { schedulerService } from '../../../services/schedulerService';
+import DateRangeDialog from '../../Scheduler/components/DateRangeDialog';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
 import { decodeHtml } from '../../../utils/stringUtils';
@@ -66,6 +69,7 @@ const DEFAULT_ALLOCATION_STATUS: ProductionRequestAllocationStatus =
   'UNPLANNED';
 const REQUEST_TYPE_CODE_ID = 'COM012';
 const EXPORT_SHEET_NAME = '생산의뢰';
+const PRODUCTION_REQUEST_SYNC_SCHEDULER_ID = 9;
 
 interface ProductionRequestExcelRow {
   생산의뢰일: string;
@@ -159,6 +163,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     ids: new Set<GridRowId>(),
   });
   const [error, setError] = useState<string>('');
+  const [dateRangeDialogOpen, setDateRangeDialogOpen] = useState(false);
 
   // 검색 조건 (실제 조회에 사용)
   const [searchParams, setSearchParams] =
@@ -488,6 +493,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
   const handleClose = useCallback(() => {
     onClose();
     setFullScreen(false);
+    setDateRangeDialogOpen(false);
     setSelectionModel({ type: 'include', ids: new Set<GridRowId>() });
     setError('');
     setInputValues(buildSearchState(workplaceCode));
@@ -733,6 +739,38 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
     )}.xlsx`;
   }, []);
 
+  const handleOpenDateRangeDialog = useCallback(() => {
+    setDateRangeDialogOpen(true);
+  }, []);
+
+  const handleDateRangeConfirm = useCallback(
+    async (fromDate: string, toDate: string) => {
+      setDateRangeDialogOpen(false);
+
+      try {
+        await schedulerService.executeScheduler(
+          PRODUCTION_REQUEST_SYNC_SCHEDULER_ID,
+          fromDate,
+          toDate,
+        );
+        await loadProductionRequests();
+        showToast({
+          message: 'ERP 데이터 동기화가 완료되었습니다.',
+          severity: 'success',
+        });
+      } catch (error) {
+        showToast({
+          message: getErrorMessage(
+            error,
+            'ERP 데이터 동기화 중 오류가 발생했습니다.',
+          ),
+          severity: 'error',
+        });
+      }
+    },
+    [loadProductionRequests, showToast],
+  );
+
   const handleExportExcel = useCallback(async () => {
     if (loading || exporting || registering) {
       return;
@@ -956,6 +994,16 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           생산의뢰 연동
         </Typography>
         <Stack direction="row" spacing={0.5} alignItems="center">
+          <Tooltip title="ERP 데이터 동기화">
+            <IconButton
+              onClick={handleOpenDateRangeDialog}
+              sx={{ color: 'white' }}
+              size="small"
+              disabled={loading || registering || exporting}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="엑셀 다운로드">
             <span>
               <IconButton
@@ -1212,6 +1260,14 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           취소
         </Button>
       </DialogActions>
+
+      {/* ERP 데이터 동기화 - 스케줄러 실행 팝업 */}
+      <DateRangeDialog
+        open={dateRangeDialogOpen}
+        onClose={() => setDateRangeDialogOpen(false)}
+        onConfirm={handleDateRangeConfirm}
+        schedulerName="생산의뢰 데이터 동기화"
+      />
     </Dialog>
   );
 };
