@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
@@ -12,28 +12,29 @@ import {
   InputLabel,
   Select,
   MenuItem,
-} from '@mui/material';
-import { GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+} from "@mui/material";
+import { GridColDef, GridPaginationModel } from "@mui/x-data-grid";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
   FilterList as FilterListIcon,
-} from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { Item } from '../../../types/item';
-import itemService from '../../../services/itemService';
-import ItemDetailDialog from './components/ItemDetailDialog';
-import DataTable from '../../../components/common/DataTable/DataTable';
-import PageHeader from '../../../components/common/PageHeader/PageHeader';
-import ConfirmDialog from '../../../components/common/Feedback/ConfirmDialog';
-import { useToast } from '../../../components/common/Feedback/ToastProvider';
-import { usePermissions } from '../../../contexts/PermissionContext';
+} from "@mui/icons-material";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { Item } from "../../../types/item";
+import itemService from "../../../services/itemService";
+import ItemDetailDialog from "./components/ItemDetailDialog";
+import DataTable from "../../../components/common/DataTable/DataTable";
+import PageHeader from "../../../components/common/PageHeader/PageHeader";
+import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
+import { useToast } from "../../../components/common/Feedback/ToastProvider";
+import { usePermissions } from "../../../contexts/PermissionContext";
+import { decodeHtml } from "../../../utils/stringUtils";
 
-const DEFAULT_ITEM_TYPES = ['PRODUCT', 'HALF_PRODUCT'];
+const DEFAULT_ITEM_TYPES = ["PRODUCT", "HALF_PRODUCT"];
 
 interface ItemSearchState {
   searchCnd: string;
@@ -51,15 +52,15 @@ interface ItemInputState {
 
 // 천단위 콤마 포맷 함수
 const formatNumber = (value: string | number | undefined): string => {
-  if (!value && value !== 0) return '';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '';
-  return num.toLocaleString('ko-KR');
+  if (!value && value !== 0) return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "";
+  return num.toLocaleString("ko-KR");
 };
 
 // 콤마 제거 함수
 const removeCommas = (value: string): string => {
-  return value.replace(/,/g, '');
+  return value.replace(/,/g, "");
 };
 
 // 품목 등록 유효성 검사 스키마
@@ -67,9 +68,9 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
   itemId: yup.string().optional(),
   itemCode: yup
     .string()
-    .required('품목 코드는 필수입니다.')
-    .max(50, '품목 코드는 최대 50자까지 입력 가능합니다.'),
-  itemName: yup.string().required('품목명은 필수입니다.'),
+    .required("품목 코드는 필수입니다.")
+    .max(50, "품목 코드는 최대 50자까지 입력 가능합니다."),
+  itemName: yup.string().required("품목명은 필수입니다."),
   itemType: yup.string().optional(),
   specification: yup.string().optional(),
   unit: yup.string().optional(),
@@ -92,8 +93,8 @@ const itemSchema: yup.ObjectSchema<Item> = yup.object({
 const ItemManagement: React.FC = () => {
   // 권한 체크
   const { hasWritePermission, hasDeletePermission } = usePermissions();
-  const canWrite = hasWritePermission('/base/item');
-  const canDelete = hasDeletePermission('/base/item');
+  const canWrite = hasWritePermission("/base/item");
+  const canDelete = hasDeletePermission("/base/item");
 
   // 페이지 로드 시 권한 새로고침
   // useEffect(() => {
@@ -106,7 +107,7 @@ const ItemManagement: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 20,
@@ -126,36 +127,36 @@ const ItemManagement: React.FC = () => {
   } = useForm<Item>({
     resolver: yupResolver(itemSchema),
     defaultValues: {
-      itemCode: '',
-      itemName: '',
-      itemType: 'PRODUCT',
-      specification: '',
-      unit: '',
-      stockQty: '0',
-      safetyStock: '0',
-      cycleTime: '0',
-      remark: '',
-      processFlowCodes: '',
-      processFlowNames: '',
-      interfaceYn: 'N',
-      useYn: 'Y',
+      itemCode: "",
+      itemName: "",
+      itemType: "PRODUCT",
+      specification: "",
+      unit: "",
+      stockQty: "0",
+      safetyStock: "0",
+      cycleTime: "0",
+      remark: "",
+      processFlowCodes: "",
+      processFlowNames: "",
+      interfaceYn: "N",
+      useYn: "Y",
     },
   });
 
   // 실제 검색에 사용되는 파라미터
   const [searchParams, setSearchParams] = useState<ItemSearchState>({
-    searchCnd: '1',
-    searchWrd: '',
-    itemType: DEFAULT_ITEM_TYPES.join(','),
-    useYn: 'Y',
+    searchCnd: "1",
+    searchWrd: "",
+    itemType: DEFAULT_ITEM_TYPES.join(","),
+    useYn: "Y",
   });
 
   // 입력 필드용 상태 (화면 입력용)
   const [inputValues, setInputValues] = useState<ItemInputState>({
-    searchCnd: '1',
-    searchWrd: '',
+    searchCnd: "1",
+    searchWrd: "",
     itemType: DEFAULT_ITEM_TYPES,
-    useYn: 'Y',
+    useYn: "Y",
   });
 
   // 품목 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
@@ -168,13 +169,13 @@ const ItemManagement: React.FC = () => {
       );
       if (response.resultCode === 200 && response.result?.resultList) {
         setItems(response.result.resultList);
-        setTotalCount(parseInt(response.result.resultCnt || '0'));
+        setTotalCount(parseInt(response.result.resultCnt || "0"));
       }
     } catch (error) {
-      console.error('Failed to fetch items:', error);
+      console.error("Failed to fetch items:", error);
       showToast({
-        message: '품목 목록을 불러오는데 실패했습니다.',
-        severity: 'error',
+        message: "품목 목록을 불러오는데 실패했습니다.",
+        severity: "error",
       });
     }
   }, [searchParams, paginationModel, showToast]);
@@ -189,7 +190,7 @@ const ItemManagement: React.FC = () => {
     setSearchParams({
       searchCnd: inputValues.searchCnd,
       searchWrd: inputValues.searchWrd,
-      itemType: inputValues.itemType.join(','),
+      itemType: inputValues.itemType.join(","),
       useYn: inputValues.useYn,
     });
     setPaginationModel({ ...paginationModel, page: 0 });
@@ -206,27 +207,27 @@ const ItemManagement: React.FC = () => {
   };
 
   const handleOpenCreateDialog = () => {
-    setDialogMode('create');
+    setDialogMode("create");
     resetItemForm({
-      itemCode: '',
-      itemName: '',
-      itemType: 'PRODUCT',
-      specification: '',
-      unit: '',
-      stockQty: '0',
-      safetyStock: '0',
-      cycleTime: '0',
-      remark: '',
-      processFlowCodes: '',
-      processFlowNames: '',
-      interfaceYn: 'N',
-      useYn: 'Y',
+      itemCode: "",
+      itemName: "",
+      itemType: "PRODUCT",
+      specification: "",
+      unit: "",
+      stockQty: "0",
+      safetyStock: "0",
+      cycleTime: "0",
+      remark: "",
+      processFlowCodes: "",
+      processFlowNames: "",
+      interfaceYn: "N",
+      useYn: "Y",
     });
     setOpenDialog(true);
   };
 
   const handleOpenEditDialog = (item: Item) => {
-    setDialogMode('edit');
+    setDialogMode("edit");
     resetItemForm(item);
     setOpenDialog(true);
   };
@@ -241,17 +242,17 @@ const ItemManagement: React.FC = () => {
       // 콤마 제거 후 저장
       const saveData = {
         ...data,
-        stockQty: removeCommas(data.stockQty || '0'),
-        safetyStock: removeCommas(data.safetyStock || '0'),
-        cycleTime: removeCommas(data.cycleTime || '0'),
+        stockQty: removeCommas(data.stockQty || "0"),
+        safetyStock: removeCommas(data.safetyStock || "0"),
+        cycleTime: removeCommas(data.cycleTime || "0"),
       };
 
-      if (dialogMode === 'create') {
+      if (dialogMode === "create") {
         const result = await itemService.createItem(saveData);
         if (result.resultCode === 200) {
-          showToast({ message: '품목이 등록되었습니다.', severity: 'success' });
+          showToast({ message: "품목이 등록되었습니다.", severity: "success" });
         } else {
-          showToast({ message: result.result.message, severity: 'error' });
+          showToast({ message: result.result.message, severity: "error" });
           return;
         }
       } else {
@@ -260,11 +261,11 @@ const ItemManagement: React.FC = () => {
           saveData,
         );
         if (result.resultCode === 200) {
-          showToast({ message: '품목이 수정되었습니다.', severity: 'success' });
+          showToast({ message: "품목이 수정되었습니다.", severity: "success" });
         } else {
           showToast({
-            message: result.result?.message || '수정에 실패했습니다.',
-            severity: 'error',
+            message: result.result?.message || "수정에 실패했습니다.",
+            severity: "error",
           });
           return;
         }
@@ -273,20 +274,20 @@ const ItemManagement: React.FC = () => {
       // 저장 후 현재 검색 조건으로 다시 조회
       fetchItems();
     } catch (error) {
-      console.error('Failed to save item:', error);
-      showToast({ message: '저장에 실패했습니다.', severity: 'error' });
+      console.error("Failed to save item:", error);
+      showToast({ message: "저장에 실패했습니다.", severity: "error" });
     }
   };
 
   const handleDeleteConfirm = async (itemCode: string) => {
     try {
       await itemService.deleteItem(itemCode);
-      showToast({ message: '품목이 삭제되었습니다.', severity: 'success' });
+      showToast({ message: "품목이 삭제되었습니다.", severity: "success" });
       // 삭제 후 현재 검색 조건으로 다시 조회
       fetchItems();
     } catch (error) {
-      console.error('Failed to delete item:', error);
-      showToast({ message: '삭제에 실패했습니다.', severity: 'error' });
+      console.error("Failed to delete item:", error);
+      showToast({ message: "삭제에 실패했습니다.", severity: "error" });
     }
   };
 
@@ -296,16 +297,16 @@ const ItemManagement: React.FC = () => {
 
   const getItemTypeLabel = (itemType: string) => {
     switch (itemType) {
-      case 'PRODUCT':
-        return '제품';
-      case '1':
-        return '상품';
-      case 'HALF_PRODUCT':
-        return '반제품';
-      case '3':
-        return '서비스';
-      case '6':
-        return '원자재';
+      case "PRODUCT":
+        return "제품";
+      case "1":
+        return "상품";
+      case "HALF_PRODUCT":
+        return "반제품";
+      case "3":
+        return "서비스";
+      case "6":
+        return "원자재";
       default:
         return itemType;
     }
@@ -313,35 +314,36 @@ const ItemManagement: React.FC = () => {
 
   const getItemTypeColor = (
     itemType: string,
-  ): 'primary' | 'success' | 'info' | 'warning' | 'secondary' | 'default' => {
+  ): "primary" | "success" | "info" | "warning" | "secondary" | "default" => {
     switch (itemType) {
-      case 'PRODUCT':
-        return 'primary';
-      case '1':
-        return 'success';
-      case 'HALF_PRODUCT':
-        return 'info';
-      case '3':
-        return 'warning';
-      case '6':
-        return 'secondary';
+      case "PRODUCT":
+        return "primary";
+      case "1":
+        return "success";
+      case "HALF_PRODUCT":
+        return "info";
+      case "3":
+        return "warning";
+      case "6":
+        return "secondary";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const columns: GridColDef[] = [
     {
-      field: 'itemCode',
-      headerName: '품목코드',
+      field: "itemCode",
+      headerName: "품목코드",
       flex: 1,
-      headerAlign: 'center',
+      headerAlign: "center",
     },
     {
-      field: 'itemName',
-      headerName: '품목명',
+      field: "itemName",
+      headerName: "품목명",
       flex: 1.2,
-      headerAlign: 'center',
+      headerAlign: "center",
+      renderCell: (params) => decodeHtml(params.value ?? ""),
     },
     // {
     //   field: 'processFlowCodes',
@@ -351,90 +353,90 @@ const ItemManagement: React.FC = () => {
     //   renderCell: (params) => params.value || '-',
     // },
     {
-      field: 'processFlowNames',
-      headerName: '공정흐름명',
+      field: "processFlowNames",
+      headerName: "공정흐름명",
       flex: 1.3,
-      headerAlign: 'center',
-      renderCell: (params) => params.value || '-',
+      headerAlign: "center",
+      renderCell: (params) => params.value || "-",
     },
     {
-      field: 'specification',
-      headerName: '규격',
+      field: "specification",
+      headerName: "규격",
       flex: 1,
-      headerAlign: 'center',
+      headerAlign: "center",
     },
     {
-      field: 'itemType',
-      headerName: '품목타입',
+      field: "itemType",
+      headerName: "품목타입",
       flex: 0.8,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <Chip
-          label={getItemTypeLabel(params.value || 'PRODUCT')}
-          color={getItemTypeColor(params.value || 'PRODUCT')}
+          label={getItemTypeLabel(params.value || "PRODUCT")}
+          color={getItemTypeColor(params.value || "PRODUCT")}
           size="small"
         />
       ),
     },
     {
-      field: 'processFlow',
-      headerName: '등록된 공정',
+      field: "processFlow",
+      headerName: "등록된 공정",
       flex: 0.8,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
     },
     {
-      field: 'unitName',
-      headerName: '단위',
+      field: "unitName",
+      headerName: "단위",
       flex: 0.5,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
     },
     {
-      field: 'stockQty',
-      headerName: '재고수량',
+      field: "stockQty",
+      headerName: "재고수량",
       flex: 0.5,
-      align: 'right',
-      headerAlign: 'center',
+      align: "right",
+      headerAlign: "center",
       renderCell: (params) => formatNumber(params.value),
     },
     {
-      field: 'useYn',
-      headerName: '사용여부',
+      field: "useYn",
+      headerName: "사용여부",
       flex: 0.5,
       minWidth: 80,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params) => (
         <Chip
-          label={params.value === 'Y' ? '사용' : '미사용'}
-          color={params.value === 'Y' ? 'success' : 'default'}
+          label={params.value === "Y" ? "사용" : "미사용"}
+          color={params.value === "Y" ? "success" : "default"}
           size="small"
         />
       ),
     },
     {
-      field: 'regDt',
-      headerName: '등록일',
+      field: "regDt",
+      headerName: "등록일",
       width: 180,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
     },
     {
-      field: 'actions',
-      headerName: '관리',
+      field: "actions",
+      headerName: "관리",
       flex: 0.8,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       sortable: false,
       renderCell: (params) => (
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
           }}
         >
           <Stack direction="row" spacing={1} justifyContent="center">
@@ -466,7 +468,7 @@ const ItemManagement: React.FC = () => {
     <Box>
       <PageHeader
         title=""
-        crumbs={[{ label: '기준정보' }, { label: '품목 관리' }]}
+        crumbs={[{ label: "기준정보" }, { label: "품목 관리" }]}
       />
 
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -474,11 +476,11 @@ const ItemManagement: React.FC = () => {
           variant="h6"
           sx={{
             mb: 2,
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 1,
             fontWeight: 600,
-            fontSize: '1rem',
+            fontSize: "1rem",
           }}
         >
           <FilterListIcon color="primary" />
@@ -490,7 +492,7 @@ const ItemManagement: React.FC = () => {
             <Select
               value={inputValues.searchCnd}
               label="검색조건"
-              onChange={(e) => handleInputChange('searchCnd', e.target.value)}
+              onChange={(e) => handleInputChange("searchCnd", e.target.value)}
             >
               <MenuItem value="1">품목코드</MenuItem>
               <MenuItem value="2">품목명</MenuItem>
@@ -500,9 +502,9 @@ const ItemManagement: React.FC = () => {
             size="small"
             placeholder="검색어를 입력하세요"
             value={inputValues.searchWrd}
-            onChange={(e) => handleInputChange('searchWrd', e.target.value)}
+            onChange={(e) => handleInputChange("searchWrd", e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === "Enter") handleSearch();
             }}
             sx={{ flex: 1 }}
           />
@@ -515,13 +517,13 @@ const ItemManagement: React.FC = () => {
               renderValue={(selected) =>
                 (selected as string[])
                   .map((value) => getItemTypeLabel(value))
-                  .join(', ')
+                  .join(", ")
               }
               onChange={(e) => {
                 const { value } = e.target;
                 handleInputChange(
-                  'itemType',
-                  typeof value === 'string' ? value.split(',') : value,
+                  "itemType",
+                  typeof value === "string" ? value.split(",") : value,
                 );
               }}
             >
@@ -537,7 +539,7 @@ const ItemManagement: React.FC = () => {
             <Select
               value={inputValues.useYn}
               label="사용여부"
-              onChange={(e) => handleInputChange('useYn', e.target.value)}
+              onChange={(e) => handleInputChange("useYn", e.target.value)}
             >
               <MenuItem value="">전체</MenuItem>
               <MenuItem value="Y">사용</MenuItem>
