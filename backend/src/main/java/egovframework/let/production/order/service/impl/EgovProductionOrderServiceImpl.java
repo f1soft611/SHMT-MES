@@ -296,7 +296,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// 2. 생산계획 기준 지시대상 공정 조회
 			List<ProdOrderRow> targets = findInsertTargets(plan);
 			if (targets.isEmpty()) {
-				continue;
+				throw new BizException("공정흐름이 등록되지 않은 품목이 존재합니다. \n" +
+						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
 			String itemCode = targets.get(0).getItemCode();
