@@ -205,7 +205,7 @@
         UPDATE LETTNEMPLYRINFO 
         SET 
                PASSWORD   =  #{password}
-        WHERE  ESNTL_ID  = #{uniqId}
+        WHERE  EMPLYR_ID  = #{mberId}
     </update>
     
     <select id="selectPassword_S" resultType="mberVO">
