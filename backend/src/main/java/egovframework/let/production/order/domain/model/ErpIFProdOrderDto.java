@@ -21,8 +21,8 @@ public class ErpIFProdOrderDto {
 
     private Integer factUnit;           // default 1
 
-    private String workOrderNo;
-    private String workOrderDate;       // YYYYMMDD
+    private String workOrderNo;         // item lotNo 로 대체
+    private String workOrderDate;       //
 
     private Integer prodPlanSeq;
     private Integer workCenterSeq;
