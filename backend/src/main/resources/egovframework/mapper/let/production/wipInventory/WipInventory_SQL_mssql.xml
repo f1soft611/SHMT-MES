@@ -184,15 +184,7 @@
                 OR F.LOT_NO LIKE '%' + #{searchKeyword} + '%'
                 )
             </if>
-            <!-- 진짜 재공만 보려면 사용
-            AND (
-                CASE
-                    WHEN PF.PREV_SEQ IS NULL
-                        THEN ISNULL(F.ORDER_QTY, 0) - ISNULL(CURR_R.PROD_QTY, 0)
-                    ELSE ISNULL(PREV_R.PROD_QTY, 0) - ISNULL(CURR_R.PROD_QTY, 0)
-                END
-            ) > 0
-            -->
+            AND (PF.PREV_SEQ IS NULL OR ISNULL(PREV_R.PROD_QTY, 0) > 0)
         </where>
         ORDER BY
         F.PRODPLAN_DATE,
@@ -322,7 +314,7 @@
                 OR F.LOT_NO LIKE '%' + #{searchKeyword} + '%'
                 )
             </if>
-            <!-- 목록 쿼리에 WIP_QTY > 0 조건을 넣으면 count에도 똑같이 넣어야 함 -->
+            AND (PF.PREV_SEQ IS NULL OR ISNULL(PREV_R.PROD_QTY, 0) > 0)
         </where>
     </select>
 
