@@ -624,30 +624,42 @@ public class EgovMberManageApiController {
 		
 		String oldPassword = param.get("old_password");
 		String newPassword = param.get("new_password");
-		String userId = user.getId();
+		String uniqId = user.getId();
+		String loginId = user.getUniqId() == null ? null : user.getUniqId().trim();
 		
-		log.info("===>>> 비밀번호 변경 시도 사용자: {}", userId);
+		log.info("===>>> 비밀번호 변경 시도 사용자 - uniqId: {}, loginId: {}", uniqId, loginId);
 
-		// 현재 비밀번호 확인
-		MberManageVO checkVO = new MberManageVO();
-		checkVO.setMberId(userId);
-		MberManageVO currentUser = mberManageService.selectMber(checkVO.getMberId());
+		// 현재 사용자(ESNTL_ID 기준) 조회
+		MberManageVO currentUser = mberManageService.selectMber(uniqId);
 
 		log.info("===>>> DB에서 조회한 사용자: {}", currentUser);
 		
 		if (currentUser == null) {
-			log.error("===>>> 사용자를 찾을 수 없음: {}", userId);
+			log.error("===>>> 사용자를 찾을 수 없음: {}", uniqId);
 			Map<String, Object> errorMap = new HashMap<>();
 			errorMap.put("error", "사용자를 찾을 수 없습니다.");
 			return resultVoHelper.buildFromMap(errorMap, ResponseCode.AUTH_ERROR);
 		}
 
-		// 비밀번호 암호화 시 mberId를 Salt로 사용
+		// 로그인과 동일하게 DB의 로그인 아이디(EMPLYR_ID)를 Salt로 사용
 		String mberId = currentUser.getMberId();
-		log.info("===>>> 암호화에 사용할 mberId: {}", mberId);
+		if (mberId != null) {
+			mberId = mberId.trim();
+		}
+		if (mberId == null || mberId.isEmpty()) {
+			log.error("===>>> DB mberId 누락 - uniqId: {}, loginId: {}", uniqId, loginId);
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("error", "사용자 로그인 아이디를 확인할 수 없습니다.");
+			return resultVoHelper.buildFromMap(errorMap, ResponseCode.SAVE_ERROR);
+		}
+		if (loginId != null && !loginId.isEmpty() && !loginId.equals(mberId)) {
+			log.warn("===>>> 토큰 loginId와 DB mberId 불일치 - loginId: {}, mberId: {}", loginId, mberId);
+		}
+		String encryptSaltId = mberId;
+		log.info("===>>> 암호화에 사용할 mberId: {}", encryptSaltId);
 		
 		// 현재 비밀번호 검증
-		String encryptedOldPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(oldPassword, mberId);
+		String encryptedOldPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(oldPassword, encryptSaltId);
 		log.info("===>>> 입력한 비밀번호(암호화): {}", encryptedOldPassword);
 		log.info("===>>> DB 비밀번호: {}", currentUser.getPassword());
 		
@@ -661,19 +673,19 @@ public class EgovMberManageApiController {
 		log.info("===>>> 현재 비밀번호 검증 통과");
 
 		// 새 비밀번호 암호화 및 업데이트
-		String encryptedNewPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(newPassword, mberId);
+		String encryptedNewPassword = egovframework.let.utl.sim.service.EgovFileScrty.encryptPassword(newPassword, encryptSaltId);
 		MberManageVO updateVO = new MberManageVO();
-		updateVO.setUniqId(userId);  // ESNTL_ID (uniqId) 설정
+		updateVO.setMberId(encryptSaltId);  // EMPLYR_ID 설정
 		updateVO.setPassword(encryptedNewPassword);
 		
-		log.info("===>>> 업데이트 대상 - uniqId: {}, mberId: {}", userId, mberId);
+		log.info("===>>> 업데이트 대상 - mberId: {}", encryptSaltId);
 
 		try {
 			mberManageService.updatePassword(updateVO);
-			log.info("===>>> 사용자 비밀번호 변경 성공: {}", userId);
+			log.info("===>>> 사용자 비밀번호 변경 성공: {}", uniqId);
 			return resultVoHelper.buildFromMap(null, ResponseCode.SUCCESS);
 		} catch (Exception e) {
-			log.error("===>>> 사용자 비밀번호 변경 실패: {}", userId, e);
+			log.error("===>>> 사용자 비밀번호 변경 실패: {}", uniqId, e);
 			return resultVoHelper.buildFromMap(null, ResponseCode.SAVE_ERROR);
 		}
 	}

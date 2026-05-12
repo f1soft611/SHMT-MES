@@ -99,12 +99,33 @@ public class EgovMberManageServiceImpl extends EgovAbstractServiceImpl implement
 	 */
 	@Override
 	public void updateMber(MberManageVO mberManageVO) throws Exception {
-		//패스워드 암호화
-		if(mberManageVO.getPassword().isEmpty() || mberManageVO.getPassword().equals("")) {
-			//업데이트 시 암호가 공백이면 암호화 과정 건너띈다. 
-		} else {
-			String pass = EgovFileScrty.encryptPassword(mberManageVO.getPassword(), mberManageVO.getMberId());
-			mberManageVO.setPassword(pass);
+		String normalizedMberId = mberManageVO.getMberId();
+		if (normalizedMberId != null) {
+			normalizedMberId = normalizedMberId.trim();
+			mberManageVO.setMberId(normalizedMberId);
+		}
+
+		// 패스워드는 항상 로그인 아이디(EMPLYR_ID) 기준으로 암호화한다.
+		String rawPassword = mberManageVO.getPassword();
+		if(rawPassword != null && !rawPassword.isEmpty()) {
+			String encryptSaltId = normalizedMberId;
+
+			// uniqId가 있으면 DB의 최신 mberId(로그인 아이디)를 우선 사용
+			String uniqId = mberManageVO.getUniqId();
+			if(uniqId != null && !uniqId.isEmpty()) {
+				MberManageVO currentUser = mberManageDAO.selectMber(uniqId);
+				if(currentUser != null && currentUser.getMberId() != null && !currentUser.getMberId().isEmpty()) {
+					encryptSaltId = currentUser.getMberId().trim();
+				}
+			}
+
+			if(encryptSaltId == null || encryptSaltId.isEmpty()) {
+				throw new IllegalArgumentException("비밀번호 암호화용 로그인 아이디(EMPLYR_ID)가 없습니다.");
+			}
+
+			String encryptedPassword = EgovFileScrty.encryptPassword(rawPassword, encryptSaltId);
+			mberManageVO.setPassword(encryptedPassword);
+			mberManageVO.setMberId(encryptSaltId);
 		}
 		mberManageDAO.updateMber(mberManageVO);
 	}
@@ -151,6 +172,9 @@ public class EgovMberManageServiceImpl extends EgovAbstractServiceImpl implement
 	 */
 	@Override
 	public void updatePassword(MberManageVO mberManageVO) {
+		if (mberManageVO.getMberId() != null) {
+			mberManageVO.setMberId(mberManageVO.getMberId().trim());
+		}
 		mberManageDAO.updatePassword(mberManageVO);
 	}
 

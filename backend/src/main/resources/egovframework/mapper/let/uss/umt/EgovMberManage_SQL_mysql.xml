@@ -173,6 +173,9 @@
         UPDATE LETTNEMPLYRINFO 
          SET EMPLYR_ID          = #{mberId},
              USER_NM          = #{mberNm},
+             <if test="password != null and !password.equals('')">
+             PASSWORD         = #{password},
+             </if>
              PASSWORD_HINT    = #{passwordHint},
              PASSWORD_CNSR    = #{passwordCnsr},
              IHIDNUM          = #{ihidnum},
@@ -204,7 +207,7 @@
         UPDATE LETTNEMPLYRINFO 
         SET 
                PASSWORD   =  #{password}
-        WHERE  ESNTL_ID  = #{uniqId}
+        WHERE  EMPLYR_ID  = #{mberId}
     </update>
     
     <select id="selectPassword_S" resultType="mberVO">
