@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import dayjs from 'dayjs';
 import productionWipInventoryService from '../../../services/productionWipInventoryService';
 import {
   WipInventoryRow,
@@ -20,7 +21,7 @@ export function useWipInventoryStatus() {
   const { showToast } = useToast();
 
   const [search, setSearch] = useState<WipInventorySearch>({
-    searchDate: '',
+    searchDate: dayjs().format('YYYY-MM-DD'),
     workCode: '',
     searchKeyword: '',
   });

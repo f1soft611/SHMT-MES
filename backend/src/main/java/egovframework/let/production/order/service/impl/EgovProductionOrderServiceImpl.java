@@ -170,16 +170,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		}
 
 		// ERP IF 배치 전송
-		// TODO : 인터페이스부분 주석
-//		try {
-//			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
-//			if (!erpSendSuccess) {
-//				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
-//			}
-//		} catch (Exception e) {
-//			// MES 트랜잭션 영향 X
-//			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
-//		}
+		try {
+			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
+			if (!erpSendSuccess) {
+				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
+			}
+		} catch (Exception e) {
+			// MES 트랜잭션 영향 X
+			log.warn("[ERP IF][PROD ORDER][A][BATCH] 전송 실패. cnt={}", erpIfList.size(), e);
+		}
 
 		// 생산계획TPR301 ORDER_FLAG UPDATE
 		if (!prodOrderList.isEmpty()) {
@@ -296,7 +295,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// 2. 생산계획 기준 지시대상 공정 조회
 			List<ProdOrderRow> targets = findInsertTargets(plan);
 			if (targets.isEmpty()) {
-				continue;
+				throw new BizException("공정흐름이 등록되지 않은 품목이 존재합니다. \n" +
+						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
 			String itemCode = targets.get(0).getItemCode();
@@ -321,20 +321,20 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				log.info("[BULK] ERP IF start, size={}", ifList.size());
 
 				// TODO : 인터페이스부분
-//				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
-//				if (!erpSendSuccess) {
-//					erpIfFailed = true;
-//					log.warn(
-//							"[ERP IF][PROD ORDER][A][BULK] send failed but MES save will continue. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
-//							plan.getProdplanDetailId(),
-//							plan.getProdplanDate(),
-//							plan.getProdplanSeq(),
-//							plan.getProdworkSeq(),
-//							ifList.size()
-//					);
-//				} else {
-//					log.info("[BULK] ERP IF end, size={}", ifList.size());
-//				}
+				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
+				if (!erpSendSuccess) {
+					erpIfFailed = true;
+					log.warn(
+							"[ERP IF][PROD ORDER][A][BULK] send failed but MES save will continue. detailId={}, date={}, seq={}, workSeq={}, cnt={}",
+							plan.getProdplanDetailId(),
+							plan.getProdplanDate(),
+							plan.getProdplanSeq(),
+							plan.getProdworkSeq(),
+							ifList.size()
+					);
+				} else {
+					log.info("[BULK] ERP IF end, size={}", ifList.size());
+				}
 			} catch (Exception e) {
 				erpIfFailed = true;
 				log.warn(
@@ -571,7 +571,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setWorkOrderSerl(0);
 
 		dto.setFactUnit(1);
-		dto.setWorkOrderNo(src.getProdorderId());
+		dto.setWorkOrderNo(src.getLotNo()); // lotno로 대체
 		dto.setWorkOrderDate(src.getProdplanDate());
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
