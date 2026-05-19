@@ -62,6 +62,7 @@ export interface ProdPlanRow {
     optime?: string;
     opmanCode2?: string;
     optime2?: string;
+    erpIfInserted: boolean;
 }
 
 

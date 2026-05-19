@@ -263,6 +263,16 @@ const ProdPlanList = () => {
             width: 100,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => {
+                const inserted = params.row.erpIfInserted;
+                return (
+                    <Chip
+                        label={inserted ? "전송완료" : "미전송"}
+                        color={inserted ? "success" : "default"}
+                        size="small"
+                    />
+                );
+            },
         },
     ];
 
