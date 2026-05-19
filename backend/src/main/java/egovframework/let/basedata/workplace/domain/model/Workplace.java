@@ -54,6 +54,9 @@ public class Workplace implements Serializable {
 	@Schema(description = "작업장 타입")
 	private String workplaceType = "";
 
+	@Schema(description = "ERP 작업장 매핑")
+	private String erpWorkplaceMapping = "";
+
 	@Schema(description = "작업장 상태 (ACTIVE/INACTIVE)")
 	private String status = "";
 
