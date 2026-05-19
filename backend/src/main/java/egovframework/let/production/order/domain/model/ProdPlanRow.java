@@ -111,4 +111,10 @@ public class ProdPlanRow implements Serializable {
 
     /** 작업시간2 */
     private String optime2;
+
+    /** ERP IF 전송 여부 */
+    private boolean erpIfInserted;
+
+    /** MES 생산지시 ID 목록 (서비스 내부 처리용, comma-separated) */
+    private String prodorderIds;
 }

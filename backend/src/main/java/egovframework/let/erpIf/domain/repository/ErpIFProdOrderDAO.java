@@ -38,4 +38,9 @@ public class ErpIFProdOrderDAO extends EgovAbstractMapper {
         return (Integer) selectOne("ErpIFProdOrderDAO.existsByMesIfKey", mesIfKey);
     }
 
+    // 주어진 MESIFKey 목록 중 ERP IF 테이블에 존재하는 key 반환
+    public List<String> selectExistingMesIfKeys(List<String> mesIfKeys) {
+        return selectList("ErpIFProdOrderDAO.selectExistingMesIfKeys", mesIfKeys);
+    }
+
 }

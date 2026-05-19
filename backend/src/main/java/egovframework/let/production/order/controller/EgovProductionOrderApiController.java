@@ -112,7 +112,6 @@ public class EgovProductionOrderApiController {
     /**
      * 생산지시관리에서 사용하는 생산계획 목록 조회
      */
-
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "데이터 없음")
@@ -121,7 +120,7 @@ public class EgovProductionOrderApiController {
     public ResultVO getProdPlans(
             @ModelAttribute ProdPlanSearchParam param,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "20") int size,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
