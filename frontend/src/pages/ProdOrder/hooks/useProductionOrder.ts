@@ -1,10 +1,14 @@
 
+import { useState } from 'react';
 import {useProdPlan} from "./useProdPlan";
 import {useProdOrder} from "./useProdOrder";
 import {useProdOrderDialog} from "./useProdOrderDialog";
 import {useFetchWorkplaces} from "../../../hooks/useFetchWorkplaces";
 import { ProdPlanRow } from "../../../types/productionOrder";
 import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
+import { useToast } from '../../../components/common/Feedback/ToastProvider';
+import { productionOrderService } from '../../../services/productionOrderService';
+import { useProdOrderStore } from '../store/useProdOrderStore';
 
 
 export function useProductionOrder() {
@@ -60,6 +64,46 @@ export function useProductionOrder() {
         dialog.openDialog();
     };
 
+    const { showToast } = useToast();
+    const [erpIfLoading, setErpIfLoading] = useState(false);
+
+    const handleErpIfResend = async () => {
+        const selectedRows = useProdOrderStore.getState().selectedRows;
+
+        const targets = selectedRows.filter(row => row.orderFlag === 'ORDERED');
+
+        if (targets.length === 0) {
+            showToast({ message: 'ORDERED 상태인 계획을 선택해주세요.', severity: 'warning' });
+            return;
+        }
+
+        const payload = targets.map(row => ({
+            prodplanId: row.prodplanId,
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId,
+        }));
+
+        try {
+            setErpIfLoading(true);
+            const response = await productionOrderService.resendErpIf(payload);
+            if (response.data.resultCode !== 200) {
+                showToast({ message: response.data.resultMessage ?? '전송 실패', severity: 'error' });
+                return;
+            }
+            showToast({
+                message: response.data.resultMessage ?? 'ERP IF 전송 완료',
+                severity: 'success',
+            });
+            await prodPlan.fetchProdPlan();
+        } catch {
+            showToast({ message: '서버 오류가 발생했습니다.', severity: 'error' });
+        } finally {
+            setErpIfLoading(false);
+        }
+    };
+
 
     return {
         // plan
@@ -97,6 +141,8 @@ export function useProductionOrder() {
 
         // event
         handlePlanSelect,
+        handleErpIfResend,
+        erpIfLoading,
     };
 
 

@@ -61,6 +61,7 @@ export function useProdOrder() {
         bigo: row.bigo,
         customerCode: row.customerCode,
         tpr110dSeq: row.tpr110dSeq,
+        workcenterSeq: row.workcenterSeq,
     });
 
 

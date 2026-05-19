@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 생산 지시 관리를 위한 서비스 구현 클래스
@@ -82,6 +83,25 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		List<ProdPlanRow> list = productionOrderDAO.selectProdPlans(param);
 		int resultCnt = productionOrderDAO.selectProdPlanCount(param);
+
+		List<String> allProdorderIds = list.stream()
+				.map(ProdPlanRow::getProdorderIds)
+				.filter(ids -> ids != null && !ids.isEmpty())
+				.flatMap(ids -> Arrays.stream(ids.split(",")))
+				.distinct()
+				.collect(Collectors.toList());
+
+		if (!allProdorderIds.isEmpty()) {
+			Set<String> erpInsertedKeys = erpIfService.selectExistingMesIfKeys(allProdorderIds);
+			for (ProdPlanRow row : list) {
+				String ids = row.getProdorderIds();
+				if (ids != null && !ids.isEmpty()) {
+					boolean inserted = Arrays.stream(ids.split(","))
+							.anyMatch(erpInsertedKeys::contains);
+					row.setErpIfInserted(inserted);
+				}
+			}
+		}
 
 		return new ListResult<>(list, resultCnt);
 	}
@@ -420,6 +440,59 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 
 	/**
+	 * 선택한 생산계획의 공정 데이터를 ERP IF 테이블에 재전송
+	 * - ORDERED 상태인 계획의 기존 생산지시 공정 row를 조회
+	 * - ERP에 없는 mesIfKey만 필터하여 배치 전송
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public boolean resendErpIf(List<ProdPlanKeyDto> plans) throws Exception {
+		if (plans == null || plans.isEmpty()) return false;
+
+		List<ErpIFProdOrderDto> candidates = new ArrayList<>();
+
+		for (ProdPlanKeyDto plan : plans) {
+			ProdOrderSearchParam param = new ProdOrderSearchParam();
+			param.setProdplanDate(plan.getProdplanDate());
+			param.setProdplanSeq(plan.getProdplanSeq());
+			param.setProdworkSeq(plan.getProdworkSeq());
+
+			List<ProdOrderRow> orders = productionOrderDAO.selectProdOrdersByPlanId(param);
+			for (ProdOrderRow row : orders) {
+				if (row.getProdorderId() != null && !row.getProdorderId().isEmpty()) {
+					candidates.add(convertRowToIfDto(row, plan.getOpmanCode()));
+				}
+			}
+		}
+
+		if (candidates.isEmpty()) {
+			log.info("[ERP IF][RESEND] 전송 대상 없음 (생산지시 미존재)");
+			return true;
+		}
+
+		List<String> allKeys = candidates.stream()
+				.map(ErpIFProdOrderDto::getMesIfKey)
+				.collect(Collectors.toList());
+
+		Set<String> existingKeys = erpIfService.selectExistingMesIfKeys(allKeys);
+
+		List<ErpIFProdOrderDto> toSend = candidates.stream()
+				.filter(dto -> !existingKeys.contains(dto.getMesIfKey()))
+				.collect(Collectors.toList());
+
+		if (toSend.isEmpty()) {
+			log.info("[ERP IF][RESEND] 모두 이미 전송됨. cnt={}", candidates.size());
+			return true;
+		}
+
+		log.info("[ERP IF][RESEND] 전송 시작. total={}, toSend={}", candidates.size(), toSend.size());
+		boolean success = erpIfService.sendProdOrderBatchToErp(toSend);
+		log.info("[ERP IF][RESEND] 전송 완료. success={}", success);
+		return success;
+	}
+
+
+	/**
 	 * 해당 생산계획이 이미 생산지시 되었는지 여부 확인
 	 */
 	private boolean isAlreadyOrdered(ProdPlanKeyDto plan) throws Exception {
@@ -467,6 +540,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setOpmanCode(plan.getOpmanCode());
 		dto.setTpr110dSeq(row.getTpr110dSeq());
+		dto.setWorkcenterSeq(row.getWorkcenterSeq());
 
 		dto.setItemCtTime(row.getItemCtTime());
 		dto.setItemOnePerQty(row.getItemOnePerQty());
@@ -575,7 +649,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setWorkOrderDate(src.getProdplanDate());
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
-		dto.setWorkCenterSeq(1);
+		dto.setWorkCenterSeq(parseWorkcenterSeq(src.getWorkcenterSeq()));
 		dto.setGoodItemSeq(src.getItemCodeId());
 		dto.setProcSeq(src.getWorkCodeId());
 		dto.setProdUnitSeq(src.getItemUnitId());
@@ -588,6 +662,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setRemark(src.getBigo());
 
 		return dto;
+	}
+
+	private Integer parseWorkcenterSeq(String value) {
+		try {
+			return (value != null && !value.trim().isEmpty()) ? Integer.parseInt(value.trim()) : 1;
+		} catch (NumberFormatException e) {
+			return 1;
+		}
 	}
 
 	/**
@@ -626,6 +708,42 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setEmpSeq(0);
 		dto.setProcRev("");
 		dto.setRemark("");
+
+		return dto;
+	}
+
+	/**
+	 * 기존 생산지시(ProdOrderRow)를 ERP IF (A) 전송용 DTO로 변환한다.
+	 * resendErpIf 전용 — 이미 저장된 row를 재전송할 때 사용.
+	 */
+	private ErpIFProdOrderDto convertRowToIfDto(ProdOrderRow row, String opmanCode) {
+		ErpIFProdOrderDto dto = new ErpIFProdOrderDto();
+
+		dto.setWorkingTag("A");
+		dto.setRegEmpId(opmanCode != null && !opmanCode.isEmpty() ? opmanCode : "SYSTEM");
+
+		dto.setMesIfKey(row.getProdorderId());
+
+		dto.setWorkOrderSeq(0);
+		dto.setWorkOrderSerl(0);
+
+		dto.setFactUnit(1);
+		dto.setWorkOrderNo(row.getLotNo());
+		dto.setWorkOrderDate(row.getProdplanDate());
+
+
+		dto.setProdPlanSeq(row.getProdplanSeq());
+		dto.setWorkCenterSeq(parseWorkcenterSeq(row.getWorkcenterSeq()));
+		dto.setGoodItemSeq(row.getItemCodeId());
+		dto.setProcSeq(row.getWorkCodeId());
+		dto.setProdUnitSeq(row.getItemUnitId());
+
+		dto.setOrderQty(row.getOrderQty());
+
+		dto.setDeptSeq(0);
+		dto.setEmpSeq(0);
+		dto.setProcRev("");
+		dto.setRemark(row.getBigo());
 
 		return dto;
 	}

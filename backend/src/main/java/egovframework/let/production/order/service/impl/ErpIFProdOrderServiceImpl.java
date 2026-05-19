@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service("ErpIFProdOrderService")
@@ -65,6 +67,17 @@ public class ErpIFProdOrderServiceImpl implements ErpIFProdOrderService {
     @Override
     public void updateProdOrderResult(ErpIFProdOrderResultDto dto) {
         erpIfDao.updateErpIFProdOrderResult(dto);
+    }
+
+    @Override
+    public Set<String> selectExistingMesIfKeys(List<String> mesIfKeys) {
+        if (mesIfKeys == null || mesIfKeys.isEmpty()) return new HashSet<>();
+        try {
+            return new HashSet<>(erpIfDao.selectExistingMesIfKeys(mesIfKeys));
+        } catch (Exception e) {
+            log.warn("[ERP IF][MESIFKEY CHECK] ERP DB 조회 실패, erpIfInserted 전부 false 처리", e);
+            return new HashSet<>();
+        }
     }
 
 }
