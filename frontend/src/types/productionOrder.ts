@@ -70,6 +70,7 @@ export interface ProdPlanRow {
 export interface ProdOrderSearchParam {
     prodplanDate: string;   // yyyyMMdd
     prodplanSeq: number;
+    prodworkSeq?: number;
 }
 
 export interface ProdOrderRow {
@@ -180,5 +181,5 @@ export interface ProdPlanKeyDto {
     prodplanDate: string;   // YYYYMMDD
     prodplanSeq: number;
     prodworkSeq: number;
-    // prodplanDetailId: string;
+    prodplanDetailId?: string;
 }

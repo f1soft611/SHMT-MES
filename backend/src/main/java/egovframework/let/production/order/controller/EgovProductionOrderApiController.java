@@ -299,4 +299,31 @@ public class EgovProductionOrderApiController {
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소가 완료되었습니다.");
     }
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "전송 완료"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/erp-if-resend")
+    public ResultVO resendErpIf(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
+        }
+
+        boolean sent = productionOrderService.resendErpIf(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        resultMap.put("sent", sent);
+
+        String message = sent
+                ? "ERP IF 재전송이 완료되었습니다."
+                : "ERP IF 전송 중 오류가 발생했습니다.";
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
+    }
 }

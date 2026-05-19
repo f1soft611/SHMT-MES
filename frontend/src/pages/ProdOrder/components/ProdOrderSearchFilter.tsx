@@ -55,6 +55,8 @@ const ProdOrderSearchFilter = () => {
   const search = useProdOrderStore((s) => s.search);
   const onChange = useProdOrderStore((s) => s.handleSearchChange);
   const onSearch = useProdOrderStore((s) => s.handleSearch);
+  const onErpIfResend = useProdOrderStore((s) => s.handleErpIfResend);
+  const erpIfLoading = useProdOrderStore((s) => s.erpIfLoading);
   const [openCalendarField, setOpenCalendarField] =
     useState<DateFieldName | null>(null);
   const anchorRefs = useRef<Record<DateFieldName, HTMLDivElement | null>>({
@@ -321,6 +323,15 @@ const ProdOrderSearchFilter = () => {
             disabled={loading}
           >
             검색
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="warning"
+            onClick={onErpIfResend}
+            disabled={erpIfLoading || loading}
+          >
+            ERP IF
           </Button>
         </Stack>
       </Box>
