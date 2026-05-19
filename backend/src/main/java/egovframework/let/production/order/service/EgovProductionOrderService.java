@@ -57,4 +57,12 @@ public interface EgovProductionOrderService {
 	// 생산지시 일괄 삭제
 	void bulkCancelProductionOrders(List<ProdPlanKeyDto> prodOrderList) throws Exception;
 
+	/**
+	 * 선택한 생산계획의 공정 데이터를 ERP IF 테이블에 재전송
+	 * ERP에 이미 존재하는 mesIfKey는 건너뜀
+	 * @param plans 재전송 대상 생산계획 키 목록
+	 * @return ERP 전송 성공 여부 (실패 시 false)
+	 */
+	boolean resendErpIf(List<ProdPlanKeyDto> plans) throws Exception;
+
 }

@@ -4,6 +4,7 @@ import egovframework.let.production.order.domain.model.ErpIFProdOrderDto;
 import egovframework.let.production.order.domain.model.ErpIFProdOrderResultDto;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ErpIFProdOrderService {
 
@@ -17,4 +18,7 @@ public interface ErpIFProdOrderService {
 
     // ERP → MES 결과 반영
     void updateProdOrderResult(ErpIFProdOrderResultDto dto) throws Exception;
+
+    // ERP IF 테이블에서 존재하는 MESIFKey를 Set으로 반환
+    Set<String> selectExistingMesIfKeys(List<String> mesIfKeys);
 }

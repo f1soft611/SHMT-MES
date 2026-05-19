@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import { useNavigate } from 'react-router-dom';
 import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import {
@@ -81,6 +81,11 @@ const ProdPlanList = () => {
         rows,
         row => row.prodplanDate + row.prodplanSeq + row.prodworkSeq
     );
+
+    // selectedRows 변경 시 store에 sync
+    useEffect(() => {
+        useProdOrderStore.setState({ selectedRows });
+    }, [selectedRows]);
 
     const {
         handleBulkOrder,
@@ -263,6 +268,16 @@ const ProdPlanList = () => {
             width: 100,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => {
+                const inserted = params.row.erpIfInserted;
+                return (
+                    <Chip
+                        label={inserted ? "전송완료" : "미전송"}
+                        color={inserted ? "success" : "default"}
+                        size="small"
+                    />
+                );
+            },
         },
     ];
 
