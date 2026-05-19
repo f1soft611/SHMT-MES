@@ -287,20 +287,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = useCallback(() => {
-    setSearchParams((prev) => {
-      if (
-        prev.searchCnd === inputValues.searchCnd &&
-        prev.searchWrd === inputValues.searchWrd &&
-        prev.dateFrom === inputValues.dateFrom &&
-        prev.dateTo === inputValues.dateTo &&
-        prev.workplaceCode === inputValues.workplaceCode &&
-        prev.allocationStatus === inputValues.allocationStatus &&
-        prev.reqType === inputValues.reqType
-      ) {
-        return prev;
-      }
-      return { ...inputValues };
-    });
+    setSearchParams({ ...inputValues });
 
     setPaginationModel((prev) => {
       if (prev.page === 0) {
