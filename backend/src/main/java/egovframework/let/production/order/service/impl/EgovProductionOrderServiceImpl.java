@@ -540,6 +540,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setOpmanCode(plan.getOpmanCode());
 		dto.setTpr110dSeq(row.getTpr110dSeq());
+		dto.setWorkcenterSeq(row.getWorkcenterSeq());
 
 		dto.setItemCtTime(row.getItemCtTime());
 		dto.setItemOnePerQty(row.getItemOnePerQty());
@@ -648,7 +649,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setWorkOrderDate(src.getProdplanDate());
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
-		dto.setWorkCenterSeq(1);
+		dto.setWorkCenterSeq(parseWorkcenterSeq(src.getWorkcenterSeq()));
 		dto.setGoodItemSeq(src.getItemCodeId());
 		dto.setProcSeq(src.getWorkCodeId());
 		dto.setProdUnitSeq(src.getItemUnitId());
@@ -661,6 +662,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setRemark(src.getBigo());
 
 		return dto;
+	}
+
+	private Integer parseWorkcenterSeq(String value) {
+		try {
+			return (value != null && !value.trim().isEmpty()) ? Integer.parseInt(value.trim()) : 1;
+		} catch (NumberFormatException e) {
+			return 1;
+		}
 	}
 
 	/**
@@ -724,7 +733,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 
 		dto.setProdPlanSeq(row.getProdplanSeq());
-		dto.setWorkCenterSeq(1);
+		dto.setWorkCenterSeq(parseWorkcenterSeq(row.getWorkcenterSeq()));
 		dto.setGoodItemSeq(row.getItemCodeId());
 		dto.setProcSeq(row.getWorkCodeId());
 		dto.setProdUnitSeq(row.getItemUnitId());

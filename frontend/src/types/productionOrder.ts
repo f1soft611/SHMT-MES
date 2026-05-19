@@ -47,6 +47,7 @@ export interface ProdPlanRow {
     itemName: string;
     workcenterCode: string;
     workcenterName: string;
+    workcenterSeq?: string;
     workCode: string;
     equipSysCd: string;
     equipmentName?: string;
@@ -111,6 +112,7 @@ export interface ProdOrderRow {
     optime2: number;
     rstCnt: number;
     tpr110dSeq:number;
+    workcenterSeq?: string;
 
     // ===== UI 전용 필드 =====
     _isNew?: boolean;
@@ -147,6 +149,7 @@ export interface ProdOrderInsertDto {
     bigo?: string;
     opmanCode?: string;
     tpr110dSeq: number;
+    workcenterSeq?: string;
 }
 
 export interface ProdOrderUpdateDto {

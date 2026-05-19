@@ -71,4 +71,5 @@ public class ProdOrderRow implements Serializable {
 
     private Integer rstCnt;           // 실적 건수
     private Integer tpr110dSeq;
+    private String workcenterSeq;
 }

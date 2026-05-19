@@ -67,6 +67,9 @@ public class ProdPlanRow implements Serializable {
     /** 작업장명 */
     private String workcenterName;
 
+    /** ERP 작업장 시퀀스 (TPR101.ERP_WORKPLACE_MAPPING) */
+    private String workcenterSeq;
+
     /** 작업코드 */
     private String workCode;
 
