@@ -9,6 +9,7 @@ export interface Workplace {
   description?: string;
   location?: string;
   workplaceType?: string;
+  erpWorkplaceMapping?: string;
   status?: string;
   useYn?: string;
 }

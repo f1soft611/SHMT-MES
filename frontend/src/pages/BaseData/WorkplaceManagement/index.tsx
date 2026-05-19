@@ -31,6 +31,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Workplace } from '../../../types/workplace';
 import workplaceService from '../../../services/workplaceService';
+import commonCodeService from '../../../services/commonCodeService';
 import { usePermissions } from '../../../contexts/PermissionContext';
 import WorkplaceDetailDialog from './components/WorkplaceDetailDialog';
 import DataTable from '../../../components/common/DataTable/DataTable';
@@ -46,6 +47,7 @@ const workplaceSchema: yup.ObjectSchema<Workplace> = yup.object({
   description: yup.string(),
   location: yup.string(),
   workplaceType: yup.string(),
+  erpWorkplaceMapping: yup.string(),
   status: yup.string().required('상태는 필수입니다.'),
   useYn: yup.string().required('사용 여부는 필수입니다.'),
 });
@@ -73,6 +75,9 @@ const WorkplaceManagement: React.FC = () => {
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [detailTab, setDetailTab] = useState(0);
+  const [erpWorkplaceCodes, setErpWorkplaceCodes] = useState<
+    Array<{ code: string; codeNm: string }>
+  >([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     page: 0,
     pageSize: 20,
@@ -97,6 +102,7 @@ const WorkplaceManagement: React.FC = () => {
       description: '',
       location: '',
       workplaceType: '',
+      erpWorkplaceMapping: '',
       status: 'ACTIVE',
       useYn: 'Y',
     },
@@ -139,6 +145,54 @@ const WorkplaceManagement: React.FC = () => {
     }
   }, [searchParams, paginationModel, showToast]);
 
+  // ERP 작업장 코드 로드 (COM010)
+  useEffect(() => {
+    const loadErpWorkplaceCodes = async () => {
+      try {
+        const response = await commonCodeService.getCommonDetailCodeList(
+          'COM010',
+          'Y',
+        );
+
+        // result가 배열인지 확인
+        if (response.resultCode === 200 && response.result) {
+          // result가 직접 배열인 경우
+          if (Array.isArray(response.result)) {
+            setErpWorkplaceCodes(response.result);
+          }
+          // result.resultList가 있는 경우
+          else if (
+            response.result.detailCodeList &&
+            Array.isArray(response.result.detailCodeList)
+          ) {
+            setErpWorkplaceCodes(response.result.detailCodeList);
+          } else {
+            console.warn('Unknown response structure:', response);
+            showToast({
+              message:
+                'ERP 작업장 코드를 불러오지 못했습니다. COM010 공통코드를 확인해주세요.',
+              severity: 'warning',
+            });
+          }
+        } else {
+          console.warn('Failed to load ERP workplace codes:', response);
+          showToast({
+            message:
+              'ERP 작업장 코드를 불러오지 못했습니다. COM010 공통코드를 확인해주세요.',
+            severity: 'warning',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch ERP workplace codes:', error);
+        showToast({
+          message: 'ERP 작업장 코드 조회 중 오류가 발생했습니다.',
+          severity: 'error',
+        });
+      }
+    };
+    loadErpWorkplaceCodes();
+  }, [showToast]);
+
   // 컴포넌트 마운트 시와 searchParams 변경 시에만 조회
   useEffect(() => {
     fetchWorkplaces();
@@ -173,6 +227,7 @@ const WorkplaceManagement: React.FC = () => {
       description: '',
       location: '',
       workplaceType: '',
+      erpWorkplaceMapping: '',
       status: 'ACTIVE',
       useYn: 'Y',
     });
@@ -261,6 +316,18 @@ const WorkplaceManagement: React.FC = () => {
     return useYn === 'N' ? '미사용' : '사용';
   };
 
+  const getErpWorkplaceLabel = (erpWorkplaceCode?: string) => {
+    if (!erpWorkplaceCode) {
+      return '-';
+    }
+
+    const matchedCode = erpWorkplaceCodes.find(
+      (code) => code.code === erpWorkplaceCode,
+    );
+
+    return matchedCode?.codeNm || erpWorkplaceCode;
+  };
+
   const columns: GridColDef[] = [
     {
       field: 'workplaceCode',
@@ -287,6 +354,14 @@ const WorkplaceManagement: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (params.value === 'A' ? 'A(주야)' : 'B(교대)'),
+    },
+    {
+      field: 'erpWorkplaceMapping',
+      headerName: 'ERP 작업장 매핑',
+      flex: 1,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => getErpWorkplaceLabel(params.value),
     },
     {
       field: 'status',
@@ -629,6 +704,25 @@ const WorkplaceManagement: React.FC = () => {
                         {workplaceErrors.useYn.message}
                       </Typography>
                     )}
+                  </FormControl>
+                )}
+              />
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <Controller
+                name="erpWorkplaceMapping"
+                control={workplaceControl}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>ERP 작업장 매핑</InputLabel>
+                    <Select {...field} label="ERP 작업장 매핑">
+                      <MenuItem value="">선택하지 않음</MenuItem>
+                      {erpWorkplaceCodes.map((code) => (
+                        <MenuItem key={code.code} value={code.code}>
+                          {code.codeNm}
+                        </MenuItem>
+                      ))}
+                    </Select>
                   </FormControl>
                 )}
               />

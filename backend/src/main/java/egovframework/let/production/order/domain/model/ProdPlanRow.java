@@ -67,6 +67,9 @@ public class ProdPlanRow implements Serializable {
     /** 작업장명 */
     private String workcenterName;
 
+    /** ERP 작업장 시퀀스 (TPR101.ERP_WORKPLACE_MAPPING) */
+    private String workcenterSeq;
+
     /** 작업코드 */
     private String workCode;
 
@@ -111,4 +114,10 @@ public class ProdPlanRow implements Serializable {
 
     /** 작업시간2 */
     private String optime2;
+
+    /** ERP IF 전송 여부 */
+    private boolean erpIfInserted;
+
+    /** MES 생산지시 ID 목록 (서비스 내부 처리용, comma-separated) */
+    private String prodorderIds;
 }

@@ -10,6 +10,7 @@
 		<result property="workplaceType" column="WORKCENTER_TYPE"/>
 		<result property="description" column="DESCRIPTION"/>
 		<result property="location" column="LOCATION"/>
+		<result property="erpWorkplaceMapping" column="ERP_WORKPLACE_MAPPING"/>
 		<result property="status" column="STATUS"/>
 		<result property="useYn" column="USE_YN"/>
 		<result property="proCnt" column="PRO_CNT"/>
@@ -29,6 +30,7 @@
 		W.WORKCENTER_TYPE,
 		W.DESCRIPTION,
 		W.LOCATION,
+		W.ERP_WORKPLACE_MAPPING,
 		W.STATUS,
 		W.USE_YN,
 		W.OPMAN_CODE,
@@ -120,6 +122,7 @@
 			DESCRIPTION,
 			LOCATION,
 			WORKCENTER_TYPE,
+			ERP_WORKPLACE_MAPPING,
 			STATUS,
 			USE_YN,
 			OPMAN_CODE,
@@ -141,6 +144,7 @@
 			DESCRIPTION,
 			LOCATION,
 			WORKCENTER_TYPE,
+			ERP_WORKPLACE_MAPPING,
 			STATUS,
 			USE_YN,
 			OPMAN_CODE,
@@ -153,6 +157,7 @@
 					 #{description},
 					 #{location},
 					 #{workplaceType},
+					 #{erpWorkplaceMapping},
 					 ISNULL(#{status}, 'ACTIVE'),
 					 ISNULL(#{useYn}, 'Y'),
 					 #{regUserId},
@@ -168,6 +173,7 @@
 			DESCRIPTION = #{description},
 			LOCATION = #{location},
 			WORKCENTER_TYPE = #{workplaceType},
+			ERP_WORKPLACE_MAPPING = #{erpWorkplaceMapping},
 			STATUS = #{status},
 			USE_YN = #{useYn},
 			OPMAN_CODE2 = #{updUserId},
