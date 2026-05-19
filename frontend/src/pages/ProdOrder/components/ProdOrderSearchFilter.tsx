@@ -320,7 +320,7 @@ const ProdOrderSearchFilter = () => {
             color="primary"
             startIcon={<SearchIcon />}
             onClick={onSearch}
-            disabled={loading}
+            disabled={erpIfLoading || loading}
           >
             검색
           </Button>
