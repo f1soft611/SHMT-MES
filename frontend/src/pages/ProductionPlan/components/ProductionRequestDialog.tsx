@@ -1057,7 +1057,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
           flexWrap="wrap"
         >
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>검색 조건</InputLabel>
+            <InputLabel>검색 조건 1</InputLabel>
             <Select
               value={inputValues.searchCnd}
               label="검색 조건"
@@ -1067,6 +1067,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               <MenuItem value="2">품목명</MenuItem>
               <MenuItem value="3">생산의뢰번호</MenuItem>
               <MenuItem value="4">품목번호</MenuItem>
+              <MenuItem value="5">거래처</MenuItem>
+              <MenuItem value="6">비고</MenuItem>
             </Select>
           </FormControl>
           <TextField
@@ -1133,6 +1135,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         <Stack
           direction="row"
           spacing={2}
+          sx={{ mt: 1 }}
           alignItems="center"
           useFlexGap
           flexWrap="wrap"
@@ -1149,6 +1152,8 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               <MenuItem value="2">품목명</MenuItem>
               <MenuItem value="3">생산의뢰번호</MenuItem>
               <MenuItem value="4">품목번호</MenuItem>
+              <MenuItem value="5">거래처</MenuItem>
+              <MenuItem value="6">비고</MenuItem>
             </Select>
           </FormControl>
           <TextField

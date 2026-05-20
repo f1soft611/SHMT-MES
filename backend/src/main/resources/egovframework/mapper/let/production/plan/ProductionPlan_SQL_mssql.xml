@@ -767,6 +767,14 @@
 					<!-- 품목번호 -->
 					AND T.ITEM_NO LIKE '%' + #{searchWrd} + '%'
 				</when>
+				<when test="searchCnd == '5' or searchCnd == 5">
+					<!-- 거래처 -->
+					AND ISNULL(C.CUSTOMER_NAME, '') LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '6' or searchCnd == 6">
+					<!-- 비고 -->
+					AND ISNULL(T.BIGO, '') LIKE '%' + #{searchWrd} + '%'
+				</when>
 			</choose>
 		</if>
 		<!-- 검색 조건 2 (다중 조건) -->
@@ -787,6 +795,14 @@
 				<when test="searchCnd2 == '4' or searchCnd2 == 4">
 					<!-- 품목번호 -->
 					AND T.ITEM_NO LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '5' or searchCnd2 == 5">
+					<!-- 거래처 -->
+					AND ISNULL(C.CUSTOMER_NAME, '') LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '6' or searchCnd2 == 6">
+					<!-- 비고 -->
+					AND ISNULL(T.BIGO, '') LIKE '%' + #{searchWrd2} + '%'
 				</when>
 			</choose>
 		</if>
@@ -904,6 +920,14 @@
 					<!-- 품목번호 -->
 					AND T.ITEM_NO LIKE '%' + #{searchWrd} + '%'
 				</when>
+				<when test="searchCnd == '5' or searchCnd == 5">
+					<!-- 거래처 -->
+					AND ISNULL(C.CUSTOMER_NAME, '') LIKE '%' + #{searchWrd} + '%'
+				</when>
+				<when test="searchCnd == '6' or searchCnd == 6">
+					<!-- 비고 -->
+					AND ISNULL(T.BIGO, '') LIKE '%' + #{searchWrd} + '%'
+				</when>
 			</choose>
 		</if>
 		<!-- 검색 조건 2 (다중 조건) -->
@@ -924,6 +948,14 @@
 				<when test="searchCnd2 == '4' or searchCnd2 == 4">
 					<!-- 품목번호 -->
 					AND T.ITEM_NO LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '5' or searchCnd2 == 5">
+					<!-- 거래처 -->
+					AND ISNULL(C.CUSTOMER_NAME, '') LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '6' or searchCnd2 == 6">
+					<!-- 비고 -->
+					AND ISNULL(T.BIGO, '') LIKE '%' + #{searchWrd2} + '%'
 				</when>
 			</choose>
 		</if>
