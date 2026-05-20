@@ -30,6 +30,9 @@ interface ProdOrderStoreState {
     submit: () => void;
     deleteOrder: () => void;
     closeDialog: () => void;
+    selectedRows: ProdPlanRow[];
+    handleErpIfResend: () => void;
+    erpIfLoading: boolean;
 }
 
 export const useProdOrderStore = create<ProdOrderStoreState>()(() => ({
@@ -56,6 +59,9 @@ export const useProdOrderStore = create<ProdOrderStoreState>()(() => ({
     submit: () => {},
     deleteOrder: () => {},
     closeDialog: () => {},
+    selectedRows: [],
+    handleErpIfResend: () => {},
+    erpIfLoading: false,
 }));
 
 export function useProdOrderStoreInit() {
@@ -75,6 +81,7 @@ export function useProdOrderStoreInit() {
         submit: () => hookRef.current.submit(),
         deleteOrder: () => hookRef.current.deleteOrder(),
         closeDialog: () => hookRef.current.closeDialog(),
+        handleErpIfResend: () => hookRef.current.handleErpIfResend(),
     });
 
     useEffect(() => {
@@ -95,11 +102,13 @@ export function useProdOrderStoreInit() {
             open: hook.open,
             workplaces: hook.workplaces,
             equipments: hook.equipments,
+            erpIfLoading: hook.erpIfLoading,
         });
     }, [
         hook.planRows, hook.planLoading, hook.prodplanResultCnt,
         hook.paginationModel, hook.search, hook.selectedPlan,
         hook.localRows, hook.orderResultCnt, hook.orderLoading,
         hook.open, hook.workplaces, hook.equipments,
+        hook.erpIfLoading,
     ]);
 }

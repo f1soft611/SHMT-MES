@@ -114,4 +114,16 @@
     </insert>
 
 
+
+    <select id="selectExistingMesIfKeys"
+            parameterType="java.util.List"
+            resultType="string">
+        SELECT DISTINCT MESIFKey
+        FROM SHM_IF_TPDSFCWorkOrder
+        WHERE MESIFKey IN
+        <foreach collection="list" item="key" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
 </mapper>
