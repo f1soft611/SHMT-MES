@@ -35,8 +35,12 @@ import {
 import { Equipment } from '../../../types/equipment';
 import { ProductionPlanData } from '../../../types/productionPlan';
 import { decodeHtml } from '../../../utils/stringUtils';
+import {
+  getUniformGroupColor,
+  GroupColor,
+  shouldUpdateScrollMetrics,
+} from './weeklyGridPerformance';
 
-type GroupColor = { main: string; light: string; dark: string };
 type ChipColor =
   | 'default'
   | 'primary'
@@ -456,6 +460,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollWidth, setScrollWidth] = useState(0);
   const [clientWidth, setClientWidth] = useState(0);
+  const scrollMetricsRef = useRef({ scrollWidth: 0, clientWidth: 0 });
   // 스타일 상수
   const equipmentColWidth = compactMode ? 180 : 240;
   const dayColMinWidth = compactMode ? 280 : 360;
@@ -534,8 +539,26 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     if (!container) return;
 
     const updateSizes = () => {
-      setScrollWidth(container.scrollWidth);
-      setClientWidth(container.clientWidth);
+      const nextScrollWidth = container.scrollWidth;
+      const nextClientWidth = container.clientWidth;
+
+      if (
+        !shouldUpdateScrollMetrics(
+          scrollMetricsRef.current.scrollWidth,
+          scrollMetricsRef.current.clientWidth,
+          nextScrollWidth,
+          nextClientWidth,
+        )
+      ) {
+        return;
+      }
+
+      scrollMetricsRef.current = {
+        scrollWidth: nextScrollWidth,
+        clientWidth: nextClientWidth,
+      };
+      setScrollWidth(nextScrollWidth);
+      setClientWidth(nextClientWidth);
     };
 
     updateSizes();
@@ -620,15 +643,6 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     if (nextLeft !== container.scrollLeft) {
       container.scrollTo({ left: nextLeft, behavior: 'smooth' });
     }
-  };
-
-  // 분할 표시는 단일 컬러로 통일
-  const getGroupColor = (_groupId: string) => {
-    return {
-      main: '#0f766e',
-      light: '#e6fffb',
-      dark: '#0b5a53',
-    };
   };
 
   const activeGroupIdRef = useRef<string | null>(activeGroupId);
@@ -1111,11 +1125,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                 maxWidth: dayColWidth,
                               }}
                             >
-                              <Collapse
-                                in={isExpanded}
-                                timeout="auto"
-                                unmountOnExit
-                              >
+                              <Collapse in={isExpanded} timeout="auto">
                                 <Box
                                   sx={{
                                     minHeight: hasPlans
@@ -1237,7 +1247,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                             : null);
                                         const groupColor =
                                           isGrouped && groupColorKey
-                                            ? getGroupColor(groupColorKey)
+                                            ? getUniformGroupColor(
+                                                groupColorKey,
+                                              )
                                             : null;
 
                                         const isGroupActive =
