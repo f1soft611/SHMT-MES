@@ -154,5 +154,59 @@ export const mapWeeklyEquipmentPlans = (
       });
     });
   });
+
+  type GroupCandidate = {
+    index: number;
+    planKey: string;
+  };
+
+  const groupedIndexes = new Map<string, GroupCandidate[]>();
+
+  list.forEach((plan, index) => {
+    const hasExistingGroup =
+      !!plan.planGroupId && (plan.totalGroupCount ?? plan.createDays ?? 1) > 1;
+
+    if (
+      hasExistingGroup ||
+      !plan.orderNo ||
+      plan.orderSeqno == null ||
+      plan.orderHistno == null
+    ) {
+      return;
+    }
+
+    const planNo = plan.planNo || 'NO_PLAN';
+    const planSeq = plan.planSeq ?? -1;
+    const orderKey = `${plan.orderNo}::${plan.orderSeqno}::${plan.orderHistno}`;
+    const planKey = `${planNo}::${planSeq}`;
+
+    const candidates = groupedIndexes.get(orderKey) ?? [];
+    candidates.push({ index, planKey });
+    groupedIndexes.set(orderKey, candidates);
+  });
+
+  groupedIndexes.forEach((candidates) => {
+    if (candidates.length < 2) {
+      return;
+    }
+
+    const distinctPlanCount = new Set(candidates.map((item) => item.planKey))
+      .size;
+    if (distinctPlanCount < 2) {
+      return;
+    }
+
+    const indexes = candidates.map((item) => item.index);
+
+    indexes.forEach((index, orderIndex) => {
+      list[index] = {
+        ...list[index],
+        splitByOrder: true,
+        groupSeq: orderIndex + 1,
+        totalGroupCount: indexes.length,
+      };
+    });
+  });
+
   return list;
 };

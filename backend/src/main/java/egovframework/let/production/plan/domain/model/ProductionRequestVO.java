@@ -30,6 +30,12 @@ public class ProductionRequestVO extends ComDefaultVO {
     @Schema(description = "검색 키워드")
     private String searchWrd = "";
 
+    @Schema(description = "검색 조건 2 (다중 조건)")
+    private String searchCnd2 = "";
+
+    @Schema(description = "검색 키워드 2 (다중 조건)")
+    private String searchWrd2 = "";
+
     @Schema(description = "시작일자 (YYYYMMDD)")
     private String startDate = "";
 

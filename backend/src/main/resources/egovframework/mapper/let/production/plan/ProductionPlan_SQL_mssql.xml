@@ -503,6 +503,32 @@
 			WHERE R.CUSTOMER_CODE IS NOT NULL
 			AND R.CUSTOMER_CODE != ''
 			GROUP BY R.FACTORY_CODE, R.PRODPLAN_DATE, R.PRODPLAN_SEQ
+		),
+		RepresentativeOrder AS (
+			-- 계획별 대표 생산의뢰 1건 선택
+			SELECT
+				R.FACTORY_CODE,
+				R.PRODPLAN_DATE,
+				R.PRODPLAN_SEQ,
+				R.ORDER_NO,
+				R.ORDER_SEQNO,
+				R.ORDER_HISTNO,
+				ROW_NUMBER() OVER (
+					PARTITION BY R.FACTORY_CODE, R.PRODPLAN_DATE, R.PRODPLAN_SEQ
+					ORDER BY
+						CASE WHEN ISNULL(R.REPRESENT_ORDER, 'N') = 'Y' THEN 0 ELSE 1 END,
+						R.ORDER_NO,
+						R.ORDER_SEQNO,
+						R.ORDER_HISTNO
+				) AS RN
+			FROM TPR301R R
+			INNER JOIN (
+				SELECT DISTINCT FACTORY_CODE, PRODPLAN_DATE, PRODPLAN_SEQ
+				FROM ScopedPlans
+			) SK
+			ON SK.FACTORY_CODE = R.FACTORY_CODE
+			AND SK.PRODPLAN_DATE = R.PRODPLAN_DATE
+			AND SK.PRODPLAN_SEQ = R.PRODPLAN_SEQ
 		)
 		SELECT
 		    E.FACTORY_CODE,
@@ -524,6 +550,9 @@
 			D.PROD_QTY AS PLANNED_QTY,
 			0 AS ACTUAL_Qty,
 			D.WORKER_TYPE AS SHIFT,
+			RO.ORDER_NO AS orderNo,
+			RO.ORDER_SEQNO AS orderSeqno,
+			RO.ORDER_HISTNO AS orderHistno,
 			D.WORKER_CODE,
 			D.WORKER_NAME,
 			D.DELIVERY_DATE,
@@ -590,6 +619,11 @@
 			ON C.FACTORY_CODE = D.FACTORY_CODE
 			AND C.PRODPLAN_DATE = D.PRODPLAN_DATE
 			AND C.PRODPLAN_SEQ = D.PRODPLAN_SEQ
+			LEFT JOIN RepresentativeOrder RO
+			ON RO.FACTORY_CODE = D.FACTORY_CODE
+			AND RO.PRODPLAN_DATE = D.PRODPLAN_DATE
+			AND RO.PRODPLAN_SEQ = D.PRODPLAN_SEQ
+			AND RO.RN = 1
 			LEFT JOIN TCO601 CU
 			ON CU.FACTORY_CODE = C.FACTORY_CODE
 			AND CU.CUSTOMER_CODE = C.FIRST_CUSTOMER_CODE
@@ -735,6 +769,27 @@
 				</when>
 			</choose>
 		</if>
+		<!-- 검색 조건 2 (다중 조건) -->
+		<if test="searchCnd2 != null and searchCnd2 != '' and searchWrd2 != null and searchWrd2 != ''">
+			<choose>
+				<when test="searchCnd2 == '1' or searchCnd2 == 1">
+					<!-- 품목코드 -->
+					AND T.ITEM_CODE LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '2' or searchCnd2 == 2">
+					<!-- 품목명 -->
+					AND T.ITEM_NAME LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '3' or searchCnd2 == 3">
+					<!-- 생산의뢰번호 -->
+					AND T.ORDER_NO LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '4' or searchCnd2 == 4">
+					<!-- 품목번호 -->
+					AND T.ITEM_NO LIKE '%' + #{searchWrd2} + '%'
+				</when>
+			</choose>
+		</if>
 		<!-- 의뢰일(OPTIME) 기간 검색 (dateFrom/dateTo) -->
 		<if test="dateFrom != null and dateFrom != ''">
 			AND CONVERT(VARCHAR(8), T.PROD_PLAN_DATE, 112) &gt;= #{dateFrom}
@@ -848,6 +903,27 @@
 				<when test="searchCnd == '4' or searchCnd == 4">
 					<!-- 품목번호 -->
 					AND T.ITEM_NO LIKE '%' + #{searchWrd} + '%'
+				</when>
+			</choose>
+		</if>
+		<!-- 검색 조건 2 (다중 조건) -->
+		<if test="searchCnd2 != null and searchCnd2 != '' and searchWrd2 != null and searchWrd2 != ''">
+			<choose>
+				<when test="searchCnd2 == '1' or searchCnd2 == 1">
+					<!-- 품목코드 -->
+					AND T.ITEM_CODE LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '2' or searchCnd2 == 2">
+					<!-- 품목명 -->
+					AND T.ITEM_NAME LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '3' or searchCnd2 == 3">
+					<!-- 생산의뢰번호 -->
+					AND T.ORDER_NO LIKE '%' + #{searchWrd2} + '%'
+				</when>
+				<when test="searchCnd2 == '4' or searchCnd2 == 4">
+					<!-- 품목번호 -->
+					AND T.ITEM_NO LIKE '%' + #{searchWrd2} + '%'
 				</when>
 			</choose>
 		</if>

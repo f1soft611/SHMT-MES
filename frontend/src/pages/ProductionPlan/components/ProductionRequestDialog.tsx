@@ -57,6 +57,8 @@ import { CommonDetailCode } from '../../../types/commonCode';
 interface ProductionRequestSearchState {
   searchCnd: string;
   searchWrd: string;
+  searchCnd2?: string;
+  searchWrd2?: string;
   dateFrom: string;
   dateTo: string;
   workplaceCode: string;
@@ -90,6 +92,8 @@ const buildSearchState = (
 ): ProductionRequestSearchState => ({
   searchCnd: DEFAULT_SEARCH_CND,
   searchWrd: '',
+  searchCnd2: '',
+  searchWrd2: '',
   dateFrom: '',
   dateTo: '',
   workplaceCode: workplaceCode || '',
@@ -1124,11 +1128,43 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
             InputLabelProps={{ shrink: true }}
             sx={{ width: 180 }}
           />
+        </Stack>
+        {/* 두 번째 검색 필드 행 */}
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+        >
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>검색 조건 2</InputLabel>
+            <Select
+              value={inputValues.searchCnd2 || ''}
+              label="검색 조건 2"
+              onChange={(e) => handleInputChange('searchCnd2', e.target.value)}
+            >
+              <MenuItem value="">선택 안함</MenuItem>
+              <MenuItem value="1">품목코드</MenuItem>
+              <MenuItem value="2">품목명</MenuItem>
+              <MenuItem value="3">생산의뢰번호</MenuItem>
+              <MenuItem value="4">품목번호</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            size="small"
+            placeholder="검색어를 입력하세요"
+            value={inputValues.searchWrd2 || ''}
+            onChange={(e) => handleInputChange('searchWrd2', e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{ flex: 1, minWidth: 220 }}
+            disabled={!inputValues.searchCnd2}
+          />
           <Button
             variant="contained"
             startIcon={<SearchIcon />}
             onClick={handleSearch}
-            sx={{ px: 4 }}
+            sx={{ px: 4, ml: 'auto' }}
           >
             검색
           </Button>

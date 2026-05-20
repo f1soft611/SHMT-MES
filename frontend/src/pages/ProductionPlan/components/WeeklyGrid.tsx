@@ -49,6 +49,8 @@ type ChipColor =
 interface PlanCardProps {
   plan: ProductionPlanData;
   isGroupActive: boolean;
+  isOrderActive: boolean;
+  isOrderSplit: boolean;
   groupColor: GroupColor | null;
   isGrouped: boolean;
   groupSeq: number;
@@ -65,12 +67,15 @@ interface PlanCardProps {
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
   handleDelete: (plan: ProductionPlanData) => void;
   onGroupClick: (groupId: string) => void;
+  onOrderClick: (orderNo: string) => void;
 }
 
 const PlanCard = memo<PlanCardProps>(
   ({
     plan,
     isGroupActive,
+    isOrderActive,
+    isOrderSplit,
     groupColor,
     isGrouped,
     groupSeq,
@@ -87,7 +92,26 @@ const PlanCard = memo<PlanCardProps>(
     handleOpenEditDialog,
     handleDelete,
     onGroupClick,
+    onOrderClick,
   }) => {
+    const handleGroupBadgeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+
+      if (isOrderSplit && plan.orderNo) {
+        onOrderClick(plan.orderNo);
+        return;
+      }
+
+      if (plan.planGroupId) {
+        onGroupClick(plan.planGroupId);
+        return;
+      }
+
+      if (plan.orderNo) {
+        onOrderClick(plan.orderNo);
+      }
+    };
+
     return (
       <Card
         elevation={0}
@@ -99,7 +123,7 @@ const PlanCard = memo<PlanCardProps>(
           borderLeft: '4px solid',
           borderColor: groupColor?.main || getShiftBorderColor(plan.shift),
           position: 'relative',
-          ...(isGroupActive && {
+          ...((isGroupActive || isOrderActive) && {
             border: '3px dashed',
             borderColor: groupColor?.main,
             transform: 'scale(1.01)',
@@ -157,15 +181,16 @@ const PlanCard = memo<PlanCardProps>(
 
                 {isGrouped && (
                   <Chip
-                    label={`🔗 ${groupSeq}/${groupTotal}`}
+                    label={
+                      isOrderSplit && plan.orderNo
+                        ? `의뢰:${plan.orderNo} (${groupSeq}/${groupTotal})`
+                        : `🔗 ${groupSeq}/${groupTotal}`
+                    }
                     size="small"
-                    variant="outlined"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (plan.planGroupId) {
-                        onGroupClick(plan.planGroupId);
-                      }
-                    }}
+                    variant={
+                      isOrderSplit && isOrderActive ? 'filled' : 'outlined'
+                    }
+                    onClick={handleGroupBadgeClick}
                     sx={{
                       borderColor: groupColor?.main,
                       color: groupColor?.dark,
@@ -174,6 +199,12 @@ const PlanCard = memo<PlanCardProps>(
                       backgroundColor: isGroupActive
                         ? groupColor?.light
                         : 'white',
+                      ...(isOrderSplit &&
+                        isOrderActive && {
+                          bgcolor: groupColor?.main,
+                          color: 'white',
+                          borderColor: groupColor?.dark,
+                        }),
                       cursor: 'pointer',
                       '&:hover': {
                         backgroundColor: groupColor?.light,
@@ -267,14 +298,6 @@ const PlanCard = memo<PlanCardProps>(
                     }}
                   />
                 )}
-                {plan.orderNo && (
-                  <Chip
-                    label={`의뢰:${plan.orderNo}`}
-                    size="small"
-                    color="info"
-                    variant="outlined"
-                  />
-                )}
               </Box>
             </Box>
             <Box
@@ -356,6 +379,7 @@ interface WeeklyGridProps {
   visibleDays: boolean[];
   expandedEquipments: Set<string>;
   activeGroupId: string | null;
+  activeOrderNo: string | null;
   plans: ProductionPlanData[];
   formatDate: (date: Date, format: string) => string;
   isSameDay: (date1: Date, date2: Date) => boolean;
@@ -391,6 +415,7 @@ interface WeeklyGridProps {
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
   handleDelete: (plan: ProductionPlanData) => void;
   setActiveGroupId: (id: string | null) => void;
+  setActiveOrderNo: (orderNo: string | null) => void;
 }
 
 const WeeklyGrid: React.FC<WeeklyGridProps> = ({
@@ -402,6 +427,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   visibleDays,
   expandedEquipments,
   activeGroupId,
+  activeOrderNo,
   plans,
   formatDate,
   isSameDay,
@@ -425,6 +451,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   handleOpenEditDialog,
   handleDelete,
   setActiveGroupId,
+  setActiveOrderNo,
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollWidth, setScrollWidth] = useState(0);
@@ -595,45 +622,13 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     }
   };
 
-  // 그룹별 고유 색상 생성 (planGroupId 기반)
-  const getGroupColor = (groupId: string) => {
-    const colors = [
-      {
-        main: '#1976d2',
-        light: '#E3F2FD',
-        dark: '#1565c0',
-      },
-      {
-        main: '#9c27b0',
-        light: '#F3E5F5',
-        dark: '#7b1fa2',
-      },
-      {
-        main: '#f57c00',
-        light: '#FFF3E0',
-        dark: '#e65100',
-      },
-      {
-        main: '#00897b',
-        light: '#E0F2F1',
-        dark: '#00695c',
-      },
-      {
-        main: '#d32f2f',
-        light: '#FFEBEE',
-        dark: '#c62828',
-      },
-      {
-        main: '#5e35b1',
-        light: '#EDE7F6',
-        dark: '#4527a0',
-      },
-    ];
-    let hash = 0;
-    for (let i = 0; i < groupId.length; i++) {
-      hash = groupId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
+  // 분할 표시는 단일 컬러로 통일
+  const getGroupColor = (_groupId: string) => {
+    return {
+      main: '#0f766e',
+      light: '#e6fffb',
+      dark: '#0b5a53',
+    };
   };
 
   const activeGroupIdRef = useRef<string | null>(activeGroupId);
@@ -644,6 +639,16 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       setActiveGroupId(activeGroupIdRef.current === groupId ? null : groupId);
     },
     [setActiveGroupId],
+  );
+
+  const activeOrderNoRef = useRef<string | null>(activeOrderNo);
+  activeOrderNoRef.current = activeOrderNo;
+
+  const handleOrderClick = React.useCallback(
+    (orderNo: string) => {
+      setActiveOrderNo(activeOrderNoRef.current === orderNo ? null : orderNo);
+    },
+    [setActiveOrderNo],
   );
 
   // 설비별 주간 합계 계산
@@ -1211,32 +1216,49 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                   {hasPlans && (
                                     <Stack spacing={compactMode ? 0.75 : 1}>
                                       {dayPlans.map((plan) => {
-                                        const isGrouped =
+                                        const groupTotal =
+                                          plan.totalGroupCount ||
+                                          plan.createDays ||
+                                          1;
+                                        const isOrderSplit =
+                                          !!plan.splitByOrder &&
+                                          groupTotal > 1 &&
+                                          !!plan.orderNo;
+                                        const isGroupSplit =
+                                          !isOrderSplit &&
                                           !!plan.planGroupId &&
-                                          (plan.createDays ||
-                                            plan.totalGroupCount ||
-                                            1) > 1;
+                                          groupTotal > 1;
+                                        const isGrouped =
+                                          isGroupSplit || isOrderSplit;
+                                        const groupColorKey =
+                                          plan.planGroupId ||
+                                          (isOrderSplit && plan.orderNo
+                                            ? `order:${plan.orderNo}`
+                                            : null);
                                         const groupColor =
-                                          isGrouped && plan.planGroupId
-                                            ? getGroupColor(plan.planGroupId)
+                                          isGrouped && groupColorKey
+                                            ? getGroupColor(groupColorKey)
                                             : null;
 
                                         const isGroupActive =
                                           isGrouped &&
                                           plan.planGroupId === activeGroupId;
+
+                                        const isOrderActive =
+                                          !!plan.orderNo &&
+                                          plan.orderNo === activeOrderNo;
+
                                         return (
                                           <PlanCard
                                             key={plan.id}
                                             plan={plan}
                                             isGroupActive={isGroupActive}
+                                            isOrderActive={isOrderActive}
+                                            isOrderSplit={isOrderSplit}
                                             groupColor={groupColor}
                                             isGrouped={isGrouped}
                                             groupSeq={plan.groupSeq || 1}
-                                            groupTotal={
-                                              plan.totalGroupCount ||
-                                              plan.createDays ||
-                                              1
-                                            }
+                                            groupTotal={groupTotal}
                                             planDisplayCode={
                                               plan.lotNo?.trim() ||
                                               plan.itemDisplayCode ||
@@ -1265,6 +1287,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                                             }
                                             handleDelete={handleDelete}
                                             onGroupClick={handleGroupClick}
+                                            onOrderClick={handleOrderClick}
                                           />
                                         );
                                       })}
