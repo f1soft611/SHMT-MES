@@ -1,5 +1,6 @@
 import {
   getUniformGroupColor,
+  shouldUseEquipmentRowVirtualization,
   shouldUpdateScrollMetrics,
 } from './weeklyGridPerformance';
 
@@ -23,5 +24,12 @@ describe('weeklyGridPerformance', () => {
       light: '#e6fffb',
       dark: '#0b5a53',
     });
+  });
+
+  it('uses virtualization only for large collapsed equipment lists', () => {
+    expect(shouldUseEquipmentRowVirtualization(40, 0)).toBe(true);
+    expect(shouldUseEquipmentRowVirtualization(120, 0)).toBe(true);
+    expect(shouldUseEquipmentRowVirtualization(39, 0)).toBe(false);
+    expect(shouldUseEquipmentRowVirtualization(120, 1)).toBe(false);
   });
 });

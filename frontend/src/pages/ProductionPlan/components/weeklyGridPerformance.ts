@@ -24,3 +24,10 @@ export const shouldUpdateScrollMetrics = (
     prevScrollWidth !== nextScrollWidth || prevClientWidth !== nextClientWidth
   );
 };
+
+export const shouldUseEquipmentRowVirtualization = (
+  equipmentCount: number,
+  expandedCount: number,
+): boolean => {
+  return equipmentCount >= 40 && expandedCount === 0;
+};
