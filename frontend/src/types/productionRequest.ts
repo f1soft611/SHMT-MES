@@ -87,6 +87,8 @@ export interface ProductionRequestSearchParams {
   reqType?: string;
   searchCnd?: string; // 1: itemCode, 2: itemName, 3: orderNo
   searchWrd?: string; // 검색어
+  searchCnd2?: string; // 두 번째 검색 조건
+  searchWrd2?: string; // 두 번째 검색어
   dateFrom?: string;
   dateTo?: string;
   workplaceCode?: string; // 작업장 코드

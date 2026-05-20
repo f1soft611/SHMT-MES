@@ -18,6 +18,7 @@ export interface ProductionPlanData {
   planGroupId?: string;
   groupSeq?: number;
   totalGroupCount?: number;
+  splitByOrder?: boolean;
   // 생산의뢰 연동 정보
   orderNo?: string;
   orderSeqno?: number;

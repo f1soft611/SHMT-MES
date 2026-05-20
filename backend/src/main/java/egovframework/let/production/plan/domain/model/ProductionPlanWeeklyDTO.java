@@ -146,6 +146,21 @@ public class ProductionPlanWeeklyDTO {
          * 근무구분 (DAY/NIGHT/SWING)
          */
         private String shift;
+
+        /**
+         * 생산의뢰번호
+         */
+        private String orderNo;
+
+        /**
+         * 생산의뢰순번
+         */
+        private Integer orderSeqno;
+
+        /**
+         * 생산의뢰이력순번
+         */
+        private Integer orderHistno;
         
         /**
          * 작업자 코드

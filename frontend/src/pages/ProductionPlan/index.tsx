@@ -270,6 +270,7 @@ const ProductionPlan: React.FC = () => {
   const [compactMode, setCompactMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeOrderNo, setActiveOrderNo] = useState<string | null>(null);
   const weeklyGridRef = useRef<HTMLDivElement>(null);
   const latestWeeklyPlansRequestRef = useRef(0);
 
@@ -1649,6 +1650,7 @@ const ProductionPlan: React.FC = () => {
         visibleDays={visibleDays}
         expandedEquipments={expandedEquipments}
         activeGroupId={activeGroupId}
+        activeOrderNo={activeOrderNo}
         plans={plans}
         formatDate={formatDate}
         isSameDay={isSameDay}
@@ -1672,6 +1674,7 @@ const ProductionPlan: React.FC = () => {
         handleOpenEditDialog={handleOpenEditDialog}
         handleDelete={handleDelete}
         setActiveGroupId={setActiveGroupId}
+        setActiveOrderNo={setActiveOrderNo}
       />
 
       {/* 등록/수정 다이얼로그 */}

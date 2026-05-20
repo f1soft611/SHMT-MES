@@ -32,11 +32,17 @@ import {
   ChevronRight as ChevronRightIcon,
   ViewWeek as ViewWeekIcon,
 } from '@mui/icons-material';
+import { List, RowComponentProps } from 'react-window';
 import { Equipment } from '../../../types/equipment';
 import { ProductionPlanData } from '../../../types/productionPlan';
 import { decodeHtml } from '../../../utils/stringUtils';
+import {
+  getUniformGroupColor,
+  GroupColor,
+  shouldUseEquipmentRowVirtualization,
+  shouldUpdateScrollMetrics,
+} from './weeklyGridPerformance';
 
-type GroupColor = { main: string; light: string; dark: string };
 type ChipColor =
   | 'default'
   | 'primary'
@@ -49,6 +55,8 @@ type ChipColor =
 interface PlanCardProps {
   plan: ProductionPlanData;
   isGroupActive: boolean;
+  isOrderActive: boolean;
+  isOrderSplit: boolean;
   groupColor: GroupColor | null;
   isGrouped: boolean;
   groupSeq: number;
@@ -65,12 +73,15 @@ interface PlanCardProps {
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
   handleDelete: (plan: ProductionPlanData) => void;
   onGroupClick: (groupId: string) => void;
+  onOrderClick: (orderNo: string) => void;
 }
 
 const PlanCard = memo<PlanCardProps>(
   ({
     plan,
     isGroupActive,
+    isOrderActive,
+    isOrderSplit,
     groupColor,
     isGrouped,
     groupSeq,
@@ -87,7 +98,26 @@ const PlanCard = memo<PlanCardProps>(
     handleOpenEditDialog,
     handleDelete,
     onGroupClick,
+    onOrderClick,
   }) => {
+    const handleGroupBadgeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+
+      if (isOrderSplit && plan.orderNo) {
+        onOrderClick(plan.orderNo);
+        return;
+      }
+
+      if (plan.planGroupId) {
+        onGroupClick(plan.planGroupId);
+        return;
+      }
+
+      if (plan.orderNo) {
+        onOrderClick(plan.orderNo);
+      }
+    };
+
     return (
       <Card
         elevation={0}
@@ -99,7 +129,7 @@ const PlanCard = memo<PlanCardProps>(
           borderLeft: '4px solid',
           borderColor: groupColor?.main || getShiftBorderColor(plan.shift),
           position: 'relative',
-          ...(isGroupActive && {
+          ...((isGroupActive || isOrderActive) && {
             border: '3px dashed',
             borderColor: groupColor?.main,
             transform: 'scale(1.01)',
@@ -157,15 +187,16 @@ const PlanCard = memo<PlanCardProps>(
 
                 {isGrouped && (
                   <Chip
-                    label={`🔗 ${groupSeq}/${groupTotal}`}
+                    label={
+                      isOrderSplit && plan.orderNo
+                        ? `의뢰:${plan.orderNo} (${groupSeq}/${groupTotal})`
+                        : `🔗 ${groupSeq}/${groupTotal}`
+                    }
                     size="small"
-                    variant="outlined"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (plan.planGroupId) {
-                        onGroupClick(plan.planGroupId);
-                      }
-                    }}
+                    variant={
+                      isOrderSplit && isOrderActive ? 'filled' : 'outlined'
+                    }
+                    onClick={handleGroupBadgeClick}
                     sx={{
                       borderColor: groupColor?.main,
                       color: groupColor?.dark,
@@ -174,6 +205,12 @@ const PlanCard = memo<PlanCardProps>(
                       backgroundColor: isGroupActive
                         ? groupColor?.light
                         : 'white',
+                      ...(isOrderSplit &&
+                        isOrderActive && {
+                          bgcolor: groupColor?.main,
+                          color: 'white',
+                          borderColor: groupColor?.dark,
+                        }),
                       cursor: 'pointer',
                       '&:hover': {
                         backgroundColor: groupColor?.light,
@@ -267,14 +304,6 @@ const PlanCard = memo<PlanCardProps>(
                     }}
                   />
                 )}
-                {plan.orderNo && (
-                  <Chip
-                    label={`의뢰:${plan.orderNo}`}
-                    size="small"
-                    color="info"
-                    variant="outlined"
-                  />
-                )}
               </Box>
             </Box>
             <Box
@@ -356,6 +385,7 @@ interface WeeklyGridProps {
   visibleDays: boolean[];
   expandedEquipments: Set<string>;
   activeGroupId: string | null;
+  activeOrderNo: string | null;
   plans: ProductionPlanData[];
   formatDate: (date: Date, format: string) => string;
   isSameDay: (date1: Date, date2: Date) => boolean;
@@ -391,7 +421,435 @@ interface WeeklyGridProps {
   handleOpenEditDialog: (plan: ProductionPlanData) => void;
   handleDelete: (plan: ProductionPlanData) => void;
   setActiveGroupId: (id: string | null) => void;
+  setActiveOrderNo: (orderNo: string | null) => void;
 }
+
+interface VisibleDayColumn {
+  date: Date;
+  dateStr: string;
+  isToday: boolean;
+  isWeekendDay: boolean;
+  totalPlans: number;
+  totalQty: number;
+  dayColWidth: number;
+}
+
+interface EquipmentRowProps {
+  equipment: Equipment;
+  rowIndex: number;
+  compactMode: boolean;
+  cardPadding: number;
+  cellPadding: number;
+  isExpanded: boolean;
+  stats?: { count: number; qty: number };
+  visibleDayColumns: VisibleDayColumn[];
+  activeGroupId: string | null;
+  activeOrderNo: string | null;
+  isSelectionMode: boolean;
+  selectionScopeKey: string | null;
+  selectedPlanNos: Set<string>;
+  getShiftLabel: (shift?: string) => string;
+  getShiftColor: (shift?: string) => ChipColor;
+  getShiftBorderColor: (shift?: string) => string;
+  getPlansForDateAndEquipment: (
+    dateStr: string,
+    equipmentCode: string,
+  ) => ProductionPlanData[];
+  toggleEquipment: (equipmentCode: string) => void;
+  onActivateSelectionScope: (scopeKey: string) => void;
+  onToggleSelectionMode: (enabled: boolean) => void;
+  onOpenBatchDelete: (planNos?: string[]) => void;
+  onTogglePlanSelection: (plan: ProductionPlanData) => void;
+  handleOpenCreateDialog: (date: string, equipmentCode?: string) => void;
+  handleOpenEditDialog: (plan: ProductionPlanData) => void;
+  handleDelete: (plan: ProductionPlanData) => void;
+  onGroupClick: (groupId: string) => void;
+  onOrderClick: (orderNo: string) => void;
+  rowSxByIndex: (index: number) => Record<string, unknown>;
+  equipmentCellSxByIndex: (index: number) => Record<string, unknown>;
+  dayCellSxByState: (
+    isWeekendDay: boolean,
+    hasPlans: boolean,
+    dayColWidth: number,
+  ) => Record<string, unknown>;
+  selectionActionButtonSx: Record<string, unknown>;
+  emptyAddButtonSx: Record<string, unknown>;
+}
+
+const EquipmentRow = memo<EquipmentRowProps>(
+  ({
+    equipment,
+    rowIndex,
+    compactMode,
+    cardPadding,
+    cellPadding,
+    isExpanded,
+    stats,
+    visibleDayColumns,
+    activeGroupId,
+    activeOrderNo,
+    isSelectionMode,
+    selectionScopeKey,
+    selectedPlanNos,
+    getShiftLabel,
+    getShiftColor,
+    getShiftBorderColor,
+    getPlansForDateAndEquipment,
+    toggleEquipment,
+    onActivateSelectionScope,
+    onToggleSelectionMode,
+    onOpenBatchDelete,
+    onTogglePlanSelection,
+    handleOpenCreateDialog,
+    handleOpenEditDialog,
+    handleDelete,
+    onGroupClick,
+    onOrderClick,
+    rowSxByIndex,
+    equipmentCellSxByIndex,
+    dayCellSxByState,
+    selectionActionButtonSx,
+    emptyAddButtonSx,
+  }) => {
+    const equipmentCode = equipment.equipCd || '';
+
+    return (
+      <TableRow sx={rowSxByIndex(rowIndex)}>
+        <TableCell
+          sx={equipmentCellSxByIndex(rowIndex)}
+          onClick={() => toggleEquipment(equipmentCode)}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              size="small"
+              sx={{
+                mr: 1,
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': { bgcolor: 'primary.dark' },
+                width: 32,
+                height: 32,
+              }}
+            >
+              {isExpanded ? (
+                <ExpandMoreIcon fontSize="small" />
+              ) : (
+                <ChevronRightIcon fontSize="small" />
+              )}
+            </IconButton>
+            <Box>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 700,
+                  color: 'text.primary',
+                  lineHeight: 1.2,
+                }}
+              >
+                {equipment.equipmentName}
+              </Typography>
+              <Chip label={equipment.equipCd} size="small" sx={{ mt: 0.25 }} />
+              {stats && (stats.count > 0 || stats.qty > 0) && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 0.5,
+                    mt: 0.5,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {stats.count > 0 && (
+                    <Chip
+                      label={`${stats.count}건`}
+                      size="small"
+                      color="error"
+                      sx={{
+                        fontSize: compactMode ? '0.7rem' : '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    />
+                  )}
+                  {stats.qty > 0 && (
+                    <Chip
+                      label={`${stats.qty.toLocaleString()}개`}
+                      size="small"
+                      sx={{
+                        fontSize: compactMode ? '0.7rem' : '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    />
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </TableCell>
+        {visibleDayColumns.map(({ dateStr, isWeekendDay, dayColWidth }) => {
+          const selectionCellKey = `${equipmentCode}::${dateStr}`;
+          const dayPlans = getPlansForDateAndEquipment(dateStr, equipmentCode);
+          const hasPlans = dayPlans.length > 0;
+          const isActiveSelectionCell =
+            isSelectionMode && selectionScopeKey === selectionCellKey;
+          const selectedPlanNosInCell = dayPlans
+            .map((plan) => plan.planNo)
+            .filter(
+              (planNo): planNo is string =>
+                !!planNo && selectedPlanNos.has(planNo),
+            );
+          const hasSelectedPlansInCell = selectedPlanNosInCell.length > 0;
+
+          return (
+            <TableCell
+              key={dateStr}
+              sx={dayCellSxByState(isWeekendDay, hasPlans, dayColWidth)}
+            >
+              <Collapse in={isExpanded} timeout="auto">
+                <Box
+                  sx={{
+                    minHeight: hasPlans ? (compactMode ? 60 : 100) : 0,
+                    display: hasPlans ? 'block' : 'flex',
+                    justifyContent: hasPlans ? 'flex-start' : 'center',
+                  }}
+                >
+                  {hasPlans ? (
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ mb: compactMode ? 0.75 : 1 }}
+                    >
+                      <Button
+                        fullWidth
+                        size="small"
+                        startIcon={<AddIcon />}
+                        onClick={() =>
+                          handleOpenCreateDialog(dateStr, equipment.equipCd)
+                        }
+                        variant="contained"
+                      >
+                        계획 추가
+                      </Button>
+                      {!isActiveSelectionCell && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<CheckBoxOutlinedIcon />}
+                          onClick={() =>
+                            onActivateSelectionScope(selectionCellKey)
+                          }
+                          sx={selectionActionButtonSx}
+                        >
+                          선택
+                        </Button>
+                      )}
+                      {isActiveSelectionCell && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => onToggleSelectionMode(false)}
+                          sx={selectionActionButtonSx}
+                        >
+                          선택 종료
+                        </Button>
+                      )}
+                      {hasSelectedPlansInCell && (
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          onClick={() =>
+                            onOpenBatchDelete(selectedPlanNosInCell)
+                          }
+                          sx={selectionActionButtonSx}
+                        >
+                          선택 삭제
+                        </Button>
+                      )}
+                    </Stack>
+                  ) : (
+                    <Tooltip title="계획 추가">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleOpenCreateDialog(dateStr, equipment.equipCd)
+                        }
+                        sx={emptyAddButtonSx}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
+                  {hasPlans && (
+                    <Stack spacing={compactMode ? 0.75 : 1}>
+                      {dayPlans.map((plan) => {
+                        const groupTotal =
+                          plan.totalGroupCount || plan.createDays || 1;
+                        const isOrderSplit =
+                          !!plan.splitByOrder &&
+                          groupTotal > 1 &&
+                          !!plan.orderNo;
+                        const isGroupSplit =
+                          !isOrderSplit && !!plan.planGroupId && groupTotal > 1;
+                        const isGrouped = isGroupSplit || isOrderSplit;
+                        const groupColorKey =
+                          plan.planGroupId ||
+                          (isOrderSplit && plan.orderNo
+                            ? `order:${plan.orderNo}`
+                            : null);
+                        const groupColor =
+                          isGrouped && groupColorKey
+                            ? getUniformGroupColor(groupColorKey)
+                            : null;
+
+                        const isGroupActive =
+                          isGrouped && plan.planGroupId === activeGroupId;
+
+                        const isOrderActive =
+                          !!plan.orderNo && plan.orderNo === activeOrderNo;
+
+                        return (
+                          <PlanCard
+                            key={plan.id}
+                            plan={plan}
+                            isGroupActive={isGroupActive}
+                            isOrderActive={isOrderActive}
+                            isOrderSplit={isOrderSplit}
+                            groupColor={groupColor}
+                            isGrouped={isGrouped}
+                            groupSeq={plan.groupSeq || 1}
+                            groupTotal={groupTotal}
+                            planDisplayCode={
+                              plan.lotNo?.trim() ||
+                              plan.itemDisplayCode ||
+                              plan.itemCode ||
+                              ''
+                            }
+                            compactMode={compactMode}
+                            cardPadding={cardPadding}
+                            getShiftLabel={getShiftLabel}
+                            getShiftColor={getShiftColor}
+                            getShiftBorderColor={getShiftBorderColor}
+                            showSelectionCheckbox={isActiveSelectionCell}
+                            isSelected={
+                              !!plan.planNo && selectedPlanNos.has(plan.planNo)
+                            }
+                            onToggleSelect={onTogglePlanSelection}
+                            handleOpenEditDialog={handleOpenEditDialog}
+                            handleDelete={handleDelete}
+                            onGroupClick={onGroupClick}
+                            onOrderClick={onOrderClick}
+                          />
+                        );
+                      })}
+                    </Stack>
+                  )}
+                </Box>
+              </Collapse>
+              {!isExpanded && dayPlans.length > 0 && (
+                <Chip
+                  label={`${dayPlans.length}건`}
+                  size="small"
+                  color="primary"
+                />
+              )}
+            </TableCell>
+          );
+        })}
+      </TableRow>
+    );
+  },
+);
+
+interface VirtualizedRowItemData {
+  equipments: Equipment[];
+  visibleDayColumns: VisibleDayColumn[];
+  getPlansForDateAndEquipment: (
+    dateStr: string,
+    equipmentCode: string,
+  ) => ProductionPlanData[];
+  toggleEquipment: (equipmentCode: string) => void;
+  compactMode: boolean;
+  equipmentColWidth: number;
+}
+
+const VirtualizedRowItem = ({
+  index,
+  style,
+  equipments,
+  visibleDayColumns,
+  getPlansForDateAndEquipment,
+  toggleEquipment,
+  compactMode,
+  equipmentColWidth,
+}: RowComponentProps<VirtualizedRowItemData>) => {
+  const equipment = equipments[index];
+  const equipmentCode = equipment.equipCd || '';
+
+  return (
+    <Box
+      style={style}
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: `${equipmentColWidth}px repeat(${visibleDayColumns.length}, minmax(120px, 1fr))`,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: 1,
+          cursor: 'pointer',
+          fontWeight: 700,
+          borderRight: '1px solid',
+          borderColor: 'divider',
+        }}
+        onClick={() => toggleEquipment(equipmentCode)}
+      >
+        <ChevronRightIcon fontSize="small" sx={{ mr: 0.5 }} />
+        <Typography
+          variant="body2"
+          noWrap
+          sx={{ fontWeight: 700, fontSize: compactMode ? '0.8rem' : '0.9rem' }}
+        >
+          {equipment.equipmentName}
+        </Typography>
+      </Box>
+      {visibleDayColumns.map((column) => {
+        const dayPlans = getPlansForDateAndEquipment(
+          column.dateStr,
+          equipmentCode,
+        );
+        return (
+          <Box
+            key={`${equipmentCode}-${column.dateStr}`}
+            sx={{
+              px: 0.75,
+              py: 0.5,
+              borderRight: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: column.isWeekendDay ? 'grey.100' : 'white',
+            }}
+          >
+            {dayPlans.length > 0 ? (
+              <Chip
+                label={`${dayPlans.length}건`}
+                size="small"
+                color="primary"
+                sx={{ fontSize: compactMode ? '0.7rem' : '0.75rem' }}
+              />
+            ) : null}
+          </Box>
+        );
+      })}
+    </Box>
+  );
+};
 
 const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   weeklyGridRef,
@@ -402,6 +860,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   visibleDays,
   expandedEquipments,
   activeGroupId,
+  activeOrderNo,
   plans,
   formatDate,
   isSameDay,
@@ -425,10 +884,12 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
   handleOpenEditDialog,
   handleDelete,
   setActiveGroupId,
+  setActiveOrderNo,
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [scrollWidth, setScrollWidth] = useState(0);
   const [clientWidth, setClientWidth] = useState(0);
+  const scrollMetricsRef = useRef({ scrollWidth: 0, clientWidth: 0 });
   // 스타일 상수
   const equipmentColWidth = compactMode ? 180 : 240;
   const dayColMinWidth = compactMode ? 280 : 360;
@@ -467,7 +928,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     scrollbarWidth: 'thin',
   };
 
-  const visibleDayColumns = useMemo(() => {
+  const visibleDayColumns = useMemo<VisibleDayColumn[]>(() => {
     return weekDays.flatMap((day, dayIndex) => {
       if (!visibleDays[dayIndex]) {
         return [];
@@ -507,8 +968,26 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     if (!container) return;
 
     const updateSizes = () => {
-      setScrollWidth(container.scrollWidth);
-      setClientWidth(container.clientWidth);
+      const nextScrollWidth = container.scrollWidth;
+      const nextClientWidth = container.clientWidth;
+
+      if (
+        !shouldUpdateScrollMetrics(
+          scrollMetricsRef.current.scrollWidth,
+          scrollMetricsRef.current.clientWidth,
+          nextScrollWidth,
+          nextClientWidth,
+        )
+      ) {
+        return;
+      }
+
+      scrollMetricsRef.current = {
+        scrollWidth: nextScrollWidth,
+        clientWidth: nextClientWidth,
+      };
+      setScrollWidth(nextScrollWidth);
+      setClientWidth(nextClientWidth);
     };
 
     updateSizes();
@@ -595,47 +1074,6 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     }
   };
 
-  // 그룹별 고유 색상 생성 (planGroupId 기반)
-  const getGroupColor = (groupId: string) => {
-    const colors = [
-      {
-        main: '#1976d2',
-        light: '#E3F2FD',
-        dark: '#1565c0',
-      },
-      {
-        main: '#9c27b0',
-        light: '#F3E5F5',
-        dark: '#7b1fa2',
-      },
-      {
-        main: '#f57c00',
-        light: '#FFF3E0',
-        dark: '#e65100',
-      },
-      {
-        main: '#00897b',
-        light: '#E0F2F1',
-        dark: '#00695c',
-      },
-      {
-        main: '#d32f2f',
-        light: '#FFEBEE',
-        dark: '#c62828',
-      },
-      {
-        main: '#5e35b1',
-        light: '#EDE7F6',
-        dark: '#4527a0',
-      },
-    ];
-    let hash = 0;
-    for (let i = 0; i < groupId.length; i++) {
-      hash = groupId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  };
-
   const activeGroupIdRef = useRef<string | null>(activeGroupId);
   activeGroupIdRef.current = activeGroupId;
 
@@ -644,6 +1082,16 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       setActiveGroupId(activeGroupIdRef.current === groupId ? null : groupId);
     },
     [setActiveGroupId],
+  );
+
+  const activeOrderNoRef = useRef<string | null>(activeOrderNo);
+  activeOrderNoRef.current = activeOrderNo;
+
+  const handleOrderClick = React.useCallback(
+    (orderNo: string) => {
+      setActiveOrderNo(activeOrderNoRef.current === orderNo ? null : orderNo);
+    },
+    [setActiveOrderNo],
   );
 
   // 설비별 주간 합계 계산
@@ -683,6 +1131,84 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     formatDate,
     getPlansForDateAndEquipment,
   ]);
+
+  const selectionActionButtonSx = useMemo(
+    () => ({ whiteSpace: 'nowrap' as const }),
+    [],
+  );
+
+  const emptyAddButtonSx = useMemo(
+    () => ({
+      bgcolor: 'grey.100',
+      '&:hover': { bgcolor: 'grey.200' },
+    }),
+    [],
+  );
+
+  const rowSxByIndex = React.useCallback(
+    (index: number) => ({
+      '&:hover': { backgroundColor: 'action.hover' },
+      bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
+    }),
+    [],
+  );
+
+  const equipmentCellSxByIndex = React.useCallback(
+    (index: number) => ({
+      position: 'sticky',
+      left: 0,
+      zIndex: 2,
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      borderRight: '1px solid',
+      borderColor: 'divider',
+      bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
+    }),
+    [],
+  );
+
+  const dayCellSxByState = React.useCallback(
+    (isWeekendDay: boolean, hasPlans: boolean, dayColWidth: number) => ({
+      verticalAlign: 'top',
+      backgroundColor: isWeekendDay ? 'grey.100' : 'white',
+      p: hasPlans ? cellPadding : 0.25,
+      borderRight: '1px solid',
+      borderColor: 'divider',
+      width: dayColWidth,
+      maxWidth: dayColWidth,
+    }),
+    [cellPadding],
+  );
+
+  const useVirtualizedRows = shouldUseEquipmentRowVirtualization(
+    equipments.length,
+    expandedEquipments.size,
+  );
+
+  const virtualizedRowItemData = useMemo<VirtualizedRowItemData>(
+    () => ({
+      equipments,
+      visibleDayColumns,
+      getPlansForDateAndEquipment,
+      toggleEquipment,
+      compactMode,
+      equipmentColWidth,
+    }),
+    [
+      equipments,
+      visibleDayColumns,
+      getPlansForDateAndEquipment,
+      toggleEquipment,
+      compactMode,
+      equipmentColWidth,
+    ],
+  );
+
+  const virtualizedRowHeight = compactMode ? 52 : 60;
+  const virtualizedBodyHeight = Math.min(
+    520,
+    equipments.length * virtualizedRowHeight,
+  );
 
   return (
     <Paper
@@ -960,331 +1486,60 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
                   </Box>
                 </TableCell>
               </TableRow>
+            ) : useVirtualizedRows ? (
+              <TableRow>
+                <TableCell colSpan={emptyColSpan} sx={{ p: 0, border: 0 }}>
+                  <List
+                    rowCount={equipments.length}
+                    rowHeight={virtualizedRowHeight}
+                    rowComponent={VirtualizedRowItem}
+                    rowProps={virtualizedRowItemData}
+                    overscanCount={5}
+                    style={{ height: virtualizedBodyHeight, width: '100%' }}
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               equipments.map((equipment, index) => {
                 const isExpanded = expandedEquipments.has(
                   equipment.equipCd || '',
                 );
                 return (
-                  <React.Fragment key={equipment.equipCd}>
-                    <TableRow
-                      sx={{
-                        '&:hover': { backgroundColor: 'action.hover' },
-                        bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
-                      }}
-                    >
-                      <TableCell
-                        sx={{
-                          position: 'sticky',
-                          left: 0,
-                          zIndex: 2,
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                          borderRight: '1px solid',
-                          borderColor: 'divider',
-                          bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
-                        }}
-                        onClick={() => toggleEquipment(equipment.equipCd || '')}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <IconButton
-                            size="small"
-                            sx={{
-                              mr: 1,
-                              bgcolor: 'primary.main',
-                              color: 'white',
-                              '&:hover': { bgcolor: 'primary.dark' },
-                              width: 32,
-                              height: 32,
-                            }}
-                          >
-                            {isExpanded ? (
-                              <ExpandMoreIcon fontSize="small" />
-                            ) : (
-                              <ChevronRightIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                          <Box>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 700,
-                                color: 'text.primary',
-                                lineHeight: 1.2,
-                              }}
-                            >
-                              {equipment.equipmentName}
-                            </Typography>
-                            <Chip
-                              label={equipment.equipCd}
-                              size="small"
-                              sx={{ mt: 0.25 }}
-                            />
-                            {(() => {
-                              const stats = equipmentWeeklyStats.get(
-                                equipment.equipCd || '',
-                              );
-                              if (
-                                !stats ||
-                                (stats.count === 0 && stats.qty === 0)
-                              ) {
-                                return null; // 0값 숨김
-                              }
-
-                              return (
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    gap: 0.5,
-                                    mt: 0.5,
-                                    flexWrap: 'wrap',
-                                  }}
-                                >
-                                  {stats.count > 0 && (
-                                    <Chip
-                                      label={`${stats.count}건`}
-                                      size="small"
-                                      color="error"
-                                      sx={{
-                                        fontSize: compactMode
-                                          ? '0.7rem'
-                                          : '0.75rem',
-                                        fontWeight: 600,
-                                      }}
-                                    />
-                                  )}
-                                  {stats.qty > 0 && (
-                                    <Chip
-                                      label={`${stats.qty.toLocaleString()}개`}
-                                      size="small"
-                                      sx={{
-                                        fontSize: compactMode
-                                          ? '0.7rem'
-                                          : '0.75rem',
-                                        fontWeight: 600,
-                                      }}
-                                    />
-                                  )}
-                                </Box>
-                              );
-                            })()}
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      {visibleDayColumns.map(
-                        ({ dateStr, isWeekendDay, dayColWidth }) => {
-                          const selectionCellKey = `${equipment.equipCd || ''}::${dateStr}`;
-                          const dayPlans = getPlansForDateAndEquipment(
-                            dateStr,
-                            equipment.equipCd || '',
-                          );
-                          const hasPlans = dayPlans.length > 0;
-                          const isActiveSelectionCell =
-                            isSelectionMode &&
-                            selectionScopeKey === selectionCellKey;
-                          const selectedPlanNosInCell = dayPlans
-                            .map((plan) => plan.planNo)
-                            .filter(
-                              (planNo): planNo is string =>
-                                !!planNo && selectedPlanNos.has(planNo),
-                            );
-                          const hasSelectedPlansInCell =
-                            selectedPlanNosInCell.length > 0;
-
-                          return (
-                            <TableCell
-                              key={dateStr}
-                              sx={{
-                                verticalAlign: 'top',
-                                backgroundColor: isWeekendDay
-                                  ? 'grey.100'
-                                  : 'white',
-                                p: hasPlans ? cellPadding : 0.25,
-                                borderRight: '1px solid',
-                                borderColor: 'divider',
-                                width: dayColWidth,
-                                maxWidth: dayColWidth,
-                              }}
-                            >
-                              <Collapse
-                                in={isExpanded}
-                                timeout="auto"
-                                unmountOnExit
-                              >
-                                <Box
-                                  sx={{
-                                    minHeight: hasPlans
-                                      ? compactMode
-                                        ? 60
-                                        : 100
-                                      : 0,
-                                    display: hasPlans ? 'block' : 'flex',
-                                    justifyContent: hasPlans
-                                      ? 'flex-start'
-                                      : 'center',
-                                  }}
-                                >
-                                  {hasPlans ? (
-                                    <Stack
-                                      direction="row"
-                                      spacing={0.75}
-                                      sx={{ mb: compactMode ? 0.75 : 1 }}
-                                    >
-                                      <Button
-                                        fullWidth
-                                        size="small"
-                                        startIcon={<AddIcon />}
-                                        onClick={() =>
-                                          handleOpenCreateDialog(
-                                            dateStr,
-                                            equipment.equipCd,
-                                          )
-                                        }
-                                        variant="contained"
-                                      >
-                                        계획 추가
-                                      </Button>
-                                      {!isActiveSelectionCell && (
-                                        <Button
-                                          size="small"
-                                          variant="outlined"
-                                          startIcon={<CheckBoxOutlinedIcon />}
-                                          onClick={() =>
-                                            onActivateSelectionScope(
-                                              selectionCellKey,
-                                            )
-                                          }
-                                          sx={{ whiteSpace: 'nowrap' }}
-                                        >
-                                          선택
-                                        </Button>
-                                      )}
-                                      {isActiveSelectionCell && (
-                                        <Button
-                                          size="small"
-                                          variant="outlined"
-                                          onClick={() =>
-                                            onToggleSelectionMode(false)
-                                          }
-                                          sx={{ whiteSpace: 'nowrap' }}
-                                        >
-                                          선택 종료
-                                        </Button>
-                                      )}
-                                      {hasSelectedPlansInCell && (
-                                        <Button
-                                          size="small"
-                                          color="error"
-                                          variant="outlined"
-                                          // startIcon={<DeleteSweepIcon />}
-                                          onClick={() =>
-                                            onOpenBatchDelete(
-                                              selectedPlanNosInCell,
-                                            )
-                                          }
-                                          sx={{ whiteSpace: 'nowrap' }}
-                                        >
-                                          선택 삭제
-                                        </Button>
-                                      )}
-                                    </Stack>
-                                  ) : (
-                                    <Tooltip title="계획 추가">
-                                      <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                          handleOpenCreateDialog(
-                                            dateStr,
-                                            equipment.equipCd,
-                                          )
-                                        }
-                                        sx={{
-                                          bgcolor: 'grey.100',
-                                          '&:hover': { bgcolor: 'grey.200' },
-                                        }}
-                                      >
-                                        <AddIcon fontSize="small" />
-                                      </IconButton>
-                                    </Tooltip>
-                                  )}
-
-                                  {hasPlans && (
-                                    <Stack spacing={compactMode ? 0.75 : 1}>
-                                      {dayPlans.map((plan) => {
-                                        const isGrouped =
-                                          !!plan.planGroupId &&
-                                          (plan.createDays ||
-                                            plan.totalGroupCount ||
-                                            1) > 1;
-                                        const groupColor =
-                                          isGrouped && plan.planGroupId
-                                            ? getGroupColor(plan.planGroupId)
-                                            : null;
-
-                                        const isGroupActive =
-                                          isGrouped &&
-                                          plan.planGroupId === activeGroupId;
-                                        return (
-                                          <PlanCard
-                                            key={plan.id}
-                                            plan={plan}
-                                            isGroupActive={isGroupActive}
-                                            groupColor={groupColor}
-                                            isGrouped={isGrouped}
-                                            groupSeq={plan.groupSeq || 1}
-                                            groupTotal={
-                                              plan.totalGroupCount ||
-                                              plan.createDays ||
-                                              1
-                                            }
-                                            planDisplayCode={
-                                              plan.lotNo?.trim() ||
-                                              plan.itemDisplayCode ||
-                                              plan.itemCode ||
-                                              ''
-                                            }
-                                            compactMode={compactMode}
-                                            cardPadding={cardPadding}
-                                            getShiftLabel={getShiftLabel}
-                                            getShiftColor={getShiftColor}
-                                            getShiftBorderColor={
-                                              getShiftBorderColor
-                                            }
-                                            showSelectionCheckbox={
-                                              isActiveSelectionCell
-                                            }
-                                            isSelected={
-                                              !!plan.planNo &&
-                                              selectedPlanNos.has(plan.planNo)
-                                            }
-                                            onToggleSelect={
-                                              onTogglePlanSelection
-                                            }
-                                            handleOpenEditDialog={
-                                              handleOpenEditDialog
-                                            }
-                                            handleDelete={handleDelete}
-                                            onGroupClick={handleGroupClick}
-                                          />
-                                        );
-                                      })}
-                                    </Stack>
-                                  )}
-                                </Box>
-                              </Collapse>
-                              {!isExpanded && dayPlans.length > 0 && (
-                                <Chip
-                                  label={`${dayPlans.length}건`}
-                                  size="small"
-                                  color="primary"
-                                />
-                              )}
-                            </TableCell>
-                          );
-                        },
-                      )}
-                    </TableRow>
-                  </React.Fragment>
+                  <EquipmentRow
+                    key={equipment.equipCd || `equipment-${index}`}
+                    equipment={equipment}
+                    rowIndex={index}
+                    compactMode={compactMode}
+                    cardPadding={cardPadding}
+                    cellPadding={cellPadding}
+                    isExpanded={isExpanded}
+                    stats={equipmentWeeklyStats.get(equipment.equipCd || '')}
+                    visibleDayColumns={visibleDayColumns}
+                    activeGroupId={activeGroupId}
+                    activeOrderNo={activeOrderNo}
+                    isSelectionMode={isSelectionMode}
+                    selectionScopeKey={selectionScopeKey}
+                    selectedPlanNos={selectedPlanNos}
+                    getShiftLabel={getShiftLabel}
+                    getShiftColor={getShiftColor}
+                    getShiftBorderColor={getShiftBorderColor}
+                    getPlansForDateAndEquipment={getPlansForDateAndEquipment}
+                    toggleEquipment={toggleEquipment}
+                    onActivateSelectionScope={onActivateSelectionScope}
+                    onToggleSelectionMode={onToggleSelectionMode}
+                    onOpenBatchDelete={onOpenBatchDelete}
+                    onTogglePlanSelection={onTogglePlanSelection}
+                    handleOpenCreateDialog={handleOpenCreateDialog}
+                    handleOpenEditDialog={handleOpenEditDialog}
+                    handleDelete={handleDelete}
+                    onGroupClick={handleGroupClick}
+                    onOrderClick={handleOrderClick}
+                    rowSxByIndex={rowSxByIndex}
+                    equipmentCellSxByIndex={equipmentCellSxByIndex}
+                    dayCellSxByState={dayCellSxByState}
+                    selectionActionButtonSx={selectionActionButtonSx}
+                    emptyAddButtonSx={emptyAddButtonSx}
+                  />
                 );
               })
             )}

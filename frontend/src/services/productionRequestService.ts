@@ -45,6 +45,8 @@ class ProductionRequestService {
       // 백엔드 VO 기준 파라미터 매핑
       if (searchParams.searchCnd) params.searchCnd = searchParams.searchCnd;
       if (searchParams.searchWrd) params.searchWrd = searchParams.searchWrd;
+      if (searchParams.searchCnd2) params.searchCnd2 = searchParams.searchCnd2;
+      if (searchParams.searchWrd2) params.searchWrd2 = searchParams.searchWrd2;
       if (searchParams.factoryCode)
         params.factoryCode = searchParams.factoryCode;
       if (searchParams.orderNo) params.orderNo = searchParams.orderNo;
