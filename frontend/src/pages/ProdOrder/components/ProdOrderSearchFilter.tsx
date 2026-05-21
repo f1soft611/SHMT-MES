@@ -297,6 +297,9 @@ const ProdOrderSearchFilter = () => {
               <MenuItem value="PLANNED" sx={{ fontSize: 13 }}>
                 계획 상태
               </MenuItem>
+              <MenuItem value="STOPPED" sx={{ fontSize: 13 }}>
+                작업 중단
+              </MenuItem>
             </Select>
           </FormControl>
 

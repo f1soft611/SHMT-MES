@@ -17,6 +17,8 @@ import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BulkSaveToolbar from "./BulkSaveToolbar";
 import { useBulkProdOrder } from "../hooks/useBulkProdOrder";
 import {useProdOrderStore} from "../store/useProdOrderStore";
+import { useStopWorkDialog } from '../hooks/useStopWorkDialog';
+import StopWorkDialog from './StopWorkDialog';
 
 function ProductionActionCell({
     row,
@@ -93,6 +95,8 @@ const ProdPlanList = () => {
         bulkLoading
     } = useBulkProdOrder(selectedRows, clear, onReload);
 
+    const { open: stopWorkOpen, orderQty, setOrderQty, handleOpen: handleStopWorkOpen, handleClose: handleStopWorkClose } =
+        useStopWorkDialog(selectedRows);
 
     const onClickBulkCancel = () => {
         if (selectedRows.length === 0) {
@@ -119,6 +123,7 @@ const ProdPlanList = () => {
                 const labelMap: Record<string, string> = {
                     ORDERED: "지시완료",
                     PLANNED: "계획완료",
+                    STOPPED: "작업중단",
                 };
 
                 const label = labelMap[value] ?? value;
@@ -126,7 +131,11 @@ const ProdPlanList = () => {
                 return (
                     <Chip
                         label={label}
-                        color={value === 'ORDERED' ? 'primary' : 'default'}
+                        color={
+                            value === 'ORDERED' ? 'primary' :
+                                value === 'STOPPED' ? 'warning' :
+                                    'default'
+                        }
                         size="small"
                     />
                 );
@@ -317,6 +326,9 @@ const ProdPlanList = () => {
                                     <BulkSaveToolbar
                                         onBulkOrder={handleBulkOrder}
                                         onBulkCancel={onClickBulkCancel}
+                                        selectedCount={selectionModel.ids.size}
+                                        canStop={selectedRows.length === 1 && selectedRows[0].orderFlag === "ORDERED"}
+                                        onStopWork={handleStopWorkOpen}
                                     />
                                 ),
                             }}
@@ -347,6 +359,14 @@ const ProdPlanList = () => {
                 </CardContent>
                 <CardActions sx={{ display: 'none' }} />
             </Card>
+
+            <StopWorkDialog
+                open={stopWorkOpen}
+                row={selectedRows[0] ?? null}
+                orderQty={orderQty}
+                onOrderQtyChange={setOrderQty}
+                onClose={handleStopWorkClose}
+            />
 
             <ConfirmDialog
                 open={cancelConfirmOpen}
