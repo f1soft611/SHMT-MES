@@ -69,3 +69,4 @@ backend/backend-dev
 
 /out
 /docs/superpowers/
+/frontend/src/pages/**/**/**.test.ts
