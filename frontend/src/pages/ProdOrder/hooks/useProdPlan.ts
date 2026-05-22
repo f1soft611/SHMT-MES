@@ -4,27 +4,16 @@ import dayjs from 'dayjs';
 import { productionOrderService } from '../../../services/productionOrderService';
 import { ProdPlanRow, ProdPlanSearchParams } from '../../../types/productionOrder';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
+import { useProdOrderSearchStore } from '../store/useProdOrderSearchStore';
 
 export function useProdPlan() {
 
   const { showToast } = useToast();
-  // 검색 조건
-  const today = new Date().toISOString().slice(0, 10);
-  const dateTo = new Date();
-  dateTo.setDate(dateTo.getDate() + 7);
-  const dateToStr = dateTo.toISOString().slice(0, 10);
 
-  // 검색조건
-  const [search, setSearch] = useState<ProdPlanSearchParams>({
-    workplace: '',
-    equipment: '',
-    keyword: '',
-    dateFrom: today,
-    dateTo: dateToStr,
-    prodFrom: '',
-    prodTo: '',
-    orderFlag: 'PLANNED',
-  });
+  // 검색조건 — 초기값을 스토어(sessionStorage)에서 읽음
+  const [search, setSearch] = useState<ProdPlanSearchParams>(
+    () => useProdOrderSearchStore.getState().search
+  );
 
   // 페이징
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -158,6 +147,10 @@ export function useProdPlan() {
     setSearchTrigger((t) => t + 1);
   };
 
+  // search 변경 시 스토어에 동기화 (페이지 이탈 후 복원용)
+  useEffect(() => {
+    useProdOrderSearchStore.getState().setSearch(search);
+  }, [search]);
 
   /** ======================
    *  조회 트리거
