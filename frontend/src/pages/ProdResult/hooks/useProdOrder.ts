@@ -7,24 +7,15 @@ import {
   ProdResultOrderRow,
   ProductionResultSearchForm,
 } from '../../../types/productionResult';
+import { useProdResultSearchStore } from '../store/useProdResultSearchStore';
 
 export function useProdOrder() {
   const { showToast } = useToast();
 
-  // 검색 조건
-  const today = new Date().toISOString().slice(0, 10);
-  const dateTo = new Date();
-  dateTo.setDate(dateTo.getDate() + 7);
-  const dateToStr = dateTo.toISOString().slice(0, 10);
-
-  // 화면 입력용 검색 조건
-  const [search, setSearch] = useState<ProductionResultSearchForm>({
-    dateFrom: today,
-    dateTo: dateToStr,
-    workplace: '',
-    equipment: '',
-    keyword: '',
-  });
+  // 화면 입력용 검색 조건 — 초기값을 스토어(sessionStorage)에서 읽음
+  const [search, setSearch] = useState<ProductionResultSearchForm>(
+    () => useProdResultSearchStore.getState().search
+  );
 
   /**
    * 실제 API 호출에 사용하는 검색 파라미터
@@ -151,6 +142,11 @@ export function useProdOrder() {
 
     return true;
   };
+
+  // search 변경 시 스토어에 동기화 (페이지 이탈 후 복원용)
+  useEffect(() => {
+    useProdResultSearchStore.getState().setSearch(search);
+  }, [search]);
 
   const handleSearch = () => {
     if (!validateDateRange()) {
