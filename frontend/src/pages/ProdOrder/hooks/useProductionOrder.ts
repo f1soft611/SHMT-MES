@@ -73,7 +73,7 @@ export function useProductionOrder() {
         const targets = selectedRows.filter(row => row.orderFlag === 'ORDERED');
 
         if (targets.length === 0) {
-            showToast({ message: 'ORDERED 상태인 계획을 선택해주세요.', severity: 'warning' });
+            showToast({ message: '지시완료 상태인 항목을 선택해주세요.', severity: 'warning' });
             return;
         }
 

@@ -8,7 +8,7 @@ import {
   ProdOrderSearchParam, ProdOrderUpdateDto, ProdPlanKeyDto,
   ProdPlanPageResult,
   ProdPlanRow,
-  ProdPlanSearchParams
+  ProdPlanSearchParams, StopWorkDto
 } from '../types/productionOrder';
 import { getMockProductionOrders } from './mockData';
 
@@ -138,7 +138,13 @@ export const productionOrderService = {
   // 생산지시 일괄 취소
   bulkCancelProductionOrders: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/bulk-cancel', data),
 
+  // 작업중단 처리
+  stopWork: (data: StopWorkDto) =>
+      apiClient.post('/api/production-orders/stop-work', data),
+
   // ERP IF 재전송 (ERP에 없는 공정 데이터만)
   resendErpIf: (data: ProdPlanKeyDto[]) =>
     apiClient.post('/api/production-orders/erp-if-resend', data),
+
+
 };

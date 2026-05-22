@@ -186,3 +186,11 @@ export interface ProdPlanKeyDto {
     prodworkSeq: number;
     prodplanDetailId?: string;
 }
+
+
+export interface StopWorkDto {
+    prodplanDate: string;   // YYYYMMDD
+    prodplanSeq: number;
+    prodworkSeq: number;
+    prodQty: number;        // 변경수량
+}

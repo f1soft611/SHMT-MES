@@ -531,4 +531,58 @@
 		  AND ISNULL(DELETE_FLAG, 0) != 1
 	</select>
 
+
+	<!-- 작업중단 — TPR504 지시 행 전체 ORDER_FLAG='STOPPED' 처리 (삭제 제외), PROD_QYT UPDATE -->
+	<update id="stopWorkTpr504"
+	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+		UPDATE TPR504
+		SET    ORDER_FLAG  = 'STOPPED',
+			   PROD_QYT    = #{prodQty},
+		       OPMAN_CODE2 = #{opmanCode},
+		       OPTIME2     = GETDATE()
+		WHERE  FACTORY_CODE  = '000001'
+		  AND  PRODPLAN_DATE = #{prodplanDate}
+		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
+		  AND  PRODWORK_SEQ  = #{prodworkSeq}
+		  AND  ISNULL(DELETE_FLAG, 0) != 1
+	</update>
+
+	<!-- 작업중단 — TPR301 계획 행 ORDER_FLAG='STOPPED' + PROD_QTY 변경 -->
+	<update id="stopWorkTpr301"
+	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+		UPDATE TPR301
+		SET    ORDER_FLAG  = 'STOPPED',
+		       PROD_QTY    = #{prodQty},
+		       OPMAN_CODE2 = #{opmanCode},
+		       OPTIME2     = GETDATE()
+		WHERE  FACTORY_CODE  = '000001'
+		  AND  PRODPLAN_DATE = #{prodplanDate}
+		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
+		  AND  PRODWORK_SEQ  = #{prodworkSeq}
+	</update>
+
+	<!-- 작업중단 — TPR301M 마스터 행 ORDER_FLAG='STOPPED' -->
+	<update id="stopWorkTpr301M"
+	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+		UPDATE TPR301M
+		SET    ORDER_FLAG  = 'STOPPED',
+		       OPMAN_CODE2 = #{opmanCode},
+		       OPTIME2     = GETDATE()
+		WHERE  FACTORY_CODE  = '000001'
+		  AND  PRODPLAN_DATE = #{prodplanDate}
+		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
+	</update>
+
+	<!-- 작업중단 — TPR301R 수주 연계 ORDER_QTY='STOPPED' -->
+	<update id="stopWorkTpr301R"
+	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+		UPDATE TPR301R
+		SET    ORDER_QTY   = #{prodQty},
+		       OPMAN_CODE2 = #{opmanCode},
+		       OPTIME2     = GETDATE()
+		WHERE  FACTORY_CODE  = '000001'
+		  AND  PRODPLAN_DATE = #{prodplanDate}
+		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
+	</update>
+
 </mapper>
