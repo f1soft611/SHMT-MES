@@ -4,16 +4,31 @@ import dayjs from 'dayjs';
 import { productionOrderService } from '../../../services/productionOrderService';
 import { ProdPlanRow, ProdPlanSearchParams } from '../../../types/productionOrder';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
-import { useProdOrderSearchStore } from '../store/useProdOrderSearchStore';
+
+const SESSION_KEY = 'prod-order-search';
+
+function getDefaultSearch(): ProdPlanSearchParams {
+  return {
+    workplace: '',
+    equipment: '',
+    keyword: '',
+    dateFrom: dayjs().format('YYYY-MM-DD'),
+    dateTo: dayjs().add(7, 'day').format('YYYY-MM-DD'),
+    prodFrom: '',
+    prodTo: '',
+    orderFlag: 'PLANNED',
+  };
+}
 
 export function useProdPlan() {
 
   const { showToast } = useToast();
 
-  // 검색조건 — 초기값을 스토어(sessionStorage)에서 읽음
-  const [search, setSearch] = useState<ProdPlanSearchParams>(
-    () => useProdOrderSearchStore.getState().search
-  );
+  // 검색조건 — 초기값을 sessionStorage에서 읽음
+  const [search, setSearch] = useState<ProdPlanSearchParams>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    return saved ? JSON.parse(saved) : getDefaultSearch();
+  });
 
   // 페이징
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -147,9 +162,8 @@ export function useProdPlan() {
     setSearchTrigger((t) => t + 1);
   };
 
-  // search 변경 시 스토어에 동기화 (페이지 이탈 후 복원용)
   useEffect(() => {
-    useProdOrderSearchStore.getState().setSearch(search);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(search));
   }, [search]);
 
   /** ======================
