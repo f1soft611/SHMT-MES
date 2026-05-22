@@ -95,8 +95,15 @@ const ProdPlanList = () => {
         bulkLoading
     } = useBulkProdOrder(selectedRows, clear, onReload);
 
-    const { open: stopWorkOpen, orderQty, setOrderQty, handleOpen: handleStopWorkOpen, handleClose: handleStopWorkClose } =
-        useStopWorkDialog(selectedRows);
+    const {
+        open: stopWorkOpen,
+        orderQty,
+        isLoading: stopWorkLoading,
+        setOrderQty,
+        handleOpen: handleStopWorkOpen,
+        handleClose: handleStopWorkClose,
+        handleConfirm: handleStopWorkConfirm,
+    } = useStopWorkDialog(selectedRows, clear, onReload);
 
     const onClickBulkCancel = () => {
         if (selectedRows.length === 0) {
@@ -364,8 +371,10 @@ const ProdPlanList = () => {
                 open={stopWorkOpen}
                 row={selectedRows[0] ?? null}
                 orderQty={orderQty}
+                isLoading={stopWorkLoading}
                 onOrderQtyChange={setOrderQty}
                 onClose={handleStopWorkClose}
+                onConfirm={handleStopWorkConfirm}
             />
 
             <ConfirmDialog
