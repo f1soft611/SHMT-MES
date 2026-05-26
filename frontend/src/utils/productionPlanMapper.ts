@@ -72,6 +72,20 @@ const normalizeDate = (raw: string): string => {
   return raw; // 이미 변환된 경우
 };
 
+const normalizeOrderFlag = (
+  orderFlag?: string,
+): ProductionPlanData['orderFlag'] => {
+  const normalized = orderFlag?.toUpperCase();
+  if (
+    normalized === 'PLANNED' ||
+    normalized === 'ORDERED' ||
+    normalized === 'STOPPED'
+  ) {
+    return normalized;
+  }
+  return undefined;
+};
+
 export const toProductionPlanData = (
   plan: ServiceProductionPlan,
   extras?: {
@@ -129,7 +143,7 @@ export const toProductionPlanData = (
     planGroupId: plan.planGroupId,
     groupSeq: plan.groupSeq,
     totalGroupCount: plan.totalGroupCount,
-    orderFlag: plan.orderFlag,
+    orderFlag: normalizeOrderFlag(plan.orderFlag),
   };
 };
 

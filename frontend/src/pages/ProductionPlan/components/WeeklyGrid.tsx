@@ -267,6 +267,17 @@ const PlanCard = memo<PlanCardProps>(
                     }}
                   />
                 )}
+                {plan.orderFlag === 'STOPPED' && (
+                  <Chip
+                    label="생산중단"
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      bgcolor: '#ED6C02',
+                      color: 'white',
+                    }}
+                  />
+                )}
                 {plan.customerName && (
                   <Chip
                     label={
@@ -352,6 +363,7 @@ const PlanCard = memo<PlanCardProps>(
                     disabled={
                       !plan.planNo ||
                       plan.orderFlag === 'ORDERED' ||
+                      plan.orderFlag === 'STOPPED' ||
                       (plan.actualQty ?? 0) > 0
                     }
                     onClick={(event) => event.stopPropagation()}

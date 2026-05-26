@@ -45,7 +45,7 @@ export interface ProductionPlanData {
   lotNo?: string;
   useYn?: string;
   // 상태 정보
-  orderFlag?: string; // ORDERED: 생산지시 완료, PLANNED: 계획만 등록
+  orderFlag?: 'PLANNED' | 'ORDERED' | 'STOPPED'; // ORDERED: 생산지시 완료, STOPPED: 생산중단, PLANNED: 계획만 등록
 }
 
 export type ProductionPlanFormUpdates = Partial<ProductionPlanData>;
