@@ -65,4 +65,7 @@ public interface EgovProductionOrderService {
 	 */
 	boolean resendErpIf(List<ProdPlanKeyDto> plans) throws Exception;
 
+	/** 작업중단 처리 — TPR504 ORDER_FLAG='S', TPR301/M ORDER_FLAG='STOPPED', TPR301.PROD_QTY=변경수량 */
+	void stopWork(StopWorkDto dto) throws Exception;
+
 }

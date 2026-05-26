@@ -8,22 +8,25 @@ import {
   ProductionResultSearchForm,
 } from '../../../types/productionResult';
 
-export function useProdOrder() {
-  const { showToast } = useToast();
+const SESSION_KEY = 'prod-result-search';
 
-  // 검색 조건
-  const today = new Date().toISOString().slice(0, 10);
-  const dateTo = new Date();
-  dateTo.setDate(dateTo.getDate() + 7);
-  const dateToStr = dateTo.toISOString().slice(0, 10);
-
-  // 화면 입력용 검색 조건
-  const [search, setSearch] = useState<ProductionResultSearchForm>({
-    dateFrom: today,
-    dateTo: dateToStr,
+function getDefaultSearch(): ProductionResultSearchForm {
+  return {
     workplace: '',
     equipment: '',
     keyword: '',
+    dateFrom: dayjs().format('YYYY-MM-DD'),
+    dateTo: dayjs().add(7, 'day').format('YYYY-MM-DD'),
+  };
+}
+
+export function useProdOrder() {
+  const { showToast } = useToast();
+
+  // 화면 입력용 검색 조건 — 초기값을 sessionStorage에서 읽음
+  const [search, setSearch] = useState<ProductionResultSearchForm>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    return saved ? JSON.parse(saved) : getDefaultSearch();
   });
 
   /**
@@ -151,6 +154,10 @@ export function useProdOrder() {
 
     return true;
   };
+
+  useEffect(() => {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(search));
+  }, [search]);
 
   const handleSearch = () => {
     if (!validateDateRange()) {

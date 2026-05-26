@@ -749,4 +749,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	}
 
 
+	@Override
+	@Transactional
+	public void stopWork(StopWorkDto dto) throws Exception {
+		productionOrderDAO.stopWorkTpr504(dto);
+		productionOrderDAO.stopWorkTpr301(dto);
+		productionOrderDAO.stopWorkTpr301M(dto);
+		productionOrderDAO.stopWorkTpr301R(dto);
+
+	}
+
+
 }
