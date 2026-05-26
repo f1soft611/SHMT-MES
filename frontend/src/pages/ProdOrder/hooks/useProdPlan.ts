@@ -5,25 +5,29 @@ import { productionOrderService } from '../../../services/productionOrderService
 import { ProdPlanRow, ProdPlanSearchParams } from '../../../types/productionOrder';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
-export function useProdPlan() {
+const SESSION_KEY = 'prod-order-search';
 
-  const { showToast } = useToast();
-  // 검색 조건
-  const today = new Date().toISOString().slice(0, 10);
-  const dateTo = new Date();
-  dateTo.setDate(dateTo.getDate() + 7);
-  const dateToStr = dateTo.toISOString().slice(0, 10);
-
-  // 검색조건
-  const [search, setSearch] = useState<ProdPlanSearchParams>({
+function getDefaultSearch(): ProdPlanSearchParams {
+  return {
     workplace: '',
     equipment: '',
     keyword: '',
-    dateFrom: today,
-    dateTo: dateToStr,
+    dateFrom: dayjs().format('YYYY-MM-DD'),
+    dateTo: dayjs().add(7, 'day').format('YYYY-MM-DD'),
     prodFrom: '',
     prodTo: '',
     orderFlag: 'PLANNED',
+  };
+}
+
+export function useProdPlan() {
+
+  const { showToast } = useToast();
+
+  // 검색조건 — 초기값을 sessionStorage에서 읽음
+  const [search, setSearch] = useState<ProdPlanSearchParams>(() => {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    return saved ? JSON.parse(saved) : getDefaultSearch();
   });
 
   // 페이징
@@ -158,6 +162,9 @@ export function useProdPlan() {
     setSearchTrigger((t) => t + 1);
   };
 
+  useEffect(() => {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(search));
+  }, [search]);
 
   /** ======================
    *  조회 트리거
