@@ -1054,10 +1054,9 @@ const ProductionPlan: React.FC = () => {
       }
 
       // 1. 생산지시 여부 확인
-      if (plan.orderFlag === 'ORDERED') {
+      if (plan.orderFlag === 'ORDERED' || plan.orderFlag === 'STOPPED') {
         showToast({
-          message:
-            '생산지시가 완료된 계획은 삭제할 수 없습니다. 먼저 생산지시를 취소해주세요.',
+          message: '지시완료 또는 생산중단 상태의 계획은 삭제할 수 없습니다.',
           severity: 'error',
         });
         return;

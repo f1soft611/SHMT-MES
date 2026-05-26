@@ -165,14 +165,15 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   onBatchChange,
   onRefresh,
 }) => {
-  const isOrderedPlan =
-    dialogMode === 'edit' && formData.orderFlag === 'ORDERED';
+  const isLockedStatusPlan =
+    dialogMode === 'edit' &&
+    (formData.orderFlag === 'ORDERED' || formData.orderFlag === 'STOPPED');
   const isGroupedPlan =
     dialogMode === 'edit' &&
     !!formData.planGroupId &&
     (formData.totalGroupCount ?? formData.createDays ?? 1) > 1;
   const canEditPlanDate = dialogMode === 'edit' && !isGroupedPlan;
-  const canEditPlan = dialogMode === 'create' || !isOrderedPlan;
+  const canEditPlan = dialogMode === 'create' || !isLockedStatusPlan;
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
   const [selectedRequests, setSelectedRequests] = useState<ProductionRequest[]>(
@@ -404,7 +405,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
               sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}
             >
               <Stack spacing={3}>
-                {isOrderedPlan && (
+                {isLockedStatusPlan && (
                   <Box
                     sx={{
                       p: 1.5,
@@ -414,8 +415,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     }}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                      생산지시 완료된 계획은 계획일만 변경 가능하며, 생산실적이
-                      있으면 수정할 수 없습니다.
+                      지시완료 또는 생산중단 상태 계획은 계획일만 변경 가능하며,
+                      생산실적이 있으면 수정할 수 없습니다.
                     </Typography>
                   </Box>
                 )}
@@ -745,14 +746,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       <FormControl
                         fullWidth
                         required
-                        disabled={isOrderedPlan}
+                        disabled={isLockedStatusPlan}
                         error={!!errors.equipmentCode}
                       >
                         <InputLabel>설비</InputLabel>
                         <Select
                           {...field}
                           label="설비"
-                          disabled={isOrderedPlan}
+                          disabled={isLockedStatusPlan}
                           onChange={(e) => {
                             // 설비 코드 업데이트
                             field.onChange(e.target.value);
@@ -864,9 +865,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       label="계획수량"
                       type="number"
                       inputMode="numeric"
-                      disabled={isOrderedPlan}
+                      disabled={isLockedStatusPlan}
                       InputProps={{
-                        readOnly: isOrderedPlan,
+                        readOnly: isLockedStatusPlan,
                       }}
                       error={!!errors.plannedQty}
                       helperText={errors.plannedQty?.message}
@@ -921,7 +922,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                         placeholder="YYYY-MM-DD 또는 YYYYMMDD"
                         inputMode="numeric"
                         InputLabelProps={{ shrink: true }}
-                        InputProps={{ readOnly: isOrderedPlan }}
+                        InputProps={{ readOnly: isLockedStatusPlan }}
                         value={displayValue}
                         onChange={handleDeliveryDateChange}
                         error={!!errors.deliveryDate}
@@ -1023,7 +1024,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           {...field}
                           label="작업자 선택"
                           value={field.value || ''} // Ensure a valid value is passed
-                          disabled={isOrderedPlan}
+                          disabled={isLockedStatusPlan}
                           onChange={(e) => {
                             const selectedWorker = workplaceWorkers.find(
                               (w) => w.workerCode === e.target.value,
@@ -1079,7 +1080,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                           {...field}
                           label="근무구분"
                           value={field.value || ''}
-                          disabled={isOrderedPlan}
+                          disabled={isLockedStatusPlan}
                           onChange={(e) => field.onChange(e.target.value)}
                         >
                           <MenuItem value="">
@@ -1119,7 +1120,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       multiline
                       rows={3}
                       label="비고"
-                      InputProps={{ readOnly: isOrderedPlan }}
+                      InputProps={{ readOnly: isLockedStatusPlan }}
                     />
                   )}
                 />
@@ -1132,7 +1133,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
               type="submit"
               variant="contained"
               color="primary"
-              disabled={!canEditPlan && !isOrderedPlan && dialogMode === 'edit'}
+              disabled={
+                !canEditPlan && !isLockedStatusPlan && dialogMode === 'edit'
+              }
             >
               저장
             </Button>
