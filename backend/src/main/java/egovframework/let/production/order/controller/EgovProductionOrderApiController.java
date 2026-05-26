@@ -7,15 +7,7 @@ import egovframework.com.cmm.util.ResultVoHelper;
 import egovframework.com.jwt.EgovJwtTokenUtil;
 import egovframework.let.common.dto.ListResult;
 import egovframework.let.cop.bbs.dto.request.BbsSearchRequestDTO;
-import egovframework.let.production.order.domain.model.ProdOrderDeleteDto;
-import egovframework.let.production.order.domain.model.ProdOrderInsertDto;
-import egovframework.let.production.order.domain.model.ProdOrderRow;
-import egovframework.let.production.order.domain.model.ProdOrderSearchParam;
-import egovframework.let.production.order.domain.model.ProdOrderUpdateDto;
-import egovframework.let.production.order.domain.model.ProdPlanKeyDto;
-import egovframework.let.production.order.domain.model.ProdPlanRow;
-import egovframework.let.production.order.domain.model.ProdPlanSearchParam;
-import egovframework.let.production.order.domain.model.ProductionOrderVO;
+import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -325,5 +317,25 @@ public class EgovProductionOrderApiController {
                 : "ERP IF 전송 중 오류가 발생했습니다.";
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
+    }
+
+
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "처리 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/stop-work")
+    public ResultVO stopWork(
+            @RequestBody StopWorkDto dto,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        dto.setOpmanCode(user.getUniqId());
+        productionOrderService.stopWork(dto);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "작업중단 처리가 완료되었습니다.");
     }
 }

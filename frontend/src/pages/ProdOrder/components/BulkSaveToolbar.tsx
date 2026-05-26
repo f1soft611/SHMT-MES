@@ -2,15 +2,19 @@ import { GridToolbarContainer } from "@mui/x-data-grid";
 import { Box, Button } from "@mui/material";
 import {
     Save as SaveIcon,
-    Delete as DeleteIcon
+    Delete as DeleteIcon,
+    Stop as StopIcon,
 } from "@mui/icons-material";
 
 interface Props {
     onBulkOrder: () => void;
     onBulkCancel: () => void;
+    selectedCount?: number;
+    canStop?: boolean;
+    onStopWork?: () => void;
 }
 
-const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel }: Props) => {
+const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel, selectedCount = 0, canStop = false, onStopWork }: Props) => {
     return (
         <GridToolbarContainer
             sx={{
@@ -26,9 +30,21 @@ const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel }: Props) => {
 
                 <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
                     <Button
+                        startIcon={<StopIcon />}
+                        variant="contained"
+                        size="small"
+                        color="warning"
+                        disabled={!canStop}
+                        onClick={onStopWork}
+                    >
+                        작업 중단
+                    </Button>
+
+                    <Button
                         startIcon={<SaveIcon />}
                         variant="contained"
                         size="small"
+                        disabled={selectedCount < 1}
                         onClick={onBulkOrder}
                     >
                         일괄 지시
@@ -39,6 +55,7 @@ const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel }: Props) => {
                         variant="contained"
                         size="small"
                         color="error"
+                        disabled={selectedCount < 1}
                         onClick={onBulkCancel}
                     >
                         일괄 취소

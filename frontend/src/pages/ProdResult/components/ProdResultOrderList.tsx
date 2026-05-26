@@ -6,6 +6,7 @@ import {
 import { ProdResultOrderRow } from "../../../types/productionResult";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import { formatNumberWithCommas } from "../../../utils/formatUtils";
+import { decodeHtml } from "../../../utils/stringUtils";
 import { useProdResultStore } from "../store/useProdResultStore";
 
 const numberCol: Partial<GridColDef> = {
@@ -30,13 +31,13 @@ export default function ProdResultOrderList() {
         { field: 'orderNo', headerName: '수주번호', width: 120 },
         { field: 'customerName', headerName: '거래처', width: 120 },
         { field: 'itemCode', headerName: '제품번호', width: 100 },
-        { field: 'itemName', headerName: '제품명', width: 150 },
+        { field: 'itemName', headerName: '제품명', width: 150, valueFormatter: (value: string) => decodeHtml(value) },
         { field: 'lotNo', headerName: '제품 LotNo', width: 150 },
         { field: 'workName', headerName: '공정명', width: 120 },
         { field: 'equipSysCd', headerName: '설비코드', width: 100 },
         { field: 'equipSysCdNm', headerName: '설비명', width: 120 },
-        { field: 'prodCode', headerName: '생산품목번호', width: 100 },
-        { field: 'prodName', headerName: '생산품목명', width: 150 },
+        { field: 'prodCode', headerName: '생산품목번호', width: 100, valueFormatter: (value: string) => decodeHtml(value) },
+        { field: 'prodName', headerName: '생산품목명', width: 150, valueFormatter: (value: string) => decodeHtml(value) },
         { field: 'prodSpec', headerName: '생산품목규격', width: 150 },
         { field: 'workdtDate', headerName: '작업시작일', width: 120 },
         { field: 'orderQty', headerName: '작업지시량', width: 80, ...numberCol },
