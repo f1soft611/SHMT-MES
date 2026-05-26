@@ -19,7 +19,6 @@
 	<properties>
 		<spring.maven.artifact.version>5.3.37</spring.maven.artifact.version>
 		<org.egovframe.rte.version>4.3.0</org.egovframe.rte.version>
-        <spring.profiles.active>dev</spring.profiles.active>
         <selenium.version>4.13.0</selenium.version>
 	</properties>
 
