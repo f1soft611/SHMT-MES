@@ -85,6 +85,7 @@ public class EgovMberManageApiController {
 	@GetMapping(value = "/members")
 	public ResultVO selectMberList(
 			@ModelAttribute BbsSearchRequestDTO boardMasterSearchVO,
+			@RequestParam(value = "pageUnit", required = false) Integer pageUnit,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user)
 			throws Exception {
 
@@ -95,7 +96,11 @@ public class EgovMberManageApiController {
 		userSearchVO.setSearchKeyword(boardMasterSearchVO.getSearchWrd());
 
 		/** EgovPropertyService */
-		userSearchVO.setPageUnit(propertiesService.getInt("Globals.pageUnit"));
+		userSearchVO.setPageUnit(
+				pageUnit != null && pageUnit > 0
+						? pageUnit
+						: propertiesService.getInt("Globals.pageUnit")
+		);
 		userSearchVO.setPageSize(propertiesService.getInt("Globals.pageSize"));
 
 		/** paging */

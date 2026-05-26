@@ -70,6 +70,10 @@ const DataTable = <T extends GridValidRowModel>({
     <Box
       sx={{
         width: '100%',
+        height: '100%',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 1,
@@ -132,6 +136,8 @@ const DataTable = <T extends GridValidRowModel>({
           ),
         }}
         sx={{
+          height: '100%',
+          minHeight: 0,
           border: 'none',
           '& .MuiDataGrid-cell:focus': { outline: 'none' },
         }}

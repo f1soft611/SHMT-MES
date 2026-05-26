@@ -57,7 +57,6 @@ export interface UserSearchParams {
   searchCnd?: string;
   searchWrd?: string;
   pageUnit?: number;
-  pageSize?: number;
 }
 
 export interface UserListResponse {
@@ -111,6 +110,9 @@ class UserService {
     }
     if (searchParams?.searchWrd) {
       params.append('searchWrd', searchParams.searchWrd);
+    }
+    if (searchParams?.pageUnit) {
+      params.append('pageUnit', searchParams.pageUnit.toString());
     }
 
     const response = await apiClient.get(`/members?${params.toString()}`);

@@ -67,6 +67,7 @@ const UserManagement: React.FC = () => {
     pageIndex: 1,
     searchCnd: '2',
     searchWrd: '',
+    pageUnit: 10,
   });
 
   const [pagination, setPagination] = useState({
@@ -168,7 +169,7 @@ const UserManagement: React.FC = () => {
 
   const handleInputChange = (
     field: keyof typeof inputValues,
-    value: string
+    value: string,
   ) => {
     setInputValues((prev) => ({ ...prev, [field]: value }));
   };
@@ -180,6 +181,7 @@ const UserManagement: React.FC = () => {
       pageIndex: 1,
       searchCnd: inputValues.searchCnd,
       searchWrd: inputValues.searchWrd,
+      pageUnit: paginationModel.pageSize,
     };
     setSearchParams(newSearchParams);
 
@@ -214,6 +216,7 @@ const UserManagement: React.FC = () => {
     const newSearchParams = {
       ...searchParams,
       pageIndex: newModel.page + 1,
+      pageUnit: newModel.pageSize,
     };
     setSearchParams(newSearchParams);
 
@@ -372,14 +375,14 @@ const UserManagement: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     const statusItem = codeData.mberSttus_result.find(
-      (item: any) => item.code === status
+      (item: any) => item.code === status,
     );
     return statusItem ? statusItem.codeNm : status;
   };
 
   const getGroupLabel = (groupId: string) => {
     const groupItem = codeData.groupId_result.find(
-      (item: any) => item.code === groupId
+      (item: any) => item.code === groupId,
     );
     return groupItem ? groupItem.codeNm : groupId;
   };
@@ -486,7 +489,14 @@ const UserManagement: React.FC = () => {
 
   return (
     <ProtectedRoute requiredPermission="read" matchMode="prefix">
-      <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 150px)',
+          minHeight: 640,
+        }}
+      >
         <PageHeader
           title=""
           crumbs={[{ label: '시스템 관리' }, { label: '사용자 관리' }]}
@@ -556,18 +566,20 @@ const UserManagement: React.FC = () => {
         </Paper>
 
         {/* 사용자 목록 */}
-        <DataTable
-          rows={users}
-          columns={columns}
-          getRowId={(row) => row.uniqId}
-          loading={loading}
-          error={error}
-          rowCount={pagination.totalRecordCount}
-          paginationModel={paginationModel}
-          onPaginationModelChange={handlePageChange}
-          pageSizeOptions={[5, 10, 25, 50]}
-          onRefresh={loadUsers}
-        />
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <DataTable
+            rows={users}
+            columns={columns}
+            getRowId={(row) => row.uniqId}
+            loading={loading}
+            error={error}
+            rowCount={pagination.totalRecordCount}
+            paginationModel={paginationModel}
+            onPaginationModelChange={handlePageChange}
+            pageSizeOptions={[5, 10, 25, 50]}
+            onRefresh={loadUsers}
+          />
+        </Box>
 
         {/* 삭제 확인 다이얼로그 */}
         <ConfirmDialog
