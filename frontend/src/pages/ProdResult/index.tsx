@@ -14,6 +14,12 @@ const ProductionResult = () => {
     const rowData = location.state?.rowData as ProdPlanRow | null;
 
     useEffect(() => {
+        return () => {
+            useProdResultStore.setState({ selectedRow: null });
+        };
+    }, []);
+
+    useEffect(() => {
         useProdResultStore.getState().initFromNavigation(rowData);
     }, [rowData]);
 
