@@ -40,6 +40,16 @@
 			   A.OPTIME,
 			   A.OPMAN_CODE2,
 			   A.OPTIME2,
+			   (
+			       SELECT TOP 1 ORDER_DATE
+			       FROM TPR504
+			       WHERE FACTORY_CODE = '000001'
+			         AND PRODPLAN_DATE = A.PRODPLAN_DATE
+			         AND PRODPLAN_SEQ = A.PRODPLAN_SEQ
+			         AND PRODWORK_SEQ = A.PRODWORK_SEQ
+			         AND ISNULL(DELETE_FLAG, 0) != 1
+			       ORDER BY WORKORDER_SEQ
+			   ) AS ORDER_DATE,
 			   STUFF((
 			       SELECT ',' + TPR504ID
 			       FROM TPR504
@@ -205,7 +215,8 @@
 			'' AS PRODORDER_ID,
 			0 AS ORDER_SEQ,
 			D.SEQ AS TPR110D_SEQ,
-			WC.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ
+			WC.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ,
+			D1.EQUIPMENT_INTEGRATION_YN
 		FROM TPR301 A
 		    LEFT JOIN TPR101 WC
 			ON A.WORKCENTER_CODE = WC.WORKCENTER_CODE
@@ -306,7 +317,9 @@
 		    A.TPR110D_SEQ,
 		    F.CUSTOMER_CODE,
 			ROW_NUMBER() OVER(PARTITION BY A.TPR110D_SEQ ORDER BY A.WORKORDER_SEQ) AS COPY_ROW,
-			H.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ
+			H.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ,
+			B.EQUIPMENT_INTEGRATION_YN,
+			A.ORDER_DATE
 		FROM TPR504 A
 			LEFT JOIN TCO403 A1
 			ON A.ITEM_CODE = A1.MATERIAL_ID
@@ -411,7 +424,8 @@
 		    BIGO,
 		    TPR110D_SEQ,
 			ITEM_CT_TIME,
-			ITEM_ONE_PER_QTY
+			ITEM_ONE_PER_QTY,
+			ORDER_DATE
 		)
 		VALUES (
 			'000001',
@@ -436,7 +450,8 @@
 			#{bigo},
 			#{tpr110dSeq},
 			#{itemCtTime},
-			#{itemOnePerQty}
+			#{itemOnePerQty},
+			#{orderDate}
 		);
 	</insert>
 
@@ -537,7 +552,7 @@
 	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
 		UPDATE TPR504
 		SET    ORDER_FLAG  = 'STOPPED',
-			   PROD_QYT    = #{prodQty},
+			   PROD_QTY    = #{prodQty},
 		       OPMAN_CODE2 = #{opmanCode},
 		       OPTIME2     = GETDATE()
 		WHERE  FACTORY_CODE  = '000001'

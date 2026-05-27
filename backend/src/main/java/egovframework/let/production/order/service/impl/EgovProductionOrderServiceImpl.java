@@ -340,7 +340,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			try {
 				log.info("[BULK] ERP IF start, size={}", ifList.size());
 
-				// TODO : 인터페이스부분
+				// 인터페이스부분
 				boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(ifList);
 				if (!erpSendSuccess) {
 					erpIfFailed = true;
@@ -459,7 +459,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			List<ProdOrderRow> orders = productionOrderDAO.selectProdOrdersByPlanId(param);
 			for (ProdOrderRow row : orders) {
-				if (row.getProdorderId() != null && !row.getProdorderId().isEmpty()) {
+				if (row.getProdorderId() != null && !row.getProdorderId().isEmpty()
+						&& "Y".equals(row.getEquipmentIntegrationYn())) {
 					candidates.add(convertRowToIfDto(row, plan.getOpmanCode()));
 				}
 			}
@@ -544,6 +545,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setItemCtTime(row.getItemCtTime());
 		dto.setItemOnePerQty(row.getItemOnePerQty());
+		dto.setOrderDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
 		return dto;
 	}
@@ -582,8 +584,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
 
-			// ERP IF DTO 수집 (A)
-			erpIfList.add(convertInsertToIfDto(dto));
+			// ERP IF DTO 수집 (A) - 설비연동 공정만 전송 대상
+			if ("Y".equals(row.getEquipmentIntegrationYn())) {
+				erpIfList.add(convertInsertToIfDto(dto));
+			}
 		}
 		return erpIfList;
 	}
@@ -646,7 +650,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setFactUnit(1);
 		dto.setWorkOrderNo(src.getLotNo()); // lotno로 대체
-		dto.setWorkOrderDate(src.getProdplanDate());
+		dto.setWorkOrderDate(src.getOrderDate());
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
 		dto.setWorkCenterSeq(parseWorkcenterSeq(src.getWorkcenterSeq()));
@@ -729,7 +733,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setFactUnit(1);
 		dto.setWorkOrderNo(row.getLotNo());
-		dto.setWorkOrderDate(row.getProdplanDate());
+		dto.setWorkOrderDate(row.getOrderDate());
 
 
 		dto.setProdPlanSeq(row.getProdplanSeq());
