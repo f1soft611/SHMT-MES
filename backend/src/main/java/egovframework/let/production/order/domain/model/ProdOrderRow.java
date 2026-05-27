@@ -73,4 +73,5 @@ public class ProdOrderRow implements Serializable {
     private Integer tpr110dSeq;
     private String workcenterSeq;
     private String equipmentIntegrationYn;  // 설비연동 유무
+    private String orderDate;               // yyyyMMdd
 }

@@ -22,7 +22,7 @@ public class ErpIFProdOrderDto {
     private Integer factUnit;           // default 1
 
     private String workOrderNo;         // item lotNo 로 대체
-    private String workOrderDate;       //
+    private String workOrderDate;       // 작업지시를 내린일자이 들어가야함(TRP504.ORDER_DATE)
 
     private Integer prodPlanSeq;
     private Integer workCenterSeq;

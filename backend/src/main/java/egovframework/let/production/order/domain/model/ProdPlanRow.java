@@ -115,6 +115,9 @@ public class ProdPlanRow implements Serializable {
     /** 작업시간2 */
     private String optime2;
 
+    /** 작업지시일 (yyyyMMdd) */
+    private String orderDate;
+
     /** ERP IF 전송 여부 */
     private boolean erpIfInserted;
 
