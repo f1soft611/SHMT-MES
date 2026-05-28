@@ -460,7 +460,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			List<ProdOrderRow> orders = productionOrderDAO.selectProdOrdersByPlanId(param);
 			for (ProdOrderRow row : orders) {
 				if (row.getProdorderId() != null && !row.getProdorderId().isEmpty()
-						&& "Y".equals(row.getEquipmentIntegrationYn())) {
+						&& row.getWorkCodeId() != null && row.getWorkCodeId() > 0) {
 					candidates.add(convertRowToIfDto(row, plan.getOpmanCode()));
 				}
 			}
@@ -584,8 +584,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
 
-			// ERP IF DTO 수집 (A) - 설비연동 공정만 전송 대상
-			if ("Y".equals(row.getEquipmentIntegrationYn())) {
+			// ERP IF DTO 수집 (A) - ERP 공정 매핑이 있는 공정만 전송 대상
+			if (row.getWorkCodeId() != null && row.getWorkCodeId() > 0) {
 				erpIfList.add(convertInsertToIfDto(dto));
 			}
 		}
