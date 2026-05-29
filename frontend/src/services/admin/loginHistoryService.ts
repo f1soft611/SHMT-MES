@@ -16,6 +16,14 @@ export interface LoginHistory {
   failReason?: string;
   logoutDt?: string;
   sessionTime?: number;
+  govInterfaceYn?: string; // 'Y' | 'N'
+  govInterfaceDt?: string;
+  govRecptnRsltCd?: string;
+  govRecptnRslt?: string;
+  govRecptnRsltDtl?: string;
+  govFailReason?: string;
+  govRequestJson?: string;
+  govResponseJson?: string;
 }
 
 /**
@@ -58,7 +66,7 @@ export const loginHistoryService = {
    * 로그인 이력 목록 조회
    */
   getLoginHistoryList: async (
-    params: LoginHistorySearchParams = {}
+    params: LoginHistorySearchParams = {},
   ): Promise<LoginHistoryListResponse> => {
     try {
       const response = await apiClient.get('/api/loginHistory/list', {
@@ -71,11 +79,14 @@ export const loginHistoryService = {
         },
       });
 
-      if (response.data.resultCode === 200 || response.data.resultCode === '200') {
+      if (
+        response.data.resultCode === 200 ||
+        response.data.resultCode === '200'
+      ) {
         return response.data.result;
       } else {
         throw new Error(
-          response.data.resultMessage || '로그인 이력 목록 조회 실패'
+          response.data.resultMessage || '로그인 이력 목록 조회 실패',
         );
       }
     } catch (error) {
@@ -88,16 +99,21 @@ export const loginHistoryService = {
    * 로그인 이력 상세 조회
    */
   getLoginHistoryDetail: async (
-    loginHistoryId: number
+    loginHistoryId: number,
   ): Promise<LoginHistory> => {
     try {
-      const response = await apiClient.get(`/api/loginHistory/${loginHistoryId}`);
+      const response = await apiClient.get(
+        `/api/loginHistory/${loginHistoryId}`,
+      );
 
-      if (response.data.resultCode === 200 || response.data.resultCode === '200') {
+      if (
+        response.data.resultCode === 200 ||
+        response.data.resultCode === '200'
+      ) {
         return response.data.result.loginHistory;
       } else {
         throw new Error(
-          response.data.resultMessage || '로그인 이력 상세 조회 실패'
+          response.data.resultMessage || '로그인 이력 상세 조회 실패',
         );
       }
     } catch (error) {

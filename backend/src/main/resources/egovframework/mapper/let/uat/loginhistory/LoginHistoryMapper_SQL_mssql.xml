@@ -15,6 +15,14 @@
 		<result property="failReason" column="FAIL_REASON"/>
 		<result property="logoutDt" column="LOGOUT_DT"/>
 		<result property="sessionTime" column="SESSION_TIME"/>
+		<result property="govInterfaceYn" column="GOV_INTERFACE_YN"/>
+		<result property="govInterfaceDt" column="GOV_INTERFACE_DT"/>
+		<result property="govRecptnRsltCd" column="GOV_RECPTN_RSLT_CD"/>
+		<result property="govRecptnRslt" column="GOV_RECPTN_RSLT"/>
+		<result property="govRecptnRsltDtl" column="GOV_RECPTN_RSLT_DTL"/>
+		<result property="govFailReason" column="GOV_FAIL_REASON"/>
+		<result property="govRequestJson" column="GOV_REQUEST_JSON"/>
+		<result property="govResponseJson" column="GOV_RESPONSE_JSON"/>
 	</resultMap>
 
 	<!-- 로그인 이력 등록 -->
@@ -56,7 +64,15 @@
 			LOGIN_RESULT,
 			FAIL_REASON,
 			CONVERT(VARCHAR(19), LOGOUT_DT, 120) AS LOGOUT_DT,
-			SESSION_TIME
+			SESSION_TIME,
+			GOV_INTERFACE_YN,
+			CONVERT(VARCHAR(23), GOV_INTERFACE_DT, 121) AS GOV_INTERFACE_DT,
+			GOV_RECPTN_RSLT_CD,
+			GOV_RECPTN_RSLT,
+			GOV_RECPTN_RSLT_DTL,
+			GOV_FAIL_REASON,
+			GOV_REQUEST_JSON,
+			GOV_RESPONSE_JSON
 		FROM (
 			SELECT 
 				*,
@@ -119,7 +135,15 @@
 			LOGIN_RESULT,
 			FAIL_REASON,
 			CONVERT(VARCHAR(19), LOGOUT_DT, 120) AS LOGOUT_DT,
-			SESSION_TIME
+			SESSION_TIME,
+			GOV_INTERFACE_YN,
+			CONVERT(VARCHAR(23), GOV_INTERFACE_DT, 121) AS GOV_INTERFACE_DT,
+			GOV_RECPTN_RSLT_CD,
+			GOV_RECPTN_RSLT,
+			GOV_RECPTN_RSLT_DTL,
+			GOV_FAIL_REASON,
+			GOV_REQUEST_JSON,
+			GOV_RESPONSE_JSON
 		FROM MES_LOGIN_HISTORY
 		WHERE LOGIN_HISTORY_ID = #{loginHistoryId}
 	</select>
@@ -130,6 +154,49 @@
 		SET 
 			LOGOUT_DT = GETDATE(),
 			SESSION_TIME = DATEDIFF(MINUTE, LOGIN_DT, GETDATE())
+		WHERE LOGIN_HISTORY_ID = #{loginHistoryId}
+	</update>
+
+	<!-- 정부 인터페이스 대상 최신 로그인 이력 1건 조회 -->
+	<select id="selectLatestLoginHistoryForGovInterface" resultMap="loginHistoryResultMap">
+		SELECT TOP 1
+			LOGIN_HISTORY_ID,
+			FACTORY_CODE,
+			USER_ID,
+			USER_NAME,
+			CONVERT(VARCHAR(19), LOGIN_DT, 120) AS LOGIN_DT,
+			LOGIN_IP,
+			LOGIN_TYPE,
+			USER_AGENT,
+			LOGIN_RESULT,
+			FAIL_REASON,
+			CONVERT(VARCHAR(19), LOGOUT_DT, 120) AS LOGOUT_DT,
+			SESSION_TIME,
+			GOV_INTERFACE_YN,
+			CONVERT(VARCHAR(23), GOV_INTERFACE_DT, 121) AS GOV_INTERFACE_DT,
+			GOV_RECPTN_RSLT_CD,
+			GOV_RECPTN_RSLT,
+			GOV_RECPTN_RSLT_DTL,
+			GOV_FAIL_REASON,
+			GOV_REQUEST_JSON,
+			GOV_RESPONSE_JSON
+		FROM MES_LOGIN_HISTORY
+		WHERE ISNULL(GOV_INTERFACE_YN, 'N') = 'N'
+		ORDER BY LOGIN_DT DESC, LOGIN_HISTORY_ID DESC
+	</select>
+
+	<!-- 정부 인터페이스 전송 결과 업데이트 -->
+	<update id="updateGovInterfaceResult" parameterType="egovframework.let.uat.loginhistory.domain.model.LoginHistory">
+		UPDATE MES_LOGIN_HISTORY
+		SET
+			GOV_INTERFACE_YN = #{govInterfaceYn},
+			GOV_INTERFACE_DT = GETDATE(),
+			GOV_RECPTN_RSLT_CD = #{govRecptnRsltCd},
+			GOV_RECPTN_RSLT = #{govRecptnRslt},
+			GOV_RECPTN_RSLT_DTL = #{govRecptnRsltDtl},
+			GOV_FAIL_REASON = #{govFailReason},
+			GOV_REQUEST_JSON = #{govRequestJson},
+			GOV_RESPONSE_JSON = #{govResponseJson}
 		WHERE LOGIN_HISTORY_ID = #{loginHistoryId}
 	</update>
 

@@ -66,4 +66,23 @@ public class LoginHistoryDAO extends EgovAbstractMapper {
 	public int updateLogoutInfo(LoginHistory loginHistory) throws Exception {
 		return update("loginHistoryDAO.updateLogoutInfo", loginHistory);
 	}
+
+	/**
+	 * 정부 인터페이스 미전송 최신 로그인 이력 1건을 조회한다.
+	 * @return 로그인 이력
+	 * @throws Exception
+	 */
+	public LoginHistory selectLatestLoginHistoryForGovInterface() throws Exception {
+		return selectOne("loginHistoryDAO.selectLatestLoginHistoryForGovInterface");
+	}
+
+	/**
+	 * 정부 인터페이스 전송 결과를 업데이트한다.
+	 * @param loginHistory 업데이트 정보
+	 * @return 업데이트 건수
+	 * @throws Exception
+	 */
+	public int updateGovInterfaceResult(LoginHistory loginHistory) throws Exception {
+		return update("loginHistoryDAO.updateGovInterfaceResult", loginHistory);
+	}
 }
