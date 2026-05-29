@@ -1,5 +1,6 @@
 import { useState} from "react";
 import {productionOrderService} from "../../../services/productionOrderService";
+import {getServerDate} from "../../../utils/dateUtils";
 import {
     ProdOrderInsertDto,
     ProdOrderRow,
@@ -62,6 +63,7 @@ export function useProdOrder() {
         customerCode: row.customerCode,
         tpr110dSeq: row.tpr110dSeq,
         workcenterSeq: row.workcenterSeq,
+        orderDate: getServerDate().toISOString().slice(0, 10).replace(/-/g, ''),
     });
 
 

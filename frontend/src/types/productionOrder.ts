@@ -63,6 +63,7 @@ export interface ProdPlanRow {
     optime?: string;
     opmanCode2?: string;
     optime2?: string;
+    orderDate?: string;
     erpIfInserted: boolean;
 }
 
@@ -150,6 +151,7 @@ export interface ProdOrderInsertDto {
     opmanCode?: string;
     tpr110dSeq: number;
     workcenterSeq?: string;
+    orderDate: string;  // yyyyMMdd, 서버시간 기준
 }
 
 export interface ProdOrderUpdateDto {
