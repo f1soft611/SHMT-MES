@@ -69,6 +69,30 @@ public class LoginHistory implements Serializable {
 	@Schema(description = "세션 유지 시간(분)")
 	private Integer sessionTime;
 
+	@Schema(description = "정부 인터페이스 전송 성공 여부 (Y/N)")
+	private String govInterfaceYn;
+
+	@Schema(description = "정부 인터페이스 마지막 전송 시각")
+	private String govInterfaceDt;
+
+	@Schema(description = "정부 인터페이스 수신 결과 코드")
+	private String govRecptnRsltCd;
+
+	@Schema(description = "정부 인터페이스 수신 결과 메시지")
+	private String govRecptnRslt;
+
+	@Schema(description = "정부 인터페이스 수신 결과 상세 메시지")
+	private String govRecptnRsltDtl;
+
+	@Schema(description = "정부 인터페이스 실패 사유")
+	private String govFailReason;
+
+	@Schema(description = "정부 인터페이스 요청 JSON")
+	private String govRequestJson;
+
+	@Schema(description = "정부 인터페이스 응답 JSON")
+	private String govResponseJson;
+
 	/**
 	 * toString 메소드를 대치한다.
 	 */

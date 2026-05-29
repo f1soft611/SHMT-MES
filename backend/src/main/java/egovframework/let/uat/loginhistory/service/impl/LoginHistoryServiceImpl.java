@@ -65,4 +65,14 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 		loginHistory.setLoginHistoryId(loginHistoryId);
 		return loginHistoryDAO.updateLogoutInfo(loginHistory);
 	}
+
+	@Override
+	public LoginHistory selectLatestLoginHistoryForGovInterface() throws Exception {
+		return loginHistoryDAO.selectLatestLoginHistoryForGovInterface();
+	}
+
+	@Override
+	public int updateGovInterfaceResult(LoginHistory loginHistory) throws Exception {
+		return loginHistoryDAO.updateGovInterfaceResult(loginHistory);
+	}
 }

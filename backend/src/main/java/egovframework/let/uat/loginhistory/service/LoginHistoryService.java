@@ -53,4 +53,19 @@ public interface LoginHistoryService {
 	 * @throws Exception
 	 */
 	int updateLogoutInfo(Long loginHistoryId) throws Exception;
+
+	/**
+	 * 정부 인터페이스 전송 대상 최신 로그인 이력 1건을 조회한다.
+	 * @return 로그인 이력
+	 * @throws Exception
+	 */
+	LoginHistory selectLatestLoginHistoryForGovInterface() throws Exception;
+
+	/**
+	 * 정부 인터페이스 전송 결과를 업데이트한다.
+	 * @param loginHistory 업데이트 정보
+	 * @return 업데이트 결과
+	 * @throws Exception
+	 */
+	int updateGovInterfaceResult(LoginHistory loginHistory) throws Exception;
 }

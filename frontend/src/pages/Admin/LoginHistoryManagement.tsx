@@ -28,6 +28,8 @@ import {
   Cancel as CancelIcon,
   Computer as ComputerIcon,
   VpnKey as VpnKeyIcon,
+  CloudDone as CloudDoneIcon,
+  CloudOff as CloudOffIcon,
 } from '@mui/icons-material';
 import {
   LoginHistory,
@@ -45,7 +47,7 @@ const LoginHistoryManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<LoginHistory | null>(
-    null
+    null,
   );
 
   const { showToast } = useToast();
@@ -115,9 +117,8 @@ const LoginHistoryManagement: React.FC = () => {
   // 상세 조회
   const handleViewDetail = async (loginHistoryId: number) => {
     try {
-      const history = await loginHistoryService.getLoginHistoryDetail(
-        loginHistoryId
-      );
+      const history =
+        await loginHistoryService.getLoginHistoryDetail(loginHistoryId);
       setSelectedHistory(history);
       setDetailOpen(true);
     } catch (err) {
@@ -127,6 +128,12 @@ const LoginHistoryManagement: React.FC = () => {
       });
     }
   };
+
+  const isGovInterfaced = (history: LoginHistory): boolean =>
+    Boolean(history.govInterfaceDt);
+
+  const getGovStatusLabel = (govInterfaceYn?: string): string =>
+    govInterfaceYn === 'Y' ? '정상' : '실패';
 
   // 테이블 컬럼 정의
   const columns: GridColDef[] = [
@@ -203,6 +210,29 @@ const LoginHistoryManagement: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => params.value || '-',
+    },
+    {
+      field: 'govInterfaceYn',
+      headerName: '인터페이스 상태',
+      width: 160,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => {
+        if (!isGovInterfaced(params.row)) {
+          return null;
+        }
+
+        return (
+          <Chip
+            icon={params.value === 'Y' ? <CloudDoneIcon /> : <CloudOffIcon />}
+            label={getGovStatusLabel(params.value)}
+            size="small"
+            color={params.value === 'Y' ? 'success' : 'warning'}
+            clickable
+            onClick={() => handleViewDetail(params.row.loginHistoryId)}
+          />
+        );
+      },
     },
     {
       field: 'actions',
@@ -504,6 +534,114 @@ const LoginHistoryManagement: React.FC = () => {
                         </Typography>
                       </Grid>
                     </>
+                  )}
+
+                  {isGovInterfaced(selectedHistory) && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        정부 인터페이스 상태
+                      </Typography>
+                      <Chip
+                        icon={
+                          selectedHistory.govInterfaceYn === 'Y' ? (
+                            <CloudDoneIcon />
+                          ) : (
+                            <CloudOffIcon />
+                          )
+                        }
+                        label={getGovStatusLabel(
+                          selectedHistory.govInterfaceYn,
+                        )}
+                        size="small"
+                        color={
+                          selectedHistory.govInterfaceYn === 'Y'
+                            ? 'success'
+                            : 'warning'
+                        }
+                      />
+                    </Grid>
+                  )}
+
+                  {isGovInterfaced(selectedHistory) &&
+                    selectedHistory.govInterfaceDt && (
+                      <Grid size={{ xs: 12 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          인터페이스 처리 시각
+                        </Typography>
+                        <Typography variant="body1">
+                          {selectedHistory.govInterfaceDt}
+                        </Typography>
+                      </Grid>
+                    )}
+
+                  {(selectedHistory.govRecptnRsltCd ||
+                    selectedHistory.govRecptnRslt ||
+                    selectedHistory.govRecptnRsltDtl) && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        인터페이스 결과
+                      </Typography>
+                      <Typography variant="body1">
+                        코드: {selectedHistory.govRecptnRsltCd || '-'}
+                      </Typography>
+                      <Typography variant="body1">
+                        메시지: {selectedHistory.govRecptnRslt || '-'}
+                      </Typography>
+                      {selectedHistory.govRecptnRsltDtl && (
+                        <Typography variant="body2" color="text.secondary">
+                          상세: {selectedHistory.govRecptnRsltDtl}
+                        </Typography>
+                      )}
+                    </Grid>
+                  )}
+
+                  {selectedHistory.govFailReason && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        인터페이스 실패 사유
+                      </Typography>
+                      <Typography variant="body1" color="error">
+                        {selectedHistory.govFailReason}
+                      </Typography>
+                    </Grid>
+                  )}
+
+                  {selectedHistory.govRequestJson && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        인터페이스 요청 JSON
+                      </Typography>
+                      <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-all',
+                          }}
+                        >
+                          {selectedHistory.govRequestJson}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  {selectedHistory.govResponseJson && (
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        인터페이스 응답 JSON
+                      </Typography>
+                      <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-all',
+                          }}
+                        >
+                          {selectedHistory.govResponseJson}
+                        </Typography>
+                      </Paper>
+                    </Grid>
                   )}
                 </Grid>
               </Stack>
