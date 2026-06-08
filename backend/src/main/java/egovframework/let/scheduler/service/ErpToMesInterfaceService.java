@@ -90,6 +90,7 @@ public interface ErpToMesInterfaceService {
 	/**
 	 * ERP 시스템의 생산 의뢰 정보를 MES 시스템으로 연동
 	 * ERP의 생산의뢰 테이블에서 생산 의뢰 정보를 조회하여 TSA308 테이블에 동기화
+	 * 조회 기준 날짜는 ERP 생산의뢰일(ReqDate, yyyyMMdd)
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @throws Exception
@@ -98,6 +99,7 @@ public interface ErpToMesInterfaceService {
 
 	/**
 	 * 스케쥴러에서 호출되는 생산 의뢰 정보 프로세스 실행
+	 * 조회 기간은 ERP 생산의뢰일(ReqDate) 기준
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @throws Exception
