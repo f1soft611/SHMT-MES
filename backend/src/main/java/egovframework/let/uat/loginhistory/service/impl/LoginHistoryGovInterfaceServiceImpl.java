@@ -19,6 +19,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,9 +54,12 @@ public class LoginHistoryGovInterfaceServiceImpl implements LoginHistoryGovInter
 	@Override
 	@Transactional
 	public void executeInterface(String fromDate, String toDate) throws Exception {
-		LoginHistory target = loginHistoryService.selectLatestLoginHistoryForGovInterface();
+		String normalizedFromDate = normalizeDate(fromDate);
+		String normalizedToDate = normalizeDate(toDate);
+
+		LoginHistory target = loginHistoryService.selectLatestLoginHistoryForGovInterface(normalizedFromDate, normalizedToDate);
 		if (target == null) {
-			log.info("정부 로그인 이력 전송 대상이 없습니다.");
+			log.info("정부 로그인 이력 전송 대상이 없습니다. (기간: {} ~ {})", normalizedFromDate, normalizedToDate);
 			return;
 		}
 
@@ -127,6 +132,13 @@ public class LoginHistoryGovInterfaceServiceImpl implements LoginHistoryGovInter
 		payload.put("conectIp", loginHistory.getLoginIp());
 		payload.put("dataUsgqty", 0);
 		return payload;
+	}
+
+	private String normalizeDate(String dateValue) {
+		if (dateValue != null && !dateValue.trim().isEmpty()) {
+			return dateValue.trim();
+		}
+		return LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
 	}
 
 	private String formatLogDate(String loginDt) {
