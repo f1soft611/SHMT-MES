@@ -62,6 +62,15 @@ public interface LoginHistoryService {
 	LoginHistory selectLatestLoginHistoryForGovInterface() throws Exception;
 
 	/**
+	 * 정부 인터페이스 전송 대상 최신 로그인 이력 1건을 조회한다. (기간 조건 + 재시도 조건)
+	 * @param fromDate 조회 시작일 (yyyy-MM-dd)
+	 * @param toDate 조회 종료일 (yyyy-MM-dd)
+	 * @return 로그인 이력
+	 * @throws Exception
+	 */
+	LoginHistory selectLatestLoginHistoryForGovInterface(String fromDate, String toDate) throws Exception;
+
+	/**
 	 * 정부 인터페이스 전송 결과를 업데이트한다.
 	 * @param loginHistory 업데이트 정보
 	 * @return 업데이트 결과

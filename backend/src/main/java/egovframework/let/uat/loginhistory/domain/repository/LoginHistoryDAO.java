@@ -5,7 +5,9 @@ import egovframework.let.uat.loginhistory.domain.model.LoginHistoryVO;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 로그인 이력 관리 DAO 클래스
@@ -74,6 +76,20 @@ public class LoginHistoryDAO extends EgovAbstractMapper {
 	 */
 	public LoginHistory selectLatestLoginHistoryForGovInterface() throws Exception {
 		return selectOne("loginHistoryDAO.selectLatestLoginHistoryForGovInterface");
+	}
+
+	/**
+	 * 정부 인터페이스 전송 대상 최신 로그인 이력 1건을 조회한다. (기간 조건 + 재시도 조건)
+	 * @param fromDate 조회 시작일 (yyyy-MM-dd)
+	 * @param toDate 조회 종료일 (yyyy-MM-dd)
+	 * @return 로그인 이력
+	 * @throws Exception
+	 */
+	public LoginHistory selectLatestLoginHistoryForGovInterface(String fromDate, String toDate) throws Exception {
+		Map<String, String> params = new HashMap<>();
+		params.put("fromDate", fromDate);
+		params.put("toDate", toDate);
+		return selectOne("loginHistoryDAO.selectLatestLoginHistoryForGovInterfaceByDateRange", params);
 	}
 
 	/**

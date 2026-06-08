@@ -72,6 +72,11 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 	}
 
 	@Override
+	public LoginHistory selectLatestLoginHistoryForGovInterface(String fromDate, String toDate) throws Exception {
+		return loginHistoryDAO.selectLatestLoginHistoryForGovInterface(fromDate, toDate);
+	}
+
+	@Override
 	public int updateGovInterfaceResult(LoginHistory loginHistory) throws Exception {
 		return loginHistoryDAO.updateGovInterfaceResult(loginHistory);
 	}

@@ -356,6 +356,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP 시스템의 생산 의뢰 정보를 MES 시스템으로 연동
+	 * ERP 생산의뢰일(ReqDate, yyyyMMdd)을 기준으로 조회
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */
@@ -417,11 +418,15 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * ERP에서 생산 의뢰 정보 조회 (JdbcTemplate 사용)
+	 * fromDate/toDate(yyyy-MM-dd)를 ReqDate(yyyyMMdd) 비교 형식으로 정규화하여 조회
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 * @return 생산 의뢰 정보 리스트
 	 */
 	private List<ErpProductionRequest> selectErpProductionRequests(String fromDate, String toDate) {
+		String fromReqDate = normalizeReqDateParam(fromDate);
+		String toReqDate = normalizeReqDateParam(toDate);
+
 		String sql =
 				"SELECT " +
 						"      JoinItem.ProdReqNo, " +
@@ -478,7 +483,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.Spec AS JoinSpec, " +
 						"           2 AS ItemFlag " +
 						"      FROM SHM_IF_VIEW_TPDMPSProdReqItem PRI " +
-						"      WHERE CONVERT(VARCHAR(10), PRI.LastDateTime, 120) BETWEEN ? AND ? " +
+						"      WHERE PRI.ReqDate BETWEEN ? AND ? " +
 
 						"      UNION ALL " +
 
@@ -513,7 +518,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"      INNER JOIN SHM_IF_VIEW_TDAItem C " +
 						"             ON A.MatItemSeq = C.ItemSeq " +
 						"            AND C.ASSETSEQ = '4' " +
-						"      WHERE CONVERT(VARCHAR(10), PRI.LastDateTime, 120) BETWEEN ? AND ? " +
+						"      WHERE PRI.ReqDate BETWEEN ? AND ? " +
 
 						"      UNION ALL " +
 
@@ -553,14 +558,21 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"      INNER JOIN SHM_IF_VIEW_TDAItem C2 " +
 						"             ON A2.MatItemSeq = C2.ItemSeq " +
 						"            AND C2.ASSETSEQ = '4' " +
-						"      WHERE CONVERT(VARCHAR(10), PRI.LastDateTime, 120) BETWEEN ? AND ? " +
+						"      WHERE PRI.ReqDate BETWEEN ? AND ? " +
 						"     ) AS JoinItem " +
 
 						"ORDER BY ProdReqNo, ProdReqSeq, Serl, ItemFlag";
 
 
 
-		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromDate, toDate, fromDate, toDate, fromDate, toDate);
+		return erpJdbcTemplate.query(sql, new ErpProductionRequestRowMapper(), fromReqDate, toReqDate, fromReqDate, toReqDate, fromReqDate, toReqDate);
+	}
+
+	static String normalizeReqDateParam(String date) {
+		if (date == null) {
+			return null;
+		}
+		return date.replace("-", "");
 	}
 
 	/**
@@ -604,6 +616,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 
 	/**
 	 * 스케쥴러에서 호출되는 생산 의뢰 정보 프로세스 실행
+	 * 조회 기간은 ERP 생산의뢰일(ReqDate) 기준으로 적용
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)
 	 */

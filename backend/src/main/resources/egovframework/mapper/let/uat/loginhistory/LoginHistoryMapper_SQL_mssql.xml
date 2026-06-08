@@ -185,6 +185,41 @@
 		ORDER BY LOGIN_DT DESC, LOGIN_HISTORY_ID DESC
 	</select>
 
+	<!-- 정부 인터페이스 대상 최신 로그인 이력 1건 조회 (기간 + 당일 중복 전송 방지 + 익일 재시도) -->
+	<select id="selectLatestLoginHistoryForGovInterfaceByDateRange" parameterType="map" resultMap="loginHistoryResultMap">
+		SELECT TOP 1
+			LOGIN_HISTORY_ID,
+			FACTORY_CODE,
+			USER_ID,
+			USER_NAME,
+			CONVERT(VARCHAR(19), LOGIN_DT, 120) AS LOGIN_DT,
+			LOGIN_IP,
+			LOGIN_TYPE,
+			USER_AGENT,
+			LOGIN_RESULT,
+			FAIL_REASON,
+			CONVERT(VARCHAR(19), LOGOUT_DT, 120) AS LOGOUT_DT,
+			SESSION_TIME,
+			GOV_INTERFACE_YN,
+			CONVERT(VARCHAR(23), GOV_INTERFACE_DT, 121) AS GOV_INTERFACE_DT,
+			GOV_RECPTN_RSLT_CD,
+			GOV_RECPTN_RSLT,
+			GOV_RECPTN_RSLT_DTL,
+			GOV_FAIL_REASON,
+			GOV_REQUEST_JSON,
+			GOV_RESPONSE_JSON
+		FROM MES_LOGIN_HISTORY
+		WHERE
+			(
+				(
+					CONVERT(DATE, LOGIN_DT) &gt;= CONVERT(DATE, #{fromDate})
+					AND CONVERT(DATE, LOGIN_DT) &lt;= CONVERT(DATE, #{toDate})
+					AND GOV_INTERFACE_DT IS NULL
+				)
+			)
+		ORDER BY LOGIN_DT DESC, LOGIN_HISTORY_ID DESC
+	</select>
+
 	<!-- 정부 인터페이스 전송 결과 업데이트 -->
 	<update id="updateGovInterfaceResult" parameterType="egovframework.let.uat.loginhistory.domain.model.LoginHistory">
 		UPDATE MES_LOGIN_HISTORY
