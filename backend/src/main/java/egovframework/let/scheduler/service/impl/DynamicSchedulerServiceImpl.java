@@ -184,9 +184,8 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         }
 
         try {
-            // 자동 스케쥴러 실행 시 오늘 날짜 사용
-            String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            Runnable task = createTaskRunnable(config, today, today);
+            // 자동 스케쥴러는 실행 시점 기준 날짜를 사용해야 한다.
+            Runnable task = createTaskRunnable(config);
             CronTrigger cronTrigger = new CronTrigger(config.getCronExpression());
             ScheduledFuture<?> scheduledTask = taskScheduler.schedule(task, cronTrigger);
             scheduledTasks.put(config.getSchedulerId(), scheduledTask);
@@ -195,6 +194,13 @@ public class DynamicSchedulerServiceImpl implements DynamicSchedulerService, Sch
         } catch (Exception e) {
             log.error("스케쥴러 등록 실패: {}", config.getSchedulerName(), e);
         }
+    }
+
+    private Runnable createTaskRunnable(SchedulerConfig config) {
+        return () -> {
+            String today = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            createTaskRunnable(config, today, today).run();
+        };
     }
 
     private Runnable createTaskRunnable(SchedulerConfig config, String fromDate, String toDate) {
