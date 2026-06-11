@@ -46,6 +46,7 @@ export interface ProductionPlanData {
   useYn?: string;
   // 상태 정보
   orderFlag?: 'PLANNED' | 'ORDERED' | 'STOPPED'; // ORDERED: 생산지시 완료, STOPPED: 생산중단, PLANNED: 계획만 등록
+  hasResult?: number; // 1: 해당 행에 실적 있음, 0: 없음 (주간 조회 시 백엔드에서 반환)
 }
 
 export type ProductionPlanFormUpdates = Partial<ProductionPlanData>;

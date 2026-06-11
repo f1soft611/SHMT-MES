@@ -270,6 +270,16 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 	}
 
 	/**
+	 * 행(PRODWORK_SEQ) 단위 생산실적 개수를 조회한다. (그룹 계획 부분 실적 체크용)
+	 * @param plan factoryCode, prodPlanDate, prodPlanSeq, prodworkSeq 포함
+	 * @return 해당 행의 생산실적 개수
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int selectProductionResultCountByWork(ProductionPlan plan) throws Exception {
+		return selectOne("ProductionPlanDAO.selectProductionResultCountByWork", plan);
+	}
+
+	/**
 	 * 생산계획 지시상태(ORDER_FLAG)를 조회한다.
 	 * @param plan factoryCode, prodPlanId 포함
 	 * @return ORDER_FLAG 값 (PLANNED 또는 ORDERED)

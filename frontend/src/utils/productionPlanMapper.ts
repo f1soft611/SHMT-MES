@@ -48,6 +48,8 @@ export interface ServiceProductionPlan {
   totalGroupCount?: number;
   // 생산지시 상태
   orderFlag?: string;
+  // 행 단위 실적 존재 여부 (주간 조회 시 백엔드에서 반환: 1=있음, 0=없음)
+  hasResult?: number;
 }
 
 export interface WeeklyEquipmentPlanResponse {
@@ -144,6 +146,7 @@ export const toProductionPlanData = (
     groupSeq: plan.groupSeq,
     totalGroupCount: plan.totalGroupCount,
     orderFlag: normalizeOrderFlag(plan.orderFlag),
+    hasResult: plan.hasResult != null ? Number(plan.hasResult) : 0,
   };
 };
 

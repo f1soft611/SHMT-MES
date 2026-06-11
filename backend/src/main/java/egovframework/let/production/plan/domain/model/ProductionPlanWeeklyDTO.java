@@ -211,6 +211,11 @@ public class ProductionPlanWeeklyDTO {
          * 생산지시 상태 (ORDERED/PLANNED 등)
          */
         private String orderFlag;
+
+        /**
+         * 행 단위 실적 존재 여부 (1: 있음, 0: 없음)
+         */
+        private Integer hasResult;
         
         /**
          * 비고
