@@ -172,7 +172,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     dialogMode === 'edit' &&
     !!formData.planGroupId &&
     (formData.totalGroupCount ?? formData.createDays ?? 1) > 1;
-  const canEditPlanDate = dialogMode === 'edit' && !isGroupedPlan;
+  // 계획일 수정 가능 여부: 해당 행에 실적이 없을 때만 허용 (그룹 여부와 무관)
+  const canEditPlanDate = dialogMode === 'edit' && formData.hasResult === 0;
   const canEditPlan = dialogMode === 'create' || !isLockedStatusPlan;
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);

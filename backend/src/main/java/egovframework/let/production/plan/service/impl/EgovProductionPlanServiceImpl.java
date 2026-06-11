@@ -282,12 +282,12 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		if (!planList.isEmpty()) {
 			String currentOrderFlag = productionPlanDAO.selectProductionPlanOrderFlag(planList.get(0));
 			if ("ORDERED".equals(currentOrderFlag)) {
-				int productionResultCount = productionPlanDAO.selectProductionResultCount(master);
-				if (productionResultCount > 0) {
-					throw new RuntimeException("생산실적이 등록된 계획은 계획일을 수정할 수 없습니다.");
-				}
-
+				// 행(PRODWORK_SEQ) 단위로 실적 체크: 실적 없는 행만 날짜 수정 허용
 				for (ProductionPlan plan : planList) {
+					int resultCount = productionPlanDAO.selectProductionResultCountByWork(plan);
+					if (resultCount > 0) {
+						throw new RuntimeException("생산실적이 등록된 계획은 계획일을 수정할 수 없습니다.");
+					}
 					productionPlanDAO.updateProductionPlanDateOnly(plan);
 				}
 				productionPlanDAO.updateProductionPlanMaster(master);
@@ -490,6 +490,9 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 						.groupSeq(row.get("groupSeq") != null ? ((Number) row.get("groupSeq")).intValue() : null)
 						.createDays(row.get("createDays") != null ? ((Number) row.get("createDays")).intValue() : null)
 						.totalGroupCount(row.get("totalGroupCount") != null ? ((Number) row.get("totalGroupCount")).intValue() : null)
+						.hasResult(row.get("hasResult") != null
+							? ((Number) row.get("hasResult")).intValue()
+							: (row.get("HAS_RESULT") != null ? ((Number) row.get("HAS_RESULT")).intValue() : 0))
 						.orderFlag((String) row.get("orderFlag"))
 						.remark((String) row.get("remark"))
 						.build();

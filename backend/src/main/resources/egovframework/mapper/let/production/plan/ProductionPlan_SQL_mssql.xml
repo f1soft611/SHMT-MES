@@ -529,6 +529,18 @@
 			ON SK.FACTORY_CODE = R.FACTORY_CODE
 			AND SK.PRODPLAN_DATE = R.PRODPLAN_DATE
 			AND SK.PRODPLAN_SEQ = R.PRODPLAN_SEQ
+		),
+		ResultExists AS (
+			-- 행(PRODWORK_SEQ) 단위 실적 존재 여부 (TPR601 스캔 1회)
+			SELECT DISTINCT R.FACTORY_CODE, R.PRODPLAN_DATE, R.PRODPLAN_SEQ, R.PRODWORK_SEQ
+			FROM TPR601 R
+			INNER JOIN (
+				SELECT DISTINCT FACTORY_CODE, PRODPLAN_DATE, PRODPLAN_SEQ
+				FROM ScopedPlans
+			) SK
+			ON SK.FACTORY_CODE = R.FACTORY_CODE
+			AND SK.PRODPLAN_DATE = R.PRODPLAN_DATE
+			AND SK.PRODPLAN_SEQ = R.PRODPLAN_SEQ
 		)
 		SELECT
 		    E.FACTORY_CODE,
@@ -567,7 +579,8 @@
 				WHEN C.CUSTOMER_COUNT = 1 THEN COALESCE(CU.CUSTOMER_NAME, '')
 				ELSE ''
 			END AS CUSTOMER_NAME,
-			D.BIGO AS REMARK
+			D.BIGO AS REMARK,
+			CASE WHEN RE.PRODWORK_SEQ IS NOT NULL THEN 1 ELSE 0 END AS HAS_RESULT
 		FROM (
 			-- 작업장 기준 공정별 설비연동 설비 목록 (중복 제거)
 			SELECT
@@ -627,6 +640,11 @@
 			LEFT JOIN TCO601 CU
 			ON CU.FACTORY_CODE = C.FACTORY_CODE
 			AND CU.CUSTOMER_CODE = C.FIRST_CUSTOMER_CODE
+			LEFT JOIN ResultExists RE
+			ON RE.FACTORY_CODE = D.FACTORY_CODE
+			AND RE.PRODPLAN_DATE = D.PRODPLAN_DATE
+			AND RE.PRODPLAN_SEQ = D.PRODPLAN_SEQ
+			AND RE.PRODWORK_SEQ = D.PRODWORK_SEQ
 		ORDER BY E.EQUIP_CD, D.PROD_DATE, D.PRODPLAN_DATE, D.PRODPLAN_SEQ
 	</select>
 
@@ -1011,6 +1029,16 @@
 		WHERE R.FACTORY_CODE = #{factoryCode}
 		  AND R.PRODPLAN_DATE = #{prodPlanDate}
 		  AND R.PRODPLAN_SEQ = #{prodPlanSeq}
+	</select>
+
+	<!-- 행(PRODWORK_SEQ) 단위 생산실적 개수 조회 (그룹 계획 부분 실적 체크용) -->
+	<select id="ProductionPlanDAO.selectProductionResultCountByWork" parameterType="egovframework.let.production.plan.domain.model.ProductionPlan" resultType="int">
+		SELECT COUNT(*)
+		FROM TPR601 R
+		WHERE R.FACTORY_CODE = #{factoryCode}
+		  AND R.PRODPLAN_DATE = #{prodPlanDate}
+		  AND R.PRODPLAN_SEQ = #{prodPlanSeq}
+		  AND R.PRODWORK_SEQ = #{prodworkSeq}
 	</select>
 
 	<!-- 월별 생산계획/실적 일자별 집계 조회 -->
