@@ -584,8 +584,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
 
-			// ERP IF DTO 수집 (A) - ERP 공정 매핑이 있는 공정만 전송 대상
-			if (row.getWorkCodeId() != null && row.getWorkCodeId() > 0) {
+			// ERP IF DTO 수집 (A) - 최종공정이면서 ERP 공정 매핑이 있는 공정만 전송 대상
+			boolean isLastProcess = "Y".equals(row.getLastFlag());
+			boolean hasErpMapping = row.getWorkCodeId() != null && row.getWorkCodeId() > 0;
+			if (isLastProcess && hasErpMapping) {
 				erpIfList.add(convertInsertToIfDto(dto));
 			}
 		}
