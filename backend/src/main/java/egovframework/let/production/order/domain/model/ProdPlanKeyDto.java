@@ -21,4 +21,10 @@ public class ProdPlanKeyDto {
 
     /** opmanCode */
     private String opmanCode;
+
+    /** erp 수주번호 (ProdReqSeq) */
+    private int orderSeqno;
+
+    /** 수주번호 serl (Serl) */
+    private int orderHistno;
 }
