@@ -1,7 +1,7 @@
-import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid';
+import {DataGrid, GridColDef, GridRowId} from '@mui/x-data-grid';
 import {
   Button, Stack, Box, FormControl, InputLabel,
-  Select, MenuItem, TextField, Grid, Typography,
+  Select, MenuItem, TextField, Grid, Typography, GlobalStyles,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import {ItemType} from '../../../../types/item';
@@ -128,6 +128,15 @@ export default function ProcessFlowItemTab() {
 
   return (
     <>
+      <GlobalStyles styles={{
+        '.MuiDataGrid-panel': {
+          opacity: 0.6,
+          transition: 'opacity 0.2s ease',
+        },
+        '.MuiDataGrid-panel:hover': {
+          opacity: 1,
+        },
+      }} />
       {/* 검색 영역 */}
       <Box sx={{ mb: 2 }}>
         <Stack direction="row" spacing={2} alignItems="center">
