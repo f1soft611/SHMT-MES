@@ -19,11 +19,11 @@ public class ProdPlanRow implements Serializable {
     /** 수주번호 */
     private String orderNo;
 
-    /** 수주이력번호 */
-    private String orderHistno;
-
-    /** 수주순번 */
+    /** erp 수주번호 (ProdReqSeq) */
     private Integer orderSeqno;
+
+    /** 수주번호 serl (Serl) */
+    private Integer orderHistno;
 
     /** 수주구분 (수주 / 재고) */
     private String orderGubun;

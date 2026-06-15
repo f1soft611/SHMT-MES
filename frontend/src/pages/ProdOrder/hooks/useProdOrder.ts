@@ -64,6 +64,9 @@ export function useProdOrder() {
         tpr110dSeq: row.tpr110dSeq,
         workcenterSeq: row.workcenterSeq,
         orderDate: getServerDate().toISOString().slice(0, 10).replace(/-/g, ''),
+
+        orderSeqno: row.orderSeqno ?? 0,
+        orderHistno: row.orderHistno ?? 0,
     });
 
 
