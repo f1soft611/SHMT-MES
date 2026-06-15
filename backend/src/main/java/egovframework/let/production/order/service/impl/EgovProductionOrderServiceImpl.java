@@ -460,8 +460,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			List<ProdOrderRow> orders = productionOrderDAO.selectProdOrdersByPlanId(param);
 			for (ProdOrderRow row : orders) {
+				boolean isLastProcess = "Y".equals(row.getLastFlag());
+				boolean hasErpMapping = row.getWorkCodeId() != null && row.getWorkCodeId() > 0;
 				if (row.getProdorderId() != null && !row.getProdorderId().isEmpty()
-						&& row.getWorkCodeId() != null && row.getWorkCodeId() > 0) {
+						&& isLastProcess && hasErpMapping) {
+					row.setOrderHistno(plan.getOrderHistno());
+					row.setOrderSeqno(plan.getOrderSeqno());
 					candidates.add(convertRowToIfDto(row, plan.getOpmanCode()));
 				}
 			}
@@ -756,6 +760,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setEmpSeq(0);
 		dto.setProcRev("");
 		dto.setRemark(row.getBigo());
+
+		dto.setOrderSeqno(row.getOrderSeqno());
+		dto.setOrderHistno(row.getOrderHistno());
 
 		return dto;
 	}
