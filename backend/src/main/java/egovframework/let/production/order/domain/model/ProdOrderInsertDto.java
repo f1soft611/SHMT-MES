@@ -36,4 +36,7 @@ public class ProdOrderInsertDto {
     private Integer tpr110dSeq;
     private String workcenterSeq;
     private String orderDate;           // yyyyMMdd
+
+    private int orderSeqno;
+    private int orderHistno;
 }

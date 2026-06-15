@@ -36,4 +36,10 @@ public class ErpIFProdOrderDto {
     private Integer empSeq;
     private String procRev;
     private String remark;
+
+
+    /** erp 수주번호 (ProdReqSeq) */
+    private int orderSeqno;
+    /** 수주번호 serl (Serl) */
+    private int orderHistno;
 }
