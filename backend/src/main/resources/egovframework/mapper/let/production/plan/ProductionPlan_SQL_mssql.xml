@@ -359,15 +359,22 @@
 
 	<!-- 생산계획 기준 생산지시일(WORKDT_DATE) 동기화 -->
 	<update id="ProductionPlanDAO.updateProductionOrderWorkDateByPlanId"
-			parameterType="egovframework.let.production.plan.domain.model.ProductionPlanMaster">
-		UPDATE TPR504
+			parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		UPDATE O
 		SET
-			WORKDT_DATE = #{planDate},
-			OPMAN_CODE2 = #{opmanCode2},
-			OPTIME2 = GETDATE()
-		WHERE FACTORY_CODE = #{factoryCode}
-		  AND PRODPLAN_ID = #{prodPlanId}
-		  AND ISNULL(DELETE_FLAG, '0') != 1
+			O.WORKDT_DATE = #{planDate},
+			O.OPMAN_CODE2 = #{opmanCode2},
+			O.OPTIME2 = GETDATE()
+		FROM TPR504 O
+		INNER JOIN TPR301 P
+			ON O.FACTORY_CODE = P.FACTORY_CODE
+			AND O.PRODPLAN_DATE = P.PRODPLAN_DATE
+			AND O.PRODPLAN_SEQ = P.PRODPLAN_SEQ
+			AND O.PRODWORK_SEQ = P.PRODWORK_SEQ
+		WHERE P.FACTORY_CODE = #{factoryCode}
+		  AND P.PRODPLAN_ID = #{prodPlanId}
+		  AND P.PRODWORK_SEQ = #{prodworkSeq}
+		  AND ISNULL(O.DELETE_FLAG, '0') != 1
 	</update>
 
 	<!-- 생산계획 마스터 삭제 (물리적 삭제) -->
