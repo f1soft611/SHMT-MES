@@ -26,6 +26,9 @@ export function useBulkProdOrder(
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
             prodplanDetailId: row.prodplanDetailId,
+
+            orderSeqno: row.orderSeqno ?? 0,
+            orderHistno: row.orderHistno ?? 0,
         }));
 
         try {

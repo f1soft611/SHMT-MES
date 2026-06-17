@@ -33,8 +33,8 @@ export interface ProdPlanRow {
     orderGubun: string;
     orderGubunFlag: number;
     orderNo?: string;
-    orderHistno?: string;
     orderSeqno?: number;
+    orderHistno?: number;
     factoryCode: string;
     prodplanDate: string;     // YYYYMMDD
     prodplanSeq: number;
@@ -115,6 +115,9 @@ export interface ProdOrderRow {
     tpr110dSeq:number;
     workcenterSeq?: string;
 
+    orderSeqno?: number;
+    orderHistno?: number;
+
     // ===== UI 전용 필드 =====
     _isNew?: boolean;
 }
@@ -152,6 +155,9 @@ export interface ProdOrderInsertDto {
     tpr110dSeq: number;
     workcenterSeq?: string;
     orderDate: string;  // yyyyMMdd, 서버시간 기준
+
+    orderSeqno?: number;
+    orderHistno?: number;
 }
 
 export interface ProdOrderUpdateDto {
@@ -187,6 +193,9 @@ export interface ProdPlanKeyDto {
     prodplanSeq: number;
     prodworkSeq: number;
     prodplanDetailId?: string;
+
+    orderSeqno?: number;
+    orderHistno?: number;
 }
 
 

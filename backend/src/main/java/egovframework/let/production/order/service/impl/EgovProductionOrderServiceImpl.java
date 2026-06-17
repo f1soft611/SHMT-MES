@@ -185,8 +185,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			productionOrderDAO.insertProductionOrder(dto);
 
 			// ERP IF DTO 수집 (A)
-			ErpIFProdOrderDto erpDto = convertInsertToIfDto(dto);
-			erpIfList.add(erpDto);
+			erpIfList.add(convertInsertToIfDto(dto));
 		}
 
 		// ERP IF 배치 전송
@@ -332,6 +331,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			for (ProdOrderRow row : targets) {
 				row.setLotNo(lotNo);
 				row.setProdplanDetailId(plan.getProdplanDetailId());
+				row.setOrderSeqno(plan.getOrderSeqno());
+				row.setOrderHistno(plan.getOrderHistno());
 			}
 
 
@@ -588,6 +589,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			boolean isLastProcess = "Y".equals(row.getLastFlag());
 			boolean hasErpMapping = row.getWorkCodeId() != null && row.getWorkCodeId() > 0;
 			if (isLastProcess && hasErpMapping) {
+				dto.setOrderSeqno(plan.getOrderSeqno());
+				dto.setOrderHistno(plan.getOrderHistno());
 				erpIfList.add(convertInsertToIfDto(dto));
 			}
 		}
@@ -666,6 +669,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setEmpSeq(0);
 		dto.setProcRev("");
 		dto.setRemark(src.getBigo());
+
+		dto.setOrderSeqno(src.getOrderSeqno());
+		dto.setOrderHistno(src.getOrderHistno());
 
 		return dto;
 	}

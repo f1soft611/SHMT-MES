@@ -81,7 +81,9 @@
             DeptSeq,
             EmpSeq,
             ProcRev,
-            Remark
+            Remark,
+            ProdReqSeq,
+            Serl
         )
         VALUES
         <foreach collection="list" item="d" separator=",">
@@ -108,7 +110,9 @@
             #{d.deptSeq},
             #{d.empSeq},
             #{d.procRev},
-            #{d.remark}
+            #{d.remark},
+            #{d.orderSeqno},
+            #{d.orderHistno}
         )
         </foreach>
     </insert>
