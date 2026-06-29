@@ -59,4 +59,24 @@
             AND MATERIAL_CODE = #{itemNo}
     </update>
 
+    <!-- LOT 채번용 IDS2 시드 보장 -->
+    <insert id="ensureLotIdSeed" parameterType="egovframework.let.scheduler.domain.model.ErpItem">
+        MERGE IDS2 WITH (HOLDLOCK) AS TARGET
+        USING (
+            SELECT
+                'TCO403' AS TABLE_NAME,
+                #{itemNo} AS CONDITION1,
+                RIGHT(CONVERT(VARCHAR(8), GETDATE(), 112), 2) AS CONDITION2,
+                300 AS NEXT_ID
+        ) AS SOURCE
+        ON (
+            TARGET.TABLE_NAME = SOURCE.TABLE_NAME
+            AND TARGET.CONDITION1 = SOURCE.CONDITION1
+            AND TARGET.CONDITION2 = SOURCE.CONDITION2
+        )
+        WHEN NOT MATCHED THEN
+            INSERT (TABLE_NAME, CONDITION1, CONDITION2, NEXT_ID)
+            VALUES (SOURCE.TABLE_NAME, SOURCE.CONDITION1, SOURCE.CONDITION2, SOURCE.NEXT_ID);
+    </insert>
+
 </mapper>

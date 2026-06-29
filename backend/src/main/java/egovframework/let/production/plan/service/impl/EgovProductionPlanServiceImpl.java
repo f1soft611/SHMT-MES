@@ -290,6 +290,7 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 					}
 					productionPlanDAO.updateProductionPlanDateOnly(plan);
 					productionPlanDAO.updateProductionOrderWorkDateByPlanId(plan);
+					productionPlanDAO.updateProductionOrderEquipmentByPlanId(plan);
 				}
 				productionPlanDAO.updateProductionPlanMaster(master);
 				return; // PROD_DATE 변경은 TPR301R 참조에 영향 없으므로 references 처리 불필요

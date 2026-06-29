@@ -310,4 +310,14 @@ public class ProductionPlanDAO extends EgovAbstractMapper {
 		return update("ProductionPlanDAO.updateProductionOrderWorkDateByPlanId", plan);
 	}
 
+	/**
+	 * 생산계획 행 기준으로 생산지시 공정/설비를 수정한다.
+	 * @param plan factoryCode, prodPlanId, prodworkSeq, processCode, equipmentId, opmanCode2 포함
+	 * @return 수정(UPDATE) 결과
+	 * @throws Exception SQL 실행 중 오류 발생 시
+	 */
+	public int updateProductionOrderEquipmentByPlanId(ProductionPlan plan) throws Exception {
+		return update("ProductionPlanDAO.updateProductionOrderEquipmentByPlanId", plan);
+	}
+
 }

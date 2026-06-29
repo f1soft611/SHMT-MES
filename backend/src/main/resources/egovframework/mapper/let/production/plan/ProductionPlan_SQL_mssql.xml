@@ -350,6 +350,8 @@
 		SET
 			PROD_DATE = #{planDate},
 			DELIVERY_DATE = #{deliveryDate},
+			WORK_CODE = #{processCode},
+			EQUIP_SYS_CD = #{equipmentId},
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
 		WHERE FACTORY_CODE = #{factoryCode}
@@ -363,6 +365,27 @@
 		UPDATE O
 		SET
 			O.WORKDT_DATE = #{planDate},
+			O.OPMAN_CODE2 = #{opmanCode2},
+			O.OPTIME2 = GETDATE()
+		FROM TPR504 O
+		INNER JOIN TPR301 P
+			ON O.FACTORY_CODE = P.FACTORY_CODE
+			AND O.PRODPLAN_DATE = P.PRODPLAN_DATE
+			AND O.PRODPLAN_SEQ = P.PRODPLAN_SEQ
+			AND O.PRODWORK_SEQ = P.PRODWORK_SEQ
+		WHERE P.FACTORY_CODE = #{factoryCode}
+		  AND P.PRODPLAN_ID = #{prodPlanId}
+		  AND P.PRODWORK_SEQ = #{prodworkSeq}
+		  AND ISNULL(O.DELETE_FLAG, '0') != 1
+	</update>
+
+	<!-- 생산계획 기준 생산지시 공정/설비 동기화 -->
+	<update id="ProductionPlanDAO.updateProductionOrderEquipmentByPlanId"
+			parameterType="egovframework.let.production.plan.domain.model.ProductionPlan">
+		UPDATE O
+		SET
+			O.WORK_CODE = P.WORK_CODE,
+			O.EQUIP_SYS_CD = P.EQUIP_SYS_CD,
 			O.OPMAN_CODE2 = #{opmanCode2},
 			O.OPTIME2 = GETDATE()
 		FROM TPR504 O

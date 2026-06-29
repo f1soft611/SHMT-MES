@@ -174,6 +174,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     (formData.totalGroupCount ?? formData.createDays ?? 1) > 1;
   // 계획일 수정 가능 여부: 해당 행에 실적이 없을 때만 허용 (그룹 여부와 무관)
   const canEditPlanDate = dialogMode === 'edit' && formData.hasResult === 0;
+  const canEditEquipment = dialogMode === 'edit' && formData.hasResult === 0;
   const canEditPlan = dialogMode === 'create' || !isLockedStatusPlan;
   const [openRequestDialog, setOpenRequestDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
@@ -416,8 +417,9 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                     }}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                      지시완료 또는 생산중단 상태 계획은 계획일만 변경 가능하며,
-                      생산실적이 있으면 수정할 수 없습니다.
+                      지시완료 또는 생산중단 상태 계획은 생산실적이 없으면
+                      계획일과 설비를 변경할 수 있으며, 생산실적이 있으면 수정할
+                      수 없습니다.
                     </Typography>
                   </Box>
                 )}
@@ -747,14 +749,14 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                       <FormControl
                         fullWidth
                         required
-                        disabled={isLockedStatusPlan}
+                        disabled={!canEditEquipment}
                         error={!!errors.equipmentCode}
                       >
                         <InputLabel>설비</InputLabel>
                         <Select
                           {...field}
                           label="설비"
-                          disabled={isLockedStatusPlan}
+                          disabled={!canEditEquipment}
                           onChange={(e) => {
                             // 설비 코드 업데이트
                             field.onChange(e.target.value);
