@@ -64,9 +64,9 @@
         MERGE IDS2 WITH (HOLDLOCK) AS TARGET
         USING (
             SELECT
-                'TCO403' AS TABLE_NAME,
+                'TPR301M' AS TABLE_NAME,
                 #{itemNo} AS CONDITION1,
-                RIGHT(CONVERT(VARCHAR(8), GETDATE(), 112), 2) AS CONDITION2,
+                '26' AS CONDITION2,
                 300 AS NEXT_ID
         ) AS SOURCE
         ON (
