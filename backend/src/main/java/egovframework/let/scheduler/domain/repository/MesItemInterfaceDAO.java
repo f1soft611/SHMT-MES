@@ -51,4 +51,13 @@ public class MesItemInterfaceDAO extends EgovAbstractMapper {
 	public void updateMesItem(ErpItem item) throws Exception {
 		update("MesItemInterfaceDAO.updateMesItem", item);
 	}
+
+	/**
+	 * LOT 채번용 IDS2 시드를 보장한다.
+	 * @param item ERP 품목 정보
+	 * @throws Exception
+	 */
+	public void ensureLotIdSeed(ErpItem item) throws Exception {
+		insert("MesItemInterfaceDAO.ensureLotIdSeed", item);
+	}
 }

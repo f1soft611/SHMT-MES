@@ -102,6 +102,14 @@ type PlanSummary = {
   totalQty: number;
 };
 
+const shouldExcludeFromWeeklyTotal = (itemCode?: string): boolean => {
+  const normalizedItemCode = itemCode?.trim().toUpperCase() ?? '';
+
+  return (
+    normalizedItemCode.startsWith('F') || normalizedItemCode.startsWith('I')
+  );
+};
+
 const extractApiErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'object' && error !== null) {
     const apiError = error as {
@@ -550,7 +558,9 @@ const ProductionPlan: React.FC = () => {
       };
 
       dateSummary.totalPlans += 1;
-      dateSummary.totalQty += plan.plannedQty;
+      if (!shouldExcludeFromWeeklyTotal(plan.itemCode)) {
+        dateSummary.totalQty += plan.plannedQty;
+      }
       summaryByDate.set(plan.date, dateSummary);
 
       const dateEquipmentKey = `${plan.date}::${plan.equipmentCode}`;

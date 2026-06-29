@@ -21,6 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -685,6 +686,11 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						mesItemInterfaceDAO.updateMesItem(item);
 						updateCount++;
 						log.debug("기존 품목 업데이트: {} ({})", item.getItemName(), item.getItemSeq());
+					}
+
+					// 2-4. LOT 채번용 IDS2 시드 보장 (신규/기존 품목 모두 대상)
+					if (StringUtils.hasText(item.getItemNo())) {
+						mesItemInterfaceDAO.ensureLotIdSeed(item);
 					}
 				} catch (Exception e) {
 					errorCount++;
