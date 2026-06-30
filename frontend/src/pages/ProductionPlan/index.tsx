@@ -102,8 +102,14 @@ type PlanSummary = {
   totalQty: number;
 };
 
-const shouldExcludeFromWeeklyTotal = (itemCode?: string): boolean => {
-  const normalizedItemCode = itemCode?.trim().toUpperCase() ?? '';
+const getQuantityCheckCode = (plan: ProductionPlanData): string =>
+  plan.lotNo?.trim() ||
+  plan.itemDisplayCode?.trim() ||
+  plan.itemCode?.trim() ||
+  '';
+
+const shouldExcludeFromWeeklyTotal = (plan: ProductionPlanData): boolean => {
+  const normalizedItemCode = getQuantityCheckCode(plan).toUpperCase();
 
   return (
     normalizedItemCode.startsWith('F') || normalizedItemCode.startsWith('I')
@@ -558,7 +564,7 @@ const ProductionPlan: React.FC = () => {
       };
 
       dateSummary.totalPlans += 1;
-      if (!shouldExcludeFromWeeklyTotal(plan.itemCode)) {
+      if (!shouldExcludeFromWeeklyTotal(plan)) {
         dateSummary.totalQty += plan.plannedQty;
       }
       summaryByDate.set(plan.date, dateSummary);
