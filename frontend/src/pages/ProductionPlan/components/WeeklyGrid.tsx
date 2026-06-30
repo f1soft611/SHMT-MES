@@ -447,12 +447,18 @@ interface VisibleDayColumn {
 }
 
 const shouldExcludeFromQuantityTotal = (itemCode?: string): boolean => {
-  const normalizedItemCode = itemCode?.trim().toUpperCase() ?? '';
+  const normalizedItemCode = itemCode?.toUpperCase() ?? '';
 
   return (
     normalizedItemCode.startsWith('F') || normalizedItemCode.startsWith('I')
   );
 };
+
+const getQuantityCheckCode = (plan: ProductionPlanData): string =>
+  plan.lotNo?.trim() ||
+  plan.itemDisplayCode?.trim() ||
+  plan.itemCode?.trim() ||
+  '';
 
 interface EquipmentRowProps {
   equipment: Equipment;
@@ -1134,7 +1140,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         totalCount += dayPlans.length;
         totalQty += dayPlans.reduce(
           (sum, plan) =>
-            shouldExcludeFromQuantityTotal(plan.itemCode)
+            shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan))
               ? sum
               : sum + (plan.plannedQty ?? 0),
           0,
