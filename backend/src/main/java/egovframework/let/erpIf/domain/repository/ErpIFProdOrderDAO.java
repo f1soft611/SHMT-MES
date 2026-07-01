@@ -43,4 +43,9 @@ public class ErpIFProdOrderDAO extends EgovAbstractMapper {
         return selectList("ErpIFProdOrderDAO.selectExistingMesIfKeys", mesIfKeys);
     }
 
+    // ERP IF 테이블에서 처리 결과 조회
+    public List<ErpIFProdOrderResultDto> selectErpResultByMesIfKeys(List<String> mesIfKeys) {
+        return selectList("ErpIFProdOrderDAO.selectErpResultByMesIfKeys", mesIfKeys);
+    }
+
 }

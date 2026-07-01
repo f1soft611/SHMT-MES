@@ -56,6 +56,7 @@ const ProdOrderSearchFilter = () => {
   const onChange = useProdOrderStore((s) => s.handleSearchChange);
   const onSearch = useProdOrderStore((s) => s.handleSearch);
   const onErpIfResend = useProdOrderStore((s) => s.handleErpIfResend);
+  const onSyncErpResults = useProdOrderStore((s) => s.handleSyncErpResult);
   const erpIfLoading = useProdOrderStore((s) => s.erpIfLoading);
   const [openCalendarField, setOpenCalendarField] =
     useState<DateFieldName | null>(null);
@@ -335,6 +336,15 @@ const ProdOrderSearchFilter = () => {
             disabled={erpIfLoading || loading}
           >
             ERP IF
+          </Button>
+
+          <Button
+              variant="outlined"
+              color="success"
+              onClick={onSyncErpResults}
+              disabled={erpIfLoading || loading}
+          >
+            결과 동기화
           </Button>
         </Stack>
       </Box>

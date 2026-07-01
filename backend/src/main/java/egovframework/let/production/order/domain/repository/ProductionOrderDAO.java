@@ -142,4 +142,14 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     public void stopWorkTpr301R(StopWorkDto dto) throws Exception {
         update("ProductionOrderDAO.stopWorkTpr301R", dto);
     }
+
+    // ERP 결과 동기화: 생산계획 키로 PRODORDER_ID 목록 조회
+    public List<String> selectProdorderIdsByPlanKey(ProdPlanKeyDto dto) {
+        return selectList("ProductionOrderDAO.selectProdorderIdsByPlanKey", dto);
+    }
+
+    // ERP 결과 동기화: TPR504에 ERP 처리 결과 업데이트
+    public int updateErpResultByProdorderId(ErpIFProdOrderResultDto dto) {
+        return update("ProductionOrderDAO.updateErpResultByProdorderId", dto);
+    }
 }

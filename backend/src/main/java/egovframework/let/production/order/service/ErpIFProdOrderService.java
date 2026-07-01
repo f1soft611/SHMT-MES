@@ -21,4 +21,7 @@ public interface ErpIFProdOrderService {
 
     // ERP IF 테이블에서 존재하는 MESIFKey를 Set으로 반환
     Set<String> selectExistingMesIfKeys(List<String> mesIfKeys);
+
+    // ERP IF 테이블에서 처리 결과 조회
+    List<ErpIFProdOrderResultDto> selectErpResultByMesIfKeys(List<String> mesIfKeys);
 }
