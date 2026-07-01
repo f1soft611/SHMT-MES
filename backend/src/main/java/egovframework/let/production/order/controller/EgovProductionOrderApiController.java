@@ -320,6 +320,30 @@ public class EgovProductionOrderApiController {
     }
 
 
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "동기화 완료"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/erp-result-sync")
+    public ResultVO syncErpResult(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        int updated = productionOrderService.syncErpResult(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        resultMap.put("updated", updated);
+
+        String message = updated > 0
+                ? updated + "건 결과 동기화가 완료되었습니다."
+                : "동기화할 ERP 처리 결과가 없습니다.";
+
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
+    }
+
+
 
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "처리 성공"),

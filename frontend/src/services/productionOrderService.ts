@@ -144,4 +144,7 @@ export const productionOrderService = {
   // ERP IF 재전송 (ERP에 없는 공정 데이터만)
   resendErpIf: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/erp-if-resend', data),
 
+  // ERP 전송결과 동기화
+  syncErpResult: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/erp-result-sync', data),
+
 };
