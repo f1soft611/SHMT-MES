@@ -64,7 +64,9 @@ export interface ProdPlanRow {
     opmanCode2?: string;
     optime2?: string;
     orderDate?: string;
-    erpIfInserted: boolean;
+    erpProcYn: string | null;
+    erpStatus: string | null;
+    erpResult: string | null;
 }
 
 

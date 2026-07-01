@@ -124,6 +124,8 @@ public class ProdPlanRow implements Serializable {
     /** ERP 처리 상태: null=미전송 / 0=성공 / 2=오류 */
     private String erpStatus;
 
+    private String erpResult;
+
     /** MES 생산지시 ID 목록 (서비스 내부 처리용, comma-separated) */
     private String prodorderIds;
 }
