@@ -117,12 +117,25 @@
         </foreach>
     </insert>
 
-
-
     <select id="selectExistingMesIfKeys"
             parameterType="java.util.List"
             resultType="string">
         SELECT DISTINCT MESIFKey
+        FROM SHM_IF_TPDSFCWorkOrder
+        WHERE MESIFKey IN
+        <foreach collection="list" item="key" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+    <select id="selectErpResultByMesIfKeys"
+            parameterType="java.util.List"
+            resultType="egovframework.let.production.order.domain.model.ErpIFProdOrderResultDto">
+        SELECT MESIFKey        AS mesIfKey,
+        ERPProcYn       AS erpProcYn,
+        CONVERT(VARCHAR(20), ERPProcDateTime, 120) AS erpProcDateTime,
+        Status          AS status,
+        Result          AS result
         FROM SHM_IF_TPDSFCWorkOrder
         WHERE MESIFKey IN
         <foreach collection="list" item="key" open="(" separator="," close=")">

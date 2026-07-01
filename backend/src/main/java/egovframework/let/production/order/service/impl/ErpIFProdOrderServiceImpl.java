@@ -80,4 +80,15 @@ public class ErpIFProdOrderServiceImpl implements ErpIFProdOrderService {
         }
     }
 
+    @Override
+    public List<ErpIFProdOrderResultDto> selectErpResultByMesIfKeys(List<String> mesIfKeys) {
+        if (mesIfKeys == null || mesIfKeys.isEmpty()) return new java.util.ArrayList<>();
+        try {
+            return erpIfDao.selectErpResultByMesIfKeys(mesIfKeys);
+        } catch (Exception e) {
+            log.warn("[ERP IF][RESULT SYNC] ERP DB 결과 조회 실패. keys={}", mesIfKeys.size(), e);
+            return new java.util.ArrayList<>();
+        }
+    }
+
 }

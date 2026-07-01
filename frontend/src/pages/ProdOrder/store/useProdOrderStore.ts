@@ -32,6 +32,7 @@ interface ProdOrderStoreState {
     closeDialog: () => void;
     selectedRows: ProdPlanRow[];
     handleErpIfResend: () => void;
+    handleSyncErpResult: () => void;
     erpIfLoading: boolean;
 }
 
@@ -61,6 +62,7 @@ export const useProdOrderStore = create<ProdOrderStoreState>()(() => ({
     closeDialog: () => {},
     selectedRows: [],
     handleErpIfResend: () => {},
+    handleSyncErpResult: () => {},
     erpIfLoading: false,
 }));
 
@@ -82,6 +84,8 @@ export function useProdOrderStoreInit() {
         deleteOrder: () => hookRef.current.deleteOrder(),
         closeDialog: () => hookRef.current.closeDialog(),
         handleErpIfResend: () => hookRef.current.handleErpIfResend(),
+        handleSyncErpResult: () => hookRef.current.handleSyncErpResult(),
+
     });
 
     useEffect(() => {

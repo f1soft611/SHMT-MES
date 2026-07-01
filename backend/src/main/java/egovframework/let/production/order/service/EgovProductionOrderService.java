@@ -68,4 +68,11 @@ public interface EgovProductionOrderService {
 	/** 작업중단 처리 — TPR504 ORDER_FLAG='S', TPR301/M ORDER_FLAG='STOPPED', TPR301.PROD_QTY=변경수량 */
 	void stopWork(StopWorkDto dto) throws Exception;
 
+
+	/**
+	 * 선택한 생산계획 행의 ERP 처리 결과를 ERP IF 테이블에서 읽어 TPR504에 반영
+	 * @return 업데이트된 건수
+	 */
+	int syncErpResult(List<ProdPlanKeyDto> plans) throws Exception;
+
 }
