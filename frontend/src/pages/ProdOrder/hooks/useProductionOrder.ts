@@ -4,7 +4,7 @@ import {useProdPlan} from "./useProdPlan";
 import {useProdOrder} from "./useProdOrder";
 import {useProdOrderDialog} from "./useProdOrderDialog";
 import {useFetchWorkplaces} from "../../../hooks/useFetchWorkplaces";
-import { ProdPlanRow } from "../../../types/productionOrder";
+import {ProdPlanKeyDto, ProdPlanRow} from "../../../types/productionOrder";
 import {useFetchEquipments} from "../../../hooks/useFetchEquipments";
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { productionOrderService } from '../../../services/productionOrderService';
@@ -108,6 +108,44 @@ export function useProductionOrder() {
     };
 
 
+    const handleSyncErpResult = async () => {
+        const selectedRows = useProdOrderStore.getState().selectedRows;
+
+        if (selectedRows.length === 0) {
+            showToast({ message: '동기화할 항목을 선택해주세요.', severity: 'warning' });
+            return;
+        }
+
+        const payload: ProdPlanKeyDto[] = selectedRows.map(row => ({
+            prodplanId: row.prodplanId,
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId,
+            orderSeqno: row.orderSeqno ?? 0,
+            orderHistno: row.orderHistno ?? 0,
+        }));
+
+        try {
+            setErpIfLoading(true);
+            const response = await productionOrderService.syncErpResult(payload);
+            if (response.data.resultCode !== 200) {
+                showToast({ message: response.data.resultMessage ?? '동기화 실패', severity: 'error' });
+                return;
+            }
+            showToast({
+                message: response.data.resultMessage ?? 'ERP 결과 동기화 완료',
+                severity: 'success',
+            });
+            await prodPlan.fetchProdPlan();
+        } catch {
+            showToast({ message: '서버 오류가 발생했습니다.', severity: 'error' });
+        } finally {
+            setErpIfLoading(false);
+        }
+    };
+
+
     return {
         // plan
         planRows: prodPlan.planRows,
@@ -145,6 +183,7 @@ export function useProductionOrder() {
         // event
         handlePlanSelect,
         handleErpIfResend,
+        handleSyncErpResult,
         erpIfLoading,
     };
 

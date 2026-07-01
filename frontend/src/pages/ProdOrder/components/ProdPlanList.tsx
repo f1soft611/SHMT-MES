@@ -210,7 +210,7 @@ const ProdPlanList = () => {
         {
             field: "itemName",
             headerName: "품목명",
-            width: 200,
+            width: 180,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => decodeHtml(params.value ?? ''),
@@ -233,14 +233,14 @@ const ProdPlanList = () => {
         {
             field: "bigo",
             headerName: "비고",
-            width: 200,
+            width: 150,
             headerAlign: "center",
             align: "left",
         },
         {
             field: "actionOrder",
             headerName: "생산지시",
-            width: 80,
+            width: 65,
             sortable: false,
             headerAlign: 'center',
             align: 'center',
@@ -257,7 +257,7 @@ const ProdPlanList = () => {
         {
             field: "actionResult",
             headerName: "생산실적",
-            width: 80,
+            width: 65,
             sortable: false,
             headerAlign: 'center',
             align: 'center',
@@ -280,8 +280,8 @@ const ProdPlanList = () => {
         },
         {
             field: "i/fFlag",
-            headerName: "인터페이스 여부",
-            width: 100,
+            headerName: "전송여부",
+            width: 80,
             headerAlign: "center",
             align: "center",
             renderCell: (params) => {

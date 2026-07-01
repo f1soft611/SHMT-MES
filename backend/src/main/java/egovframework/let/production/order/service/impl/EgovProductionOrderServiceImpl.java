@@ -498,6 +498,35 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	}
 
 
+	@Override
+	public int syncErpResult(List<ProdPlanKeyDto> plans) throws Exception {
+		// 1) 선택된 생산계획 행 → PRODORDER_ID 수집
+		List<String> prodorderIds = new ArrayList<>();
+		for (ProdPlanKeyDto plan : plans) {
+			List<String> ids = productionOrderDAO.selectProdorderIdsByPlanKey(plan);
+			prodorderIds.addAll(ids);
+		}
+
+		if (prodorderIds.isEmpty()) {
+			return 0;
+		}
+
+		// 2) ERP IF 테이블에서 처리 결과 조회 (PRODORDER_ID = MESIFKey)
+		List<ErpIFProdOrderResultDto> results = erpIfService.selectErpResultByMesIfKeys(prodorderIds);
+
+		if (results.isEmpty()) {
+			return 0;
+		}
+
+		// 3) MES DB TPR504에 결과 반영
+		int updated = 0;
+		for (ErpIFProdOrderResultDto result : results) {
+			updated += productionOrderDAO.updateErpResultByProdorderId(result);
+		}
+		return updated;
+	}
+
+
 	/**
 	 * 해당 생산계획이 이미 생산지시 되었는지 여부 확인
 	 */
