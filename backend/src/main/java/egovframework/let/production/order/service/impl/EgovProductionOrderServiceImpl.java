@@ -83,26 +83,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		List<ProdPlanRow> list = productionOrderDAO.selectProdPlans(param);
 		int resultCnt = productionOrderDAO.selectProdPlanCount(param);
-
-		List<String> allProdorderIds = list.stream()
-				.map(ProdPlanRow::getProdorderIds)
-				.filter(ids -> ids != null && !ids.isEmpty())
-				.flatMap(ids -> Arrays.stream(ids.split(",")))
-				.distinct()
-				.collect(Collectors.toList());
-
-		if (!allProdorderIds.isEmpty()) {
-			Set<String> erpInsertedKeys = erpIfService.selectExistingMesIfKeys(allProdorderIds);
-			for (ProdPlanRow row : list) {
-				String ids = row.getProdorderIds();
-				if (ids != null && !ids.isEmpty()) {
-					boolean inserted = Arrays.stream(ids.split(","))
-							.anyMatch(erpInsertedKeys::contains);
-					row.setErpIfInserted(inserted);
-				}
-			}
-		}
-
 		return new ListResult<>(list, resultCnt);
 	}
 
