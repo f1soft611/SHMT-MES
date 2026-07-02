@@ -471,7 +471,7 @@
 			#{tpr110dSeq},
 			#{itemCtTime},
 			#{itemOnePerQty},
-			#{orderDate}
+			CONVERT(VARCHAR(8), GETDATE(), 112)
 		);
 	</insert>
 
