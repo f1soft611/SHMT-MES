@@ -173,6 +173,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
 			if (!erpSendSuccess) {
 				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
+			} else {
+				autoSyncErpResult(erpIfList);
 			}
 		} catch (Exception e) {
 			// MES 트랜잭션 영향 X
@@ -335,6 +337,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					);
 				} else {
 					log.info("[BULK] ERP IF end, size={}", ifList.size());
+					autoSyncErpResult(ifList);
 				}
 			} catch (Exception e) {
 				erpIfFailed = true;
@@ -774,6 +777,19 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setOrderHistno(row.getOrderHistno());
 
 		return dto;
+	}
+
+	private void autoSyncErpResult(List<ErpIFProdOrderDto> sent) {
+		try {
+			List<String> keys = sent.stream().map(ErpIFProdOrderDto::getMesIfKey).collect(Collectors.toList());
+			List<ErpIFProdOrderResultDto> results = erpIfService.selectErpResultByMesIfKeys(keys);
+			for (ErpIFProdOrderResultDto r : results) {
+				productionOrderDAO.updateErpResultByProdorderId(r);
+			}
+			log.info("[ERP IF][AUTO SYNC] {}건 동기화", results.size());
+		} catch (Exception e) {
+			log.warn("[ERP IF][AUTO SYNC] 동기화 실패 (수동 동기화 사용)", e);
+		}
 	}
 
 
