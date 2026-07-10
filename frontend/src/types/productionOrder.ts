@@ -64,7 +64,9 @@ export interface ProdPlanRow {
     opmanCode2?: string;
     optime2?: string;
     orderDate?: string;
-    erpIfInserted: boolean;
+    erpProcYn: string | null;
+    erpStatus: string | null;
+    erpResult: string | null;
 }
 
 
@@ -178,7 +180,8 @@ export interface ProdOrderDeleteDto {
     prodplanDate: string; // yyyyMMdd
     prodplanSeq: number;
     prodworkSeq: number;
-    prodorderId?: string; // 단건 삭제 시 사용
+    prodorderId?: string;
+    lotNo?: string;
 }
 
 export type OrderFlag = "PLANNED" | "ORDERED";
@@ -193,6 +196,7 @@ export interface ProdPlanKeyDto {
     prodplanSeq: number;
     prodworkSeq: number;
     prodplanDetailId?: string;
+    lotNo?: string;
 
     orderSeqno?: number;
     orderHistno?: number;

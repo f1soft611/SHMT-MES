@@ -196,6 +196,7 @@ export function useProdOrder() {
                 prodplanDate: selectedPlan.prodplanDate,
                 prodplanSeq: selectedPlan.prodplanSeq,
                 prodworkSeq: selectedPlan.prodworkSeq,
+                lotNo: selectedPlan.lotNo,
             };
 
             const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
@@ -268,6 +269,7 @@ export function useProdOrder() {
                 prodplanSeq: target.prodplanSeq,
                 prodworkSeq: target.prodworkSeq,
                 prodorderId: target.prodorderId,
+                lotNo: target.lotNo,
             };
 
             const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
