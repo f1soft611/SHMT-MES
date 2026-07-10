@@ -85,6 +85,7 @@ export function useBulkProdOrder(
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
             prodplanDetailId: row.prodplanDetailId,
+            lotNo: row.lotNo,
         }));
 
         try {

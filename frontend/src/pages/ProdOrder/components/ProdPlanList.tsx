@@ -167,7 +167,7 @@ const ProdPlanList = () => {
         },
         {
             field: "prodplanDetailId",
-            headerName: "지시번호",
+            headerName: "생산계획번호",
             width: 140,
             headerAlign: "center",
             align: "center",
