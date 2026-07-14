@@ -16,6 +16,42 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import {useProdOrderStore} from "../store/useProdOrderStore";
 import {usePermissions} from "../../../contexts/PermissionContext";
+import type {ProdOrderRow, ProdPlanRow} from "../../../types/productionOrder";
+
+export const isOrderLocked = (orderFlag?: string) => orderFlag !== 'PLANNED';
+
+/** 같은 공정(tpr110dSeq)에 대해 이미 저장된(신규 아닌) 행들의 지시수량 합계 */
+export const processOrderedQty = (row: ProdOrderRow, rows: ProdOrderRow[]) =>
+    rows
+    .filter(r => r.tpr110dSeq === row.tpr110dSeq && !r._isNew)
+    .reduce((sum, r) => sum + (r.orderQty ?? 0), 0);
+
+/** 그 공정에 남은 계획 잔량 (계획량 - 그 공정 기지시량 합계) */
+export const processRemainingQty = (row: ProdOrderRow, rows: ProdOrderRow[], plan: ProdPlanRow | null) =>
+    (plan?.prodQty ?? 0) - processOrderedQty(row, rows);
+
+/** 지시 완료(PLANNED가 아님) 상태에서, 그 공정에 남은 잔량이 없을 때만 편집/추가를 잠근다 */
+export const rowLocked = (row: ProdOrderRow, rows: ProdOrderRow[], plan: ProdPlanRow | null) =>
+    isOrderLocked(plan?.orderFlag) && processRemainingQty(row, rows, plan) <= 0;
+
+/** 신규(미저장) 행들을 공정별로 묶어, 어느 한 공정이라도 그 공정의 잔량을 초과하는지 */
+export const exceedsRemainingQty = (plan: ProdPlanRow | null, rows: ProdOrderRow[]) => {
+    if (!plan) return false;
+
+    const newQtyByProcess = new Map<number, number>();
+    for (const row of rows.filter(r => r._isNew)) {
+        newQtyByProcess.set(
+            row.tpr110dSeq,
+            (newQtyByProcess.get(row.tpr110dSeq) ?? 0) + (row.orderQty ?? 0)
+        );
+    }
+
+    for (const row of rows.filter(r => r._isNew)) {
+        const newQty = newQtyByProcess.get(row.tpr110dSeq) ?? 0;
+        if (newQty > processRemainingQty(row, rows, plan)) return true;
+    }
+    return false;
+};
 
 export default function ProdOrderDialog() {
     const open = useProdOrderStore(s => s.open);
@@ -32,6 +68,15 @@ export default function ProdOrderDialog() {
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [removeTargetIndex, setRemoveTargetIndex] = useState<number | null>(null);
+    const [qtyConfirmOpen, setQtyConfirmOpen] = useState(false);
+
+    const handleSubmitClick = () => {
+        if (exceedsRemainingQty(plan, rows)) {
+            setQtyConfirmOpen(true);
+            return;
+        }
+        onSubmit();
+    };
 
     const columns: GridColDef[] =[
         { field: 'prodplanId'},
@@ -54,7 +99,7 @@ export default function ProdOrderDialog() {
             renderCell: (params) => {
                 const isNew = params.row._isNew === true;
                 const canDelete = isNew || (params.row.copyRow ?? 0) > 1;
-                const disabled = params.row.rstCnt > 0;
+                const disabled = rowLocked(params.row, rows, plan) || params.row.rstCnt > 0;
                 return (
                     <IconButton
                         size="small"
@@ -433,6 +478,7 @@ export default function ProdOrderDialog() {
                             }}   // 화면에서만 숨김
                             processRowUpdate={onProcessRowUpdate}
                             isCellEditable={(params) => {
+                                if (rowLocked(params.row, rows, plan)) return false;
                                 if (params.field === 'bigo') return true;
                                 // rstCnt > 0 이면 전체 편집 불가
                                 return params.row.rstCnt <= 0;
@@ -444,14 +490,16 @@ export default function ProdOrderDialog() {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button
-                        onClick={onSubmit}
-                        variant="contained"
-                        color="primary"
-                        disabled={!canWrite}
-                    >
-                        {plan?.orderFlag === 'ORDERED' ? '수정' : '저장'}
-                    </Button>
+                    {rows.some(r => !rowLocked(r, rows, plan)) && (
+                        <Button
+                            onClick={handleSubmitClick}
+                            variant="contained"
+                            color="primary"
+                            disabled={!canWrite}
+                        >
+                            저장
+                        </Button>
+                    )}
                     {plan?.orderFlag === 'ORDERED' && (
                         <Button
                             variant="contained"
@@ -499,6 +547,19 @@ export default function ProdOrderDialog() {
                 onConfirm={async () => {
                     setDeleteConfirmOpen(false);
                     await onDelete();
+                }}
+            />
+
+            <ConfirmDialog
+                open={qtyConfirmOpen}
+                title="잔량 초과"
+                message="계획된 잔량을 초과하는 수량입니다. 계속 저장하시겠습니까?"
+                confirmText="저장"
+                cancelText="취소"
+                onClose={() => setQtyConfirmOpen(false)}
+                onConfirm={async () => {
+                    setQtyConfirmOpen(false);
+                    await onSubmit();
                 }}
             />
         </>

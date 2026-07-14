@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import {
     Box, Stack,
-    Card, CardContent, CardActions, IconButton, Chip, CircularProgress,
+    Card, CardContent, CardActions, IconButton, Chip, CircularProgress, Tooltip,
 } from '@mui/material';
 import {
     AssignmentAdd as AssignmentAddIcon,
@@ -167,7 +167,7 @@ const ProdPlanList = () => {
         },
         {
             field: "prodplanDetailId",
-            headerName: "지시번호",
+            headerName: "생산계획번호",
             width: 140,
             headerAlign: "center",
             align: "center",
@@ -231,6 +231,14 @@ const ProdPlanList = () => {
             renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
+            field: "orderQty",
+            headerName: "지시량",
+            width: 70,
+            headerAlign: "center",
+            align: "right",
+            renderCell: (params) => (params.value ?? 0).toLocaleString(),
+        },
+        {
             field: "bigo",
             headerName: "비고",
             width: 150,
@@ -285,14 +293,25 @@ const ProdPlanList = () => {
             headerAlign: "center",
             align: "center",
             renderCell: (params) => {
-                const inserted = params.row.erpIfInserted;
-                return (
-                    <Chip
-                        label={inserted ? "전송완료" : "미전송"}
-                        color={inserted ? "success" : "default"}
-                        size="small"
-                    />
-                );
+                const { erpProcYn, erpStatus, erpResult } = params.row;
+                let label = "미전송";
+                let color: "default" | "warning" | "success" | "error" = "default";
+
+                if (erpProcYn === "N") {
+                    label = "ERP처리중";
+                    color = "warning";
+                } else if (erpProcYn === "Y" && erpStatus === "2") {
+                    label = "ERP오류";
+                    color = "error";
+                } else if (erpProcYn === "Y") {
+                    label = "전송완료";
+                    color = "success";
+                }
+
+                const chip = <Chip label={label} color={color} size="small" />;
+                return erpStatus === "2" && erpResult
+                    ? <Tooltip title={erpResult} arrow><span>{chip}</span></Tooltip>
+                    : chip;
             },
         },
     ];
@@ -325,7 +344,7 @@ const ProdPlanList = () => {
                             disableRowSelectionOnClick
                             rowSelectionModel={selectionModel}
                             onRowSelectionModelChange={onSelectionChange}
-                            getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
+                            getRowId={(row) => `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq ?? 'none'}`}
 
                             showToolbar
                             slots={{

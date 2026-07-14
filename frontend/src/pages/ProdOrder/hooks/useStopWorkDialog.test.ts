@@ -30,7 +30,11 @@ const makeRow = (prodQty: number): ProdPlanRow => ({
   workCode: 'W1',
   equipSysCd: 'E1',
   prodQty,
-  erpIfInserted: false,
+  orderQty: prodQty,
+  erpProcYn: '',
+  erpStatus: '',
+  erpResult:'',
+  workSeq:0,
 });
 
 const mockClear = jest.fn();

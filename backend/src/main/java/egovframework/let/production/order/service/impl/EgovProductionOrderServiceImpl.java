@@ -83,26 +83,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		List<ProdPlanRow> list = productionOrderDAO.selectProdPlans(param);
 		int resultCnt = productionOrderDAO.selectProdPlanCount(param);
-
-		List<String> allProdorderIds = list.stream()
-				.map(ProdPlanRow::getProdorderIds)
-				.filter(ids -> ids != null && !ids.isEmpty())
-				.flatMap(ids -> Arrays.stream(ids.split(",")))
-				.distinct()
-				.collect(Collectors.toList());
-
-		if (!allProdorderIds.isEmpty()) {
-			Set<String> erpInsertedKeys = erpIfService.selectExistingMesIfKeys(allProdorderIds);
-			for (ProdPlanRow row : list) {
-				String ids = row.getProdorderIds();
-				if (ids != null && !ids.isEmpty()) {
-					boolean inserted = Arrays.stream(ids.split(","))
-							.anyMatch(erpInsertedKeys::contains);
-					row.setErpIfInserted(inserted);
-				}
-			}
-		}
-
 		return new ListResult<>(list, resultCnt);
 	}
 
@@ -193,6 +173,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			boolean erpSendSuccess = erpIfService.sendProdOrderBatchToErp(erpIfList);
 			if (!erpSendSuccess) {
 				log.warn("[ERP IF][PROD ORDER][A][BATCH] send failed but MES save will continue. cnt={}", erpIfList.size());
+			} else {
+				autoSyncErpResult(erpIfList);
 			}
 		} catch (Exception e) {
 			// MES 트랜잭션 영향 X
@@ -229,6 +211,16 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	@Override
 	@Transactional
 	public void updateProductionOrders(List<ProdOrderUpdateDto> prodOrderList) throws Exception {
+
+		if (!prodOrderList.isEmpty()) {
+			ProdOrderUpdateDto planKeySource = prodOrderList.get(0);
+			assertPlanNotOrdered(
+					planKeySource.getProdplanDate(),
+					planKeySource.getProdplanSeq(),
+					planKeySource.getProdworkSeq()
+			);
+		}
+
 		for(ProdOrderUpdateDto dto : prodOrderList){
 			productionOrderDAO.updateProductionOrder(dto);
 		}
@@ -237,9 +229,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	/**
 	 * 생산지시 삭제
-	 * TPR504.DELETE_FLAG = 1 UPDATE
-	 * ERP IF
-	 * 생산계획 ORDER_FLAG = PLANNED UPDATE
 	 */
 	@Override
 	@Transactional
@@ -251,36 +240,53 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			throw new BizException("생산실적이 등록된 생산지시는 삭제할 수 없습니다.");
 		}
 
-		// ERP IF 전송
-		// TODO : 인터페이스부분
-//		try {
-//			ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
-//			boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
-//			if (!erpSendSuccess) {
-//				log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq());
-//			}
-//		} catch (Exception e) {
-//			// MES 트랜잭션 영향 주면 안 됨
-//			log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodOrderId={}", dto.getProdplanDate()+dto.getProdplanSeq()+dto.getProdworkSeq(), e);
-//		}
-		// 삭제
-		productionOrderDAO.deleteProductionOrder(dto);
+		deleteOrderRows(dto);
+	}
 
-		// 생산계획TPR301 ORDER_FLAG UPDATE
-		updatePlanOrderFlag(
-				dto.getProdplanDate(),
-				dto.getProdplanSeq(),
-				dto.getProdworkSeq(),
-				"PLANNED"
-		);
+	/**
+	 * 생산지시 삭제 — dto.prodorderId가 있으면 해당 1건만, 없으면 계획키의 전체 비삭제건을 삭제한다.
+	 * ERP IF D 전송도 같은 범위로 나간다.
+	 * 삭제 후 남은 분할건이 있으면 ORDER_FLAG/LOT_NO를 유지하고, 전부 삭제되면 PLANNED로 되돌린다.
+	 */
+	private void deleteOrderRows(ProdOrderDeleteDto dto) throws Exception {
 
-		// 생산계획TPR301 LOT_NO UPDATE
-		updatePlanLotNo(
-				dto.getProdplanDate(),
-				dto.getProdplanSeq(),
-				dto.getProdworkSeq(),
-				""
-		);
+		ProdPlanKeyDto planKey = new ProdPlanKeyDto();
+		planKey.setProdplanDate(dto.getProdplanDate());
+		planKey.setProdplanSeq(dto.getProdplanSeq());
+		planKey.setProdworkSeq(dto.getProdworkSeq());
+
+		boolean singleOnly = dto.getProdorderId() != null && !dto.getProdorderId().isEmpty();
+		List<String> targetIds = singleOnly
+				? Collections.singletonList(dto.getProdorderId())
+				: productionOrderDAO.selectProdorderIdsByPlanKey(planKey);
+
+		for (String prodorderId : targetIds) {
+			ProdOrderDeleteDto rowDto = new ProdOrderDeleteDto();
+			rowDto.setProdplanDate(dto.getProdplanDate());
+			rowDto.setProdplanSeq(dto.getProdplanSeq());
+			rowDto.setProdworkSeq(dto.getProdworkSeq());
+			rowDto.setOpmanCode(dto.getOpmanCode());
+			rowDto.setLotNo(dto.getLotNo());
+			rowDto.setProdorderId(prodorderId);
+
+			try {
+				ErpIFProdOrderDto erpDto = convertDeleteToIfDto(rowDto);
+				boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
+				if (!erpSendSuccess) {
+					log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodorderId={}", prodorderId);
+				}
+			} catch (Exception e) {
+				log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodorderId={}", prodorderId, e);
+			}
+
+			productionOrderDAO.deleteProductionOrder(rowDto);
+		}
+
+		int remaining = productionOrderDAO.selectProdorderIdsByPlanKey(planKey).size();
+		if (remaining == 0) {
+			updatePlanOrderFlag(dto.getProdplanDate(), dto.getProdplanSeq(), dto.getProdworkSeq(), "PLANNED");
+			updatePlanLotNo(dto.getProdplanDate(), dto.getProdplanSeq(), dto.getProdworkSeq(), "");
+		}
 	}
 
 
@@ -335,7 +341,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				row.setOrderHistno(plan.getOrderHistno());
 			}
 
-
 			// 3. 생산지시 저장
 			List<ErpIFProdOrderDto> ifList = createProductionOrders(plan, targets);
 			try {
@@ -355,6 +360,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					);
 				} else {
 					log.info("[BULK] ERP IF end, size={}", ifList.size());
+					autoSyncErpResult(ifList);
 				}
 			} catch (Exception e) {
 				erpIfFailed = true;
@@ -417,16 +423,36 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
-			// 2. 생산지시 삭제
-			productionOrderDAO.deleteProductionOrder(dto);
+//			// 2. ERP IF D 전송 — plan key에 속한 PRODORDER_ID별로 각각 전송
+//			List<String> prodorderIds = productionOrderDAO.selectProdorderIdsByPlanKey(plan);
+//			dto.setLotNo(plan.getLotNo());
+//			for (String prodorderId : prodorderIds) {
+//				dto.setProdorderId(prodorderId);
+//				try {
+//					ErpIFProdOrderDto erpDto = convertDeleteToIfDto(dto);
+//					boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
+//					if (!erpSendSuccess) {
+//						log.warn("[ERP IF][PROD ORDER][D][BULK] send failed but MES delete will continue. prodorderId={}", prodorderId);
+//					}
+//				} catch (Exception e) {
+//					log.warn("[ERP IF][PROD ORDER][D][BULK] 전송 실패. prodorderId={}", prodorderId, e);
+//				}
+//			}
+//
+//			// 3. 생산지시 삭제
+//			productionOrderDAO.deleteProductionOrder(dto);
+//
+//			// 4. 생산계획 order_flag 갱신 TPR301.ORDER_FLAG = PLANNED
+//			updatePlanOrderFlag(
+//					plan.getProdplanDate(),
+//					plan.getProdplanSeq(),
+//					plan.getProdworkSeq(),
+//					"PLANNED"
+//			);
 
-			// 3. 생산계획 order_flag 갱신 TPR301.ORDER_FLAG = PLANNED
-			updatePlanOrderFlag(
-					plan.getProdplanDate(),
-					plan.getProdplanSeq(),
-					plan.getProdworkSeq(),
-					"PLANNED"
-			);
+			// 2~4. ERP IF D 전송 + 생산지시 삭제 + 생산계획 상태 갱신
+			dto.setLotNo(plan.getLotNo());
+			deleteOrderRows(dto);
 
 			// 생산계획TPR301 LOT_NO UPDATE
 			updatePlanLotNo(
@@ -532,6 +558,21 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	private boolean isAlreadyOrdered(ProdPlanKeyDto plan) throws Exception {
 		return productionOrderDAO.selectProdPlanOrderedCount(plan) > 0;
+	}
+
+
+	/**
+	 * 이미 지시(TPR504에 삭제되지 않은 지시 행 존재)된 생산계획이면 등록/수정을 차단한다.
+	 */
+	private void assertPlanNotOrdered(String prodplanDate, int prodplanSeq, int prodworkSeq) throws Exception {
+		ProdPlanKeyDto key = new ProdPlanKeyDto();
+		key.setProdplanDate(prodplanDate);
+		key.setProdplanSeq(prodplanSeq);
+		key.setProdworkSeq(prodworkSeq);
+
+		if (isAlreadyOrdered(key)) {
+			throw new BizException("이미 지시가 완료된 생산계획은 수정할 수 없습니다.");
+		}
 	}
 
 	/**
@@ -738,7 +779,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		// 기본값
 		dto.setFactUnit(1);
-		dto.setWorkOrderNo(src.getProdorderId());
+		dto.setWorkOrderNo(src.getLotNo());
 		dto.setWorkOrderDate(src.getProdplanDate()); // YYYYMMDD
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
@@ -794,6 +835,19 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setOrderHistno(row.getOrderHistno());
 
 		return dto;
+	}
+
+	private void autoSyncErpResult(List<ErpIFProdOrderDto> sent) {
+		try {
+			List<String> keys = sent.stream().map(ErpIFProdOrderDto::getMesIfKey).collect(Collectors.toList());
+			List<ErpIFProdOrderResultDto> results = erpIfService.selectErpResultByMesIfKeys(keys);
+			for (ErpIFProdOrderResultDto r : results) {
+				productionOrderDAO.updateErpResultByProdorderId(r);
+			}
+			log.info("[ERP IF][AUTO SYNC] {}건 동기화", results.size());
+		} catch (Exception e) {
+			log.warn("[ERP IF][AUTO SYNC] 동기화 실패 (수동 동기화 사용)", e);
+		}
 	}
 
 
