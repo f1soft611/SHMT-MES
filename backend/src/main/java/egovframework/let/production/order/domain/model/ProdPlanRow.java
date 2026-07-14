@@ -94,6 +94,9 @@ public class ProdPlanRow implements Serializable {
     /** 생산수량 */
     private Double prodQty;
 
+    /** 지시수량 (TPR504.PROD_QTY) */
+    private Double orderQty;
+
     /** 작업지시순번 */
     private Integer workorderSeq;
 
@@ -128,4 +131,7 @@ public class ProdPlanRow implements Serializable {
 
     /** MES 생산지시 ID 목록 (서비스 내부 처리용, comma-separated) */
     private String prodorderIds;
+
+    /** 분할건(TPR504) 고유 작업순번 — 지시 전이면 null */
+    private Integer workSeq;
 }

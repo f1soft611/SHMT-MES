@@ -231,6 +231,14 @@ const ProdPlanList = () => {
             renderCell: (params) => (params.value ?? 0).toLocaleString(),
         },
         {
+            field: "orderQty",
+            headerName: "지시량",
+            width: 70,
+            headerAlign: "center",
+            align: "right",
+            renderCell: (params) => (params.value ?? 0).toLocaleString(),
+        },
+        {
             field: "bigo",
             headerName: "비고",
             width: 150,
@@ -336,7 +344,7 @@ const ProdPlanList = () => {
                             disableRowSelectionOnClick
                             rowSelectionModel={selectionModel}
                             onRowSelectionModelChange={onSelectionChange}
-                            getRowId={(row) => row.prodplanDate + row.prodplanSeq + row.prodworkSeq}
+                            getRowId={(row) => `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq ?? 'none'}`}
 
                             showToolbar
                             slots={{

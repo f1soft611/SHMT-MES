@@ -56,6 +56,7 @@ export interface ProdPlanRow {
     workerName?: string;
     lotNo?: string;
     prodQty: number;
+    orderQty: number;
     workorderSeq?: number;
     bigo?: string;
     selCustomerNames?: string;
@@ -67,6 +68,7 @@ export interface ProdPlanRow {
     erpProcYn: string | null;
     erpStatus: string | null;
     erpResult: string | null;
+    workSeq: number | null;
 }
 
 
@@ -122,6 +124,7 @@ export interface ProdOrderRow {
 
     // ===== UI 전용 필드 =====
     _isNew?: boolean;
+    _dirty?: boolean;
 }
 
 
