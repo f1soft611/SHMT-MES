@@ -74,15 +74,15 @@ const ProdPlanList = () => {
 
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
+    const getRowId = (row: ProdPlanRow) =>
+        `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq ?? 'none'}`;
+
     const {
         selectionModel,
         selectedRows,
         onSelectionChange,
         clear,
-    } = useSameFlagSelection(
-        rows,
-        row => row.prodplanDate + row.prodplanSeq + row.prodworkSeq
-    );
+    } = useSameFlagSelection(rows, getRowId);
 
     // selectedRows 변경 시 store에 sync
     useEffect(() => {
@@ -344,7 +344,7 @@ const ProdPlanList = () => {
                             disableRowSelectionOnClick
                             rowSelectionModel={selectionModel}
                             onRowSelectionModelChange={onSelectionChange}
-                            getRowId={(row) => `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq ?? 'none'}`}
+                            getRowId={getRowId}
 
                             showToolbar
                             slots={{

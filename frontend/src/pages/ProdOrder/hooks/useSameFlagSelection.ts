@@ -43,6 +43,22 @@ export function useSameFlagSelection(
             .filter(r => r.orderFlag === baseFlag)
             .map(r => getRowId(r));
 
+            // 이미 선택 가능한 항목이 모두 선택된 상태에서 헤더를 다시 누르면 전체 해제
+            // (지시상태가 섞여있으면 헤더가 계속 indeterminate 상태라 재클릭도 '선택' 이벤트로 들어오기 때문)
+            const alreadyAllSelected =
+                selectionModel.type === 'include' &&
+                selectionModel.ids.size === allowedIds.length &&
+                allowedIds.every(id => selectionModel.ids.has(id));
+
+            if (alreadyAllSelected) {
+                setSelectionModel({
+                    type: 'include',
+                    ids: new Set(),
+                });
+                setOrderFlag(null);
+                return;
+            }
+
             if (hasDifferentFlag){
                 showToast({
                     message: '지시상태가 같은 항목만 선택할 수 있습니다.',
