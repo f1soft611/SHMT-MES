@@ -8,6 +8,7 @@ public class ProdOrderUpdateDto {
     // WHERE
     private String prodplanDate;   // yyyyMMdd
     private int prodplanSeq;
+    private int prodworkSeq;
     private int orderSeq;
 
     // SET

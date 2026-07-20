@@ -129,7 +129,7 @@ export const productionOrderService = {
   // 생산지시 수정
   updateProductionOrder: (data: ProdOrderUpdateDto[]) => apiClient.post('/api/production-orders/update', data),
 
-  // 생산지시 삭제
+  // 생산지시 삭제 -> bulk 랑 합칠예정
   deleteProductionOrders: (data: ProdOrderDeleteDto) => apiClient.post('/api/production-orders/delete', data),
 
   // 생산지시 일괄 저장

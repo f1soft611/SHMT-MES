@@ -22,6 +22,7 @@
 			   A.ITEM_CODE AS ITEM_CODE_ID,
 			   B1.MATERIAL_CODE AS ITEM_CODE,
 			   A.ITEM_NAME,
+			   ERP_INFO.PROD_CODE AS PROD_CODE_ID,
 			   A.WORKCENTER_CODE,
 			   C.WORKCENTER_NAME,
 			   C.ERP_WORKPLACE_MAPPING WORKCENTER_SEQ,
@@ -31,7 +32,7 @@
 			   A.WORKER_TYPE,
 			   A.WORKER_CODE,
 			   A.WORKER_NAME,
-			   M.ITEM_LOT_NO LOT_NO,
+			   ERP_INFO.LOT_NO LOT_NO,
 			   A.PROD_QTY,
 			   A.WORKORDER_SEQ,
 			   A.BIGO,
@@ -50,6 +51,16 @@
 			         AND ISNULL(DELETE_FLAG, 0) != 1
 			       ORDER BY WORKORDER_SEQ
 			   ) AS ORDER_DATE,
+			   (
+			       SELECT SUM(PROD_QTY)
+			       FROM TPR504
+			       WHERE FACTORY_CODE = '000001'
+			         AND PRODPLAN_DATE = A.PRODPLAN_DATE
+			         AND PRODPLAN_SEQ = A.PRODPLAN_SEQ
+			         AND PRODWORK_SEQ = A.PRODWORK_SEQ
+			         AND WORK_SEQ = ERP_INFO.WORK_SEQ
+			         AND ISNULL(DELETE_FLAG, 0) != 1
+			   ) AS ORDER_QTY,
 			   STUFF((
 			       SELECT ',' + TPR504ID
 			       FROM TPR504
@@ -59,7 +70,11 @@
 			         AND PRODWORK_SEQ = A.PRODWORK_SEQ
 			         AND ISNULL(DELETE_FLAG, 0) != 1
 			       FOR XML PATH(''), TYPE
-			   ).value('.', 'NVARCHAR(MAX)'), 1, 1, '') AS PRODORDER_IDS
+			   ).value('.', 'NVARCHAR(MAX)'), 1, 1, '') AS PRODORDER_IDS,
+				ERP_INFO.ERP_PROC_YN,
+				ERP_INFO.ERP_STATUS,
+				ERP_INFO.ERP_RESULT,
+				ERP_INFO.WORK_SEQ
 		FROM TPR301 A
 		LEFT JOIN TPR301M M
 		ON A.FACTORY_CODE = M.FACTORY_CODE
@@ -75,6 +90,24 @@
 		    ON A.WORKCENTER_CODE = C.WORKCENTER_CODE
 		LEFT JOIN TPR151 D
 		    ON A.EQUIP_SYS_CD = D.EQUIP_SYS_CD
+
+		LEFT JOIN (
+			SELECT 	PRODPLAN_DATE,
+					PRODPLAN_SEQ,
+					PRODWORK_SEQ,
+		    		PROD_CODE,
+					LTRIM(RTRIM(ERPProcYn)) AS ERP_PROC_YN,
+					LTRIM(RTRIM(ERPStatus)) AS ERP_STATUS,
+					ERPResult AS ERP_RESULT,
+					WORK_SEQ,
+					LOT_NO
+			FROM TPR504
+			WHERE FACTORY_CODE = '000001'
+			AND ISNULL(DELETE_FLAG, 0) != 1
+		) ERP_INFO
+			ON  A.PRODPLAN_DATE = ERP_INFO.PRODPLAN_DATE
+			AND A.PRODPLAN_SEQ  = ERP_INFO.PRODPLAN_SEQ
+			AND A.PRODWORK_SEQ  = ERP_INFO.PRODWORK_SEQ
 		WHERE 1=1
 		    AND CONVERT(date, A.OPTIME, 112) BETWEEN #{dateFrom} AND #{dateTo}
 			<if test="prodFrom != null and prodFrom != ''">
@@ -150,7 +183,6 @@
 		</if>
 	</select>
 
-
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
@@ -187,7 +219,7 @@
 			A.ITEM_CODE AS ITEM_CODE_ID,
 			A2.MATERIAL_CODE AS ITEM_CODE,
 			A2.UNIT AS ITEM_UNIT_ID,
-			F.MAT_ITEM_SEQ AS PROD_CODE_ID,
+			F.UPPER_ITEM_SEQ AS PROD_CODE_ID,
 			F1.MATERIAL_CODE AS PROD_CODE,
 			F1.MATERIAL_NAME,
 			F1.MATERIAL_SPEC,
@@ -256,7 +288,7 @@
 			LEFT JOIN BOM_TREE F
 			ON CAST(F.PROC_SEQ AS VARCHAR) = D1.ERP_PROCESS_MAPPING
 			LEFT JOIN TCO403 F1
-			ON CAST(F.MAT_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
+			ON CAST(F.UPPER_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
 			LEFT JOIN MES_CCMMNDETAIL_CODE F2
 			ON F2.CODE_ID = 'COM007'
 			AND F1.UNIT = F2.CODE
@@ -453,7 +485,7 @@
 			#{tpr110dSeq},
 			#{itemCtTime},
 			#{itemOnePerQty},
-			#{orderDate}
+			CONVERT(VARCHAR(8), GETDATE(), 112)
 		);
 	</insert>
 
@@ -492,7 +524,6 @@
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 	</update>
-
 	
 	<!-- 생산지시 삭제	-->
 	<update id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
@@ -519,7 +550,6 @@
 		AND PRODPLAN_SEQ = #{prodplanSeq}
 		AND PRODWORK_SEQ = #{prodworkSeq}
 	</select>
-
 
 	<!-- 생산지시 수정	-->
 	<update id="updateProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderUpdateDto">

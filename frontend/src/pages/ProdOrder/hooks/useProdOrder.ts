@@ -4,11 +4,14 @@ import {getServerDate} from "../../../utils/dateUtils";
 import {
     ProdOrderInsertDto,
     ProdOrderRow,
-    ProdOrderUpdateDto,
+    ProdOrderUpdateDto, ProdPlanKeyDto,
     ProdPlanRow
 } from "../../../types/productionOrder";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
 
+/** 화면에 있는 기존 행 중, 실제로 편집되어 서버에 업데이트를 보내야 하는 행인지 판정한다 */
+export const isUpdateTarget = (row: ProdOrderRow): boolean =>
+    !row._isNew && !!row.prodorderId && !!row._dirty;
 
 export function useProdOrder() {
 
@@ -52,10 +55,12 @@ export function useProdOrder() {
         itemCode: row.itemCode,
         itemUnitId: row.itemUnitId,
         prodCodeId: row.prodCodeId,
+        prodCode: row.prodCode,
         equipmentCode: row.equipmentCode,
 
         itemCtTime: row.itemCtTime,
         itemOnePerQty: row.itemOnePerQty,
+        lastFlag: row.lastFlag,
 
         lotNo: row.lotNo,
         orderQty: row.orderQty,
@@ -141,7 +146,7 @@ export function useProdOrder() {
             .map(({ row, seq }) => toInsertDto(row, seq));
 
             const updateRows: ProdOrderUpdateDto[] = indexed
-            .filter(({ row }) => !row._isNew && row.prodorderId)
+            .filter(({ row }) => isUpdateTarget(row))
             .map(({ row, seq }) => toUpdateDto(row, seq));
 
             let changed = false;
@@ -187,18 +192,30 @@ export function useProdOrder() {
 
 
     /** ======================
-     *  생산지시 삭제
+     *  생산지시 등록 dialig에서 삭제
      *  ====================== */
     const remove: () => Promise<{ deleted: boolean }> = async () => {
         if (!selectedPlan) return { deleted: false };
+
         try {
-            const deleteDto = {
+
+            // const deleteDto = {
+            //     prodplanDate: selectedPlan.prodplanDate,
+            //     prodplanSeq: selectedPlan.prodplanSeq,
+            //     prodworkSeq: selectedPlan.prodworkSeq,
+            //     // lotNo: selectedPlan.lotNo,
+            // };
+
+            const deleteDto: ProdPlanKeyDto[] = [{
+                prodplanId: selectedPlan.prodplanId,
                 prodplanDate: selectedPlan.prodplanDate,
                 prodplanSeq: selectedPlan.prodplanSeq,
                 prodworkSeq: selectedPlan.prodworkSeq,
-            };
+            }];
 
-            const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+
+            // const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+            const { data } = await productionOrderService.bulkCancelProductionOrders(deleteDto);
             if (data.resultCode !== 200) {
                 showToast({
                     message: data.resultMessage,
@@ -268,6 +285,8 @@ export function useProdOrder() {
                 prodplanSeq: target.prodplanSeq,
                 prodworkSeq: target.prodworkSeq,
                 prodorderId: target.prodorderId,
+                lotNo: target.lotNo,
+                prodCodeId: target.prodCodeId,
             };
 
             const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
@@ -287,10 +306,11 @@ export function useProdOrder() {
      *  셀 수정 반영
      *  ====================== */
     const handleProcessRowUpdate = (newRow: ProdOrderRow) => {
+        const dirtyRow = { ...newRow, _dirty: true };
         setLocalRows((prev) =>
-            prev.map((r) => (r.idx === newRow.idx ? newRow : r))
+            prev.map((r) => (r.idx === newRow.idx ? dirtyRow : r))
         );
-        return newRow;
+        return dirtyRow;
     };
 
 

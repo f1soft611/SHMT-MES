@@ -11,6 +11,7 @@ export function useBulkProdOrder(
     const { showToast } = useToast();
     const [bulkLoading, setBulkLoading] = useState(false);
 
+    // 일괄 지시
     const handleBulkOrder = async () => {
         if (selectedRows.length === 0) return;
 
@@ -77,14 +78,14 @@ export function useBulkProdOrder(
             return;
         }
 
-        // console.log(targets);
-
         const payload: ProdPlanKeyDto[] = targets.map(row => ({
             prodplanId: row.prodplanId,
             prodplanDate: row.prodplanDate,
             prodplanSeq: row.prodplanSeq,
             prodworkSeq: row.prodworkSeq,
             prodplanDetailId: row.prodplanDetailId,
+            prodCodeId: row.prodCodeId,
+            lotNo: row.lotNo,
         }));
 
         try {

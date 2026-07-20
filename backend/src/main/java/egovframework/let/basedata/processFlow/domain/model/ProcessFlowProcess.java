@@ -63,6 +63,9 @@ public class ProcessFlowProcess implements Serializable {
 	@Schema(description = "최종 공정") // LAST_FLAG
 	private String lastFlag = "";
 
+	@Schema(description = "계획 공정") // PLAN_FLAG
+	private String planFlag = "";
+
 	@Schema(description = "등록자 ID")
 	private String regUserId = "";
 
