@@ -698,11 +698,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
 
-//			// ERP IF DTO 수집 (A) 모든 공정 ERP IF
-//			dto.setOrderSeqno(plan.getOrderSeqno());
-//			dto.setOrderHistno(plan.getOrderHistno());
-//			erpIfList.add(convertInsertToIfDto(dto));
-
 			// ERP IF DTO 수집 (A) - LAST_FLAG(I/F연동) = 'Y' 인 공정만 전송 대상
 			boolean isLastProcess = "Y".equals(row.getLastFlag());
 			if (isLastProcess) {
