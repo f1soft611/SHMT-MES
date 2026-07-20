@@ -134,6 +134,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				lotNo = dto.getLotNo();
 			}else{
 				String prodCode = dto.getProdCode();
+				if (prodCode == null || prodCode.isEmpty()) {
+					prodCode = dto.getItemCode();
+				}
 
 				// 이미 채번된 품목이면 재사용
 				lotNo = lotMap.get(prodCode);
@@ -365,6 +368,9 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 			for (ProdOrderRow row : targets) {
 				String prodCode = row.getProdCode();
+				if (prodCode == null || prodCode.isEmpty()) {
+					prodCode = row.getItemCode();
+				}
 				String lotNo = egovConditionalIdService.getNextStringId(
 						"TPR301M",
 						prodCode,
