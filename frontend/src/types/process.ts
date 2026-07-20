@@ -9,6 +9,7 @@ export interface Process {
   description?: string;
   processType?: string;
   erpProcessMapping?: string;
+  erpProcessName?: string;
   equipmentIntegrationYn?: string;
   status?: string;
   useYn?: string;
@@ -22,6 +23,7 @@ export interface ProcessType {
   description?: string;
   processType?: string;
   erpProcessMapping?: string;
+  erpProcessName?: string;
   equipmentIntegrationYn?: string;
   status?: string;
   useYn?: string;

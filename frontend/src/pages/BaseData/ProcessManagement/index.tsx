@@ -50,6 +50,7 @@ const processSchema: yup.ObjectSchema<Process> = yup.object({
   description: yup.string(),
   processType: yup.string(),
   erpProcessMapping: yup.string(),
+  erpProcessName: yup.string(),
   equipmentIntegrationYn: yup.string().required('설비연동 여부는 필수입니다.'),
   status: yup.string().required('상태는 필수입니다.'),
   useYn: yup.string().required('사용 여부는 필수입니다.'),

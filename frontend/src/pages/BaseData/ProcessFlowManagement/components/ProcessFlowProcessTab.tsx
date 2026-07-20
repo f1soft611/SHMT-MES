@@ -64,7 +64,7 @@ export default function ProcessFlowProcessTab() {
       align: 'center',
     },
     {
-      field: 'processERPName',
+      field: 'erpProcessName',
       headerName: 'ERP공정 이름',
       flex: 1,
       headerAlign: 'center',
