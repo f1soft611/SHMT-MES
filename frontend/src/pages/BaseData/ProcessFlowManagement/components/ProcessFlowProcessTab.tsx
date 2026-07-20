@@ -1,7 +1,7 @@
 import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid';
 import {
   Button, Stack, Box, FormControl, InputLabel, Select,
-  MenuItem, TextField, Grid, Radio, Chip, Typography, GlobalStyles,
+  MenuItem, TextField, Grid, Radio, Chip, Typography, GlobalStyles, Checkbox,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import {ProcessType} from '../../../../types/process';
@@ -40,7 +40,8 @@ export default function ProcessFlowProcessTab() {
     addProcess,
     removeProcess,
     updateProcessRow,
-    selectLastProcess,
+    selectPlanFlag,
+    toggleLastFlag,
   } = useDetailProcessTab({
     flowProcessRows,
     setFlowProcessRows,
@@ -102,6 +103,23 @@ export default function ProcessFlowProcessTab() {
       align: 'center',
     },
     {
+      field: 'planFlag',
+      headerName: '계획공정',
+      width: 80,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => {
+        const rid = params.row.flowProcessId ?? params.row.flowRowId;
+        return (
+            <Radio
+                name="planFlag"
+                checked={params.row.planFlag === 'Y'}
+                onChange={() => selectPlanFlag(rid)}
+            />
+        );
+      },
+    },
+    {
       field: 'equipmentFlag',
       headerName: '설비연동',
       width: 80,
@@ -126,17 +144,17 @@ export default function ProcessFlowProcessTab() {
     },
     {
       field: 'lastFlag',
-      headerName: '마지막',
+      headerName: 'I/F 연동',
       width: 80,
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => {
         const rid = params.row.flowProcessId ?? params.row.flowRowId;
         return (
-          <Radio
-            name="lastProcess"
+          <Checkbox
+            name="lastFlag"
             checked={params.row.lastFlag === 'Y'}
-            onChange={() => selectLastProcess(rid)}
+            onChange={() => toggleLastFlag(rid)}
           />
         );
       },

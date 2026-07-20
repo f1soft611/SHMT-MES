@@ -61,6 +61,9 @@ public class ProdPlanRow implements Serializable {
     /** 품목명 */
     private String itemName;
 
+    /** 생산품목코드 */
+    private String prodCodeId;
+
     /** 작업장코드 */
     private String workcenterCode;
 

@@ -45,6 +45,7 @@ export interface ProdPlanRow {
     itemCodeId: string;
     itemCode: string;
     itemName: string;
+    prodCodeId?: number;
     workcenterCode: string;
     workcenterName: string;
     workcenterSeq?: string;
@@ -146,10 +147,12 @@ export interface ProdOrderInsertDto {
     itemCode: string;
     itemUnitId: number;
     prodCodeId: string;
+    prodCode: string;
     equipmentCode?: string;
 
     itemCtTime: number;
     itemOnePerQty:number;
+    lastFlag: string;
 
     lotNo?: string;
     orderQty: number;
@@ -185,6 +188,7 @@ export interface ProdOrderDeleteDto {
     prodworkSeq: number;
     prodorderId?: string;
     lotNo?: string;
+    prodCodeId?: string; // ERP IF GoodItemSeq
 }
 
 export type OrderFlag = "PLANNED" | "ORDERED";
@@ -199,6 +203,7 @@ export interface ProdPlanKeyDto {
     prodplanSeq: number;
     prodworkSeq: number;
     prodplanDetailId?: string;
+    prodCodeId?: number;
     lotNo?: string;
 
     orderSeqno?: number;

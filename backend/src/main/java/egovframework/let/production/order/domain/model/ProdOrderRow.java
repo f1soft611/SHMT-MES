@@ -2,6 +2,7 @@ package egovframework.let.production.order.domain.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
  */
 @Getter
 @Setter
+@ToString
 public class ProdOrderRow implements Serializable {
 
     private static final long serialVersionUID = 1L;
