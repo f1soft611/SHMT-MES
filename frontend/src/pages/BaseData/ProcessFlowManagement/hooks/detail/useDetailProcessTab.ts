@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { GridRowId, GridRowModel } from '@mui/x-data-grid';
-import { useToast } from '../../../../../components/common/Feedback/ToastProvider';
 import { ProcessFlowProcess } from '../../../../../types/processFlow';
 import {ProcessType} from '../../../../../types/process';
 
@@ -15,8 +14,6 @@ export function useDetailProcessTab({
   flowProcessRows,
   setFlowProcessRows,
 }: Props) {
-  const { showToast } = useToast();
-
   /** 선택 관리 */
   const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
   const [lastProcessId, setLastProcessId] = useState<string | null>(null);
@@ -29,25 +26,6 @@ export function useDetailProcessTab({
     processFlowCode: string,
   ) => {
     if (selectedLeft.length === 0) return;
-
-    // 이미 등록된 설비연동(Y) 개수
-    const currentLinked = flowProcessRows.filter(
-      (p) => p.equipmentFlag === 'Y',
-    ).length;
-
-    // 왼쪽에서 선택된 공정 중 설비연동(Y) 개수
-    const selectedLeftLinked = processRows
-      .filter((p) => p.processId && selectedLeft.includes(p.processId))
-      .filter((p) => p.equipmentIntegrationYn === 'Y').length;
-
-    if (currentLinked + selectedLeftLinked > 1) {
-      showToast?.({
-        message: '설비 연동 공정은 하나만 추가할 수 있습니다.',
-        severity: 'error',
-        durationMs: 2500,
-      });
-      return;
-    }
 
     setFlowProcessRows((prev) => {
       const existIds = new Set(
@@ -78,6 +56,7 @@ export function useDetailProcessTab({
 
           equipmentFlag: p.equipmentIntegrationYn ?? 'N',
           lastFlag: 'N',
+          planFlag: 'N',
           // 자동증가
           seq: String(nextSeq++),
           processSeq: String(p.sortOrder ?? ''),
@@ -129,16 +108,27 @@ export function useDetailProcessTab({
     return newRow;
   };
 
-  // lastFlag 라디오 선택
-  const selectLastProcess = (rid: string) => {
+  // planFlag 라디오 선택
+  const selectPlanFlag = (rid: string) => {
     setFlowProcessRows((prev) =>
       prev.map((p) =>
         (p.flowProcessId ?? p.flowRowId) === rid
-          ? { ...p, lastFlag: 'Y' }
-          : { ...p, lastFlag: 'N' },
+          ? { ...p, planFlag: 'Y' }
+          : { ...p, planFlag: 'N' },
       ),
     );
     setLastProcessId(rid);
+  };
+
+  // lastFlag(I/F 연동) 체크박스 토글 - 다건 선택 가능
+  const toggleLastFlag = (rid: string) => {
+    setFlowProcessRows((prev) =>
+      prev.map((p) =>
+        (p.flowProcessId ?? p.flowRowId) === rid
+          ? { ...p, lastFlag: p.lastFlag === 'Y' ? 'N' : 'Y' }
+          : p,
+      ),
+    );
   };
 
   return {
@@ -149,6 +139,7 @@ export function useDetailProcessTab({
     addProcess,
     removeProcess,
     updateProcessRow,
-    selectLastProcess,
+    selectPlanFlag,
+    toggleLastFlag,
   };
 }

@@ -12,6 +12,7 @@
         <result property="processSeq" column="WORK_SEQ"/>
         <result property="equipmentFlag" column="EQUIPMENT_FLAG"/>
         <result property="lastFlag" column="LAST_FLAG"/>
+        <result property="planFlag" column="PLAN_FLAG"/>
 
         <result property="regUserId" column="OPMAN_CODE"/>
         <result property="regDt" column="OPTIME"/>
@@ -19,7 +20,9 @@
         <result property="updDt" column="OPTIME2"/>
     </resultMap>
 
-    <select id="selectProcessFlowProcessList" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcessVO" resultMap="processFlowProcessResult">
+    <select id="selectProcessFlowProcessList"
+            parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcessVO"
+            resultMap="processFlowProcessResult">
         SELECT
         A.FACTORY_CODE,
         A.WORK_ORDER_ID,
@@ -29,6 +32,7 @@
         A.SEQ,
         A.WORK_SEQ,
         A.LAST_FLAG,
+        A.PLAN_FLAG,
         A.OPTIME,
         A.OPMAN_CODE,
         A.OPTIME2,
@@ -54,6 +58,7 @@
             A.WORK_SEQ,
             ISNULL(B.EQUIPMENT_INTEGRATION_YN, '') AS EQUIPMENT_FLAG,
             A.LAST_FLAG,
+            A.PLAN_FLAG,
             A.OPTIME,
             A.OPMAN_CODE,
             A.OPTIME2,
@@ -74,7 +79,8 @@
         WHERE WORK_ORDER_ID = #{value}
     </delete>
 
-    <insert id="insertProcessFlowProcess" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess">
+    <insert id="insertProcessFlowProcess"
+            parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess">
         INSERT INTO TPR110D (
             FACTORY_CODE,
             FLOW_PROCESS_ID,
@@ -84,6 +90,7 @@
             SEQ,
             WORK_SEQ,
             LAST_FLAG,
+            PLAN_FLAG,
             OPTIME,
             OPMAN_CODE
         ) VALUES (  #{factoryCode},
@@ -94,6 +101,7 @@
                      #{seq},
                      #{processSeq},
                      #{lastFlag},
+                     #{planFlag},
                     GETDATE(),
                     #{regUserId}
                  )

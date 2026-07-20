@@ -29,12 +29,12 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
                     return { ok: false, reason: "공정 순서를 입력해주세요" };
                 }
 
-                // 설비연동 중복 검사
-                const linkedCnt = processes.filter(
-                    (p) => p.equipmentFlag === "Y"
+                // 계획공정 선택 검사
+                const planCnt = processes.filter(
+                    (p) => p.planFlag === "Y"
                 ).length;
-                if (linkedCnt > 1) {
-                    return { ok: false, reason: "연동된 공정은 한 개만 등록 가능합니다" };
+                if (planCnt !== 1) {
+                    return { ok: false, reason: "계획 공정을 1개 선택해주세요" };
                 }
 
                 // UI 전용 flowRowId 제거 + DTO 변환
@@ -46,6 +46,7 @@ export function useProcessFlowDetailActions(selectedFlow: ProcessFlow | null) {
                     seq: p.seq,
                     processSeq: p.processSeq,
                     lastFlag: p.lastFlag,
+                    planFlag: p.planFlag,
                 }));
 
                 const {data} = await processFlowService.createFlowProcesses(
