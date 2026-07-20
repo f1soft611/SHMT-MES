@@ -4,7 +4,7 @@ import {getServerDate} from "../../../utils/dateUtils";
 import {
     ProdOrderInsertDto,
     ProdOrderRow,
-    ProdOrderUpdateDto,
+    ProdOrderUpdateDto, ProdPlanKeyDto,
     ProdPlanRow
 } from "../../../types/productionOrder";
 import {useToast} from "../../../components/common/Feedback/ToastProvider";
@@ -55,10 +55,12 @@ export function useProdOrder() {
         itemCode: row.itemCode,
         itemUnitId: row.itemUnitId,
         prodCodeId: row.prodCodeId,
+        prodCode: row.prodCode,
         equipmentCode: row.equipmentCode,
 
         itemCtTime: row.itemCtTime,
         itemOnePerQty: row.itemOnePerQty,
+        lastFlag: row.lastFlag,
 
         lotNo: row.lotNo,
         orderQty: row.orderQty,
@@ -190,19 +192,30 @@ export function useProdOrder() {
 
 
     /** ======================
-     *  생산지시 삭제
+     *  생산지시 등록 dialig에서 삭제
      *  ====================== */
     const remove: () => Promise<{ deleted: boolean }> = async () => {
         if (!selectedPlan) return { deleted: false };
+
         try {
-            const deleteDto = {
+
+            // const deleteDto = {
+            //     prodplanDate: selectedPlan.prodplanDate,
+            //     prodplanSeq: selectedPlan.prodplanSeq,
+            //     prodworkSeq: selectedPlan.prodworkSeq,
+            //     // lotNo: selectedPlan.lotNo,
+            // };
+
+            const deleteDto: ProdPlanKeyDto[] = [{
+                prodplanId: selectedPlan.prodplanId,
                 prodplanDate: selectedPlan.prodplanDate,
                 prodplanSeq: selectedPlan.prodplanSeq,
                 prodworkSeq: selectedPlan.prodworkSeq,
-                lotNo: selectedPlan.lotNo,
-            };
+            }];
 
-            const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+
+            // const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
+            const { data } = await productionOrderService.bulkCancelProductionOrders(deleteDto);
             if (data.resultCode !== 200) {
                 showToast({
                     message: data.resultMessage,
@@ -273,6 +286,7 @@ export function useProdOrder() {
                 prodworkSeq: target.prodworkSeq,
                 prodorderId: target.prodorderId,
                 lotNo: target.lotNo,
+                prodCodeId: target.prodCodeId,
             };
 
             const { data } = await productionOrderService.deleteProductionOrders(deleteDto);
