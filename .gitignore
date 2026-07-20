@@ -70,3 +70,5 @@ backend/backend-dev
 /out
 /docs/superpowers/
 /frontend/src/pages/**/**/**.test.ts
+/graphify-out/cache/
+/graphify-out/
