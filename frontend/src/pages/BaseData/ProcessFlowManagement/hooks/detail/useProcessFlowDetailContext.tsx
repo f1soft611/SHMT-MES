@@ -20,6 +20,7 @@ interface DetailContextState {
 
   flowProcessRows: ProcessFlowProcess[];
   flowItemRows: ProcessFlowItem[];
+  flowItemLoading: boolean;
 
   setFlowProcessRows: React.Dispatch<
     React.SetStateAction<ProcessFlowProcess[]>
@@ -45,6 +46,7 @@ export function ProcessFlowDetailProvider({
     []
   );
   const [flowItemRows, setFlowItemRows] = useState<ProcessFlowItem[]>([]);
+  const [flowItemLoading, setFlowItemLoading] = useState(false);
 
   const flowId = processFlow?.processFlowId ?? null; // ★ 공정 흐름 ID 추출
 
@@ -57,9 +59,11 @@ export function ProcessFlowDetailProvider({
 
   useEffect(() => {
     if (!flowId) return;
+    setFlowItemLoading(true);
     processFlowService
       .getProcessFlowItem(flowId)
-      .then((res) => setFlowItemRows(res?.result?.resultList ?? []));
+      .then((res) => setFlowItemRows(res?.result?.resultList ?? []))
+      .finally(() => setFlowItemLoading(false));
   }, [flowId]);
 
   const getSavePayload = (tabIndex: number) =>
@@ -72,6 +76,7 @@ export function ProcessFlowDetailProvider({
         flowProcessRows,
         setFlowProcessRows,
         flowItemRows,
+        flowItemLoading,
         setFlowItemRows,
         getSavePayload,
       }}

@@ -3,6 +3,28 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import {ProcessFlow} from "../../../../../types/processFlow";
 import processFlowService from "../../../../../services/processFlowService";
 
+const SEARCH_STORAGE_KEY = 'processFlowManagement.searchParams';
+
+interface ProcessFlowSearchParams {
+    searchCnd: string;
+    searchWrd: string;
+    status: string;
+}
+
+const getStoredSearchParams = (): ProcessFlowSearchParams => {
+    try {
+        const stored = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+        if (stored) return JSON.parse(stored);
+    } catch {
+        // ignore
+    }
+    return {
+        searchCnd: '1',
+        searchWrd: '',
+        status: '',
+    };
+};
+
 export function useProcessFlowList() {
     const [rows, setRows] = useState<ProcessFlow[]>([]);
     const [rowCount, setRowCount] = useState(0);
@@ -16,18 +38,10 @@ export function useProcessFlowList() {
     });
 
     // 실제 검색에 사용되는 파라미터
-    const [searchParams, setSearchParams] = useState({
-        searchCnd: '1',
-        searchWrd: '',
-        status: '',
-    });
+    const [searchParams, setSearchParams] = useState(getStoredSearchParams);
 
     // 입력 필드용 상태 (화면 입력용)
-    const [inputValues, setInputValues] = useState({
-        searchCnd: '1',
-        searchWrd: '',
-        status: '',
-    });
+    const [inputValues, setInputValues] = useState(getStoredSearchParams);
 
     // 입력 변경 처리
     const handleInputChange = (field: string, value: string) => {
@@ -76,6 +90,15 @@ export function useProcessFlowList() {
     useEffect(() => {
         fetchProcessFlows();
     }, [fetchProcessFlows]);
+
+    // 검색 조건을 세션에 저장해 다른 페이지 이동 후 복귀 시에도 유지
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(searchParams));
+        } catch {
+            // ignore
+        }
+    }, [searchParams]);
 
 
     return {

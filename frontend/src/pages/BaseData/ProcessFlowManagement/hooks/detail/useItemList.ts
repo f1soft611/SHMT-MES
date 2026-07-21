@@ -8,6 +8,7 @@ export function useItemList() {
   /** 데이터 */
   const [rows, setRows] = useState<ItemType[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   /** 페이징 */
   const [page, setPage] = useState(0);
@@ -46,9 +47,14 @@ export function useItemList() {
 
   /** 조회 */
   const fetchList = async (p = page, ps = pageSize, s = searchParams) => {
-    const res = await itemService.getItemList(p, ps, s);
-    setRows(res?.result?.resultList ?? []);
-    setTotalCount(res?.result?.resultCnt ?? 0);
+    setIsLoading(true);
+    try {
+      const res = await itemService.getItemList(p, ps, s);
+      setRows(res?.result?.resultList ?? []);
+      setTotalCount(res?.result?.resultCnt ?? 0);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /** 페이징 / 검색조건 변경 시 조회 */
@@ -89,6 +95,7 @@ export function useItemList() {
     /** rows */
     rows,
     totalCount,
+    isLoading,
 
     /** paging */
     page,
