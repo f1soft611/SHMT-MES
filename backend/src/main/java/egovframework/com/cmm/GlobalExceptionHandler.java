@@ -1,6 +1,7 @@
 package egovframework.com.cmm;
 
 import egovframework.com.cmm.exception.BizException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -8,11 +9,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BizException.class)
     public Map<String, Object> handleBizException(BizException e) {
+        log.warn("BizException: {}", e.getMessage());
         Map<String, Object> res = new HashMap<>();
         res.put("resultCode", "FAIL");
         res.put("resultMessage", e.getMessage());
@@ -22,6 +25,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public Map<String, Object> handleDataAccessException(DataAccessException e) {
+        log.error("DataAccessException", e);
         Throwable t = e;
         String msg = null;
 
@@ -47,6 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public Map<String, Object> handleIllegalStateException(IllegalStateException e) {
+        log.error("IllegalStateException", e);
         Map<String, Object> res = new HashMap<>();
         res.put("resultCode", "FAIL");
         res.put("message", e.getMessage());
@@ -56,6 +61,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Map<String, Object> handleException(Exception e) {
+        log.error("Unhandled exception", e);
         Map<String, Object> res = new HashMap<>();
         res.put("resultCode", "FAIL");
         res.put("message", "서버 처리 중 오류가 발생했습니다.");
