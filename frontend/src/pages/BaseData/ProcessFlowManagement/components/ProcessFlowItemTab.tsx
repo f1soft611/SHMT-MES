@@ -15,6 +15,7 @@ export default function ProcessFlowItemTab() {
   const {
     processFlow,
     flowItemRows, // 흐름에 속한 제품 목록
+    flowItemLoading,
     setFlowItemRows, // 흐름 제품 setter
   } = useProcessFlowDetailContext();
 
@@ -22,6 +23,7 @@ export default function ProcessFlowItemTab() {
   const {
     rows: itemRows,
     totalCount,
+    isLoading,
     page,
     pageSize,
     handlePaginationChange,
@@ -190,6 +192,7 @@ export default function ProcessFlowItemTab() {
             rows={itemRows}
             columns={leftColumns}
             getRowId={(row: ItemType) => row.itemId}
+            loading={isLoading}
             pagination
             paginationMode="server"
             rowCount={totalCount}
@@ -273,6 +276,7 @@ export default function ProcessFlowItemTab() {
             rows={flowItemRows}
             columns={rightColumns}
             getRowId={(row) => row.flowItemId ?? row.flowRowId}
+            loading={flowItemLoading}
             columnVisibilityModel={{
               unit: false,
               flowItemCodeId: false,
