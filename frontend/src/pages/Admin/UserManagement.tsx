@@ -42,6 +42,26 @@ import DataTable from '../../components/common/DataTable/DataTable';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
+const SEARCH_STORAGE_KEY = 'userManagement.searchParams';
+
+interface UserSearchFilter {
+  searchCnd: string;
+  searchWrd: string;
+}
+
+const getStoredSearchParams = (): UserSearchFilter => {
+  try {
+    const stored = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return {
+    searchCnd: '2',
+    searchWrd: '',
+  };
+};
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,18 +77,16 @@ const UserManagement: React.FC = () => {
   const { showToast } = useToast();
 
   // 검색 상태 (입력값과 실제 적용값 분리)
-  const [inputValues, setInputValues] = useState({
-    searchCnd: '2',
-    searchWrd: '',
-  });
+  const [inputValues, setInputValues] = useState<UserSearchFilter>(
+    getStoredSearchParams,
+  );
 
   // 실제 API 호출에 사용되는 검색 파라미터
-  const [searchParams, setSearchParams] = useState<UserSearchParams>({
+  const [searchParams, setSearchParams] = useState<UserSearchParams>(() => ({
     pageIndex: 1,
-    searchCnd: '2',
-    searchWrd: '',
     pageUnit: 10,
-  });
+    ...getStoredSearchParams(),
+  }));
 
   const [pagination, setPagination] = useState({
     currentPageNo: 1,
@@ -166,6 +184,21 @@ const UserManagement: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 검색 조건을 세션에 저장해 다른 페이지 이동 후 복귀 시에도 유지
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        SEARCH_STORAGE_KEY,
+        JSON.stringify({
+          searchCnd: searchParams.searchCnd,
+          searchWrd: searchParams.searchWrd,
+        }),
+      );
+    } catch {
+      // ignore
+    }
+  }, [searchParams.searchCnd, searchParams.searchWrd]);
 
   const handleInputChange = (
     field: keyof typeof inputValues,

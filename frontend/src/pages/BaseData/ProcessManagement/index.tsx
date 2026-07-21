@@ -42,6 +42,8 @@ import DataTable from '../../../components/common/DataTable/DataTable';
 import PageHeader from '../../../components/common/PageHeader/PageHeader';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 
+const SEARCH_STORAGE_KEY = 'processManagement.searchParams';
+
 // 공정 등록 유효성 검사 스키마
 const processSchema: yup.ObjectSchema<Process> = yup.object({
   processId: yup.string(),
@@ -111,21 +113,25 @@ const ProcessManagement: React.FC = () => {
     },
   });
 
-  const [searchParams, setSearchParams] = useState({
-    searchCnd: '1',
-    searchWrd: '',
-    status: 'ACTIVE',
-    equipmentIntegrationYn: '',
-    useYn: 'Y',
-  });
+  const getStoredSearchParams = () => {
+    try {
+      const stored = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+    return {
+      searchCnd: '1',
+      searchWrd: '',
+      status: 'ACTIVE',
+      equipmentIntegrationYn: '',
+      useYn: 'Y',
+    };
+  };
 
-  const [inputValues, setInputValues] = useState({
-    searchCnd: '1',
-    searchWrd: '',
-    status: 'ACTIVE',
-    equipmentIntegrationYn: '',
-    useYn: 'Y',
-  });
+  const [searchParams, setSearchParams] = useState(getStoredSearchParams);
+
+  const [inputValues, setInputValues] = useState(getStoredSearchParams);
 
   const fetchProcesses = useCallback(async () => {
     try {
@@ -150,6 +156,15 @@ const ProcessManagement: React.FC = () => {
   useEffect(() => {
     fetchProcesses();
   }, [fetchProcesses]);
+
+  // 검색 조건을 세션에 저장해 다른 페이지 이동 후 복귀 시에도 유지
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(searchParams));
+    } catch {
+      // ignore
+    }
+  }, [searchParams]);
 
   // ERP 공정 코드 로드 (com008)
   useEffect(() => {

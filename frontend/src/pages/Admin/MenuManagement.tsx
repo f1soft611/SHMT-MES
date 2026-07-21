@@ -56,6 +56,28 @@ import PageHeader from '../../components/common/PageHeader/PageHeader';
 import { useToast } from '../../components/common/Feedback/ToastProvider';
 import ConfirmDialog from '../../components/common/Feedback/ConfirmDialog';
 
+const SEARCH_STORAGE_KEY = 'menuManagement.searchParams';
+
+interface MenuSearchFilter {
+  searchCnd: string;
+  searchWrd: string;
+  useAt: string;
+}
+
+const getStoredSearchParams = (): MenuSearchFilter => {
+  try {
+    const stored = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return {
+    searchCnd: '0',
+    searchWrd: '',
+    useAt: '',
+  };
+};
+
 const MenuManagement: React.FC = () => {
   const [menus, setMenus] = useState<MenuInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,16 +94,10 @@ const MenuManagement: React.FC = () => {
   const { showToast } = useToast();
 
   // 검색 상태 (입력값과 실제 적용값 분리)
-  const [inputValues, setInputValues] = useState({
-    searchCnd: '0', // 0: 메뉴명, 1: URL, 2: 설명
-    searchWrd: '',
-    useAt: '', // 전체/사용(Y)/미사용(N)
-  });
-  const [searchParams, setSearchParams] = useState({
-    searchCnd: '0',
-    searchWrd: '',
-    useAt: '',
-  });
+  const [inputValues, setInputValues] =
+    useState<MenuSearchFilter>(getStoredSearchParams);
+  const [searchParams, setSearchParams] =
+    useState<MenuSearchFilter>(getStoredSearchParams);
 
   const [formData, setFormData] = useState({
     menuNm: '',
@@ -142,6 +158,15 @@ const MenuManagement: React.FC = () => {
   useEffect(() => {
     loadMenus();
   }, []);
+
+  // 검색 조건을 세션에 저장해 다른 페이지 이동 후 복귀 시에도 유지
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(searchParams));
+    } catch {
+      // ignore
+    }
+  }, [searchParams]);
 
   const handleInputChange = (
     field: keyof typeof inputValues,
