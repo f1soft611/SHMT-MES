@@ -112,7 +112,11 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         insert("ProcessFlowItemDAO.insertProcessFlowItem", item);
     }
 
-    public List<ProcessFlowItem> selectItemByFlowId(String processFlowId) {
-        return selectList("ProcessFlowItemDAO.selectItemByFlowId", processFlowId);
+    public List<ProcessFlowItem> selectItemByFlowId(
+            String processFlowId, String factoryCode) {
+        Map<String, String> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        return selectList("ProcessFlowItemDAO.selectItemByFlowId", params);
     }
 }

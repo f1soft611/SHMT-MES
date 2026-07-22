@@ -21,7 +21,7 @@
 
     <select
             id="selectItemByFlowId"
-            parameterType="string"
+            parameterType="map"
             resultMap="processFlowItemResult">
         SELECT
             A.FACTORY_CODE,
@@ -29,6 +29,7 @@
             A.WORK_ORDER,
             A.FLOW_ITEM_ID,
             A.PROD_CODE,
+            A.PROD_CODE_ID,
             B.MATERIAL_NAME AS PROD_CODE_NAME,
             B.MATERIAL_SPEC,
             B.UNIT,
@@ -39,11 +40,13 @@
             A.OPMAN_CODE2
         FROM TPR112 A
         LEFT JOIN TCO403 B
-            ON A.PROD_CODE = B.MATERIAL_CODE
+            ON A.FACTORY_CODE = B.FACTORY_CODE
+            AND A.PROD_CODE_ID = B.MATERIAL_ID
             LEFT JOIN MES_CCMMNDETAIL_CODE B1
             ON B.UNIT = B1.CODE
         WHERE 1=1
-        AND WORK_ORDER_ID = #{processFlowId}
+        AND A.FACTORY_CODE = #{factoryCode}
+        AND A.WORK_ORDER_ID = #{processFlowId}
         ORDER BY FLOW_ITEM_ID
     </select>
 

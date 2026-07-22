@@ -40,7 +40,7 @@ public interface EgovProcessFlowService {
 	void createProcessFlow(ProcessFlow pf) throws Exception;
 
 	List<ProcessFlowProcess> selectProcessByFlowId(String processFlowId, String factoryCode) throws Exception;
-	List<ProcessFlowItem> selectItemByFlowId(String processFlowId) throws Exception;
+	List<ProcessFlowItem> selectItemByFlowId(String processFlowId, String factoryCode) throws Exception;
 
 	void updateProcessFlow(ProcessFlow processFlow) throws Exception;
 	void deleteProcessFlow(String processFlowId) throws Exception;

@@ -273,10 +273,12 @@ public class EgovProcessFlowApiController {
 
     @GetMapping("/{processFlowId}/item")
     public ResultVO selectItemByFlowId(
-            @PathVariable("processFlowId") String processFlowId
+            @PathVariable("processFlowId") String processFlowId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        List<ProcessFlowItem> itemList = processFlowService.selectItemByFlowId(processFlowId);
+        List<ProcessFlowItem> itemList =
+                processFlowService.selectItemByFlowId(processFlowId, user.getFactoryCode());
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("resultList", itemList);

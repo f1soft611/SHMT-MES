@@ -220,7 +220,7 @@ export function ProcessFlowDetailProvider({
     () => ({
       rows: itemRows,
       catalogRows: filterCatalog(catalogData?.resultList || []),
-      catalogTotalCount: catalogData?.totalCount || 0,
+      catalogTotalCount: Number(catalogData?.resultCnt ?? 0),
       dirty: itemDirty,
       isLoading: isItemLoading || isItemCatalogLoading,
       isSaving: isSavingItems,

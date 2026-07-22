@@ -214,8 +214,9 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 	}
 
 	@Override
-	public List<ProcessFlowItem> selectItemByFlowId(String processFlowId) throws Exception {
-		return processFlowDAO.selectItemByFlowId(processFlowId);
+	public List<ProcessFlowItem> selectItemByFlowId(
+			String processFlowId, String factoryCode) throws Exception {
+		return processFlowDAO.selectItemByFlowId(processFlowId, factoryCode);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
