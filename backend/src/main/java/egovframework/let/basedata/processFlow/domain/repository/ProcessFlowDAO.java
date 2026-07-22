@@ -77,14 +77,6 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         return selectList("ProcessFlowProcessDAO.selectByProcessFlowId", params);
     }
 
-    public void deleteProcessFlowItem(String workOderId) {
-        delete("ProcessFlowItemDAO.deleteAllByProcessFlowId", workOderId);
-    }
-
-    public void deleteProcessFlowItemById(String flowItemId) {
-        delete("ProcessFlowItemDAO.deleteProcessFlowItemById", flowItemId);
-    }
-
     public List<String> selectOwnedFlowItemIds(
             String processFlowId, String factoryCode, List<String> flowItemIds) {
         Map<String, Object> params = new HashMap<>();

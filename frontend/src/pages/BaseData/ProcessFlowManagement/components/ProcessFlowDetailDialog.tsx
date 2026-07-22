@@ -16,7 +16,6 @@ import {
   Extension as ExtensionIcon,
 } from '@mui/icons-material';
 import type { ProcessFlow } from '../../../../types/processFlow';
-import type { DetailSavePayload, DetailSaveResult } from '../../../../types/processFlow';
 import ConfirmDialog from '../../../../components/common/Feedback/ConfirmDialog';
 import ProcessFlowItemTab from './ProcessFlowItemTab';
 import ProcessFlowProcessTab from './ProcessFlowProcessTab';
@@ -30,8 +29,6 @@ interface Props {
   onClose: () => void;
   selectedFlow: ProcessFlow | null;
   initialTab: number;
-  onSave?: (data: DetailSavePayload) => Promise<DetailSaveResult>;
-  itemLoading?: boolean;
 }
 
 function TabLabel({ text, dirty }: { text: string; dirty: boolean }) {

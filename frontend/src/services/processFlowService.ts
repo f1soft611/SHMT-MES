@@ -122,15 +122,6 @@ export const processFlowService = {
     return withLegacyResult(resultList.map(toProcessFlowItemDto), resultList);
   },
 
-  createFlowProcesses: (processFlowId: string, data: unknown[]) =>
-    apiClient.post(`/api/processflow/${processFlowId}/process`, data),
-
-  createFlowItems: (processFlowId: string, data: unknown[]) =>
-    apiClient.post(`/api/processflow/${processFlowId}/item`, data),
-
-  deleteFlowItems: (data: { flowItemId: string }[]) =>
-    apiClient.post('/api/processflow/item/delete', data),
-
   saveFlowProcesses: async (
     processFlowId: string,
     request: SaveFlowProcessesRequest,

@@ -1,70 +1,164 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useToast } from '../../../../components/common/Feedback/ToastProvider';
-import type { ProcessFlowItemDto, ProcessFlowSummary, CatalogParams } from '../types';
+import type {
+  CatalogParams,
+  ProcessFlowItemDto,
+  ProcessFlowSummary,
+} from '../types';
 import { DetailSessionContextProvider } from './DetailSessionContext';
 import { ItemDraftContextProvider } from './ItemDraftContext';
 import { ProcessDraftContextProvider } from './ProcessDraftContext';
 import { useItemDeltaDraft } from './useItemDeltaDraft';
-import { useSaveItemsMutation, useSaveProcessesMutation } from './useProcessFlowDetailMutations';
+import {
+  useSaveItemsMutation,
+  useSaveProcessesMutation,
+} from './useProcessFlowDetailMutations';
 import { useProcessFlowDetailQueries } from './useProcessFlowDetailQueries';
 import { useProcessDraft } from './useProcessDraft';
 import { validateProcessDraft } from './validators';
 
-type Props = { open: boolean; processFlow: ProcessFlowSummary; children: ReactNode };
-const defaultCatalogParams: CatalogParams = { page: 0, pageSize: 10 };
-const toError = (error: unknown) => error instanceof Error ? error : null;
-const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.';
+type Props = {
+  open: boolean;
+  processFlow: ProcessFlowSummary;
+  children: ReactNode;
+};
 
-export function ProcessFlowDetailProvider({ open, processFlow, children }: Props) {
+const defaultCatalogParams: CatalogParams = { page: 0, pageSize: 10 };
+
+const toError = (error: unknown) => (error instanceof Error ? error : null);
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error
+    ? error.message
+    : '저장 중 오류가 발생했습니다.';
+
+export function ProcessFlowDetailProvider({
+  open,
+  processFlow,
+  children,
+}: Props) {
   const { showToast } = useToast();
   const flowId = processFlow.processFlowId || '';
   const [tabIndex, setTabIndex] = useState<0 | 1>(0);
-  const [processCatalogParams] = useState<CatalogParams>(defaultCatalogParams);
-  const [itemCatalogParams, setCatalogParams] = useState<CatalogParams>(defaultCatalogParams);
-  const queries = useProcessFlowDetailQueries(open, flowId, processCatalogParams, itemCatalogParams);
+  const [processCatalogParams] =
+    useState<CatalogParams>(defaultCatalogParams);
+  const [itemCatalogParams, setCatalogParams] =
+    useState<CatalogParams>(defaultCatalogParams);
+
+  const queries = useProcessFlowDetailQueries(
+    open,
+    flowId,
+    processCatalogParams,
+    itemCatalogParams,
+  );
+  const {
+    data: processData,
+    isLoading: isProcessLoading,
+    error: processError,
+    refetch: refetchProcesses,
+  } = queries.processes;
+  const {
+    data: itemData,
+    isLoading: isItemLoading,
+    error: itemError,
+    refetch: refetchItems,
+  } = queries.items;
+  const {
+    data: itemCatalogData,
+    isLoading: isItemCatalogLoading,
+    error: itemCatalogError,
+    refetch: refetchItemCatalog,
+  } = queries.itemCatalog;
+
   const processDraft = useProcessDraft([]);
+  const {
+    rows: processRows,
+    dirty: processDirty,
+    add: addProcess,
+    remove: removeProcess,
+    updateSeq,
+    selectPlan,
+    toggleLast,
+    resetCanonical: resetProcessCanonical,
+    discard: discardProcesses,
+  } = processDraft;
+
   const itemDraft = useItemDeltaDraft([]);
-  const saveProcessesMutation = useSaveProcessesMutation(flowId);
-  const saveItemsMutation = useSaveItemsMutation(flowId);
+  const {
+    rows: itemRows,
+    addItemIds,
+    deleteFlowItemIds,
+    dirty: itemDirty,
+    add: addItem,
+    remove: removeItem,
+    filterCatalog,
+    resetCanonical: resetItemCanonical,
+    discard: discardItems,
+  } = itemDraft;
+
+  const {
+    mutateAsync: saveProcessesAsync,
+    isPending: isSavingProcesses,
+  } = useSaveProcessesMutation(flowId);
+  const {
+    mutateAsync: saveItemsAsync,
+    isPending: isSavingItems,
+  } = useSaveItemsMutation(flowId);
+
   const initializedProcessFlowId = useRef<string | null>(null);
   const initializedItemFlowId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!flowId || !queries.processes.data || initializedProcessFlowId.current === flowId) return;
-    processDraft.resetCanonical(queries.processes.data);
+    if (!flowId || !processData || initializedProcessFlowId.current === flowId) {
+      return;
+    }
+    resetProcessCanonical(processData);
     initializedProcessFlowId.current = flowId;
-  }, [flowId, processDraft.resetCanonical, queries.processes.data]);
+  }, [flowId, processData, resetProcessCanonical]);
 
   useEffect(() => {
-    if (!flowId || !queries.items.data || initializedItemFlowId.current === flowId) return;
-    itemDraft.resetCanonical(queries.items.data);
+    if (!flowId || !itemData || initializedItemFlowId.current === flowId) {
+      return;
+    }
+    resetItemCanonical(itemData);
     initializedItemFlowId.current = flowId;
-  }, [flowId, itemDraft.resetCanonical, queries.items.data]);
+  }, [flowId, itemData, resetItemCanonical]);
 
   const saveProcesses = useCallback(async () => {
-    const validation = validateProcessDraft(processDraft.rows);
+    const validation = validateProcessDraft(processRows);
     if (!validation.ok) {
       showToast({ message: validation.message, severity: 'error' });
       return false;
     }
+
     try {
-      const result = await saveProcessesMutation.mutateAsync({
-        processes: processDraft.rows.map(({ flowProcessCode, seq, planFlag, lastFlag }) => ({ flowProcessCode, seq: seq as number, planFlag, lastFlag })),
+      const result = await saveProcessesAsync({
+        processes: processRows.map(
+          ({ flowProcessCode, seq, planFlag, lastFlag }) => ({
+            flowProcessCode,
+            seq: seq as number,
+            planFlag,
+            lastFlag,
+          }),
+        ),
       });
-      processDraft.resetCanonical(result.processes);
+      resetProcessCanonical(result.processes);
       return true;
     } catch (error) {
       showToast({ message: getErrorMessage(error), severity: 'error' });
       return false;
     }
-  }, [processDraft, saveProcessesMutation, showToast]);
+  }, [processRows, resetProcessCanonical, saveProcessesAsync, showToast]);
 
   const saveItems = useCallback(async () => {
     try {
-      const result = await saveItemsMutation.mutateAsync({ addItemIds: itemDraft.addItemIds, deleteFlowItemIds: itemDraft.deleteFlowItemIds });
+      const result = await saveItemsAsync({
+        addItemIds,
+        deleteFlowItemIds,
+      });
       const deleted = new Set(result.deletedFlowItemIds);
-      const retainedItems: ProcessFlowItemDto[] = itemDraft.rows
+      const retainedItems: ProcessFlowItemDto[] = itemRows
         .filter((row) => row.flowItemId && !deleted.has(row.flowItemId))
         .map((row) => ({
           flowItemId: row.flowItemId as string,
@@ -75,18 +169,120 @@ export function ProcessFlowDetailProvider({ open, processFlow, children }: Props
           unit: row.unit,
           unitName: row.unitName,
         }));
-      itemDraft.resetCanonical([...retainedItems, ...result.addedItems]);
+      resetItemCanonical([...retainedItems, ...result.addedItems]);
       return true;
     } catch (error) {
       showToast({ message: getErrorMessage(error), severity: 'error' });
       return false;
     }
-  }, [itemDraft, saveItemsMutation, showToast]);
+  }, [
+    addItemIds,
+    deleteFlowItemIds,
+    itemRows,
+    resetItemCanonical,
+    saveItemsAsync,
+    showToast,
+  ]);
 
-  const processValue = useMemo(() => ({ rows: processDraft.rows, dirty: processDraft.dirty, isLoading: queries.processes.isLoading, isSaving: saveProcessesMutation.isPending, error: toError(queries.processes.error), add: processDraft.add, remove: processDraft.remove, updateSeq: processDraft.updateSeq, selectPlan: processDraft.selectPlan, toggleLast: processDraft.toggleLast, save: saveProcesses, retry: () => queries.processes.refetch() }), [processDraft.rows, processDraft.dirty, processDraft.add, processDraft.remove, processDraft.updateSeq, processDraft.selectPlan, processDraft.toggleLast, queries.processes.isLoading, queries.processes.error, queries.processes.refetch, saveProcessesMutation.isPending, saveProcesses]);
-  const catalogData = queries.itemCatalog.data?.result;
-  const itemValue = useMemo(() => ({ rows: itemDraft.rows, catalogRows: itemDraft.filterCatalog(catalogData?.resultList || []), catalogTotalCount: catalogData?.totalCount || 0, dirty: itemDraft.dirty, isLoading: queries.items.isLoading || queries.itemCatalog.isLoading, isSaving: saveItemsMutation.isPending, error: toError(queries.items.error || queries.itemCatalog.error), add: itemDraft.add, remove: itemDraft.remove, save: saveItems, retry: () => Promise.all([queries.items.refetch(), queries.itemCatalog.refetch()]), setCatalogParams }), [itemDraft.rows, itemDraft.dirty, itemDraft.add, itemDraft.remove, itemDraft.filterCatalog, catalogData, queries.items.isLoading, queries.items.error, queries.items.refetch, queries.itemCatalog.isLoading, queries.itemCatalog.error, queries.itemCatalog.refetch, saveItemsMutation.isPending, saveItems]);
-  const sessionValue = useMemo(() => ({ flow: processFlow, tabIndex, setTabIndex, processDirty: processDraft.dirty, itemDirty: itemDraft.dirty, hasDirtyChanges: processDraft.dirty || itemDraft.dirty, isSaving: saveProcessesMutation.isPending || saveItemsMutation.isPending, discardAll: () => { processDraft.discard(); itemDraft.discard(); } }), [processFlow, tabIndex, processDraft.dirty, processDraft.discard, itemDraft.dirty, itemDraft.discard, saveProcessesMutation.isPending, saveItemsMutation.isPending]);
+  const processValue = useMemo(
+    () => ({
+      rows: processRows,
+      dirty: processDirty,
+      isLoading: isProcessLoading,
+      isSaving: isSavingProcesses,
+      error: toError(processError),
+      add: addProcess,
+      remove: removeProcess,
+      updateSeq,
+      selectPlan,
+      toggleLast,
+      save: saveProcesses,
+      retry: refetchProcesses,
+    }),
+    [
+      processRows,
+      processDirty,
+      isProcessLoading,
+      isSavingProcesses,
+      processError,
+      addProcess,
+      removeProcess,
+      updateSeq,
+      selectPlan,
+      toggleLast,
+      saveProcesses,
+      refetchProcesses,
+    ],
+  );
 
-  return <DetailSessionContextProvider value={sessionValue}><ProcessDraftContextProvider value={processValue}><ItemDraftContextProvider value={itemValue}>{children}</ItemDraftContextProvider></ProcessDraftContextProvider></DetailSessionContextProvider>;
+  const catalogData = itemCatalogData?.result;
+  const itemValue = useMemo(
+    () => ({
+      rows: itemRows,
+      catalogRows: filterCatalog(catalogData?.resultList || []),
+      catalogTotalCount: catalogData?.totalCount || 0,
+      dirty: itemDirty,
+      isLoading: isItemLoading || isItemCatalogLoading,
+      isSaving: isSavingItems,
+      error: toError(itemError || itemCatalogError),
+      add: addItem,
+      remove: removeItem,
+      save: saveItems,
+      retry: () => Promise.all([refetchItems(), refetchItemCatalog()]),
+      setCatalogParams,
+    }),
+    [
+      itemRows,
+      filterCatalog,
+      catalogData,
+      itemDirty,
+      isItemLoading,
+      isItemCatalogLoading,
+      isSavingItems,
+      itemError,
+      itemCatalogError,
+      addItem,
+      removeItem,
+      saveItems,
+      refetchItems,
+      refetchItemCatalog,
+    ],
+  );
+
+  const discardAll = useCallback(() => {
+    discardProcesses();
+    discardItems();
+  }, [discardItems, discardProcesses]);
+
+  const sessionValue = useMemo(
+    () => ({
+      flow: processFlow,
+      tabIndex,
+      setTabIndex,
+      processDirty,
+      itemDirty,
+      hasDirtyChanges: processDirty || itemDirty,
+      isSaving: isSavingProcesses || isSavingItems,
+      discardAll,
+    }),
+    [
+      processFlow,
+      tabIndex,
+      processDirty,
+      itemDirty,
+      isSavingProcesses,
+      isSavingItems,
+      discardAll,
+    ],
+  );
+
+  return (
+    <DetailSessionContextProvider value={sessionValue}>
+      <ProcessDraftContextProvider value={processValue}>
+        <ItemDraftContextProvider value={itemValue}>
+          {children}
+        </ItemDraftContextProvider>
+      </ProcessDraftContextProvider>
+    </DetailSessionContextProvider>
+  );
 }

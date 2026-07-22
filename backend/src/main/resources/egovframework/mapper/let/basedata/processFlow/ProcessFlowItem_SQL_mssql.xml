@@ -47,18 +47,6 @@
         ORDER BY FLOW_ITEM_ID
     </select>
 
-    <!-- 공정흐름 제품 전체 삭제 -->
-    <delete id="deleteAllByProcessFlowId" parameterType="string">
-        delete from  TPR112
-        WHERE WORK_ORDER_ID = #{value}
-    </delete>
-
-    <!--    아이디별 삭제-->
-    <delete id="deleteProcessFlowItemById" parameterType="string">
-        DELETE FROM TPR112
-        WHERE FLOW_ITEM_ID = #{value}
-    </delete>
-
     <select id="selectOwnedFlowItemIds" parameterType="map" resultType="string">
         SELECT FLOW_ITEM_ID
         FROM TPR112
