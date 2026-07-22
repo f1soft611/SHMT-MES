@@ -60,13 +60,13 @@ export function ProcessFlowDetailProvider({
   } = queries.processes;
   const {
     data: itemData,
-    isLoading: isItemLoading,
+    isFetching: isAppliedItemsFetching,
     error: itemError,
     refetch: refetchItems,
   } = queries.items;
   const {
     data: itemCatalogData,
-    isLoading: isItemCatalogLoading,
+    isFetching: isCatalogFetching,
     error: itemCatalogError,
     refetch: refetchItemCatalog,
   } = queries.itemCatalog;
@@ -222,7 +222,8 @@ export function ProcessFlowDetailProvider({
       catalogRows: filterCatalog(catalogData?.resultList || []),
       catalogTotalCount: Number(catalogData?.resultCnt ?? 0),
       dirty: itemDirty,
-      isLoading: isItemLoading || isItemCatalogLoading,
+      isCatalogFetching,
+      isAppliedItemsFetching,
       isSaving: isSavingItems,
       error: toError(itemError || itemCatalogError),
       add: addItem,
@@ -236,8 +237,8 @@ export function ProcessFlowDetailProvider({
       filterCatalog,
       catalogData,
       itemDirty,
-      isItemLoading,
-      isItemCatalogLoading,
+      isCatalogFetching,
+      isAppliedItemsFetching,
       isSavingItems,
       itemError,
       itemCatalogError,

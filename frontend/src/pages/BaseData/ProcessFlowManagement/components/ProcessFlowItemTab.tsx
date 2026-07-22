@@ -106,7 +106,13 @@ export default function ProcessFlowItemTab() {
             rows={item.catalogRows}
             columns={leftColumns}
             getRowId={(row: ItemType) => row.itemId}
-            loading={item.isLoading}
+            loading={item.isCatalogFetching}
+            slotProps={{
+              loadingOverlay: {
+                variant: 'linear-progress',
+                noRowsVariant: 'linear-progress',
+              },
+            }}
             pagination
             paginationMode="server"
             rowCount={item.catalogTotalCount}
@@ -142,7 +148,13 @@ export default function ProcessFlowItemTab() {
             rows={item.rows}
             columns={rightColumns}
             getRowId={(row) => row.rowId}
-            loading={item.isLoading}
+            loading={item.isAppliedItemsFetching}
+            slotProps={{
+              loadingOverlay: {
+                variant: 'linear-progress',
+                noRowsVariant: 'linear-progress',
+              },
+            }}
             columnVisibilityModel={{ unit: false, itemId: false }}
             checkboxSelection
             disableRowSelectionOnClick

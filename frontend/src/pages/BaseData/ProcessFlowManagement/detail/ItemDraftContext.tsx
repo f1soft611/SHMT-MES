@@ -8,7 +8,8 @@ export type ItemDraftContextValue = {
   catalogRows: ItemType[];
   catalogTotalCount: number;
   dirty: boolean;
-  isLoading: boolean;
+  isCatalogFetching: boolean;
+  isAppliedItemsFetching: boolean;
   isSaving: boolean;
   error: Error | null;
   add: (ids: GridRowId[], source: ItemType[]) => void;
