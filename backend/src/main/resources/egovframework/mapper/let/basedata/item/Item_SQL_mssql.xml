@@ -94,30 +94,43 @@
 			AND A.DELETE_FLAG = CASE WHEN #{useYn} = 'Y' THEN '0' ELSE '1' END
 		</if>
 
-		<!-- 공정 등록 여부 -->
-		<if test="inProcessFlowYn != null">
-			<choose>
-				<!-- 1: 미등록 -->
-				<when test="inProcessFlowYn == 1">
-					AND NOT EXISTS (
-					SELECT 1
-					FROM TPR112 FI
-					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
-					)
-				</when>
+		<!-- 현재 공정흐름 기준 추가 가능 품목 / 기존 공정 등록 여부 -->
+		<choose>
+			<when test="availableForProcessFlowId != null and availableForProcessFlowId != ''">
+				AND NOT EXISTS (
+				SELECT 1
+				FROM TPR112 FI
+				WHERE FI.FACTORY_CODE = A.FACTORY_CODE
+				  AND FI.PROD_CODE_ID = A.MATERIAL_ID
+				  AND FI.WORK_ORDER_ID != #{availableForProcessFlowId}
+				)
+			</when>
+			<otherwise>
+				<if test="inProcessFlowYn != null">
+					<choose>
+						<!-- 1: 미등록 -->
+						<when test="inProcessFlowYn == 1">
+							AND NOT EXISTS (
+							SELECT 1
+							FROM TPR112 FI
+							WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+							)
+						</when>
 
-				<!-- 2: 등록 -->
-				<when test="inProcessFlowYn == 2">
-					AND EXISTS (
-					SELECT 1
-					FROM TPR112 FI
-					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
-					)
-				</when>
+						<!-- 2: 등록 -->
+						<when test="inProcessFlowYn == 2">
+							AND EXISTS (
+							SELECT 1
+							FROM TPR112 FI
+							WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+							)
+						</when>
 
-				<!-- 0: 전체 → 조건 없음 -->
-			</choose>
-		</if>
+						<!-- 0: 전체 → 조건 없음 -->
+					</choose>
+				</if>
+			</otherwise>
+		</choose>
 
 		ORDER BY A.MATERIAL_ID DESC
 		<if test="firstIndex != null and recordCountPerPage != null">
@@ -160,30 +173,43 @@
 				AND DELETE_FLAG != '1'
 			</otherwise>
 		</choose>
-		<!-- 공정 등록 여부 -->
-		<if test="inProcessFlowYn != null">
-			<choose>
-				<!-- 1: 미등록 -->
-				<when test="inProcessFlowYn == 1">
-					AND NOT EXISTS (
-					SELECT 1
-					FROM TPR112 FI
-					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
-					)
-				</when>
+		<!-- 현재 공정흐름 기준 추가 가능 품목 / 기존 공정 등록 여부 -->
+		<choose>
+			<when test="availableForProcessFlowId != null and availableForProcessFlowId != ''">
+				AND NOT EXISTS (
+				SELECT 1
+				FROM TPR112 FI
+					WHERE FI.FACTORY_CODE = A.FACTORY_CODE
+					  AND FI.PROD_CODE_ID = A.MATERIAL_ID
+					  AND FI.WORK_ORDER_ID != #{availableForProcessFlowId}
+				)
+			</when>
+			<otherwise>
+				<if test="inProcessFlowYn != null">
+					<choose>
+						<!-- 1: 미등록 -->
+						<when test="inProcessFlowYn == 1">
+							AND NOT EXISTS (
+							SELECT 1
+							FROM TPR112 FI
+							WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+							)
+						</when>
 
-				<!-- 2: 등록 -->
-				<when test="inProcessFlowYn == 2">
-					AND EXISTS (
-					SELECT 1
-					FROM TPR112 FI
-					WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
-					)
-				</when>
+						<!-- 2: 등록 -->
+						<when test="inProcessFlowYn == 2">
+							AND EXISTS (
+							SELECT 1
+							FROM TPR112 FI
+							WHERE FI.PROD_CODE_ID = A.MATERIAL_ID
+							)
+						</when>
 
-				<!-- 0: 전체 → 조건 없음 -->
-			</choose>
-		</if>
+						<!-- 0: 전체 → 조건 없음 -->
+					</choose>
+				</if>
+			</otherwise>
+		</choose>
 	</select>
 
 	<select id="ItemDAO.selectItem" parameterType="string" resultMap="itemResult">

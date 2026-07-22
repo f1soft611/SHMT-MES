@@ -41,6 +41,10 @@ public class ItemVO extends Item {
 	/** 공정 등록 여부 (0: 전체, 1: 미등록, 2: 등록) */
 	@Schema(description = "공정 등록 여부 (0: 전체, 1: 미등록, 2: 등록)")
 	private Integer inProcessFlowYn;
+
+	/** 현재 공정흐름 기준 추가 가능 품목 조회 ID */
+	@Schema(description = "현재 공정흐름 기준 추가 가능 품목 조회 ID")
+	private String availableForProcessFlowId;
 	
 	/** 페이지 번호 */
 	@Schema(description = "페이지 번호")
