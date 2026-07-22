@@ -8,6 +8,7 @@ import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import egovframework.let.basedata.processFlow.domain.repository.ProcessFlowDAO;
 import egovframework.let.basedata.processFlow.dto.ProcessFlowProcessSaveRequest;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowItemDeltaResponse;
 import egovframework.let.basedata.processFlow.service.EgovProcessFlowService;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -152,7 +155,7 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 
 	}
 
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public List<ProcessFlowProcess> saveProcessFlowProcesses(
 			String processFlowId,
@@ -215,6 +218,73 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 	@Override
 	public List<ProcessFlowItem> selectItemByFlowId(String processFlowId) throws Exception {
 		return processFlowDAO.selectItemByFlowId(processFlowId);
+	}
+
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public ProcessFlowItemDeltaResponse saveProcessFlowItemDelta(
+			String processFlowId,
+			String factoryCode,
+			String userId,
+			List<String> addItemIds,
+			List<String> deleteFlowItemIds) throws Exception {
+		List<String> addIds = requireDistinctIds(addItemIds, "추가 품목");
+		List<String> deleteIds = requireDistinctIds(deleteFlowItemIds, "삭제 품목");
+
+		ProcessFlow flow =
+				processFlowDAO.selectProcessFlowByIdAndFactory(processFlowId, factoryCode);
+		if (flow == null) {
+			throw new BizException("존재하지 않는 공정흐름입니다.");
+		}
+
+		if (!deleteIds.isEmpty()) {
+			List<String> owned = processFlowDAO.selectOwnedFlowItemIds(
+					processFlowId, factoryCode, deleteIds);
+			if (owned.size() != deleteIds.size()) {
+				throw new BizException("삭제 대상이 현재 공정흐름에 속하지 않습니다.");
+			}
+		}
+
+		if (!addIds.isEmpty() &&
+				!processFlowDAO.selectRegisteredItemIds(addIds).isEmpty()) {
+			throw new BizException("이미 다른 공정흐름에 등록된 품목이 있습니다.");
+		}
+
+		List<ProcessFlowItem> masters = addIds.isEmpty()
+				? Collections.emptyList()
+				: processFlowDAO.selectItemMasters(factoryCode, addIds);
+		if (masters.size() != addIds.size()) {
+			throw new BizException("존재하지 않거나 사용할 수 없는 품목이 있습니다.");
+		}
+
+		if (!deleteIds.isEmpty()) {
+			int deleted = processFlowDAO.deleteProcessFlowItems(
+					processFlowId, factoryCode, deleteIds);
+			if (deleted != deleteIds.size()) {
+				throw new BizException("품목 삭제 건수가 일치하지 않습니다.");
+			}
+		}
+
+		List<ProcessFlowItem> added = new ArrayList<>();
+		for (ProcessFlowItem master : masters) {
+			master.setFactoryCode(factoryCode);
+			master.setProcessFlowId(processFlowId);
+			master.setProcessFlowCode(flow.getProcessFlowCode());
+			master.setFlowItemId(egovProcessFlowItemIdGnrService.getNextStringId());
+			master.setRegUserId(userId);
+			processFlowDAO.insertProcessFlowItem(master);
+			added.add(master);
+		}
+		return new ProcessFlowItemDeltaResponse(added, deleteIds);
+	}
+
+	private static List<String> requireDistinctIds(List<String> ids, String label) {
+		List<String> safe = ids == null ? Collections.emptyList() : ids;
+		if (safe.stream().anyMatch(id -> id == null || id.trim().isEmpty()) ||
+				new HashSet<>(safe).size() != safe.size()) {
+			throw new BizException(label + " ID가 올바르지 않습니다.");
+		}
+		return new ArrayList<>(safe);
 	}
 
 

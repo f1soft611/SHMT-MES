@@ -6,6 +6,7 @@ import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import egovframework.let.basedata.processFlow.dto.ProcessFlowProcessSaveRequest;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowItemDeltaResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,13 @@ public interface EgovProcessFlowService {
 			String factoryCode,
 			String userId,
 			List<ProcessFlowProcessSaveRequest.Entry> entries) throws Exception;
+
+	ProcessFlowItemDeltaResponse saveProcessFlowItemDelta(
+			String processFlowId,
+			String factoryCode,
+			String userId,
+			List<String> addItemIds,
+			List<String> deleteFlowItemIds) throws Exception;
 
 	void createProcessFlowProcess(String processFlowId, List<ProcessFlowProcess> processList) throws Exception;
 

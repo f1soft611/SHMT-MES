@@ -9,6 +9,8 @@ import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import egovframework.let.basedata.processFlow.dto.ProcessFlowProcessSaveRequest;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowItemDeltaRequest;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowItemDeltaResponse;
 import egovframework.let.basedata.processFlow.service.EgovProcessFlowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -281,6 +283,24 @@ public class EgovProcessFlowApiController {
         resultMap.put("message", "공정흐름별 품목이 저장되었습니다.");
         resultMap.put("user", user);
 
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+    }
+
+    @PostMapping("/{processFlowId}/item/delta")
+    public ResultVO saveProcessFlowItemDelta(
+            @PathVariable String processFlowId,
+            @RequestBody ProcessFlowItemDeltaRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+        ProcessFlowItemDeltaResponse saved = processFlowService.saveProcessFlowItemDelta(
+                processFlowId,
+                user.getFactoryCode(),
+                user.getUniqId(),
+                request.getAddItemIds(),
+                request.getDeleteFlowItemIds());
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("addedItems", saved.getAddedItems());
+        resultMap.put("deletedFlowItemIds", saved.getDeletedFlowItemIds());
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
 

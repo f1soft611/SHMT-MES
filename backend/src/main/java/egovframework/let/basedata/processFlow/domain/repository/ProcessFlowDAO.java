@@ -85,6 +85,37 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         delete("ProcessFlowItemDAO.deleteProcessFlowItemById", flowItemId);
     }
 
+    public List<String> selectOwnedFlowItemIds(
+            String processFlowId, String factoryCode, List<String> flowItemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        params.put("flowItemIds", flowItemIds);
+        return selectList("ProcessFlowItemDAO.selectOwnedFlowItemIds", params);
+    }
+
+    public List<String> selectRegisteredItemIds(List<String> itemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("itemIds", itemIds);
+        return selectList("ProcessFlowItemDAO.selectRegisteredItemIds", params);
+    }
+
+    public List<ProcessFlowItem> selectItemMasters(String factoryCode, List<String> itemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("factoryCode", factoryCode);
+        params.put("itemIds", itemIds);
+        return selectList("ProcessFlowItemDAO.selectItemMasters", params);
+    }
+
+    public int deleteProcessFlowItems(
+            String processFlowId, String factoryCode, List<String> flowItemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        params.put("flowItemIds", flowItemIds);
+        return delete("ProcessFlowItemDAO.deleteProcessFlowItems", params);
+    }
+
     public void insertProcessFlowItem(ProcessFlowItem item) {
         insert("ProcessFlowItemDAO.insertProcessFlowItem", item);
     }
