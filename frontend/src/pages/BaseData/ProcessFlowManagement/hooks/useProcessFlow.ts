@@ -2,7 +2,6 @@ import {useProcessFlowList} from "./main/useProcessFlowList";
 import {useProcessFlowMainDialog} from "./main/useProcessFlowMainDialog";
 import {useProcessFlowMainActions} from "./main/useProcessFlowMainActions";
 import {useProcessFlowDetailDialog} from "./detail/useProcessFlowDetailDialog";
-import {useProcessFlowDetailActions} from "./detail/useProcessFlowDetailActions";
 
 export function useProcessFlow() {
 
@@ -14,10 +13,6 @@ export function useProcessFlow() {
     );
 
     const detailDialog = useProcessFlowDetailDialog();
-    const detailActions = useProcessFlowDetailActions(
-        detailDialog.selectedFlow
-    );
-
 
     return {
         /** 목록 */
@@ -55,10 +50,6 @@ export function useProcessFlow() {
         selectedFlowDetail: detailDialog.selectedFlow,
         handleOpenDetailDialog: detailDialog.handleOpenDetailDialog,
         handleCloseDetailDialog: detailDialog.handleCloseDetailDialog,
-
-        /** 상세 저장 액션 */
-        handleDetailSave: detailActions.handleDetailSave,
-        itemLoading: detailActions.loading,
     };
 }
 

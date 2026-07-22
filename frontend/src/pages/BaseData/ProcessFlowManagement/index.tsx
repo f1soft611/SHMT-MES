@@ -107,9 +107,7 @@ const ProcessFlowManagement: React.FC = () => {
                 open={pf.openDetailDialog}
                 selectedFlow={pf.selectedFlowDetail}
                 initialTab={pf.detailTab}
-                onClose={pf.handleCloseDetailDialog}
-                itemLoading={pf.itemLoading}
-                onSave={pf.handleDetailSave} />
+                onClose={pf.handleCloseDetailDialog} />
         </Box>
     )
 }
