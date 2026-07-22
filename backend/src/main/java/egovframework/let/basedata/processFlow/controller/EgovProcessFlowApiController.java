@@ -8,6 +8,7 @@ import egovframework.let.basedata.processFlow.domain.model.ProcessFlow;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowProcessSaveRequest;
 import egovframework.let.basedata.processFlow.service.EgovProcessFlowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -199,23 +200,23 @@ public class EgovProcessFlowApiController {
             @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
     })
     @PostMapping("/{processFlowId}/process")
-    public ResultVO createProcessFlowProcess(
+    public ResultVO saveProcessFlowProcesses(
             @PathVariable("processFlowId") String processFlowId,
-            @RequestBody List<ProcessFlowProcess> processList,
+            @RequestBody ProcessFlowProcessSaveRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
         // 사용자 ID 세팅
-        for (ProcessFlowProcess p : processList) {
-            p.setRegUserId(user.getUniqId());
-        }
+        List<ProcessFlowProcess> saved = processFlowService.saveProcessFlowProcesses(
+                processFlowId,
+                user.getFactoryCode(),
+                user.getUniqId(),
+                request.getProcesses());
 
         // 저장 서비스 호출
-        processFlowService.createProcessFlowProcess(processFlowId, processList);
 
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("message", "공정흐름별 공정이 저장되었습니다.");
-        resultMap.put("user", user);
+        resultMap.put("processes", saved);
 
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
     }
@@ -237,10 +238,12 @@ public class EgovProcessFlowApiController {
     })
     @GetMapping("/{processFlowId}/process")
     public ResultVO selectProcessByFlowId(
-            @PathVariable("processFlowId") String processFlowId
+            @PathVariable("processFlowId") String processFlowId,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        List<ProcessFlowProcess> processList = processFlowService.selectProcessByFlowId(processFlowId);
+        List<ProcessFlowProcess> processList =
+                processFlowService.selectProcessByFlowId(processFlowId, user.getFactoryCode());
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("resultList", processList);

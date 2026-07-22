@@ -7,6 +7,7 @@ import egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowProcess;
 import egovframework.let.basedata.processFlow.domain.model.ProcessFlowVO;
 import egovframework.let.basedata.processFlow.domain.repository.ProcessFlowDAO;
+import egovframework.let.basedata.processFlow.dto.ProcessFlowProcessSaveRequest;
 import egovframework.let.basedata.processFlow.service.EgovProcessFlowService;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -17,10 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -98,8 +102,9 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 
 
 	@Override
-	public List<ProcessFlowProcess> selectProcessByFlowId(String processFlowId) throws Exception {
-		return processFlowDAO.selectProcessByFlowId(processFlowId);
+	public List<ProcessFlowProcess> selectProcessByFlowId(
+			String processFlowId, String factoryCode) throws Exception {
+		return processFlowDAO.selectProcessByFlowId(processFlowId, factoryCode);
 	}
 
 	@Transactional
@@ -107,7 +112,11 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 	public void createProcessFlowProcess(String processFlowId, List<ProcessFlowProcess> processList) throws Exception {
 
 		// processFlowId 기준 기존 데이터 삭제 (있다면)
-		processFlowDAO.deleteProcessFlowProcess(processFlowId);
+		if (processList.isEmpty()) {
+			return;
+		}
+		processFlowDAO.deleteProcessFlowProcess(
+				processFlowId, processList.get(0).getFactoryCode());
 
 		if (processList.isEmpty()) {
 			return;
@@ -141,6 +150,66 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 			processFlowDAO.insertProcessFlowProcess(p);
 		}
 
+	}
+
+	@Transactional
+	@Override
+	public List<ProcessFlowProcess> saveProcessFlowProcesses(
+			String processFlowId,
+			String factoryCode,
+			String userId,
+			List<ProcessFlowProcessSaveRequest.Entry> entries) throws Exception {
+		validateProcessEntries(entries);
+
+		ProcessFlow flow =
+				processFlowDAO.selectProcessFlowByIdAndFactory(processFlowId, factoryCode);
+		if (flow == null) {
+			throw new BizException("존재하지 않는 공정흐름입니다.");
+		}
+
+		processFlowDAO.deleteProcessFlowProcess(processFlowId, factoryCode);
+
+		Map<String, Integer> processSeqByCode = new HashMap<>();
+		entries.sort(Comparator.comparingInt(ProcessFlowProcessSaveRequest.Entry::getSeq));
+		for (ProcessFlowProcessSaveRequest.Entry entry : entries) {
+			int processSeq = processSeqByCode.merge(entry.getFlowProcessCode(), 1, Integer::sum);
+			ProcessFlowProcess row = new ProcessFlowProcess();
+			row.setFactoryCode(factoryCode);
+			row.setProcessFlowId(processFlowId);
+			row.setProcessFlowCode(flow.getProcessFlowCode());
+			row.setFlowProcessId(egovProcessFlowProcessIdGnrService.getNextStringId());
+			row.setFlowProcessCode(entry.getFlowProcessCode());
+			row.setSeq(String.valueOf(entry.getSeq()));
+			row.setProcessSeq(String.valueOf(processSeq));
+			row.setPlanFlag(entry.getPlanFlag());
+			row.setLastFlag(entry.getLastFlag());
+			row.setRegUserId(userId);
+			processFlowDAO.insertProcessFlowProcess(row);
+		}
+		return processFlowDAO.selectProcessByFlowId(processFlowId, factoryCode);
+	}
+
+	static void validateProcessEntries(List<ProcessFlowProcessSaveRequest.Entry> entries) {
+		if (entries == null || entries.isEmpty() || entries.size() > 5) {
+			throw new BizException("공정은 1개 이상 5개 이하로 등록해야 합니다.");
+		}
+		Set<Integer> sequences = new HashSet<>();
+		int planCount = 0;
+		for (ProcessFlowProcessSaveRequest.Entry entry : entries) {
+			if (entry.getSeq() == null || entry.getSeq() <= 0 || !sequences.add(entry.getSeq())) {
+				throw new BizException("공정 순번은 중복되지 않는 양의 정수여야 합니다.");
+			}
+			if ("Y".equals(entry.getPlanFlag())) {
+				planCount++;
+			}
+			if (!Arrays.asList("Y", "N").contains(entry.getLastFlag()) ||
+					!Arrays.asList("Y", "N").contains(entry.getPlanFlag())) {
+				throw new BizException("공정 플래그 값이 올바르지 않습니다.");
+			}
+		}
+		if (planCount != 1) {
+			throw new BizException("계획 공정을 1개 선택해야 합니다.");
+		}
 	}
 
 	@Override
