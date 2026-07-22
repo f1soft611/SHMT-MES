@@ -8,7 +8,6 @@ export function useProcessFlow() {
     const list = useProcessFlowList();
     const mainDialog = useProcessFlowMainDialog();
     const mainActions = useProcessFlowMainActions(
-        list.fetchProcessFlows,
         mainDialog.closeMainDialog
     );
 
@@ -19,6 +18,7 @@ export function useProcessFlow() {
         rows: list.rows,
         rowCount: list.rowCount,
         loading: list.loading,
+        listError: list.error,
         paginationModel: list.paginationModel,
         setPaginationModel: list.setPaginationModel,
         searchParams: list.searchParams,

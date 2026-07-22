@@ -1,6 +1,6 @@
 import React from "react";
 import {
-    Box, Button, Grid, Typography,
+    Alert, Box, Button, Grid, Typography,
     FormControl, InputLabel, MenuItem,
     Paper, Select, Stack, TextField } from "@mui/material";
 import {
@@ -82,10 +82,24 @@ const ProcessFlowManagement: React.FC = () => {
 
             <Grid container spacing={2} columns={12}>
                 <Grid size={{xs: 12, md: 12}}>
+                    {pf.listError && (
+                        <Alert
+                            severity="error"
+                            action={
+                                <Button color="inherit" size="small" onClick={() => pf.fetchProcessFlows()}>
+                                    다시 시도
+                                </Button>
+                            }
+                            sx={{ mb: 2 }}
+                        >
+                            {pf.listError instanceof Error ? pf.listError.message : '목록 조회에 실패했습니다.'}
+                        </Alert>
+                    )}
                     {/* 공정 흐름 목록 */}
                     <ProcessFlowList
                         rows={pf.rows}
                         rowCount={pf.rowCount}
+                        loading={pf.loading}
                         paginationModel={pf.paginationModel}
                         setPaginationModel={pf.setPaginationModel}
                         onEdit={pf.handleOpenEditDialog}
