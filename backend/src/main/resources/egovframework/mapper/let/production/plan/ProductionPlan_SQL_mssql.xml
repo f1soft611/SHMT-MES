@@ -104,6 +104,7 @@
 		    PLAN_GROUP_ID,
 		    GROUP_SEQ,
 		    CREATE_DAYS,
+			BIGO,
 			ORDER_FLAG,
 			OPMAN_CODE,
 			OPTIME
@@ -134,6 +135,7 @@
 			#{planGroupId},
 			#{groupSeq},
 			#{createDays},
+			#{remark},
 			'PLANNED',
 			#{opmanCode},
 			GETDATE()
