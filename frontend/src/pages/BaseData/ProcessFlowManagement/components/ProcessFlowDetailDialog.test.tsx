@@ -198,6 +198,7 @@ describe('ProcessFlowDetailDialog', () => {
       await waitFor(() => expect(activeSave).toHaveBeenCalledTimes(1));
       expect(onClose).not.toHaveBeenCalled();
       expect(screen.getByRole('dialog')).toBeVisible();
+      expect(mockShowToast).not.toHaveBeenCalled();
     },
   );
 
@@ -221,8 +222,8 @@ describe('ProcessFlowDetailDialog', () => {
   });
 
   it.each([
-    [0, true, false, '공정 데이터가 완료되었습니다.'],
-    [1, false, true, '제품 데이터가 완료되었습니다.'],
+    [0, true, false, '공정 저장이 완료되었습니다.'],
+    [1, false, true, '제품 저장이 완료되었습니다.'],
   ] as const)(
     'defers a clean save success toast until the detail dialog has exited',
     async (tabIndex, processDirty, itemDirty, message) => {
@@ -233,7 +234,7 @@ describe('ProcessFlowDetailDialog', () => {
         hasDirtyChanges: true,
       });
 
-      fireEvent.click(screen.getAllByRole('button')[0]);
+      fireEvent.click(screen.getByRole('button', { name: '저장' }));
 
       await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
       expect(mockShowToast).not.toHaveBeenCalled();
@@ -246,8 +247,8 @@ describe('ProcessFlowDetailDialog', () => {
   );
 
   it.each([
-    [0, '공정 데이터가 완료되었습니다.'],
-    [1, '제품 데이터가 완료되었습니다.'],
+    [0, '공정 저장이 완료되었습니다.'],
+    [1, '제품 저장이 완료되었습니다.'],
   ] as const)(
     'shows a dirty save success toast without closing the detail dialog',
     async (tabIndex, message) => {
@@ -258,7 +259,7 @@ describe('ProcessFlowDetailDialog', () => {
         hasDirtyChanges: true,
       });
 
-      fireEvent.click(screen.getAllByRole('button')[0]);
+      fireEvent.click(screen.getByRole('button', { name: '저장' }));
 
       await waitFor(() =>
         expect(mockShowToast).toHaveBeenCalledWith({ message, severity: 'success' }),
@@ -270,7 +271,7 @@ describe('ProcessFlowDetailDialog', () => {
   it('does not show a success toast when manually closing a clean dialog', () => {
     const { onClose } = renderDialog();
 
-    fireEvent.click(screen.getAllByRole('button')[1]);
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(mockOnDetailDialogExited).toEqual(expect.any(Function));

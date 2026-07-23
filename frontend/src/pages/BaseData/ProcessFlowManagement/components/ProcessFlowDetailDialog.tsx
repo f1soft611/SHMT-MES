@@ -79,8 +79,8 @@ function DetailDialogActions({
   const otherDirty = session.tabIndex === 0 ? item.dirty : process.dirty;
   const successMessage =
     session.tabIndex === 0
-      ? '공정 데이터가 완료되었습니다.'
-      : '제품 데이터가 완료되었습니다.';
+      ? '공정 저장이 완료되었습니다.'
+      : '제품 저장이 완료되었습니다.';
 
   const handleSave = async () => {
     const saved = await active.save();
