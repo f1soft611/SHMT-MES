@@ -37,6 +37,9 @@ import { WorkplaceWorker } from '../../../types/workplace';
 import { ProductionPlanData } from '../../../types/productionPlan';
 import { CommonDetailCode } from '../../../types/commonCode';
 import commonCodeService from '../../../services/commonCodeService';
+import FlexibleDateField, {
+  normalizeFlexibleDateInput,
+} from '../../../components/common/DateField/FlexibleDateField';
 
 /**
  * 근무구분(COM006) 코드를 한글 표시명으로 변환
@@ -200,6 +203,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   });
 
   const watchCreateDays = watch('createDays', formData.createDays || 1);
+  const watchPlanDate = watch('date', formData.date || selectedDate);
   // watchPlannedQty 제거 - 이것이 리렌더링의 원인!
 
   // formData가 변경될 때마다 폼을 리셋 (외부에서 값이 변경되었을 때 반영)
@@ -336,7 +340,18 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
-    onSave(data, productionReferences);
+    const normalizedDeliveryDate = normalizeFlexibleDateInput(
+      data.deliveryDate || '',
+      data.date || selectedDate,
+    );
+
+    onSave(
+      {
+        ...data,
+        deliveryDate: normalizedDeliveryDate || undefined,
+      },
+      productionReferences,
+    );
   };
 
   const handleDialogClose = () => {
@@ -883,55 +898,20 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   name="deliveryDate"
                   control={control}
                   render={({ field }) => {
-                    // YYYYMMDD -> YYYY-MM-DD 변환
-                    let displayValue = field.value || '';
-                    if (
-                      displayValue &&
-                      displayValue.length === 8 &&
-                      !displayValue.includes('-')
-                    ) {
-                      displayValue = `${displayValue.substring(
-                        0,
-                        4,
-                      )}-${displayValue.substring(4, 6)}-${displayValue.substring(
-                        6,
-                        8,
-                      )}`;
-                    }
-
-                    const handleDeliveryDateChange = (
-                      e: React.ChangeEvent<HTMLInputElement>,
-                    ) => {
-                      let value = e.target.value.replace(/[^\d-]/g, ''); // 숫자와 하이픈만 허용
-
-                      // YYYYMMDD 형식 (8자리 숫자) -> YYYY-MM-DD로 변환
-                      if (value.length === 8 && /^\d{8}$/.test(value)) {
-                        value = `${value.substring(0, 4)}-${value.substring(
-                          4,
-                          6,
-                        )}-${value.substring(6, 8)}`;
-                      }
-                      // YYYY-MM-DD 형식은 그대로 허용
-
-                      field.onChange(value);
-                    };
-
                     return (
-                      <TextField
-                        {...field}
+                      <FlexibleDateField
                         fullWidth
                         label="납기일"
-                        type="text"
-                        placeholder="YYYY-MM-DD 또는 YYYYMMDD"
-                        inputMode="numeric"
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        baseDate={watchPlanDate}
+                        placeholder="YYYY-MM-DD / YYYYMMDD / YYMMDD / MMDD / DD"
                         InputLabelProps={{ shrink: true }}
                         InputProps={{ readOnly: isLockedStatusPlan }}
-                        value={displayValue}
-                        onChange={handleDeliveryDateChange}
                         error={!!errors.deliveryDate}
                         helperText={
                           errors.deliveryDate?.message ||
-                          '날짜를 입력하세요 (형식: YYYY-MM-DD 또는 YYYYMMDD)'
+                          '지원: YYYY-MM-DD, YYYYMMDD, YYMMDD, MMDD, DD (DD/MMDD는 계획일 기준 자동완성)'
                         }
                       />
                     );
