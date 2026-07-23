@@ -37,6 +37,9 @@ import { WorkplaceWorker } from '../../../types/workplace';
 import { ProductionPlanData } from '../../../types/productionPlan';
 import { CommonDetailCode } from '../../../types/commonCode';
 import commonCodeService from '../../../services/commonCodeService';
+import FlexibleDateField, {
+  normalizeFlexibleDateInput,
+} from '../../../components/common/DateField/FlexibleDateField';
 
 /**
  * 근무구분(COM006) 코드를 한글 표시명으로 변환
@@ -74,121 +77,6 @@ const formatShiftLabel = (
   const matched = shiftCodes?.find((c) => c.code === code);
   if (matched) return `${matched.codeNm} (${matched.code})`;
   return getShiftDisplayName(code);
-};
-
-const toIsoDate = (value: string): string => {
-  const trimmed = value.trim();
-
-  if (/^\d{8}$/.test(trimmed)) {
-    return `${trimmed.substring(0, 4)}-${trimmed.substring(4, 6)}-${trimmed.substring(6, 8)}`;
-  }
-
-  return trimmed;
-};
-
-const buildIsoDate = (year: number, month: number, day: number): string => {
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-};
-
-const isValidIsoDate = (isoDate: string): boolean => {
-  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) {
-    return false;
-  }
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
-    return false;
-  }
-
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-};
-
-const resolvePlanDateParts = (
-  planDate?: string,
-): { year: number; month: number } | null => {
-  if (!planDate) {
-    return null;
-  }
-
-  const normalizedPlanDate = toIsoDate(planDate);
-  const match = normalizedPlanDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    year: Number(match[1]),
-    month: Number(match[2]),
-  };
-};
-
-const normalizeDeliveryDateByPlanMonth = (
-  rawDeliveryDate: string,
-  planDate?: string,
-): string => {
-  const normalizedDeliveryDate = toIsoDate(rawDeliveryDate);
-  if (!normalizedDeliveryDate) {
-    return '';
-  }
-
-  if (isValidIsoDate(normalizedDeliveryDate)) {
-    return normalizedDeliveryDate;
-  }
-
-  const compact = normalizedDeliveryDate.replace(/-/g, '');
-  const planParts = resolvePlanDateParts(planDate);
-
-  if (/^\d{6}$/.test(compact)) {
-    const year = 2000 + Number(compact.substring(0, 2));
-    const month = Number(compact.substring(2, 4));
-    const day = Number(compact.substring(4, 6));
-    const candidate = buildIsoDate(year, month, day);
-
-    if (isValidIsoDate(candidate)) {
-      return candidate;
-    }
-  }
-
-  if (planParts && /^\d{4}$/.test(compact)) {
-    const month = Number(compact.substring(0, 2));
-    const day = Number(compact.substring(2, 4));
-    const candidate = buildIsoDate(planParts.year, month, day);
-
-    if (isValidIsoDate(candidate)) {
-      return candidate;
-    }
-  }
-
-  if (planParts && /^\d{1,2}$/.test(compact)) {
-    const day = Number(compact);
-    const candidate = buildIsoDate(planParts.year, planParts.month, day);
-
-    if (isValidIsoDate(candidate)) {
-      return candidate;
-    }
-  }
-
-  const monthDayMatch = normalizedDeliveryDate.match(/^(\d{1,2})-(\d{1,2})$/);
-  if (planParts && monthDayMatch) {
-    const month = Number(monthDayMatch[1]);
-    const day = Number(monthDayMatch[2]);
-    const candidate = buildIsoDate(planParts.year, month, day);
-
-    if (isValidIsoDate(candidate)) {
-      return candidate;
-    }
-  }
-
-  return normalizedDeliveryDate;
 };
 
 // 생산계획 등록 유효성 검사 스키마 (UI에서 사용하는 필드 중심 + 선택적 백엔드 필드 포함)
@@ -452,7 +340,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
   };
 
   const handleFormSubmit = (data: ProductionPlanData) => {
-    const normalizedDeliveryDate = normalizeDeliveryDateByPlanMonth(
+    const normalizedDeliveryDate = normalizeFlexibleDateInput(
       data.deliveryDate || '',
       data.date || selectedDate,
     );
@@ -1010,59 +898,16 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                   name="deliveryDate"
                   control={control}
                   render={({ field }) => {
-                    // YYYYMMDD -> YYYY-MM-DD 변환
-                    let displayValue = field.value || '';
-                    if (
-                      displayValue &&
-                      displayValue.length === 8 &&
-                      !displayValue.includes('-')
-                    ) {
-                      displayValue = `${displayValue.substring(
-                        0,
-                        4,
-                      )}-${displayValue.substring(4, 6)}-${displayValue.substring(
-                        6,
-                        8,
-                      )}`;
-                    }
-
-                    const handleDeliveryDateChange = (
-                      e: React.ChangeEvent<HTMLInputElement>,
-                    ) => {
-                      let value = e.target.value.replace(/[^\d-]/g, ''); // 숫자와 하이픈만 허용
-
-                      // YYYYMMDD 형식 (8자리 숫자) -> YYYY-MM-DD로 변환
-                      value = toIsoDate(value);
-
-                      // DD 입력은 onBlur 시점에 계획일의 년월로 자동완성
-
-                      field.onChange(value);
-                    };
-
-                    const handleDeliveryDateBlur = () => {
-                      const normalizedValue = normalizeDeliveryDateByPlanMonth(
-                        field.value || '',
-                        watchPlanDate,
-                      );
-
-                      if (normalizedValue !== (field.value || '')) {
-                        field.onChange(normalizedValue);
-                      }
-                    };
-
                     return (
-                      <TextField
-                        {...field}
+                      <FlexibleDateField
                         fullWidth
                         label="납기일"
-                        type="text"
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        baseDate={watchPlanDate}
                         placeholder="YYYY-MM-DD / YYYYMMDD / YYMMDD / MMDD / DD"
-                        inputMode="numeric"
                         InputLabelProps={{ shrink: true }}
                         InputProps={{ readOnly: isLockedStatusPlan }}
-                        value={displayValue}
-                        onChange={handleDeliveryDateChange}
-                        onBlur={handleDeliveryDateBlur}
                         error={!!errors.deliveryDate}
                         helperText={
                           errors.deliveryDate?.message ||
