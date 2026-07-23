@@ -64,17 +64,31 @@ function DetailDialogContent() {
   );
 }
 
-function DetailDialogActions({ requestClose }: { requestClose: () => void }) {
+function DetailDialogActions({
+  requestClose,
+  closeAfterSave,
+}: {
+  requestClose: () => void;
+  closeAfterSave: () => void;
+}) {
   const session = useDetailSessionContext();
   const process = useProcessDraftContext();
   const item = useItemDraftContext();
   const active = session.tabIndex === 0 ? process : item;
+  const otherDirty = session.tabIndex === 0 ? item.dirty : process.dirty;
+
+  const handleSave = async () => {
+    const saved = await active.save();
+    if (saved && !otherDirty) {
+      closeAfterSave();
+    }
+  };
 
   return (
     <DialogActions>
       <Button
         variant="contained"
-        onClick={active.save}
+        onClick={handleSave}
         disabled={!active.dirty || active.isSaving}
       >
         {active.isSaving ? '저장중...' : '저장'}
@@ -134,7 +148,10 @@ function DetailDialogShell({
         <DetailDialogContent />
       </DialogContent>
 
-      <DetailDialogActions requestClose={requestClose} />
+      <DetailDialogActions
+        requestClose={requestClose}
+        closeAfterSave={onClose}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

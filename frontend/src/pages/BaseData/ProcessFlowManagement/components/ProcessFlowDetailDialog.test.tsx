@@ -56,7 +56,15 @@ jest.mock('../detail/ItemDraftContext', () => ({
 jest.mock('./ProcessFlowProcessTab', () => () => <div>process-tab</div>);
 jest.mock('./ProcessFlowItemTab', () => () => <div>item-tab</div>);
 
-const renderDialog = (overrides: Partial<typeof mockSession> = {}) => {
+type SaveResults = {
+  process?: boolean;
+  item?: boolean;
+};
+
+const renderDialog = (
+  overrides: Partial<typeof mockSession> = {},
+  saveResults: SaveResults = {},
+) => {
   Object.assign(mockSession, {
     tabIndex: 0,
     processDirty: false,
@@ -68,12 +76,12 @@ const renderDialog = (overrides: Partial<typeof mockSession> = {}) => {
   Object.assign(mockProcess, {
     dirty: mockSession.processDirty,
     isSaving: mockSession.isSaving,
-    save: jest.fn().mockResolvedValue(true),
+    save: jest.fn().mockResolvedValue(saveResults.process ?? true),
   });
   Object.assign(mockItem, {
     dirty: mockSession.itemDirty,
     isSaving: mockSession.isSaving,
-    save: jest.fn().mockResolvedValue(true),
+    save: jest.fn().mockResolvedValue(saveResults.item ?? true),
   });
   const onClose = jest.fn();
 
@@ -95,18 +103,73 @@ const renderDialog = (overrides: Partial<typeof mockSession> = {}) => {
 };
 
 describe('ProcessFlowDetailDialog', () => {
-  it('keeps dialog open after current tab save succeeds', async () => {
-    const { onClose } = renderDialog({
-      processDirty: true,
-      hasDirtyChanges: true,
-    });
+  it.each([
+    ['공정 관리', 0, true, false],
+    ['제품 관리', 1, false, true],
+  ] as const)(
+    '%s 저장 성공 후 다른 탭이 clean이면 닫는다',
+    async (_tabName, tabIndex, processDirty, itemDirty) => {
+      const { onClose } = renderDialog({
+        tabIndex,
+        processDirty,
+        itemDirty,
+        hasDirtyChanges: true,
+      });
+      const activeSave = tabIndex === 0 ? mockProcess.save : mockItem.save;
 
-    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+      fireEvent.click(screen.getByRole('button', { name: '저장' }));
 
-    await waitFor(() => expect(mockProcess.save).toHaveBeenCalled());
-    expect(screen.getByRole('dialog')).toBeVisible();
-    expect(onClose).not.toHaveBeenCalled();
-  });
+      await waitFor(() => expect(activeSave).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    },
+  );
+
+  it.each([
+    ['공정 관리', 0],
+    ['제품 관리', 1],
+  ] as const)(
+    '%s 저장 성공 후 다른 탭이 dirty이면 유지한다',
+    async (_tabName, tabIndex) => {
+      const { onClose } = renderDialog({
+        tabIndex,
+        processDirty: true,
+        itemDirty: true,
+        hasDirtyChanges: true,
+      });
+      const activeSave = tabIndex === 0 ? mockProcess.save : mockItem.save;
+
+      fireEvent.click(screen.getByRole('button', { name: '저장' }));
+
+      await waitFor(() => expect(activeSave).toHaveBeenCalledTimes(1));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByRole('dialog')).toBeVisible();
+    },
+  );
+
+  it.each([
+    ['공정 관리', 0, true, false, { process: false }],
+    ['제품 관리', 1, false, true, { item: false }],
+  ] as const)(
+    '%s 저장 실패 시 다이얼로그를 유지한다',
+    async (_tabName, tabIndex, processDirty, itemDirty, saveResults) => {
+      const { onClose } = renderDialog(
+        {
+          tabIndex,
+          processDirty,
+          itemDirty,
+          hasDirtyChanges: true,
+        },
+        saveResults,
+      );
+      const activeSave = tabIndex === 0 ? mockProcess.save : mockItem.save;
+
+      fireEvent.click(screen.getByRole('button', { name: '저장' }));
+
+      await waitFor(() => expect(activeSave).toHaveBeenCalledTimes(1));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByRole('dialog')).toBeVisible();
+    },
+  );
 
   it('shows confirmation when closing with dirty changes', () => {
     renderDialog({
