@@ -45,7 +45,7 @@
     </select>
 
     <select id="selectByProcessFlowId"
-            parameterType="string"
+            parameterType="map"
             resultMap="processFlowProcessResult">
         SELECT
             A.FACTORY_CODE,
@@ -68,15 +68,17 @@
             ON A.FACTORY_CODE = B.FACTORY_CODE
             AND A.WORK_CODE = B.WORK_CODE
             AND B.USE_YN = 'Y'
-        WHERE WORK_ORDER_ID = #{value}
+        WHERE A.WORK_ORDER_ID = #{processFlowId}
+          AND A.FACTORY_CODE = #{factoryCode}
         ORDER BY SEQ
     </select>
 
 
     <!-- 공정흐름 공정 전체 삭제 -->
-    <delete id="deleteAllByProcessFlowId" parameterType="string">
+    <delete id="deleteAllByProcessFlowId" parameterType="map">
         DELETE FROM TPR110D
-        WHERE WORK_ORDER_ID = #{value}
+        WHERE WORK_ORDER_ID = #{processFlowId}
+          AND FACTORY_CODE = #{factoryCode}
     </delete>
 
     <insert id="insertProcessFlowProcess"

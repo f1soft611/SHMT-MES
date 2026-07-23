@@ -13,6 +13,7 @@ import { ProcessFlow } from "../../../../types/processFlow";
 interface Props {
     rows: ProcessFlow[];
     rowCount: number;
+    loading?: boolean;
     paginationModel: GridPaginationModel;
     setPaginationModel: (model: GridPaginationModel) => void;
     onSelect?: (row: ProcessFlow) => void;
@@ -24,6 +25,7 @@ interface Props {
 export default function ProcessFlowList({
                                             rows,
                                             rowCount,
+                                            loading = false,
                                             paginationModel,
                                             setPaginationModel,
                                             onSelect,
@@ -111,6 +113,7 @@ export default function ProcessFlowList({
             <DataGrid
                 rows={rows}
                 columns={columns}
+                loading={loading}
                 getRowId={(row) => row.processFlowId || ''}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}

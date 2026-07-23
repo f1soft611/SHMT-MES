@@ -1,157 +1,241 @@
-import React, {useEffect} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    Box,  Button,
-    Dialog, DialogActions, DialogContent, DialogTitle,
-    Tab, Tabs,
-    Backdrop, CircularProgress
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Tab,
+  Tabs,
 } from '@mui/material';
 import {
-    Extension as ExtensionIcon,
-    Build as BuildIcon
+  Build as BuildIcon,
+  Extension as ExtensionIcon,
 } from '@mui/icons-material';
-import ProcessFlowItemTab from "./ProcessFlowItemTab";
-import ProcessFlowProcessTab from "./ProcessFlowProcessTab";
-import { ProcessFlow, DetailSavePayload, DetailSaveResult } from '../../../../types/processFlow';
-import {
-    ProcessFlowDetailProvider,
-    useProcessFlowDetailContext
-} from "../hooks/detail/useProcessFlowDetailContext";
-import {useToast} from "../../../../components/common/Feedback/ToastProvider";
-
+import type { ProcessFlow } from '../../../../types/processFlow';
+import ConfirmDialog from '../../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../../components/common/Feedback/ToastProvider';
+import ProcessFlowItemTab from './ProcessFlowItemTab';
+import ProcessFlowProcessTab from './ProcessFlowProcessTab';
+import { ProcessFlowDetailProvider } from '../detail/ProcessFlowDetailProvider';
+import { useDetailSessionContext } from '../detail/DetailSessionContext';
+import { useItemDraftContext } from '../detail/ItemDraftContext';
+import { useProcessDraftContext } from '../detail/ProcessDraftContext';
 
 interface Props {
-    open: boolean;
-    onClose: () => void;
-    selectedFlow: ProcessFlow | null;
-    onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
-    initialTab: number;
-    itemLoading: boolean;
+  open: boolean;
+  onClose: () => void;
+  selectedFlow: ProcessFlow | null;
+  initialTab: number;
 }
 
-function DetailDialogContent({
-                                selectedFlow,
-                                tabIndex,
-                                setTabIndex
-                            }: {
-    selectedFlow: ProcessFlow | null;
-    tabIndex: number;
-    setTabIndex: (v: number) => void;
-}) {
-    return (
-        <>
-            <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)}>
-                <Tab label="공정 관리" icon={<BuildIcon />} iconPosition="start" />
-                <Tab label="제품 관리" icon={<ExtensionIcon />} iconPosition="start" />
-            </Tabs>
+function TabLabel({ text, dirty }: { text: string; dirty: boolean }) {
+  return <span>{dirty ? `${text} *` : text}</span>;
+}
 
-            <Box sx={{ mt: 2, minHeight: 0, }}>
-                {tabIndex === 0 && <ProcessFlowProcessTab />}
-                {tabIndex === 1 && <ProcessFlowItemTab />}
-            </Box>
-        </>
-    );
+function DetailDialogContent() {
+  const session = useDetailSessionContext();
+
+  return (
+    <>
+      <Tabs
+        value={session.tabIndex}
+        onChange={(_, value) => session.setTabIndex(value)}
+      >
+        <Tab
+          label={<TabLabel text="공정 관리" dirty={session.processDirty} />}
+          icon={<BuildIcon />}
+          iconPosition="start"
+        />
+        <Tab
+          label={<TabLabel text="제품 관리" dirty={session.itemDirty} />}
+          icon={<ExtensionIcon />}
+          iconPosition="start"
+        />
+      </Tabs>
+
+      <Box sx={{ mt: 2, minHeight: 0 }}>
+        {session.tabIndex === 0 && <ProcessFlowProcessTab />}
+        {session.tabIndex === 1 && <ProcessFlowItemTab />}
+      </Box>
+    </>
+  );
 }
 
 function DetailDialogActions({
-                                onSave,
-                                onClose,
-                                tabIndex,
-                                 itemLoading
-                             }: {
-    onSave: (data: DetailSavePayload) => Promise<DetailSaveResult>;
-    onClose: () => void;
-    tabIndex: number;
-    itemLoading: boolean;
+  requestClose,
+  onSaveSuccess,
+}: {
+  requestClose: () => void;
+  onSaveSuccess: (message: string, keepOpen: boolean) => void;
 }) {
-    const { getSavePayload  } = useProcessFlowDetailContext();
-    const { showToast } = useToast();
+  const session = useDetailSessionContext();
+  const process = useProcessDraftContext();
+  const item = useItemDraftContext();
+  const active = session.tabIndex === 0 ? process : item;
+  const otherDirty = session.tabIndex === 0 ? item.dirty : process.dirty;
+  const successMessage =
+    session.tabIndex === 0
+      ? '공정 저장이 완료되었습니다.'
+      : '제품 저장이 완료되었습니다.';
 
-    const handleSave = async () => {
-        const result = await onSave(getSavePayload(tabIndex));
+  const handleSave = async () => {
+    const saved = await active.save();
+    if (!saved) return;
+    onSaveSuccess(successMessage, otherDirty);
+  };
 
-        if (!result.ok) {
-            showToast({
-                message: result.reason ?? "저장 실패",
-                severity: "error",
-            });
-            return;
-        }
+  return (
+    <DialogActions>
+      <Button
+        variant="contained"
+        onClick={handleSave}
+        disabled={!active.dirty || active.isSaving}
+      >
+        {active.isSaving ? '저장중...' : '저장'}
+      </Button>
+      <Button onClick={requestClose} disabled={session.isSaving}>
+        닫기
+      </Button>
+    </DialogActions>
+  );
+}
 
-        showToast({
-            message: "등록되었습니다.",
-            severity: "success",
-        });
+function DetailDialogShell({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const session = useDetailSessionContext();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { showToast } = useToast();
+  const pendingSuccessToastRef = useRef<string | null>(null);
 
-        onClose();
-    };
+  const requestClose = () => {
+    if (session.isSaving) return;
+    if (session.hasDirtyChanges) {
+      setConfirmOpen(true);
+      return;
+    }
+    onClose();
+  };
 
-    return (
-        <DialogActions>
-            <Button
-                variant="contained"
-                onClick={handleSave}
-                disabled={itemLoading}>
-                {itemLoading ? "저장중..." : "저장"}
-            </Button>
-            <Button onClick={onClose}>닫기</Button>
-        </DialogActions>
-    );
+  const discardAndClose = () => {
+    session.discardAll();
+    setConfirmOpen(false);
+    onClose();
+  };
+
+  const handleSaveSuccess = (message: string, keepOpen: boolean) => {
+    if (keepOpen) {
+      showToast({ message, severity: 'success' });
+      return;
+    }
+
+    pendingSuccessToastRef.current = message;
+    onClose();
+  };
+
+  const handleDialogExited = () => {
+    const message = pendingSuccessToastRef.current;
+    if (!message) return;
+
+    pendingSuccessToastRef.current = null;
+    showToast({ message, severity: 'success' });
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={requestClose}
+      maxWidth="xl"
+      fullWidth
+      slotProps={{
+        transition: {
+          onExited: handleDialogExited,
+        },
+      }}
+    >
+      <Backdrop
+        open={session.isSaving}
+        sx={{ position: 'absolute', zIndex: 2000, color: '#fff' }}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      <DialogTitle>공정흐름 상세 관리</DialogTitle>
+
+      <DialogContent
+        sx={{
+          height: '650px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+        dividers
+      >
+        <DetailDialogContent />
+      </DialogContent>
+
+      <DetailDialogActions
+        requestClose={requestClose}
+        onSaveSuccess={handleSaveSuccess}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="닫기 확인"
+        message="저장하지 않은 변경이 있습니다. 변경을 버리고 닫으시겠습니까?"
+        confirmText="닫기"
+        cancelText="취소"
+        onConfirm={discardAndClose}
+        onClose={() => setConfirmOpen(false)}
+      />
+    </Dialog>
+  );
 }
 
 export default function ProcessFlowDetailDialog({
-                                                    open,
-                                                    onClose,
-                                                    selectedFlow,
-                                                    onSave,
-                                                    initialTab,itemLoading
+  open,
+  onClose,
+  selectedFlow,
+  initialTab,
 }: Props) {
-    const [tabIndex, setTabIndex] = React.useState(0);
+  const [providerKey, setProviderKey] = useState('');
 
-    useEffect(() => {
-        if (open) {
-            setTabIndex(initialTab);
-        }
-    },[open, initialTab]);
+  useEffect(() => {
+    if (open) {
+      setProviderKey(selectedFlow?.processFlowId || '');
+    }
+  }, [open, selectedFlow?.processFlowId]);
 
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
-            <ProcessFlowDetailProvider processFlow={selectedFlow}>
+  if (!selectedFlow) {
+    return null;
+  }
 
-                <Backdrop
-                    open={itemLoading}
-                    sx={{
-                        position: "absolute",
-                        zIndex: 2000,
-                        color: "#fff"
-                    }}
-                >
-                    <CircularProgress color="inherit" />
-                </Backdrop>
+  return (
+    <ProcessFlowDetailProvider
+      key={providerKey}
+      open={open}
+      processFlow={selectedFlow}
+    >
+      <InitialTabSync initialTab={initialTab} />
+      <DetailDialogShell open={open} onClose={onClose} />
+    </ProcessFlowDetailProvider>
+  );
+}
 
-                <DialogTitle>공정흐름 상세 관리</DialogTitle>
+function InitialTabSync({ initialTab }: { initialTab: number }) {
+  const { setTabIndex } = useDetailSessionContext();
 
-                <DialogContent
-                    sx={{
-                        height: '650px',          // 원하는 높이
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden',
-                    }}
-                    dividers>
-                    <DetailDialogContent
-                        selectedFlow={selectedFlow}
-                        tabIndex={tabIndex}
-                        setTabIndex={setTabIndex}
-                    />
-                </DialogContent>
+  useEffect(() => {
+    setTabIndex(initialTab === 1 ? 1 : 0);
+  }, [initialTab, setTabIndex]);
 
-                <DetailDialogActions
-                    tabIndex={tabIndex}
-                    onSave={onSave}
-                    onClose={onClose}
-                    itemLoading={itemLoading}
-                />
-            </ProcessFlowDetailProvider>
-        </Dialog>
-    );
+  return null;
 }
