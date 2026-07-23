@@ -1,6 +1,31 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ProcessFlowDetailDialog from './ProcessFlowDetailDialog';
 
+const mockShowToast = jest.fn();
+let mockOnDetailDialogExited: (() => void) | undefined;
+
+jest.mock('../../../../components/common/Feedback/ToastProvider', () => ({
+  useToast: () => ({ showToast: mockShowToast }),
+}));
+
+jest.mock('@mui/material', () => {
+  const actual = jest.requireActual('@mui/material');
+  const ActualDialog = actual.Dialog;
+
+  return {
+    ...actual,
+    Dialog: ({
+      slotProps,
+      ...props
+    }: React.ComponentProps<typeof ActualDialog>) => {
+      if (props.maxWidth === 'xl') {
+        mockOnDetailDialogExited = slotProps?.transition?.onExited;
+      }
+      return <ActualDialog {...props} slotProps={slotProps} />;
+    },
+  };
+});
+
 const mockSession = {
   flow: { processFlowId: 'PF-1', processFlowCode: 'FLOW-1', processFlowName: '흐름' },
   tabIndex: 0 as 0 | 1,
@@ -103,6 +128,11 @@ const renderDialog = (
 };
 
 describe('ProcessFlowDetailDialog', () => {
+  beforeEach(() => {
+    mockShowToast.mockClear();
+    mockOnDetailDialogExited = undefined;
+  });
+
   it.each([
     ['공정 관리', 0, true, false],
     ['제품 관리', 1, false, true],
@@ -188,5 +218,65 @@ describe('ProcessFlowDetailDialog', () => {
     renderDialog({ isSaving: true });
 
     expect(screen.getByRole('button', { name: '닫기' })).toBeDisabled();
+  });
+
+  it.each([
+    [0, true, false, '공정 데이터가 완료되었습니다.'],
+    [1, false, true, '제품 데이터가 완료되었습니다.'],
+  ] as const)(
+    'defers a clean save success toast until the detail dialog has exited',
+    async (tabIndex, processDirty, itemDirty, message) => {
+      const { onClose } = renderDialog({
+        tabIndex,
+        processDirty,
+        itemDirty,
+        hasDirtyChanges: true,
+      });
+
+      fireEvent.click(screen.getAllByRole('button')[0]);
+
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+      expect(mockShowToast).not.toHaveBeenCalled();
+      expect(mockOnDetailDialogExited).toEqual(expect.any(Function));
+
+      mockOnDetailDialogExited?.();
+
+      expect(mockShowToast).toHaveBeenCalledWith({ message, severity: 'success' });
+    },
+  );
+
+  it.each([
+    [0, '공정 데이터가 완료되었습니다.'],
+    [1, '제품 데이터가 완료되었습니다.'],
+  ] as const)(
+    'shows a dirty save success toast without closing the detail dialog',
+    async (tabIndex, message) => {
+      const { onClose } = renderDialog({
+        tabIndex,
+        processDirty: true,
+        itemDirty: true,
+        hasDirtyChanges: true,
+      });
+
+      fireEvent.click(screen.getAllByRole('button')[0]);
+
+      await waitFor(() =>
+        expect(mockShowToast).toHaveBeenCalledWith({ message, severity: 'success' }),
+      );
+      expect(onClose).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not show a success toast when manually closing a clean dialog', () => {
+    const { onClose } = renderDialog();
+
+    fireEvent.click(screen.getAllByRole('button')[1]);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(mockOnDetailDialogExited).toEqual(expect.any(Function));
+
+    mockOnDetailDialogExited?.();
+
+    expect(mockShowToast).not.toHaveBeenCalled();
   });
 });

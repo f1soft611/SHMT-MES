@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Backdrop,
   Box,
@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import type { ProcessFlow } from '../../../../types/processFlow';
 import ConfirmDialog from '../../../../components/common/Feedback/ConfirmDialog';
+import { useToast } from '../../../../components/common/Feedback/ToastProvider';
 import ProcessFlowItemTab from './ProcessFlowItemTab';
 import ProcessFlowProcessTab from './ProcessFlowProcessTab';
 import { ProcessFlowDetailProvider } from '../detail/ProcessFlowDetailProvider';
@@ -66,22 +67,25 @@ function DetailDialogContent() {
 
 function DetailDialogActions({
   requestClose,
-  closeAfterSave,
+  onSaveSuccess,
 }: {
   requestClose: () => void;
-  closeAfterSave: () => void;
+  onSaveSuccess: (message: string, keepOpen: boolean) => void;
 }) {
   const session = useDetailSessionContext();
   const process = useProcessDraftContext();
   const item = useItemDraftContext();
   const active = session.tabIndex === 0 ? process : item;
   const otherDirty = session.tabIndex === 0 ? item.dirty : process.dirty;
+  const successMessage =
+    session.tabIndex === 0
+      ? '공정 데이터가 완료되었습니다.'
+      : '제품 데이터가 완료되었습니다.';
 
   const handleSave = async () => {
     const saved = await active.save();
-    if (saved && !otherDirty) {
-      closeAfterSave();
-    }
+    if (!saved) return;
+    onSaveSuccess(successMessage, otherDirty);
   };
 
   return (
@@ -109,6 +113,8 @@ function DetailDialogShell({
 }) {
   const session = useDetailSessionContext();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { showToast } = useToast();
+  const pendingSuccessToastRef = useRef<string | null>(null);
 
   const requestClose = () => {
     if (session.isSaving) return;
@@ -125,8 +131,36 @@ function DetailDialogShell({
     onClose();
   };
 
+  const handleSaveSuccess = (message: string, keepOpen: boolean) => {
+    if (keepOpen) {
+      showToast({ message, severity: 'success' });
+      return;
+    }
+
+    pendingSuccessToastRef.current = message;
+    onClose();
+  };
+
+  const handleDialogExited = () => {
+    const message = pendingSuccessToastRef.current;
+    if (!message) return;
+
+    pendingSuccessToastRef.current = null;
+    showToast({ message, severity: 'success' });
+  };
+
   return (
-    <Dialog open={open} onClose={requestClose} maxWidth="xl" fullWidth>
+    <Dialog
+      open={open}
+      onClose={requestClose}
+      maxWidth="xl"
+      fullWidth
+      slotProps={{
+        transition: {
+          onExited: handleDialogExited,
+        },
+      }}
+    >
       <Backdrop
         open={session.isSaving}
         sx={{ position: 'absolute', zIndex: 2000, color: '#fff' }}
@@ -150,7 +184,7 @@ function DetailDialogShell({
 
       <DetailDialogActions
         requestClose={requestClose}
-        closeAfterSave={onClose}
+        onSaveSuccess={handleSaveSuccess}
       />
 
       <ConfirmDialog
