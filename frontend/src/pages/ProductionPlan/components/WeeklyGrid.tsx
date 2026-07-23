@@ -614,6 +614,13 @@ const EquipmentRow = memo<EquipmentRowProps>(
           const selectionCellKey = `${equipmentCode}::${dateStr}`;
           const dayPlans = getPlansForDateAndEquipment(dateStr, equipmentCode);
           const hasPlans = dayPlans.length > 0;
+          const dayTotalQty = dayPlans.reduce(
+            (sum, plan) =>
+              shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan))
+                ? sum
+                : sum + (plan.plannedQty ?? 0),
+            0,
+          );
           const isActiveSelectionCell =
             isSelectionMode && selectionScopeKey === selectionCellKey;
           const selectedPlanNosInCell = dayPlans
@@ -638,59 +645,82 @@ const EquipmentRow = memo<EquipmentRowProps>(
                   }}
                 >
                   {hasPlans ? (
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      sx={{ mb: compactMode ? 0.75 : 1 }}
-                    >
-                      <Button
-                        fullWidth
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() =>
-                          handleOpenCreateDialog(dateStr, equipment.equipCd)
-                        }
-                        variant="contained"
+                    <>
+                      <Stack
+                        direction="row"
+                        spacing={0.75}
+                        sx={{ mb: compactMode ? 0.75 : 1 }}
                       >
-                        계획 추가
-                      </Button>
-                      {!isActiveSelectionCell && (
                         <Button
+                          fullWidth
                           size="small"
-                          variant="outlined"
-                          startIcon={<CheckBoxOutlinedIcon />}
+                          startIcon={<AddIcon />}
                           onClick={() =>
-                            onActivateSelectionScope(selectionCellKey)
+                            handleOpenCreateDialog(dateStr, equipment.equipCd)
                           }
-                          sx={selectionActionButtonSx}
+                          variant="contained"
                         >
-                          선택
+                          계획 추가
                         </Button>
-                      )}
-                      {isActiveSelectionCell && (
-                        <Button
+                        {!isActiveSelectionCell && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<CheckBoxOutlinedIcon />}
+                            onClick={() =>
+                              onActivateSelectionScope(selectionCellKey)
+                            }
+                            sx={selectionActionButtonSx}
+                          >
+                            선택
+                          </Button>
+                        )}
+                        {isActiveSelectionCell && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => onToggleSelectionMode(false)}
+                            sx={selectionActionButtonSx}
+                          >
+                            선택 종료
+                          </Button>
+                        )}
+                        {hasSelectedPlansInCell && (
+                          <Button
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            onClick={() =>
+                              onOpenBatchDelete(selectedPlanNosInCell)
+                            }
+                            sx={selectionActionButtonSx}
+                          >
+                            선택 삭제
+                          </Button>
+                        )}
+                      </Stack>
+                      <Box sx={{ mb: compactMode ? 0.75 : 1, display: 'flex' }}>
+                        <Chip
+                          label={`설비+일별 합계 ${dayPlans.length}건 / ${dayTotalQty.toLocaleString()}개`}
                           size="small"
                           variant="outlined"
-                          onClick={() => onToggleSelectionMode(false)}
-                          sx={selectionActionButtonSx}
-                        >
-                          선택 종료
-                        </Button>
-                      )}
-                      {hasSelectedPlansInCell && (
-                        <Button
-                          size="small"
-                          color="error"
-                          variant="outlined"
-                          onClick={() =>
-                            onOpenBatchDelete(selectedPlanNosInCell)
-                          }
-                          sx={selectionActionButtonSx}
-                        >
-                          선택 삭제
-                        </Button>
-                      )}
-                    </Stack>
+                          sx={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            borderRadius: '6px',
+                            bgcolor: 'grey.100',
+                            borderColor: 'grey.400',
+                            color: 'text.primary',
+                            '& .MuiChip-label': {
+                              width: '100%',
+                              textAlign: 'center',
+                              fontWeight: 700,
+                            },
+                          }}
+                        />
+                      </Box>
+                    </>
                   ) : (
                     <Tooltip title="계획 추가">
                       <IconButton
@@ -773,9 +803,22 @@ const EquipmentRow = memo<EquipmentRowProps>(
               </Collapse>
               {!isExpanded && dayPlans.length > 0 && (
                 <Chip
-                  label={`${dayPlans.length}건`}
+                  label={`${dayPlans.length}건 / ${dayTotalQty.toLocaleString()}개`}
                   size="small"
-                  color="primary"
+                  sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    borderRadius: '6px',
+                    bgcolor: 'grey.100',
+                    borderColor: 'grey.400',
+                    color: 'text.primary',
+                    '& .MuiChip-label': {
+                      width: '100%',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                    },
+                  }}
                 />
               )}
             </TableCell>

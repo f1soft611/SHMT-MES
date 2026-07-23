@@ -53,6 +53,9 @@ import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import { getServerDate } from '../../../utils/dateUtils';
 import { decodeHtml } from '../../../utils/stringUtils';
 import { CommonDetailCode } from '../../../types/commonCode';
+import FlexibleDateField, {
+  normalizeFlexibleDateInput,
+} from '../../../components/common/DateField/FlexibleDateField';
 
 interface ProductionRequestSearchState {
   searchCnd: string;
@@ -291,7 +294,22 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = useCallback(() => {
-    setSearchParams({ ...inputValues });
+    const normalizedDateFrom = normalizeFlexibleDateInput(
+      inputValues.dateFrom,
+      selectedDate,
+    );
+    const normalizedDateTo = normalizeFlexibleDateInput(
+      inputValues.dateTo,
+      selectedDate,
+    );
+    const normalizedInputValues = {
+      ...inputValues,
+      dateFrom: normalizedDateFrom,
+      dateTo: normalizedDateTo,
+    };
+
+    setInputValues(normalizedInputValues);
+    setSearchParams(normalizedInputValues);
 
     setPaginationModel((prev) => {
       if (prev.page === 0) {
@@ -302,7 +320,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
         page: 0,
       };
     });
-  }, [inputValues]);
+  }, [inputValues, selectedDate]);
 
   const handleInputChange = useCallback(
     <K extends keyof ProductionRequestSearchState>(
@@ -1111,22 +1129,22 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               ))}
             </Select>
           </FormControl>
-          <TextField
+          <FlexibleDateField
             size="small"
             label="의뢰일 From"
-            type="date"
             value={inputValues.dateFrom}
-            onChange={(e) => handleInputChange('dateFrom', e.target.value)}
+            onChange={(nextValue) => handleInputChange('dateFrom', nextValue)}
+            baseDate={selectedDate}
             InputLabelProps={{ shrink: true }}
             sx={{ width: 180 }}
           />
           <Typography sx={{ color: 'text.secondary' }}>~</Typography>
-          <TextField
+          <FlexibleDateField
             size="small"
             label="의뢰일 To"
-            type="date"
             value={inputValues.dateTo}
-            onChange={(e) => handleInputChange('dateTo', e.target.value)}
+            onChange={(nextValue) => handleInputChange('dateTo', nextValue)}
+            baseDate={selectedDate}
             InputLabelProps={{ shrink: true }}
             sx={{ width: 180 }}
           />
