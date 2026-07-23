@@ -356,6 +356,7 @@ const ItemManagement: React.FC = () => {
       field: "itemCode",
       headerName: "품목코드",
       flex: 1,
+      align: "center",
       headerAlign: "center",
     },
     {
@@ -372,23 +373,24 @@ const ItemManagement: React.FC = () => {
     //   headerAlign: 'center',
     //   renderCell: (params) => params.value || '-',
     // },
-    {
-      field: "processFlowNames",
-      headerName: "공정흐름명",
-      flex: 1.3,
-      headerAlign: "center",
-      renderCell: (params) => params.value || "-",
-    },
+    // {
+    //   field: "processFlowNames",
+    //   headerName: "공정흐름명",
+    //   flex: 1.3,
+    //   headerAlign: "center",
+    //   renderCell: (params) => params.value || "-",
+    // },
     {
       field: "specification",
       headerName: "규격",
-      flex: 1,
+      flex: 1.5,
       headerAlign: "center",
     },
     {
       field: "itemType",
       headerName: "품목타입",
-      flex: 0.8,
+      flex: 0.5,
+      minWidth: 80,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -402,7 +404,7 @@ const ItemManagement: React.FC = () => {
     {
       field: "processFlow",
       headerName: "등록된 공정",
-      flex: 0.8,
+      flex: 1,
       align: "center",
       headerAlign: "center",
     },

@@ -173,6 +173,12 @@ export default function ProcessFlowProcessTab() {
             columns={leftColumns}
             getRowId={(row: ProcessType) => row.processId}
             loading={catalog.isLoading}
+            slotProps={{
+              loadingOverlay: {
+                variant: 'linear-progress',
+                noRowsVariant: 'linear-progress',
+              },
+            }}
             pagination
             paginationMode="server"
             rowCount={totalCount}
@@ -208,6 +214,12 @@ export default function ProcessFlowProcessTab() {
             columns={rightColumns}
             getRowId={(row) => row.rowId}
             loading={process.isLoading}
+            slotProps={{
+              loadingOverlay: {
+                variant: 'linear-progress',
+                noRowsVariant: 'linear-progress',
+              },
+            }}
             editMode="cell"
             processRowUpdate={updateProcessRow}
             checkboxSelection
