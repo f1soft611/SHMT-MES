@@ -1,51 +1,43 @@
-import {ProcessFlow} from "../../../../../types/processFlow";
-import processFlowService from "../../../../../services/processFlowService";
-import {useToast} from "../../../../../components/common/Feedback/ToastProvider";
+import { ProcessFlow } from '../../../../../types/processFlow';
+import { useToast } from '../../../../../components/common/Feedback/ToastProvider';
+import { useProcessFlowMasterMutations } from '../useProcessFlowMasterMutations';
 
-export function useProcessFlowMainActions(fetchList: () => void, closeDialog: () => void) {
+export function useProcessFlowMainActions(closeDialog: () => void) {
+  const { showToast } = useToast();
+  const mutations = useProcessFlowMasterMutations();
 
-    const { showToast } = useToast();
+  const handleSave = async (data: ProcessFlow, mode: 'create' | 'edit') => {
+    try {
+      if (mode === 'create') {
+        await mutations.create.mutateAsync(data);
+      } else {
+        if (!data.processFlowId) throw new Error('processFlowId 없음');
+        await mutations.update.mutateAsync({
+          id: data.processFlowId,
+          data,
+        });
+      }
+      showToast({ message: '저장 성공', severity: 'success' });
+      closeDialog();
+      return true;
+    } catch (e: any) {
+      showToast({ message: e.message, severity: 'error' });
+      console.error(e);
+      return false;
+    }
+  };
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return false;
 
-    const handleSave = async (data: ProcessFlow, mode: "create" | "edit") => {
-        // console.log("[MainActions] handleSave called:", mode, data);
-        try {
-            if (mode === "create") {
-                await processFlowService.createProcessFlow(data);
-            } else {
-                if (!data.processFlowId) throw new Error("processFlowId 없음");
-                await processFlowService.updateProcessFlow(data.processFlowId, data);
-            }
-            showToast({
-                message: '저장 성공',
-                severity: 'success'
-            })
-            closeDialog();
-            fetchList();
-            return true;
-        } catch (e: any) {
-            showToast({
-                message: e.message,
-                severity: 'error'
-            })
-            console.error(e);
-            return false;
-        }
-    };
+    try {
+      await mutations.remove.mutateAsync(id);
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm("정말 삭제하시겠습니까?")) return false;
-
-        try {
-            await processFlowService.deleteProcessFlow(id);
-            fetchList();
-            return true;
-        } catch (e) {
-            console.error(e);
-            return false;
-        }
-    };
-
-    return { handleSave, handleDelete };
-
+  return { handleSave, handleDelete };
 }
