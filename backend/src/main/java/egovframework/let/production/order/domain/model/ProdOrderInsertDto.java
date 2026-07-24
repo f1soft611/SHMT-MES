@@ -28,6 +28,7 @@ public class ProdOrderInsertDto {
     private Integer itemCtTime;
     private Integer itemOnePerQty;
     private String lastFlag;
+    private String planFlag;
 
     private String lotNo;
     private int orderQty;
