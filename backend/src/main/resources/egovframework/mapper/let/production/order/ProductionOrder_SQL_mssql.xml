@@ -183,6 +183,19 @@
 		</if>
 	</select>
 
+
+	<!-- 생산계획의 루트 품목(ERP ItemSeq) 목록 조회 -->
+	<select id="selectRootItemCodesByPlan"
+	        parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
+	        resultType="int">
+		SELECT DISTINCT A.ITEM_CODE
+		FROM TPR301 A
+		WHERE A.PRODPLAN_DATE = #{prodplanDate}
+		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
+		  AND A.PRODWORK_SEQ = #{prodworkSeq}
+	</select>
+
+
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
@@ -237,6 +250,7 @@
 			C.WORK_ORDER,
 			C.WORK_ORDER_NM,
 			D.LAST_FLAG,
+		    D.PLAN_FLAG AS PLAN_FLAG,
 			A.PROD_QTY AS ORDER_QTY,
 			CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
 			ISNULL(A.BIGO, '') AS BIGO,
@@ -288,7 +302,8 @@
 			LEFT JOIN BOM_TREE F
 			ON CAST(F.PROC_SEQ AS VARCHAR) = D1.ERP_PROCESS_MAPPING
 			LEFT JOIN TCO403 F1
-			ON CAST(F.MAT_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
+			--ON CAST(F.MAT_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
+			ON CAST(F.ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
 			LEFT JOIN MES_CCMMNDETAIL_CODE F2
 			ON F2.CODE_ID = 'COM007'
 			AND F1.UNIT = F2.CODE
