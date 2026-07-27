@@ -1,5 +1,7 @@
 import type { Mock } from 'vitest';
+import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useProdResultDetail } from './useProdResultDetail';
 import { ProdResultOrderRow, ProductionResultDetail } from '../../../types/productionResult';
@@ -109,8 +111,15 @@ beforeEach(() => {
 });
 
 // mount 시 fetchDetails/fetchWorkers가 자동 실행되므로, 렌더 직후 그 promise를 flush해준다.
+// useQuery/useMutation을 쓰므로 QueryClientProvider로 감싸야 한다.
 const setup = async (parentRow: ProdResultOrderRow) => {
-  const utils = renderHook(() => useProdResultDetail(parentRow));
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+
+  const utils = renderHook(() => useProdResultDetail(parentRow), { wrapper });
   await act(async () => {});
   return utils;
 };
@@ -321,5 +330,101 @@ describe('useProdResultDetail - processRowUpdate (양품/불량 자동계산)', 
     });
 
     expect(returned!.__isModified).toBe(true);
+  });
+});
+
+describe('useProdResultDetail - handleSave (신규/수정 분리 저장)', () => {
+  beforeEach(() => {
+    (productionResultService.updateProdResult as Mock).mockResolvedValue({
+      data: { resultCode: 200, resultMessage: '수정되었습니다' },
+    });
+    (productionResultService.createProdResult as Mock).mockResolvedValue({
+      data: { resultCode: 200, resultMessage: '등록되었습니다' },
+    });
+  });
+
+  it('변경사항이 없으면 저장을 호출하지 않고 info 토스트를 띄운다', async () => {
+    const { result } = await setup(makeParentRow());
+
+    let saved: boolean | undefined;
+    await act(async () => {
+      saved = await result.current.handleSave();
+    });
+
+    expect(saved).toBe(false);
+    expect(productionResultService.updateProdResult).not.toHaveBeenCalled();
+    expect(productionResultService.createProdResult).not.toHaveBeenCalled();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'info', message: '저장할 변경사항이 없습니다.' })
+    );
+  });
+
+  it('prodQty가 0 이하인 행이 있으면 저장 전체를 차단한다', async () => {
+    const { result } = await setup(makeParentRow());
+    act(() => {
+      result.current.setRows([
+        makeDetailRow({ tpr601Id: 'EXIST-1', prodQty: 0, __isModified: true }),
+      ]);
+    });
+
+    let saved: boolean | undefined;
+    await act(async () => {
+      saved = await result.current.handleSave();
+    });
+
+    expect(saved).toBe(false);
+    expect(productionResultService.updateProdResult).not.toHaveBeenCalled();
+    expect(productionResultService.createProdResult).not.toHaveBeenCalled();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'warning', message: '생산수량은 0보다 커야 합니다.' })
+    );
+  });
+
+  it('신규 행과 수정 행을 분리해서 각각 create/update를 호출한다', async () => {
+    const { result } = await setup(makeParentRow());
+    const newRow = makeDetailRow({ tpr601Id: 'NEW-1', prodQty: 50 });
+    const modifiedRow = makeDetailRow({ tpr601Id: 'EXIST-1', prodQty: 80, __isModified: true });
+    const unmodifiedRow = makeDetailRow({ tpr601Id: 'EXIST-2', prodQty: 70, __isModified: false });
+
+    act(() => {
+      result.current.setRows([newRow, modifiedRow, unmodifiedRow]);
+    });
+
+    let saved: boolean | undefined;
+    await act(async () => {
+      saved = await result.current.handleSave();
+    });
+
+    expect(saved).toBe(true);
+    expect(productionResultService.updateProdResult).toHaveBeenCalledWith([modifiedRow]);
+    expect(productionResultService.createProdResult).toHaveBeenCalledWith([newRow]);
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', message: '등록되었습니다' })
+    );
+    // 저장 성공 후 목록을 재조회한다 (mount 시 1회 + 저장 후 1회)
+    expect(productionResultService.getProdResultDetails).toHaveBeenCalledTimes(2);
+  });
+
+  it('수정 저장이 실패하면 신규 등록은 호출하지 않는다', async () => {
+    (productionResultService.updateProdResult as Mock).mockResolvedValue({
+      data: { resultCode: 500, resultMessage: '수정 중 오류가 발생했습니다.' },
+    });
+
+    const { result } = await setup(makeParentRow());
+    const newRow = makeDetailRow({ tpr601Id: 'NEW-1', prodQty: 50 });
+    const modifiedRow = makeDetailRow({ tpr601Id: 'EXIST-1', prodQty: 80, __isModified: true });
+
+    act(() => {
+      result.current.setRows([newRow, modifiedRow]);
+    });
+
+    await act(async () => {
+      await result.current.handleSave();
+    });
+
+    expect(productionResultService.createProdResult).not.toHaveBeenCalled();
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'error', message: '수정 중 오류가 발생했습니다.' })
+    );
   });
 });

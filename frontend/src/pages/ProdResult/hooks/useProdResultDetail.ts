@@ -1,4 +1,5 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
   ProdResultOrderRow,
@@ -9,13 +10,23 @@ import workplaceService from '../../../services/workplaceService';
 import { WorkplaceWorker } from '../../../types/workplace';
 import dayjs from "dayjs";
 
+// 실적 상세 조회 쿼리 키 (parentRow를 식별하는 복합키 기준)
+const prodResultDetailsKey = (row: ProdResultOrderRow | null) => [
+  'prodResultDetails',
+  row?.prodplanId,
+  row?.prodplanDate,
+  row?.prodplanSeq,
+  row?.prodworkSeq,
+  row?.workSeq,
+  row?.prodSeq,
+] as const;
+
 export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   // 상태관리
-  const [saving, setSaving] = useState(false); // 저장 중 여부 (중복 저장 방지)
   const [rows, setRows] = useState<ProductionResultDetail[]>([]);
-  const [loading, setLoading] = useState(false);
   const [workplaceWorkers, setWorkplaceWorkers] = useState<WorkplaceWorker[]>([]);
 
 
@@ -36,23 +47,34 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   /** ======================
    *  실적 상세 조회
    *  ====================== */
-  const fetchDetails = useCallback(async () => {
-    if (!parentRow) return;
-    setLoading(true);
-    try {
-      const response = await productionResultService.getProdResultDetails(parentRow);
-      const list = response.result?.resultList ?? [];
-      setRows(normalizeRows(list));
-    } catch (e) {
-      console.log(e);
+  const detailsQuery = useQuery({
+    queryKey: prodResultDetailsKey(parentRow),
+    queryFn: () => productionResultService.getProdResultDetails(parentRow as ProdResultOrderRow),
+    enabled: Boolean(parentRow),
+  });
+  const loading = detailsQuery.isFetching;
+
+  useEffect(() => {
+    if (!parentRow) {
+      setRows([]);
+      return;
+    }
+    if (detailsQuery.isError) {
       showToast({
         message: '실적 상세 조회 중 오류가 발생했습니다.',
         severity: 'error',
       });
-    } finally {
-      setLoading(false);
+      return;
     }
-  }, [parentRow, showToast]);
+    if (detailsQuery.data) {
+      setRows(normalizeRows(detailsQuery.data.result?.resultList ?? []));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parentRow, detailsQuery.data, detailsQuery.isError]);
+
+  const fetchDetails = async () => {
+    await detailsQuery.refetch();
+  };
 
 
   /** ======================
@@ -162,9 +184,10 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     if (newRow.badQty !== oldRow.badQty) {
       nextRow.goodQty = Math.max(prod - bad, 0);
     }
-    // 생산수량 수정 → 불량 재계산
+    // 생산수량 수정 → 불량 재계산 (불량이 생산수량을 넘지 않도록 함께 clamp)
     if (newRow.prodQty !== oldRow.prodQty) {
-      nextRow.goodQty = Math.max(prod - (nextRow.badQty ?? 0), 0);
+      nextRow.badQty = Math.min(nextRow.badQty ?? 0, prod);
+      nextRow.goodQty = Math.max(prod - nextRow.badQty, 0);
     }
 
     nextRow.__isModified = true;
@@ -183,6 +206,20 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
   };
 
 
+  const updateMutation = useMutation({
+    mutationFn: (data: ProductionResultDetail[]) =>
+      productionResultService.updateProdResult(data),
+  });
+  const createMutation = useMutation({
+    mutationFn: (data: ProductionResultDetail[]) =>
+      productionResultService.createProdResult(data),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (row: ProductionResultDetail) =>
+      productionResultService.deleteProdResult(row),
+  });
+  const saving = updateMutation.isPending || createMutation.isPending;
+
   /** ======================
    *  저장 처리
    *  - 신규 / 수정 분리
@@ -190,7 +227,6 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
    *  ====================== */
   const handleSave = async () => {
     if (saving) return false;   // 중복 클릭 차단
-    setSaving(true);
 
     const newRows = rows.filter((r) => r.tpr601Id.startsWith('NEW-'));
     const modifiedRows = rows.filter(
@@ -214,16 +250,6 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
         message: '생산수량은 0보다 커야 합니다.',
         severity: 'warning',
       });
-      setSaving(false);
-      return false;
-    }
-
-    if (newRows.length === 0 && modifiedRows.length === 0) {
-      showToast({
-        message: '저장할 변경사항이 없습니다.',
-        severity: 'info',
-      });
-      setSaving(false);
       return false;
     }
 
@@ -232,22 +258,20 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     try {
       // 수정 먼저
       if (modifiedRows.length > 0) {
-        const { data } = await productionResultService.updateProdResult(
-          modifiedRows
-        );
+        const { data } = await updateMutation.mutateAsync(modifiedRows);
         if (data.resultCode !== 200) {
           showToast({ message: data.resultMessage, severity: 'error' });
-          return;
+          return false;
         }
         lastMessage = data.resultMessage;
       }
 
       // 신규
       if (newRows.length > 0) {
-        const { data } = await productionResultService.createProdResult(newRows);
+        const { data } = await createMutation.mutateAsync(newRows);
         if (data.resultCode !== 200) {
           showToast({ message: data.resultMessage, severity: 'error' });
-          return;
+          return false;
         }
         lastMessage = data.resultMessage;
       }
@@ -264,7 +288,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
           __isModified: false,
         }))
       );
-      await fetchDetails();
+      await queryClient.invalidateQueries({ queryKey: prodResultDetailsKey(parentRow) });
       return true;
     } catch (e) {
       console.error(e);
@@ -273,8 +297,6 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
         severity: 'error',
       });
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -288,14 +310,8 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
       return;
     }
 
-    // // 기존 행 → 확인
-    // if (!window.confirm('해당 실적을 삭제하시겠습니까?')) return;
-    //
-    // let lastMessage = '삭제되었습니다';
-
-    // // 실제 삭제는 저장 시 처리 → 여기서는 제거
     try {
-      const { data } = await productionResultService.deleteProdResult(row);
+      const { data } = await deleteMutation.mutateAsync(row);
       if (data.resultCode !== 200) {
         showToast({ message: data.resultMessage, severity: 'error' });
         return;
@@ -355,18 +371,6 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     fetchWorkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workcenterCode]);
-
-  useEffect(() => {
-    if (!parentRow) {
-      setRows([]); // 선택 해제 시 초기화까지 해주는 게 맞음
-      return;
-    }
-
-    /** ======================
-     *  parentRow 변경 시 작업자 재조회
-     *  ====================== */
-    fetchDetails();
-  }, [parentRow, fetchDetails]);
 
   return {
     rows,
