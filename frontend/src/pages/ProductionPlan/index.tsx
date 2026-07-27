@@ -563,8 +563,10 @@ const ProductionPlan: React.FC = () => {
         totalQty: 0,
       };
 
-      dateSummary.totalPlans += 1;
-      if (!shouldExcludeFromWeeklyTotal(plan)) {
+      const shouldExclude = shouldExcludeFromWeeklyTotal(plan);
+
+      if (!shouldExclude) {
+        dateSummary.totalPlans += 1;
         dateSummary.totalQty += plan.plannedQty;
       }
       summaryByDate.set(plan.date, dateSummary);
