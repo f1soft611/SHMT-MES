@@ -7,6 +7,7 @@ import egovframework.let.production.order.domain.model.*;
 import egovframework.let.production.order.domain.repository.ProductionOrderDAO;
 import egovframework.let.production.order.service.EgovProductionOrderService;
 import egovframework.let.production.order.service.ErpIFProdOrderService;
+import egovframework.let.scheduler.service.ErpToMesInterfaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -45,6 +46,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	private final ErpIFProdOrderService erpIfService;
 
 	private final EgovConditionalIdService egovConditionalIdService;
+	private final ErpToMesInterfaceService erpToMesInterfaceService;
 
 	@Resource(name = "egovProdOrderIdGnrService")
 	private EgovIdGnrService egovProdOrderIdGnrService;
@@ -93,6 +95,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 */
 	@Override
 	public ListResult<ProdOrderRow> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception{
+		List<Integer> rootItemSeqs = productionOrderDAO.selectRootItemCodesByPlan(param);
+		for (Integer itemSeq : rootItemSeqs) {
+			erpToMesInterfaceService.resyncTPDROUItemProcMatByRootItem(itemSeq);
+		}
+
 		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
 		return new ListResult<>(list, 0);
 	}
@@ -127,6 +134,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		Map<String, String> lotMap = new HashMap<>();
 
 		String lotNo = null;
+		String planLotNo = null;
 
         for (ProdOrderInsertDto dto : prodOrderList) {
 			
@@ -155,6 +163,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			}
 
 			dto.setLotNo(lotNo);
+
+			if ("Y".equals(dto.getPlanFlag())) {
+				planLotNo = lotNo;
+			}
+
 
 			// 생산지시 ID 채번
 			String nextId = productionOrderDAO.selectProdOrderNextId();
@@ -197,17 +210,16 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					"ORDERED"
 			);
 
-//			// 품목별 LOT 업데이트
-//			for (Map.Entry<String, String> entry : lotMap.entrySet()) {
-//
-//				updatePlanLotNo(
-//						first.getProdplanDate(),
-//						first.getProdplanSeq(),
-//						first.getProdworkSeq(),
-//						entry.getValue()  // lotNo
-//				);
-//			}
+			if (planLotNo != null && !planLotNo.isEmpty()) {
+				updatePlanLotNo(
+						first.getProdplanDate(),
+						first.getProdplanSeq(),
+						first.getProdworkSeq(),
+						planLotNo
+				);
+			}
 		}
+
 	}
 
 
@@ -340,7 +352,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 * 생산계획 ORDER_FLAG = ORDERED UPDATE
 	 */
 	@Override
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public boolean bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
 		long startedAt = System.currentTimeMillis();
 		log.info("[BULK] service start, planCount={}", plans == null ? 0 : plans.size());
@@ -366,6 +378,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
+			String planLotNo = null;
+
 			for (ProdOrderRow row : targets) {
 				String prodCode = row.getProdCode();
 				if (prodCode == null || prodCode.isEmpty()) {
@@ -380,6 +394,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						'0'
 				);
 				row.setLotNo(lotNo);
+				if ("Y".equals(row.getPlanFlag())) {
+					planLotNo = lotNo;
+				} else {
+					planLotNo = null;
+				}
 				row.setProdplanDetailId(plan.getProdplanDetailId());
 				row.setOrderSeqno(plan.getOrderSeqno());
 				row.setOrderHistno(plan.getOrderHistno());
@@ -427,6 +446,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					plan.getProdworkSeq(),
 					"ORDERED"
 			);
+
+			if (planLotNo != null && !planLotNo.isEmpty()) {
+				updatePlanLotNo(
+						plan.getProdplanDate(),
+						plan.getProdplanSeq(),
+						plan.getProdworkSeq(),
+						planLotNo
+				);
+			}
 
 //			updatePlanLotNo(
 //					plan.getProdplanDate(),
@@ -630,7 +658,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		param.setProdplanSeq(plan.getProdplanSeq());
 		param.setProdworkSeq(plan.getProdworkSeq());
 
-		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
+		List<ProdOrderRow> list = selectFlowProcessByPlanId(param).getResultList();
 		return list != null ? list : Collections.emptyList();
 	}
 

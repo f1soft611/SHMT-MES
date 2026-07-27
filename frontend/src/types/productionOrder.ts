@@ -112,6 +112,7 @@ export interface ProdOrderRow {
     orderQty: number;
     bigo: string;
     lastFlag:string;
+    planFlag:string;
     customerCode:number;
     copyRow:number;
     opmanCode2: string;
@@ -153,6 +154,7 @@ export interface ProdOrderInsertDto {
     itemCtTime: number;
     itemOnePerQty:number;
     lastFlag: string;
+    planFlag: string;
 
     lotNo?: string;
     orderQty: number;
