@@ -922,6 +922,63 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	}
 
 	/**
+	 * ERP 시스템에서 특정 품목을 루트로 하위 자재까지 재귀적으로 제품별공정별소요자재 정보를 조회한다.
+	 * @param itemSeq 루트 품목의 ERP ItemSeq
+	 * @return 루트 + 재귀적으로 발견된 하위 자재의 ERP 원본 데이터 전체
+	 */
+	@Override
+	public List<egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat> fetchTPDROUItemProcMatByItemSeq(int itemSeq) throws Exception {
+		String sql = ";WITH BOM_TREE AS (" +
+				"SELECT T.* " +
+				"FROM dbo.SHM_IF_VIEW_TPDROUItemProcMat AS T " +
+				"WHERE T.ItemSeq = ? " +
+				"UNION ALL " +
+				"SELECT C.* " +
+				"FROM BOM_TREE AS B " +
+				"INNER JOIN dbo.SHM_IF_VIEW_TPDROUItemProcMat AS C ON C.ItemSeq = B.MatItemSeq" +
+				") " +
+				"SELECT * FROM BOM_TREE " +
+				"OPTION (MAXRECURSION 0)";
+
+		return erpJdbcTemplate.query(sql, new ErpTPDROUItemProcMatRowMapper(), itemSeq);
+	}
+
+	/**
+	 * 루트 품목의 TCO501 BOM 트리를 삭제하고 ERP에서 재귀적으로 다시 가져와 저장한다.
+	 * @param rootItemSeq 루트 품목의 ERP ItemSeq
+	 */
+	@Override
+	@Transactional
+	public void resyncTPDROUItemProcMatByRootItem(int rootItemSeq) throws Exception {
+		List<Integer> treeItemSeqs = mesTPDROUItemProcMatInterfaceDAO.selectTPDROUItemProcMatTreeItemSeqs(rootItemSeq);
+		mesTPDROUItemProcMatInterfaceDAO.deleteMesTPDROUItemProcMatByItemSeqs(treeItemSeqs);
+
+		List<egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat> erpList =
+				fetchTPDROUItemProcMatByItemSeq(rootItemSeq);
+		for (egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat item : erpList) {
+			java.util.Map<String, Object> param = new java.util.HashMap<>();
+			param.put("CompanySeq", item.getCompanySeq());
+			param.put("ItemSeq", item.getItemSeq());
+			param.put("BOMRev", item.getBOMRev());
+			param.put("ProcRev", item.getProcRev());
+			param.put("ProcSeq", item.getProcSeq());
+			param.put("Serl", item.getSerl());
+			param.put("MatItemSeq", item.getMatItemSeq());
+			param.put("UnitSeq", item.getUnitSeq());
+			param.put("NeedQtyNumerator", item.getNeedQtyNumerator());
+			param.put("NeedQtyDenominator", item.getNeedQtyDenominator());
+			param.put("SMDelvType", item.getSMDelvType());
+			param.put("UpperItemSeq", item.getUpperItemSeq());
+			param.put("UpperBOMRev", item.getUpperBOMRev());
+			param.put("BOMItemSerl", item.getBOMItemSerl());
+			param.put("LastUserSeq", item.getLastUserSeq());
+			param.put("LastDateTime", item.getLastDateTime());
+
+			mesTPDROUItemProcMatInterfaceDAO.insertMesTPDROUItemProcMat(param);
+		}
+	}
+
+	/**
 	 * 스케쥴러에서 호출되는 제품별공정별소요자재 정보 프로세스 실행
 	 * @param fromDate 조회 시작 날짜 (yyyy-MM-dd)
 	 * @param toDate 조회 종료 날짜 (yyyy-MM-dd)

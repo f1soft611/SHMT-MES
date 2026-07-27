@@ -1,5 +1,9 @@
 package egovframework.let.scheduler.service;
 
+import egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat;
+
+import java.util.List;
+
 /**
  * ERP-MES 인터페이스 서비스
  * 스케쥴러에서 주기적으로 ERP 시스템의 데이터를 MES 시스템으로 연동하는 서비스
@@ -27,6 +31,22 @@ public interface ErpToMesInterfaceService {
 	 * @throws Exception
 	 */
 	void syncTPDROUItemProcMat(String fromDate, String toDate) throws Exception;
+
+	/**
+	 * ERP 시스템에서 특정 품목을 루트로 하위 자재까지 재귀적으로 제품별공정별소요자재 정보를 조회한다.
+	 * TCO501에 쓰지 않고 조회만 한다 (저장은 호출부 책임).
+	 * @param itemSeq 루트 품목의 ERP ItemSeq
+	 * @return 루트 + 재귀적으로 발견된 하위 자재의 ERP 원본 데이터 전체
+	 * @throws Exception
+	 */
+	List<ErpTPDROUItemProcMat> fetchTPDROUItemProcMatByItemSeq(int itemSeq) throws Exception;
+
+	/**
+	 * 루트 품목의 TCO501 BOM 트리를 삭제하고 ERP에서 재귀적으로 다시 가져와 저장한다.
+	 * @param rootItemSeq 루트 품목의 ERP ItemSeq
+	 * @throws Exception
+	 */
+	void resyncTPDROUItemProcMatByRootItem(int rootItemSeq) throws Exception;
 
 	/**
 	 * 스케쥴러에서 호출되는 제품별공정별소요자재 정보 프로세스 실행

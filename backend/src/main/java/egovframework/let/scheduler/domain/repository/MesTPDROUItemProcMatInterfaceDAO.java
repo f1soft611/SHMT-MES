@@ -4,6 +4,7 @@ import egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,5 +41,27 @@ public class MesTPDROUItemProcMatInterfaceDAO extends EgovAbstractMapper {
      */
     public void updateMesTPDROUItemProcMat(Map<String, Object> param) throws Exception {
         update("MesTPDROUItemProcMatInterfaceDAO.updateMesTPDROUItemProcMat", param);
+    }
+
+    /**
+     * 루트 품목 기준 재귀적으로 TCO501에 저장된 BOM 트리의 ITEM_SEQ 전체 조회
+     * @param itemSeq 루트 품목의 ERP ItemSeq
+     * @return 루트 + 재귀적 하위 자재의 ITEM_SEQ 목록
+     * @throws Exception
+     */
+    public List<Integer> selectTPDROUItemProcMatTreeItemSeqs(int itemSeq) throws Exception {
+        return selectList("MesTPDROUItemProcMatInterfaceDAO.selectTPDROUItemProcMatTreeItemSeqs", itemSeq);
+    }
+
+    /**
+     * ITEM_SEQ 목록에 해당하는 TCO501 행 전체 삭제
+     * @param itemSeqs 삭제할 ITEM_SEQ 목록
+     * @throws Exception
+     */
+    public void deleteMesTPDROUItemProcMatByItemSeqs(List<Integer> itemSeqs) throws Exception {
+        if (itemSeqs.isEmpty()) {
+            return;
+        }
+        delete("MesTPDROUItemProcMatInterfaceDAO.deleteMesTPDROUItemProcMatByItemSeqs", itemSeqs);
     }
 }

@@ -13,6 +13,46 @@ import {useToast} from "../../../components/common/Feedback/ToastProvider";
 export const isUpdateTarget = (row: ProdOrderRow): boolean =>
     !row._isNew && !!row.prodorderId && !!row._dirty;
 
+/** ======================
+ *  신규 저장 DTO 변환
+ *  ====================== */
+export const toInsertDto = (row: ProdOrderRow, seq: number): ProdOrderInsertDto => ({
+    prodplanDate: row.prodplanDate,
+    prodplanSeq: row.prodplanSeq,
+    prodworkSeq: row.prodworkSeq,
+
+    prodplanId: row.prodplanId,
+    prodplanDetailId: row.prodplanDetailId,
+    newWorkorderSeq: seq,
+
+    workCode: row.workCode,
+    workCodeId: row.workCodeId,
+    workdtDate: row.workdtDate,
+
+    itemCodeId: row.itemCodeId,
+    itemCode: row.itemCode,
+    itemUnitId: row.itemUnitId,
+    prodCodeId: row.prodCodeId,
+    prodCode: row.prodCode,
+    equipmentCode: row.equipmentCode,
+
+    itemCtTime: row.itemCtTime,
+    itemOnePerQty: row.itemOnePerQty,
+    lastFlag: row.lastFlag,
+    planFlag: row.planFlag,
+
+    lotNo: row.lotNo,
+    orderQty: row.orderQty,
+    bigo: row.bigo,
+    customerCode: row.customerCode,
+    tpr110dSeq: row.tpr110dSeq,
+    workcenterSeq: row.workcenterSeq,
+    orderDate: getServerDate().toISOString().slice(0, 10).replace(/-/g, ''),
+
+    orderSeqno: row.orderSeqno ?? 0,
+    orderHistno: row.orderHistno ?? 0,
+});
+
 export function useProdOrder() {
 
     const { showToast } = useToast();
@@ -33,46 +73,6 @@ export function useProdOrder() {
         setSelectedPlan(plan);
         await fetchProdOrders(plan);
     };
-
-
-    /** ======================
-     *  신규 저장 DTO 변환
-     *  ====================== */
-    const toInsertDto = (row: ProdOrderRow, seq: number): ProdOrderInsertDto => ({
-        prodplanDate: row.prodplanDate,
-        prodplanSeq: row.prodplanSeq,
-        prodworkSeq: row.prodworkSeq,
-
-        prodplanId: row.prodplanId,
-        prodplanDetailId: row.prodplanDetailId,
-        newWorkorderSeq: seq,
-
-        workCode: row.workCode,
-        workCodeId: row.workCodeId,
-        workdtDate: row.workdtDate,
-
-        itemCodeId: row.itemCodeId,
-        itemCode: row.itemCode,
-        itemUnitId: row.itemUnitId,
-        prodCodeId: row.prodCodeId,
-        prodCode: row.prodCode,
-        equipmentCode: row.equipmentCode,
-
-        itemCtTime: row.itemCtTime,
-        itemOnePerQty: row.itemOnePerQty,
-        lastFlag: row.lastFlag,
-
-        lotNo: row.lotNo,
-        orderQty: row.orderQty,
-        bigo: row.bigo,
-        customerCode: row.customerCode,
-        tpr110dSeq: row.tpr110dSeq,
-        workcenterSeq: row.workcenterSeq,
-        orderDate: getServerDate().toISOString().slice(0, 10).replace(/-/g, ''),
-
-        orderSeqno: row.orderSeqno ?? 0,
-        orderHistno: row.orderHistno ?? 0,
-    });
 
 
     /** ======================
