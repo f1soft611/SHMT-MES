@@ -117,6 +117,7 @@ export interface ProdOrderRow {
     copyRow:number;
     opmanCode2: string;
     optime2: number;
+    opmanName: string;
     rstCnt: number;
     tpr110dSeq:number;
     workcenterSeq?: string;

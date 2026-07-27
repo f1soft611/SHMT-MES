@@ -71,6 +71,7 @@ public class ProdOrderRow implements Serializable {
 
     private String opmanCode2;
     private String optime2;
+    private String opmanName;
 
     private Integer rstCnt;           // 실적 건수
     private Integer tpr110dSeq;

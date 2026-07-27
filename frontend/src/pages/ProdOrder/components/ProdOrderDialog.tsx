@@ -277,7 +277,7 @@ export default function ProdOrderDialog() {
             renderCell: (params) => decodeHtml(params.value ?? ''),
         },
         {
-            field: 'opmanCode2',
+            field: 'opmanName',
             headerName: "최종수정자",
             width: 100,
             headerAlign: "center",
