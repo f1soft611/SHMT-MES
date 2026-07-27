@@ -55,7 +55,6 @@
             OPTIME2 = GETDATE()
         WHERE FACTORY_CODE = #{factoryCode}
             AND MATERIAL_ID = #{itemSeq}
---             AND MATERIAL_CODE = #{itemNo}
     </update>
 
     <!-- LOT 채번용 IDS2 시드 보장 -->
