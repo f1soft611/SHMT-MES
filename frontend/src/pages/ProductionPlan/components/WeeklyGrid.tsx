@@ -613,12 +613,14 @@ const EquipmentRow = memo<EquipmentRowProps>(
         {visibleDayColumns.map(({ dateStr, isWeekendDay, dayColWidth }) => {
           const selectionCellKey = `${equipmentCode}::${dateStr}`;
           const dayPlans = getPlansForDateAndEquipment(dateStr, equipmentCode);
+          const dayPlansForTotal = dayPlans.filter(
+            (plan) =>
+              !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
+          );
           const hasPlans = dayPlans.length > 0;
-          const dayTotalQty = dayPlans.reduce(
-            (sum, plan) =>
-              shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan))
-                ? sum
-                : sum + (plan.plannedQty ?? 0),
+          const dayTotalCount = dayPlansForTotal.length;
+          const dayTotalQty = dayPlansForTotal.reduce(
+            (sum, plan) => sum + (plan.plannedQty ?? 0),
             0,
           );
           const isActiveSelectionCell =
@@ -701,7 +703,7 @@ const EquipmentRow = memo<EquipmentRowProps>(
                       </Stack>
                       <Box sx={{ mb: compactMode ? 0.75 : 1, display: 'flex' }}>
                         <Chip
-                          label={`설비+일별 합계 ${dayPlans.length}건 / ${dayTotalQty.toLocaleString()}개`}
+                          label={`설비+일별 합계 ${dayTotalCount}건 / ${dayTotalQty.toLocaleString()}개`}
                           size="small"
                           variant="outlined"
                           sx={{
@@ -803,7 +805,7 @@ const EquipmentRow = memo<EquipmentRowProps>(
               </Collapse>
               {!isExpanded && dayPlans.length > 0 && (
                 <Chip
-                  label={`${dayPlans.length}건 / ${dayTotalQty.toLocaleString()}개`}
+                  label={`${dayTotalCount}건 / ${dayTotalQty.toLocaleString()}개`}
                   size="small"
                   sx={{
                     width: '100%',
@@ -891,6 +893,9 @@ const VirtualizedRowItem = ({
           column.dateStr,
           equipmentCode,
         );
+        const dayTotalCount = dayPlans.filter(
+          (plan) => !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
+        ).length;
         return (
           <Box
             key={`${equipmentCode}-${column.dateStr}`}
@@ -907,7 +912,7 @@ const VirtualizedRowItem = ({
           >
             {dayPlans.length > 0 ? (
               <Chip
-                label={`${dayPlans.length}건`}
+                label={`${dayTotalCount}건`}
                 size="small"
                 color="primary"
                 sx={{ fontSize: compactMode ? '0.7rem' : '0.75rem' }}
@@ -1180,7 +1185,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
           equipment.equipCd || '',
         );
 
-        totalCount += dayPlans.length;
+        totalCount += dayPlans.filter(
+          (plan) => !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
+        ).length;
         totalQty += dayPlans.reduce(
           (sum, plan) =>
             shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan))
