@@ -22,4 +22,16 @@ public class ProductionResultSqlContractTest {
         assertThat(xml).contains("#{workingTag}");
         assertThat(xml).contains("#{mesIfKey}");
     }
+
+    @Test
+    public void selectProductionResultForErpJoinsProdOrderForLotNo() throws Exception {
+        Path mapper = Paths.get(
+                "src/main/resources/egovframework/mapper/let/production/result/ProductionResult_SQL_mssql.xml");
+        String xml = new String(Files.readAllBytes(mapper), StandardCharsets.UTF_8);
+
+        assertThat(xml).contains("<select id=\"selectProductionResultForErp\"");
+        assertThat(xml).contains("LEFT JOIN TPR504");
+        assertThat(xml).contains("AS lotNo");
+        assertThat(xml).contains("AS workorderSeq");
+    }
 }
