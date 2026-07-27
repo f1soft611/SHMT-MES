@@ -352,7 +352,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 * 생산계획 ORDER_FLAG = ORDERED UPDATE
 	 */
 	@Override
-	@Transactional
+	@Transactional(rollbackFor = Exception.class)
 	public boolean bulkCreateProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
 		long startedAt = System.currentTimeMillis();
 		log.info("[BULK] service start, planCount={}", plans == null ? 0 : plans.size());
@@ -378,6 +378,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						"생산지시번호 : "+plan.getProdplanDetailId());
 			}
 
+			String planLotNo = null;
+
 			for (ProdOrderRow row : targets) {
 				String prodCode = row.getProdCode();
 				if (prodCode == null || prodCode.isEmpty()) {
@@ -392,6 +394,11 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						'0'
 				);
 				row.setLotNo(lotNo);
+				if ("Y".equals(row.getPlanFlag())) {
+					planLotNo = lotNo;
+				} else {
+					planLotNo = null;
+				}
 				row.setProdplanDetailId(plan.getProdplanDetailId());
 				row.setOrderSeqno(plan.getOrderSeqno());
 				row.setOrderHistno(plan.getOrderHistno());
@@ -439,6 +446,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 					plan.getProdworkSeq(),
 					"ORDERED"
 			);
+
+			if (planLotNo != null && !planLotNo.isEmpty()) {
+				updatePlanLotNo(
+						plan.getProdplanDate(),
+						plan.getProdplanSeq(),
+						plan.getProdworkSeq(),
+						planLotNo
+				);
+			}
 
 //			updatePlanLotNo(
 //					plan.getProdplanDate(),
@@ -642,7 +658,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		param.setProdplanSeq(plan.getProdplanSeq());
 		param.setProdworkSeq(plan.getProdworkSeq());
 
-		List<ProdOrderRow> list = productionOrderDAO.selectFlowProcessByPlanId(param);
+		List<ProdOrderRow> list = selectFlowProcessByPlanId(param).getResultList();
 		return list != null ? list : Collections.emptyList();
 	}
 
