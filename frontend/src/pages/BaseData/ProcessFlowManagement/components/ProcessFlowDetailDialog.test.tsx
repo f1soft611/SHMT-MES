@@ -18,8 +18,16 @@ vi.mock('@mui/material', async () => {
       slotProps,
       ...props
     }: React.ComponentProps<typeof ActualDialog>) => {
+      const transitionSlotProps =
+        typeof slotProps?.transition === 'function'
+          ? slotProps.transition(props)
+          : slotProps?.transition;
+
       if (props.maxWidth === 'xl') {
-        mockOnDetailDialogExited = slotProps?.transition?.onExited;
+        const onExited = transitionSlotProps?.onExited;
+        mockOnDetailDialogExited = onExited
+          ? () => onExited(document.createElement('div'))
+          : undefined;
       }
       return <ActualDialog {...props} slotProps={slotProps} />;
     },
