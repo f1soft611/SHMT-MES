@@ -361,8 +361,8 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     onClose();
   };
 
-  // 드래그 가능한 Paper 컴포넌트
-  const DraggablePaper = (props: PaperProps) => {
+  // Dialog의 PaperComponent 참조를 고정해 입력 중 리마운트로 인한 포커스 이탈을 방지
+  const DraggablePaper = React.useCallback((props: PaperProps) => {
     return (
       <Draggable
         nodeRef={draggableRef}
@@ -372,7 +372,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
         <Paper {...props} ref={draggableRef} />
       </Draggable>
     );
-  };
+  }, []);
 
   return (
     <>
