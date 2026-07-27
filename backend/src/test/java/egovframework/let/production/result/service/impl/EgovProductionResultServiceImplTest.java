@@ -14,6 +14,11 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+
+import org.mockito.InOrder;
+
 
 @ExtendWith(MockitoExtension.class)
 class EgovProductionResultServiceImplTest {
@@ -94,5 +99,59 @@ class EgovProductionResultServiceImplTest {
                 .doesNotThrowAnyException();
 
         verify(productionResultDAO).insertProductionResult(dto);
+    }
+
+    @Test
+    void updateProductionResult_sendsDeleteThenAddToErp() throws Exception {
+        EgovProductionResultServiceImpl service =
+                new EgovProductionResultServiceImpl(productionResultDAO, erpIfService);
+
+        ProdResultUpdateDto dto = new ProdResultUpdateDto();
+        dto.setTpr601Id("PR20260727001");
+        dto.setProdplanDate("20260727");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+        dto.setWorkSeq(1);
+        dto.setProdSeq(1);
+        dto.setProdQty(20);
+        dto.setGoodQty(18);
+        dto.setBadQty(2);
+        dto.setProdStime("2026-07-27 10:00");
+        dto.setProdEtime("2026-07-27 11:00");
+
+        when(productionResultDAO.selectProductionResultForErp(dto)).thenReturn(linkRow());
+
+        service.updateProductionResult(Collections.singletonList(dto));
+
+        InOrder inOrder = inOrder(erpIfService);
+        inOrder.verify(erpIfService).sendProdResultToErp(argThat(d -> "D".equals(d.getWorkingTag())));
+        inOrder.verify(erpIfService).sendProdResultToErp(argThat(d ->
+                "A".equals(d.getWorkingTag())
+                        && Integer.valueOf(20).equals(d.getProdQty())
+                        && "1100".equals(d.getWorkEndTime()) // 새 prodEtime(11:00)을 써야 함 - linkRow의 09:00이 아님
+        ));
+    }
+
+    @Test
+    void updateProductionResult_deleteFailureStillSendsAdd() throws Exception {
+        EgovProductionResultServiceImpl service =
+                new EgovProductionResultServiceImpl(productionResultDAO, erpIfService);
+
+        ProdResultUpdateDto dto = new ProdResultUpdateDto();
+        dto.setTpr601Id("PR20260727001");
+        dto.setProdplanDate("20260727");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+        dto.setWorkSeq(1);
+        dto.setProdSeq(1);
+        dto.setProdQty(20);
+
+        when(productionResultDAO.selectProductionResultForErp(dto)).thenReturn(linkRow());
+        doThrow(new RuntimeException("erp down"))
+                .when(erpIfService).sendProdResultToErp(argThat(d -> "D".equals(d.getWorkingTag())));
+
+        service.updateProductionResult(Collections.singletonList(dto));
+
+        verify(erpIfService).sendProdResultToErp(argThat(d -> "A".equals(d.getWorkingTag())));
     }
 }

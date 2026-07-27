@@ -104,6 +104,9 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 		for(ProdResultUpdateDto  dto : resultList){
 
+			// ERP D+A 전송을 위해 갱신 전 연계정보(TPR504 LOT_NO 등, 변경 안 되는 값) 확보
+			ProdResultErpLinkRow beforeRow = productionResultDAO.selectProductionResultForErp(dto);
+
 			// TPR601 UPDATE
 			productionResultDAO.updateProductionResult(dto);
 
@@ -114,6 +117,19 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			// 🔥 3. 불량 DELETE → INSERT (추가)
 			saveProductionResultBadDetails(dto);
 
+			// ERP IF 전송: 기존 실적 취소(D) 후 재생성(A) - 각각 독립적으로 실패를 격리
+			try {
+				erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow));
+			} catch (Exception e) {
+				log.warn("생산실적 ERP 취소전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+			}
+			try {
+				erpIfService.sendProdResultToErp(buildAddIfDto(
+						beforeRow, dto.getProdQty(), dto.getGoodQty(), dto.getBadQty(),
+						dto.getProdStime(), dto.getProdEtime(), dto.getWorkerCodes()));
+			} catch (Exception e) {
+				log.warn("생산실적 ERP 재생성전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+			}
 
 			// TPR601M DELETE ALL -> INSERT
 		}
@@ -250,6 +266,31 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		dto.setWorkStartTime(toHHmm(prodStime));
 		dto.setWorkEndTime(toHHmm(prodEtime));
 		dto.setWorkerQty(workerCodes != null ? workerCodes.size() : 0);
+		return dto;
+	}
+
+	// ERP IF 'D'(삭제/취소) 페이로드 구성 - 조회 시점의 기존 값을 그대로 사용
+	private ErpIFProdResultDto buildDeleteIfDto(ProdResultErpLinkRow row) {
+		ErpIFProdResultDto dto = new ErpIFProdResultDto();
+		dto.setWorkingTag("D");
+		dto.setRegEmpId("SYSTEM");
+		dto.setMesIfKey(row.getTpr601Id());
+		dto.setWorkDate(row.getProdplanDate());
+		dto.setWorkOrderSeq(row.getWorkorderSeq());
+		dto.setWorkOrderSerl(row.getWorkorderSeq());
+		dto.setWorkOrderNo(row.getLotNo());
+		dto.setLotNo(row.getLotNo());
+		dto.setDeptSeq(0);
+		dto.setEmpSeq(0);
+		dto.setWorkCenterSeq(1);
+		dto.setItemSeq(parseItemSeq(row.getItemCode()));
+		dto.setUnitSeq(0);
+		dto.setProdQty(row.getProdQty());
+		dto.setOkQty(row.getGoodQty());
+		dto.setBadQty(row.getBadQty());
+		dto.setWorkStartTime(toHHmm(row.getProdStime()));
+		dto.setWorkEndTime(toHHmm(row.getProdEtime()));
+		dto.setWorkerQty(0);
 		return dto;
 	}
 
