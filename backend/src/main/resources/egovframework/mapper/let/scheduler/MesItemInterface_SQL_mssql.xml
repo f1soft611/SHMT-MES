@@ -8,7 +8,6 @@
         SELECT COUNT(1) AS cnt
         FROM TCO403
         WHERE MATERIAL_ID = #{itemSeq}
-        AND MATERIAL_CODE = #{itemNo}
     </select>
 
     <!-- MES 품목 테이블에 품목 정보 삽입 -->
@@ -56,7 +55,7 @@
             OPTIME2 = GETDATE()
         WHERE FACTORY_CODE = #{factoryCode}
             AND MATERIAL_ID = #{itemSeq}
-            AND MATERIAL_CODE = #{itemNo}
+--             AND MATERIAL_CODE = #{itemNo}
     </update>
 
     <!-- LOT 채번용 IDS2 시드 보장 -->
