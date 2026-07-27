@@ -5,6 +5,7 @@ import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
 import egovframework.let.production.result.domain.repository.ProductionResultDAO;
 import egovframework.let.production.result.service.EgovProductionResultService;
+import egovframework.let.production.result.service.ErpIFProdResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -35,6 +36,7 @@ import java.util.List;
 public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl implements EgovProductionResultService {
 
 	private final ProductionResultDAO productionResultDAO;
+	private final ErpIFProdResultService erpIfService;
 
 	@Override
 	public ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception {
@@ -68,6 +70,17 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 				// 불량 상세 저장
 				saveProductionResultBadDetails(dto);
+
+
+				// ERP IF 전송 (A) - 실패해도 MES 저장은 유지
+				try {
+					ProdResultErpLinkRow row = productionResultDAO.selectProductionResultForErp(dto);
+					erpIfService.sendProdResultToErp(buildAddIfDto(
+							row, dto.getProdQty(), dto.getGoodQty(), dto.getBadQty(),
+							dto.getProdStime(), dto.getProdEtime(), dto.getWorkerCodes()));
+				} catch (Exception e) {
+					log.warn("생산실적 ERP 전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+				}
 
 
 				// TPR601M 저장
@@ -209,6 +222,49 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			dto.setBadSeq(seq++);
 
 			productionResultDAO.insertBadDetail(dto);
+		}
+	}
+
+	// ERP IF 'A'(신규/재생성) 페이로드 구성
+	private ErpIFProdResultDto buildAddIfDto(
+			ProdResultErpLinkRow row, Integer prodQty, Integer goodQty, Integer badQty,
+			String prodStime, String prodEtime, List<String> workerCodes) {
+
+		ErpIFProdResultDto dto = new ErpIFProdResultDto();
+		dto.setWorkingTag("A");
+		dto.setRegEmpId("SYSTEM");
+		dto.setMesIfKey(row.getTpr601Id());
+		dto.setWorkDate(row.getProdplanDate());
+		dto.setWorkOrderSeq(row.getWorkorderSeq());
+		dto.setWorkOrderSerl(row.getWorkorderSeq());
+		dto.setWorkOrderNo(row.getLotNo());
+		dto.setLotNo(row.getLotNo());
+		dto.setDeptSeq(0);
+		dto.setEmpSeq(0);
+		dto.setWorkCenterSeq(1);
+		dto.setItemSeq(parseItemSeq(row.getItemCode()));
+		dto.setUnitSeq(0);
+		dto.setProdQty(prodQty);
+		dto.setOkQty(goodQty);
+		dto.setBadQty(badQty);
+		dto.setWorkStartTime(toHHmm(prodStime));
+		dto.setWorkEndTime(toHHmm(prodEtime));
+		dto.setWorkerQty(workerCodes != null ? workerCodes.size() : 0);
+		return dto;
+	}
+
+	// "yyyy-MM-dd HH:mm" → "HHmm" (짧으면 null)
+	private String toHHmm(String dateTimeStr) {
+		if (dateTimeStr == null || dateTimeStr.length() < 16) return null;
+		return dateTimeStr.substring(11, 13) + dateTimeStr.substring(14, 16);
+	}
+
+	// 품목코드를 ERP ItemSeq(정수)로 변환, 실패 시 0
+	private Integer parseItemSeq(String itemCode) {
+		try {
+			return (itemCode != null && !itemCode.trim().isEmpty()) ? Integer.parseInt(itemCode.trim()) : 0;
+		} catch (NumberFormatException e) {
+			return 0;
 		}
 	}
 
