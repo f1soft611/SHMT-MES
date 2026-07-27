@@ -140,6 +140,9 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Transactional
 	public void deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
 
+		// ERP D 전송을 위해 삭제 전 값 확보
+		ProdResultErpLinkRow beforeRow = productionResultDAO.selectProductionResultForErp(dto);
+
 		// 1. 실적별 불량 상세 삭제 TPR605
 		productionResultDAO.deleteBadDetails(dto);
 
@@ -154,6 +157,13 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 		// 4. 실적 삭제 TPR601
 		productionResultDAO.deleteProductionResult(dto);
+
+		// ERP IF 전송 (D) - 실패해도 MES 삭제는 유지
+		try {
+			erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow));
+		} catch (Exception e) {
+			log.warn("생산실적 ERP 삭제전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+		}
 
 	}
 

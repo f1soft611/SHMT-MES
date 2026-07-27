@@ -154,4 +154,47 @@ class EgovProductionResultServiceImplTest {
 
         verify(erpIfService).sendProdResultToErp(argThat(d -> "A".equals(d.getWorkingTag())));
     }
+
+    @Test
+    void deleteProductionResult_sendsDeleteToErp() throws Exception {
+        EgovProductionResultServiceImpl service =
+                new EgovProductionResultServiceImpl(productionResultDAO, erpIfService);
+
+        ProdResultDeleteDto dto = new ProdResultDeleteDto();
+        dto.setTpr601Id("PR20260727001");
+        dto.setProdplanDate("20260727");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+        dto.setWorkSeq(1);
+        dto.setProdSeq(1);
+
+        when(productionResultDAO.selectProductionResultForErp(dto)).thenReturn(linkRow());
+
+        service.deleteProductionResult(dto);
+
+        verify(erpIfService).sendProdResultToErp(argThat(d ->
+                "D".equals(d.getWorkingTag()) && "PR20260727001".equals(d.getMesIfKey())));
+        verify(productionResultDAO).deleteProductionResult(dto);
+    }
+
+    @Test
+    void deleteProductionResult_erpFailureDoesNotBlockMesDelete() throws Exception {
+        EgovProductionResultServiceImpl service =
+                new EgovProductionResultServiceImpl(productionResultDAO, erpIfService);
+
+        ProdResultDeleteDto dto = new ProdResultDeleteDto();
+        dto.setTpr601Id("PR20260727001");
+        dto.setProdplanDate("20260727");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+        dto.setWorkSeq(1);
+        dto.setProdSeq(1);
+
+        when(productionResultDAO.selectProductionResultForErp(dto))
+                .thenThrow(new RuntimeException("erp db down"));
+
+        assertThatCode(() -> service.deleteProductionResult(dto)).doesNotThrowAnyException();
+
+        verify(productionResultDAO).deleteProductionResult(dto);
+    }
 }
