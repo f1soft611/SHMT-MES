@@ -76,4 +76,27 @@
                     AND SERL = #{Serl}
     </update>
 
+
+    <!-- 루트 품목 기준 재귀적으로 TCO501에 저장된 BOM 트리의 ITEM_SEQ 전체 조회 -->
+    <select id="selectTPDROUItemProcMatTreeItemSeqs" parameterType="int" resultType="int">
+        ;WITH BOM_TREE AS (
+            SELECT * FROM TCO501 WHERE ITEM_SEQ = #{itemSeq}
+            UNION ALL
+            SELECT C.*
+            FROM BOM_TREE B
+                     INNER JOIN TCO501 C ON B.MAT_ITEM_SEQ = C.ITEM_SEQ
+        )
+         SELECT DISTINCT ITEM_SEQ FROM BOM_TREE
+             OPTION (MAXRECURSION 0)
+    </select>
+
+    <!-- ITEM_SEQ 목록에 해당하는 TCO501 행 전체 삭제 -->
+    <delete id="deleteMesTPDROUItemProcMatByItemSeqs" parameterType="list">
+        DELETE FROM TCO501
+        WHERE ITEM_SEQ IN
+        <foreach collection="list" item="itemSeq" open="(" separator="," close=")">
+            #{itemSeq}
+        </foreach>
+    </delete>
+
 </mapper>

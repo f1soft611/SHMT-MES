@@ -68,5 +68,6 @@ export interface ItemSearchParams {
   itemType?: string;
   useYn?: string;
   inProcessFlowYn?: InProcessFlowFilter;
+  availableForProcessFlowId?: string;
   pageIndex?: number;
 }

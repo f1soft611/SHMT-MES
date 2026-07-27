@@ -21,7 +21,7 @@
 
     <select
             id="selectItemByFlowId"
-            parameterType="string"
+            parameterType="map"
             resultMap="processFlowItemResult">
         SELECT
             A.FACTORY_CODE,
@@ -29,6 +29,7 @@
             A.WORK_ORDER,
             A.FLOW_ITEM_ID,
             A.PROD_CODE,
+            A.PROD_CODE_ID,
             B.MATERIAL_NAME AS PROD_CODE_NAME,
             B.MATERIAL_SPEC,
             B.UNIT,
@@ -39,24 +40,65 @@
             A.OPMAN_CODE2
         FROM TPR112 A
         LEFT JOIN TCO403 B
-            ON A.PROD_CODE = B.MATERIAL_CODE
+            ON A.FACTORY_CODE = B.FACTORY_CODE
+            AND A.PROD_CODE_ID = B.MATERIAL_ID
             LEFT JOIN MES_CCMMNDETAIL_CODE B1
             ON B.UNIT = B1.CODE
         WHERE 1=1
-        AND WORK_ORDER_ID = #{processFlowId}
+        AND A.FACTORY_CODE = #{factoryCode}
+        AND A.WORK_ORDER_ID = #{processFlowId}
         ORDER BY FLOW_ITEM_ID
     </select>
 
-    <!-- 공정흐름 제품 전체 삭제 -->
-    <delete id="deleteAllByProcessFlowId" parameterType="string">
-        delete from  TPR112
-        WHERE WORK_ORDER_ID = #{value}
-    </delete>
+    <select id="selectOwnedFlowItemIds" parameterType="map" resultType="string">
+        SELECT FLOW_ITEM_ID
+        FROM TPR112
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND WORK_ORDER_ID = #{processFlowId}
+          AND FLOW_ITEM_ID IN
+          <foreach collection="flowItemIds" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
 
-    <!--    아이디별 삭제-->
-    <delete id="deleteProcessFlowItemById" parameterType="string">
+    <select id="selectRegisteredItemIds" parameterType="map" resultType="string">
+        SELECT PROD_CODE_ID
+        FROM TPR112
+        WHERE PROD_CODE_ID IN
+          <foreach collection="itemIds" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
+
+    <select id="selectItemMasters" parameterType="map" resultMap="processFlowItemResult">
+        SELECT
+            A.FACTORY_CODE,
+            A.MATERIAL_ID AS PROD_CODE_ID,
+            A.MATERIAL_CODE AS PROD_CODE,
+            A.MATERIAL_NAME AS PROD_CODE_NAME,
+            A.MATERIAL_SPEC,
+            A.UNIT,
+            ISNULL(UNIT_NAME.CODE_NM, '') AS UNIT_NAME
+        FROM TCO403 A
+        LEFT JOIN MES_CCMMNDETAIL_CODE UNIT_NAME
+            ON UNIT_NAME.CODE_ID = 'COM007'
+            AND UNIT_NAME.CODE = A.UNIT
+        WHERE A.FACTORY_CODE = #{factoryCode}
+          AND ISNULL(A.DELETE_FLAG, '') != '1'
+          AND A.MATERIAL_ID IN
+          <foreach collection="itemIds" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
+
+    <delete id="deleteProcessFlowItems" parameterType="map">
         DELETE FROM TPR112
-        WHERE FLOW_ITEM_ID = #{value}
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND WORK_ORDER_ID = #{processFlowId}
+          AND FLOW_ITEM_ID IN
+          <foreach collection="flowItemIds" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
     </delete>
 
     <insert id="insertProcessFlowItem" parameterType="egovframework.let.basedata.processFlow.domain.model.ProcessFlowItem">

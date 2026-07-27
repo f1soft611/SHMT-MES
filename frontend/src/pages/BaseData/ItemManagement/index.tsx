@@ -35,6 +35,7 @@ import { usePermissions } from "../../../contexts/PermissionContext";
 import { decodeHtml } from "../../../utils/stringUtils";
 
 const DEFAULT_ITEM_TYPES = ["PRODUCT", "HALF_PRODUCT"];
+const SEARCH_STORAGE_KEY = "itemManagement.searchParams";
 
 interface ItemSearchState {
   searchCnd: string;
@@ -143,20 +144,30 @@ const ItemManagement: React.FC = () => {
     },
   });
 
+  const getStoredSearchParams = (): ItemSearchState => {
+    try {
+      const stored = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+    return {
+      searchCnd: "1",
+      searchWrd: "",
+      itemType: DEFAULT_ITEM_TYPES.join(","),
+      useYn: "Y",
+    };
+  };
+
   // 실제 검색에 사용되는 파라미터
-  const [searchParams, setSearchParams] = useState<ItemSearchState>({
-    searchCnd: "1",
-    searchWrd: "",
-    itemType: DEFAULT_ITEM_TYPES.join(","),
-    useYn: "Y",
-  });
+  const [searchParams, setSearchParams] = useState<ItemSearchState>(
+    getStoredSearchParams,
+  );
 
   // 입력 필드용 상태 (화면 입력용)
-  const [inputValues, setInputValues] = useState<ItemInputState>({
-    searchCnd: "1",
-    searchWrd: "",
-    itemType: DEFAULT_ITEM_TYPES,
-    useYn: "Y",
+  const [inputValues, setInputValues] = useState<ItemInputState>(() => {
+    const stored = getStoredSearchParams();
+    return { ...stored, itemType: stored.itemType.split(",") };
   });
 
   // 품목 목록 조회 (searchParams, paginationModel 의존성으로 자동 실행)
@@ -184,6 +195,15 @@ const ItemManagement: React.FC = () => {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // 검색 조건을 세션에 저장해 다른 페이지 이동 후 복귀 시에도 유지
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(searchParams));
+    } catch {
+      // ignore
+    }
+  }, [searchParams]);
 
   // 검색 실행 (입력값을 검색 파라미터로 복사하고 페이지를 0으로 리셋)
   const handleSearch = () => {
@@ -336,6 +356,7 @@ const ItemManagement: React.FC = () => {
       field: "itemCode",
       headerName: "품목코드",
       flex: 1,
+      align: "center",
       headerAlign: "center",
     },
     {
@@ -352,23 +373,24 @@ const ItemManagement: React.FC = () => {
     //   headerAlign: 'center',
     //   renderCell: (params) => params.value || '-',
     // },
-    {
-      field: "processFlowNames",
-      headerName: "공정흐름명",
-      flex: 1.3,
-      headerAlign: "center",
-      renderCell: (params) => params.value || "-",
-    },
+    // {
+    //   field: "processFlowNames",
+    //   headerName: "공정흐름명",
+    //   flex: 1.3,
+    //   headerAlign: "center",
+    //   renderCell: (params) => params.value || "-",
+    // },
     {
       field: "specification",
       headerName: "규격",
-      flex: 1,
+      flex: 1.5,
       headerAlign: "center",
     },
     {
       field: "itemType",
       headerName: "품목타입",
-      flex: 0.8,
+      flex: 0.5,
+      minWidth: 80,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -382,7 +404,7 @@ const ItemManagement: React.FC = () => {
     {
       field: "processFlow",
       headerName: "등록된 공정",
-      flex: 0.8,
+      flex: 1,
       align: "center",
       headerAlign: "center",
     },

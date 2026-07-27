@@ -72,3 +72,4 @@ backend/backend-dev
 /frontend/src/pages/**/**/**.test.ts
 /graphify-out/cache/
 /graphify-out/
+/.superpowers/

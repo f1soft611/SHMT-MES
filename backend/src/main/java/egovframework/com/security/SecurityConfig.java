@@ -138,8 +138,6 @@ public class SecurityConfig {
                         .antMatchers("/mypage/**").hasAnyRole("ADMIN", "USER") // 마이페이지는 ADMIN, USER 모두 접근
                         .antMatchers("/inform/**").hasAnyRole("ADMIN", "USER") // 게시판은 ADMIN, USER 모두 접근
 
-                        .antMatchers("/api/processflow/**").permitAll()
-
                         .antMatchers(AUTH_WHITELIST).permitAll()
                         .antMatchers(HttpMethod.GET, AUTH_GET_WHITELIST).permitAll()
                         .anyRequest().authenticated())

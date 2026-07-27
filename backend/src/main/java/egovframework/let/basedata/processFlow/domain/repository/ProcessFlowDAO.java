@@ -8,6 +8,7 @@ import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @Repository("ProcessFlowDAO")
@@ -50,31 +51,72 @@ public class ProcessFlowDAO extends EgovAbstractMapper {
         delete("ProcessFlowDAO.deleteProcessFlow", processFlowId);
     }
 
-    public void deleteProcessFlowProcess(String workOderId) {
-        delete("ProcessFlowProcessDAO.deleteAllByProcessFlowId", workOderId);
+    public ProcessFlow selectProcessFlowByIdAndFactory(String processFlowId, String factoryCode) {
+        Map<String, String> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        return selectOne("ProcessFlowDAO.selectProcessFlowByIdAndFactory", params);
+    }
+
+    public void deleteProcessFlowProcess(String processFlowId, String factoryCode) {
+        Map<String, String> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        delete("ProcessFlowProcessDAO.deleteAllByProcessFlowId", params);
     }
 
     public void insertProcessFlowProcess(ProcessFlowProcess p) {
         insert("ProcessFlowProcessDAO.insertProcessFlowProcess", p);
     }
 
-    public List<ProcessFlowProcess> selectProcessByFlowId(String processFlowId) {
-        return selectList("ProcessFlowProcessDAO.selectByProcessFlowId", processFlowId);
+    public List<ProcessFlowProcess> selectProcessByFlowId(
+            String processFlowId, String factoryCode) {
+        Map<String, String> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        return selectList("ProcessFlowProcessDAO.selectByProcessFlowId", params);
     }
 
-    public void deleteProcessFlowItem(String workOderId) {
-        delete("ProcessFlowItemDAO.deleteAllByProcessFlowId", workOderId);
+    public List<String> selectOwnedFlowItemIds(
+            String processFlowId, String factoryCode, List<String> flowItemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        params.put("flowItemIds", flowItemIds);
+        return selectList("ProcessFlowItemDAO.selectOwnedFlowItemIds", params);
     }
 
-    public void deleteProcessFlowItemById(String flowItemId) {
-        delete("ProcessFlowItemDAO.deleteProcessFlowItemById", flowItemId);
+    public List<String> selectRegisteredItemIds(List<String> itemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("itemIds", itemIds);
+        return selectList("ProcessFlowItemDAO.selectRegisteredItemIds", params);
+    }
+
+    public List<ProcessFlowItem> selectItemMasters(String factoryCode, List<String> itemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("factoryCode", factoryCode);
+        params.put("itemIds", itemIds);
+        return selectList("ProcessFlowItemDAO.selectItemMasters", params);
+    }
+
+    public int deleteProcessFlowItems(
+            String processFlowId, String factoryCode, List<String> flowItemIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        params.put("flowItemIds", flowItemIds);
+        return delete("ProcessFlowItemDAO.deleteProcessFlowItems", params);
     }
 
     public void insertProcessFlowItem(ProcessFlowItem item) {
         insert("ProcessFlowItemDAO.insertProcessFlowItem", item);
     }
 
-    public List<ProcessFlowItem> selectItemByFlowId(String processFlowId) {
-        return selectList("ProcessFlowItemDAO.selectItemByFlowId", processFlowId);
+    public List<ProcessFlowItem> selectItemByFlowId(
+            String processFlowId, String factoryCode) {
+        Map<String, String> params = new HashMap<>();
+        params.put("processFlowId", processFlowId);
+        params.put("factoryCode", factoryCode);
+        return selectList("ProcessFlowItemDAO.selectItemByFlowId", params);
     }
 }

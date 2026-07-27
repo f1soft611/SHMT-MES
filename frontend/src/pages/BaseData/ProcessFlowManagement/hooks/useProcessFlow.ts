@@ -2,28 +2,23 @@ import {useProcessFlowList} from "./main/useProcessFlowList";
 import {useProcessFlowMainDialog} from "./main/useProcessFlowMainDialog";
 import {useProcessFlowMainActions} from "./main/useProcessFlowMainActions";
 import {useProcessFlowDetailDialog} from "./detail/useProcessFlowDetailDialog";
-import {useProcessFlowDetailActions} from "./detail/useProcessFlowDetailActions";
 
 export function useProcessFlow() {
 
     const list = useProcessFlowList();
     const mainDialog = useProcessFlowMainDialog();
     const mainActions = useProcessFlowMainActions(
-        list.fetchProcessFlows,
         mainDialog.closeMainDialog
     );
 
     const detailDialog = useProcessFlowDetailDialog();
-    const detailActions = useProcessFlowDetailActions(
-        detailDialog.selectedFlow
-    );
-
 
     return {
         /** 목록 */
         rows: list.rows,
         rowCount: list.rowCount,
         loading: list.loading,
+        listError: list.error,
         paginationModel: list.paginationModel,
         setPaginationModel: list.setPaginationModel,
         searchParams: list.searchParams,
@@ -55,10 +50,6 @@ export function useProcessFlow() {
         selectedFlowDetail: detailDialog.selectedFlow,
         handleOpenDetailDialog: detailDialog.handleOpenDetailDialog,
         handleCloseDetailDialog: detailDialog.handleCloseDetailDialog,
-
-        /** 상세 저장 액션 */
-        handleDetailSave: detailActions.handleDetailSave,
-        itemLoading: detailActions.loading,
     };
 }
 

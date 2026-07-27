@@ -59,6 +59,11 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         return selectList("ProductionOrderDAO.selectProdPlan", param);
     }
 
+    // 생산지시] 생산계획의 루트 품목(ERP ItemSeq) 목록 조회
+    public List<Integer> selectRootItemCodesByPlan(ProdOrderSearchParam param) throws Exception {
+        return selectList("ProductionOrderDAO.selectRootItemCodesByPlan", param);
+    }
+
     // 생산지시] 생산지시 등록되기 전 제품의 공정 가져오기
     public List<ProdOrderRow> selectFlowProcessByPlanId(ProdOrderSearchParam param) throws Exception {
         return selectList("ProductionOrderDAO.selectFlowProcess", param);

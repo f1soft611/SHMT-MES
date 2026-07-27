@@ -2028,7 +2028,7 @@ public class EgovConfigAppIdGen {
 				.setTable("IDS")
 				.setTableName("TPR112")
 				.setPreFix("PFI")
-				.setCipers(4)
+				.setCipers(8)
 				.setFillChar('0')
 				.build();
 	}

@@ -9,8 +9,6 @@
         <result property="workplaceCode" column="WORKCENTER_CODE"/>
         <result property="workplaceName" column="WORKCENTER_NAME"/>
 
-        <result property="deleteFlag" column="DELETE_FLAG"/>
-
         <result property="regUserId" column="OPMAN_CODE"/>
         <result property="regDt" column="OPTIME"/>
         <result property="updUserId" column="OPMAN_CODE2"/>
@@ -151,6 +149,27 @@
         WHERE TPR110ID LIKE  'PF' + CONVERT(char(8), GETDATE(), 112) + '%'
     </select>
 
+
+    <select id="selectProcessFlowByIdAndFactory" parameterType="map" resultMap="processFlowResult">
+        SELECT
+            A.FACTORY_CODE,
+            A.WORK_ORDER_ID,
+            A.WORK_ORDER,
+            A.WORK_ORDER_NM,
+            A.WORKCENTER_CODE,
+            B.WORKCENTER_NAME,
+            A.OPMAN_CODE,
+            A.OPTIME,
+            A.OPMAN_CODE2,
+            A.OPTIME2
+        FROM TPR110 A
+        LEFT JOIN TPR101 B
+            ON A.FACTORY_CODE = B.FACTORY_CODE
+            AND A.WORKCENTER_CODE = B.WORKCENTER_CODE
+        WHERE A.WORK_ORDER_ID = #{processFlowId}
+          AND A.FACTORY_CODE = #{factoryCode}
+          AND ISNULL(A.DELETE_FLAG, '') != '1'
+    </select>
 
     <select id="selectProcessByFlowId" parameterType="string" resultType="map">
         SELECT WORK_ORDER_ID, WORK_ORDER, WORK_CODE, WORK_SEQ

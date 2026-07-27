@@ -183,6 +183,19 @@
 		</if>
 	</select>
 
+
+	<!-- 생산계획의 루트 품목(ERP ItemSeq) 목록 조회 -->
+	<select id="selectRootItemCodesByPlan"
+	        parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
+	        resultType="int">
+		SELECT DISTINCT A.ITEM_CODE
+		FROM TPR301 A
+		WHERE A.PRODPLAN_DATE = #{prodplanDate}
+		  AND A.PRODPLAN_SEQ = #{prodplanSeq}
+		  AND A.PRODWORK_SEQ = #{prodworkSeq}
+	</select>
+
+
 	<!--	작업지시가 등록되기 전 공정별 생산제품 조회 코드-->
 	<select id="selectFlowProcess"
 			parameterType="egovframework.let.production.order.domain.model.ProdOrderSearchParam"
@@ -219,7 +232,7 @@
 			A.ITEM_CODE AS ITEM_CODE_ID,
 			A2.MATERIAL_CODE AS ITEM_CODE,
 			A2.UNIT AS ITEM_UNIT_ID,
-			F.UPPER_ITEM_SEQ AS PROD_CODE_ID,
+			F.MAT_ITEM_SEQ AS PROD_CODE_ID,
 			F1.MATERIAL_CODE AS PROD_CODE,
 			F1.MATERIAL_NAME,
 			F1.MATERIAL_SPEC,
@@ -237,6 +250,7 @@
 			C.WORK_ORDER,
 			C.WORK_ORDER_NM,
 			D.LAST_FLAG,
+		    D.PLAN_FLAG AS PLAN_FLAG,
 			A.PROD_QTY AS ORDER_QTY,
 			CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
 			ISNULL(A.BIGO, '') AS BIGO,
@@ -266,6 +280,7 @@
 
 			LEFT JOIN TCO403 A2
 			ON A.ITEM_CODE = A2.MATERIAL_ID
+			AND ISNULL(A2.DELETE_FLAG, '') != '1'
 
 			LEFT JOIN TPR112 B
 			ON A.ITEM_CODE = B.PROD_CODE_ID
@@ -288,7 +303,9 @@
 			LEFT JOIN BOM_TREE F
 			ON CAST(F.PROC_SEQ AS VARCHAR) = D1.ERP_PROCESS_MAPPING
 			LEFT JOIN TCO403 F1
-			ON CAST(F.UPPER_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
+			--ON CAST(F.MAT_ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID--
+			ON CAST(F.ITEM_SEQ AS VARCHAR) = F1.MATERIAL_ID
+			AND ISNULL(F1.DELETE_FLAG, '') != '1'
 			LEFT JOIN MES_CCMMNDETAIL_CODE F2
 			ON F2.CODE_ID = 'COM007'
 			AND F1.UNIT = F2.CODE
@@ -297,8 +314,8 @@
 		AND A.PRODPLAN_DATE = #{prodplanDate}
 		AND A.PRODPLAN_SEQ = #{prodplanSeq}
 		AND A.PRODWORK_SEQ = #{prodworkSeq}
-		AND A2.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')
-		AND (F1.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')  OR D.SEQ = 1) --
+		--AND A2.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')
+		--AND (F1.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')  OR D.SEQ = 1) --
 		ORDER BY A.PRODPLAN_DATE, CAST(A.PRODPLAN_SEQ AS INT), CAST(A.PRODWORK_SEQ AS INT), CAST(D.SEQ AS INT), CAST(D.WORK_SEQ AS INT)
 	</select>
 
