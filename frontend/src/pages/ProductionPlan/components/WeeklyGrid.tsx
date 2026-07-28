@@ -552,12 +552,14 @@ const getDeliveryLabel = (
     parsedDeliveryDate,
   );
 
-  if (diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS) {
-    return diffDays === 0 ? 'D-Day' : `D-${diffDays}`;
-  }
-
   const mm = String(parsedDeliveryDate.getMonth() + 1).padStart(2, '0');
   const dd = String(parsedDeliveryDate.getDate()).padStart(2, '0');
+
+  if (diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS) {
+    return diffDays === 0
+      ? `D-Day (${mm}-${dd})`
+      : `D-${diffDays} (${mm}-${dd})`;
+  }
 
   return `${mm}-${dd}`;
 };
