@@ -1,15 +1,16 @@
+import type { Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useStopWorkDialog } from './useStopWorkDialog';
 import { ProdPlanRow } from '../../../types/productionOrder';
 import { productionOrderService } from '../../../services/productionOrderService';
 
-jest.mock('../../../services/productionOrderService', () => ({
+vi.mock('../../../services/productionOrderService', () => ({
   productionOrderService: {
-    stopWork: jest.fn(),
+    stopWork: vi.fn(),
   },
 }));
-jest.mock('../../../components/common/Feedback/ToastProvider', () => ({
-  useToast: () => ({ showToast: jest.fn() }),
+vi.mock('../../../components/common/Feedback/ToastProvider', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
 }));
 
 const makeRow = (prodQty: number): ProdPlanRow => ({
@@ -37,11 +38,11 @@ const makeRow = (prodQty: number): ProdPlanRow => ({
   workSeq:0,
 });
 
-const mockClear = jest.fn();
-const mockReload = jest.fn();
+const mockClear = vi.fn();
+const mockReload = vi.fn();
 
 describe('useStopWorkDialog', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   it('handleOpen이 호출되면 open이 true가 된다', () => {
     const { result } = renderHook(() =>
@@ -84,7 +85,7 @@ describe('useStopWorkDialog', () => {
   });
 
   it('handleConfirm 성공 시 open이 false가 되고 onReload가 호출된다', async () => {
-    (productionOrderService.stopWork as jest.Mock).mockResolvedValue({
+    (productionOrderService.stopWork as Mock).mockResolvedValue({
       data: { resultCode: 200, resultMessage: '작업중단 처리가 완료되었습니다.' },
     });
 
@@ -104,7 +105,7 @@ describe('useStopWorkDialog', () => {
   });
 
   it('handleConfirm 실패 시 open이 유지된다', async () => {
-    (productionOrderService.stopWork as jest.Mock).mockRejectedValue(new Error('서버 오류'));
+    (productionOrderService.stopWork as Mock).mockRejectedValue(new Error('서버 오류'));
 
     const { result } = renderHook(() =>
         useStopWorkDialog([makeRow(100)], mockClear, mockReload)
