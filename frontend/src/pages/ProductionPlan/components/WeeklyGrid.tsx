@@ -100,7 +100,7 @@ const PlanCard = memo<PlanCardProps>(
     onGroupClick,
     onOrderClick,
   }) => {
-    const deliveryLabel = getDeliveryLabel(plan.deliveryDate, plan.date);
+    const deliveryLabel = getDeliveryLabel(plan.deliveryDate);
 
     const handleGroupBadgeClick = (e: React.MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
@@ -244,9 +244,7 @@ const PlanCard = memo<PlanCardProps>(
                     label={deliveryLabel}
                     size="small"
                     color={
-                      isDeliveryDday(plan.deliveryDate, plan.date)
-                        ? 'warning'
-                        : 'default'
+                      isDeliveryDday(plan.deliveryDate) ? 'warning' : 'default'
                     }
                     variant="outlined"
                     sx={{
@@ -536,10 +534,7 @@ const parseDeliveryDate = (deliveryDate?: string): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const getDeliveryLabel = (
-  deliveryDate?: string,
-  baseDate?: string,
-): string | null => {
+const getDeliveryLabel = (deliveryDate?: string): string | null => {
   const parsedDeliveryDate = parseDeliveryDate(deliveryDate);
 
   if (!parsedDeliveryDate) {
@@ -549,20 +544,7 @@ const getDeliveryLabel = (
   const mm = String(parsedDeliveryDate.getMonth() + 1).padStart(2, '0');
   const dd = String(parsedDeliveryDate.getDate()).padStart(2, '0');
 
-  const parsedBaseDate = parseDeliveryDate(baseDate);
-  const today = new Date();
-  const isPastBaseDate =
-    !!parsedBaseDate && getCalendarDayDiff(parsedBaseDate, today) > 0;
-
-  // Past plans should not keep showing D-day style labels.
-  if (isPastBaseDate) {
-    return `${mm}-${dd}`;
-  }
-
-  const diffDays = getCalendarDayDiff(
-    parsedBaseDate ?? today,
-    parsedDeliveryDate,
-  );
+  const diffDays = getCalendarDayDiff(new Date(), parsedDeliveryDate);
 
   if (diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS) {
     return diffDays === 0
@@ -573,26 +555,14 @@ const getDeliveryLabel = (
   return `${mm}-${dd}`;
 };
 
-const isDeliveryDday = (deliveryDate?: string, baseDate?: string): boolean => {
+const isDeliveryDday = (deliveryDate?: string): boolean => {
   const parsedDeliveryDate = parseDeliveryDate(deliveryDate);
 
   if (!parsedDeliveryDate) {
     return false;
   }
 
-  const parsedBaseDate = parseDeliveryDate(baseDate);
-  const today = new Date();
-  const isPastBaseDate =
-    !!parsedBaseDate && getCalendarDayDiff(parsedBaseDate, today) > 0;
-
-  if (isPastBaseDate) {
-    return false;
-  }
-
-  const diffDays = getCalendarDayDiff(
-    parsedBaseDate ?? today,
-    parsedDeliveryDate,
-  );
+  const diffDays = getCalendarDayDiff(new Date(), parsedDeliveryDate);
 
   return diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS;
 };
