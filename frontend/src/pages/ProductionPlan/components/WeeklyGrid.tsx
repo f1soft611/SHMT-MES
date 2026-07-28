@@ -546,14 +546,23 @@ const getDeliveryLabel = (
     return null;
   }
 
-  const parsedBaseDate = parseDeliveryDate(baseDate);
-  const diffDays = getCalendarDayDiff(
-    parsedBaseDate ?? new Date(),
-    parsedDeliveryDate,
-  );
-
   const mm = String(parsedDeliveryDate.getMonth() + 1).padStart(2, '0');
   const dd = String(parsedDeliveryDate.getDate()).padStart(2, '0');
+
+  const parsedBaseDate = parseDeliveryDate(baseDate);
+  const today = new Date();
+  const isPastBaseDate =
+    !!parsedBaseDate && getCalendarDayDiff(parsedBaseDate, today) > 0;
+
+  // Past plans should not keep showing D-day style labels.
+  if (isPastBaseDate) {
+    return `${mm}-${dd}`;
+  }
+
+  const diffDays = getCalendarDayDiff(
+    parsedBaseDate ?? today,
+    parsedDeliveryDate,
+  );
 
   if (diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS) {
     return diffDays === 0
@@ -572,8 +581,16 @@ const isDeliveryDday = (deliveryDate?: string, baseDate?: string): boolean => {
   }
 
   const parsedBaseDate = parseDeliveryDate(baseDate);
+  const today = new Date();
+  const isPastBaseDate =
+    !!parsedBaseDate && getCalendarDayDiff(parsedBaseDate, today) > 0;
+
+  if (isPastBaseDate) {
+    return false;
+  }
+
   const diffDays = getCalendarDayDiff(
-    parsedBaseDate ?? new Date(),
+    parsedBaseDate ?? today,
     parsedDeliveryDate,
   );
 
