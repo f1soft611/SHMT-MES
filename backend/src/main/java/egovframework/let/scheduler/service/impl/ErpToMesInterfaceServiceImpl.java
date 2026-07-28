@@ -937,7 +937,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 				"FROM BOM_TREE AS B " +
 				"INNER JOIN dbo.SHM_IF_VIEW_TPDROUItemProcMat AS C ON C.ItemSeq = B.MatItemSeq" +
 				") " +
-				"SELECT * FROM BOM_TREE " +
+				"SELECT DISTINCT * FROM BOM_TREE " +
 				"OPTION (MAXRECURSION 0)";
 
 		return erpJdbcTemplate.query(sql, new ErpTPDROUItemProcMatRowMapper(), itemSeq);

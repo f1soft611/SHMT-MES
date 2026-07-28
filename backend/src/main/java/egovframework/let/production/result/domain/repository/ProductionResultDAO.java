@@ -67,6 +67,11 @@ public class ProductionResultDAO extends EgovAbstractMapper {
 		delete("ProductionResultDAO.deleteProductionResult", dto);
 	}
 
+	// 생산실적 ERP IF 전송용 조회 (TPR601 + TPR504 연계정보)
+	public ProdResultErpLinkRow selectProductionResultForErp(ProdResultDetailParent key) throws Exception {
+		return (ProdResultErpLinkRow) selectOne("ProductionResultDAO.selectProductionResultForErp", key);
+	}
+
 	// 생산실적 작업자 TPR601W nextId 가져오기
 	public String selectProdResultWorkerNextId() throws Exception {
 		return (String)selectOne("ProductionResultDAO.selectProdResultWorkerNextId");

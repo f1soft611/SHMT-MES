@@ -1,17 +1,18 @@
+import type { Mock } from 'vitest';
 import apiClient from './api';
 import { processFlowService } from './processFlowService';
 
-jest.mock('./api', () => ({
+vi.mock('./api', () => ({
   __esModule: true,
   default: {
-    post: jest.fn(),
-    get: jest.fn(),
+    post: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
 describe('processFlowService', () => {
   it('품목 delta는 flowId를 URL에 넣고 ID 배열만 전송한다', async () => {
-    (apiClient.post as jest.Mock).mockResolvedValue({
+    (apiClient.post as Mock).mockResolvedValue({
       data: {
         resultCode: 200,
         result: { addedItems: [], deletedFlowItemIds: [] },
@@ -30,7 +31,7 @@ describe('processFlowService', () => {
   });
 
   it('공정 상세 응답의 seq를 number DTO로 정규화한다', async () => {
-    (apiClient.get as jest.Mock).mockResolvedValue({
+    (apiClient.get as Mock).mockResolvedValue({
       data: {
         resultCode: 200,
         result: {

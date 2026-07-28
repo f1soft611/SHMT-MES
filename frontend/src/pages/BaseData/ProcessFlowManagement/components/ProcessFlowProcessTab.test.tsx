@@ -1,24 +1,25 @@
+import type { MockedFunction } from 'vitest';
 import { render, within } from '@testing-library/react';
 import ProcessFlowProcessTab from './ProcessFlowProcessTab';
 import { useProcessDraftContext } from '../detail/ProcessDraftContext';
 import { useProcessCatalogQuery } from '../detail/useProcessFlowDetailQueries';
 
-jest.mock('../detail/ProcessDraftContext', () => ({
-  useProcessDraftContext: jest.fn(),
+vi.mock('../detail/ProcessDraftContext', () => ({
+  useProcessDraftContext: vi.fn(),
 }));
 
-jest.mock('../detail/useProcessFlowDetailQueries', () => ({
-  useProcessCatalogQuery: jest.fn(),
+vi.mock('../detail/useProcessFlowDetailQueries', () => ({
+  useProcessCatalogQuery: vi.fn(),
 }));
 
-jest.mock('../../../../components/common/Feedback/ToastProvider', () => ({
-  useToast: () => ({ showToast: jest.fn() }),
+vi.mock('../../../../components/common/Feedback/ToastProvider', () => ({
+  useToast: () => ({ showToast: vi.fn() }),
 }));
 
-const mockedUseProcessDraftContext = useProcessDraftContext as jest.MockedFunction<
+const mockedUseProcessDraftContext = useProcessDraftContext as MockedFunction<
   typeof useProcessDraftContext
 >;
-const mockedUseProcessCatalogQuery = useProcessCatalogQuery as jest.MockedFunction<
+const mockedUseProcessCatalogQuery = useProcessCatalogQuery as MockedFunction<
   typeof useProcessCatalogQuery
 >;
 
@@ -40,13 +41,13 @@ const renderLoadingGrids = (withRows: boolean) => {
     isLoading: true,
     isSaving: false,
     error: null,
-    add: jest.fn(),
-    remove: jest.fn(),
-    updateSeq: jest.fn(),
-    selectPlan: jest.fn(),
-    toggleLast: jest.fn(),
-    save: jest.fn().mockResolvedValue(true),
-    retry: jest.fn().mockResolvedValue(undefined),
+    add: vi.fn(),
+    remove: vi.fn(),
+    updateSeq: vi.fn(),
+    selectPlan: vi.fn(),
+    toggleLast: vi.fn(),
+    save: vi.fn().mockResolvedValue(true),
+    retry: vi.fn().mockResolvedValue(undefined),
   } as unknown as ReturnType<typeof useProcessDraftContext>);
 
   mockedUseProcessCatalogQuery.mockReturnValue({
@@ -65,7 +66,7 @@ const renderLoadingGrids = (withRows: boolean) => {
     },
     isLoading: true,
     error: null,
-    refetch: jest.fn(),
+    refetch: vi.fn(),
   } as unknown as ReturnType<typeof useProcessCatalogQuery>);
 
   const { container } = render(<ProcessFlowProcessTab />);

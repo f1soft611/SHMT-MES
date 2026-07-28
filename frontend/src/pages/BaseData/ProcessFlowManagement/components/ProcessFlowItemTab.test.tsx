@@ -1,12 +1,13 @@
+import type { MockedFunction } from 'vitest';
 import { render, within } from '@testing-library/react';
 import ProcessFlowItemTab from './ProcessFlowItemTab';
 import { useItemDraftContext } from '../detail/ItemDraftContext';
 
-jest.mock('../detail/ItemDraftContext', () => ({
-  useItemDraftContext: jest.fn(),
+vi.mock('../detail/ItemDraftContext', () => ({
+  useItemDraftContext: vi.fn(),
 }));
 
-const mockedUseItemDraftContext = useItemDraftContext as jest.MockedFunction<
+const mockedUseItemDraftContext = useItemDraftContext as MockedFunction<
   typeof useItemDraftContext
 >;
 
@@ -28,11 +29,11 @@ describe('ProcessFlowItemTab', () => {
       isAppliedItemsFetching,
       isSaving: false,
       error: null,
-      add: jest.fn(),
-      remove: jest.fn(),
-      save: jest.fn().mockResolvedValue(true),
-      retry: jest.fn().mockResolvedValue(undefined),
-      setCatalogParams: jest.fn(),
+      add: vi.fn(),
+      remove: vi.fn(),
+      save: vi.fn().mockResolvedValue(true),
+      retry: vi.fn().mockResolvedValue(undefined),
+      setCatalogParams: vi.fn(),
     } as unknown as ReturnType<typeof useItemDraftContext>);
 
     const { container } = render(<ProcessFlowItemTab />);
@@ -75,11 +76,11 @@ describe('ProcessFlowItemTab', () => {
       isAppliedItemsFetching: true,
       isSaving: false,
       error: null,
-      add: jest.fn(),
-      remove: jest.fn(),
-      save: jest.fn().mockResolvedValue(true),
-      retry: jest.fn().mockResolvedValue(undefined),
-      setCatalogParams: jest.fn(),
+      add: vi.fn(),
+      remove: vi.fn(),
+      save: vi.fn().mockResolvedValue(true),
+      retry: vi.fn().mockResolvedValue(undefined),
+      setCatalogParams: vi.fn(),
     } as unknown as ReturnType<typeof useItemDraftContext>);
 
     const { container } = render(<ProcessFlowItemTab />);
