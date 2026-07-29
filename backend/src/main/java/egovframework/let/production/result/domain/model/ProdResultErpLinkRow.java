@@ -18,4 +18,6 @@ public class ProdResultErpLinkRow {
 
     private String lotNo;          // TPR504.LOT_NO (조인)
     private Integer workorderSeq;  // TPR504.WORKORDER_SEQ (조인)
+
+    private String opmanCode;
 }

@@ -254,6 +254,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     }
 
     let lastMessage = '저장되었습니다';
+    let erpFailed = false;
 
     try {
       // 수정 먼저
@@ -264,6 +265,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
           return false;
         }
         lastMessage = data.resultMessage;
+        if (data.result?.erpFailReason) erpFailed = true;
       }
 
       // 신규
@@ -274,11 +276,12 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
           return false;
         }
         lastMessage = data.resultMessage;
+        if (data.result?.erpFailReason) erpFailed = true;
       }
 
       showToast({
         message: lastMessage,
-        severity: 'success',
+        severity: erpFailed ? 'warning' : 'success',
       });
 
       // 플래그 초기화
@@ -322,7 +325,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
 
       showToast({
         message: data.resultMessage,
-        severity: 'success',
+        severity: data.result?.erpFailReason ? 'warning' : 'success',
       });
     } catch (e) {
       console.error(e);

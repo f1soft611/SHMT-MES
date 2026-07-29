@@ -5,7 +5,6 @@
     <insert id="insertErpIFProdResult"
             parameterType="egovframework.let.production.result.domain.model.ErpIFProdResultDto">
         INSERT INTO SHM_IF_TPDSFCWorkReport(
-            IDX,
             WorkingTag,
             RegEmpID,
             RegDateTime,
@@ -32,7 +31,6 @@
             LotNo
         )
         VALUES (
-                   #{mesIfKey},
                    #{workingTag},
                    #{regEmpId},
                    GETDATE(),

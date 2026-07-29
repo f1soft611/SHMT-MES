@@ -32,14 +32,14 @@ public interface EgovProductionResultService {
      */
     ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception;
 
-    // 생산실적 TPR601 등록
-    void insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception;
+    // 생산실적 TPR601 등록, ERP 전송 실패 시 실패 사유 반환 (성공 시 null)
+    String insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception;
 
-    // 생산실적 수정
-    void updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception;
+    // 생산실적 수정, ERP 전송 실패 시 실패 사유 반환 (성공 시 null)
+    String updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception;
 
-    // 생산실적 삭제
-    void deleteProductionResult(ProdResultDeleteDto dto) throws Exception;
+    // 생산실적 삭제, ERP 전송 실패 시 실패 사유 반환 (성공 시 null)
+    String deleteProductionResult(ProdResultDeleteDto dto) throws Exception;
 
 
     /**
