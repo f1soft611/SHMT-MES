@@ -6,6 +6,7 @@ import {
   ProductionResultDetail,
 } from '../../../types/productionResult';
 import { productionResultService } from '../../../services/productionResultService';
+import { prodOrderListQueryKey } from './useProdOrder';
 import workplaceService from '../../../services/workplaceService';
 import { WorkplaceWorker } from '../../../types/workplace';
 import dayjs from "dayjs";
@@ -236,7 +237,7 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
     if (newRows.length === 0 && modifiedRows.length === 0) {
       showToast({
         message: '저장할 변경사항이 없습니다.',
-        severity: 'info',
+        severity: 'warning',
       });
       return false;
     }
@@ -292,6 +293,8 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
         }))
       );
       await queryClient.invalidateQueries({ queryKey: prodResultDetailsKey(parentRow) });
+      // 저장된 수량이 메인 그리드(생산지시 목록)에도 반영되도록 함께 새로고침
+      await queryClient.invalidateQueries({ queryKey: [prodOrderListQueryKey] });
       return true;
     } catch (e) {
       console.error(e);
@@ -327,6 +330,9 @@ export function useProdResultDetail(parentRow: ProdResultOrderRow | null) {
         message: data.resultMessage,
         severity: data.result?.erpFailReason ? 'warning' : 'success',
       });
+      await queryClient.invalidateQueries({ queryKey: prodResultDetailsKey(parentRow) });
+      // 삭제 결과가 메인 그리드(생산지시 목록)에도 반영되도록 함께 새로고침
+      await queryClient.invalidateQueries({ queryKey: [prodOrderListQueryKey] });
     } catch (e) {
       console.error(e);
       showToast({
