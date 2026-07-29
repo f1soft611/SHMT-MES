@@ -2,6 +2,7 @@ package egovframework.let.production.result.domain.repository;
 
 import egovframework.let.production.result.domain.model.ProdResultBadDetailDto;
 import egovframework.let.production.result.domain.model.*;
+import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;
 import org.springframework.stereotype.Repository;
 
@@ -24,111 +25,133 @@ import java.util.List;
  *
  * </pre>
  */
+@Slf4j
 @Repository("ProductionResultDAO")
 public class ProductionResultDAO extends EgovAbstractMapper {
 
 	// 조건에 맞는 생산지시 목록 반환
 	public List<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto searchVO) throws Exception {
+		log.info("==========> selectProductionOrderList <==========");
 		return selectList("ProductionResultDAO.selectProductionOrderList", searchVO);
 	}
 
 	// 조건에 맞는 생산지시 전체 건 수
 	public int selectProductionOrderListCount(ProdResultSearchDto searchVO) throws Exception {
+		log.info("==========> selectProductionOrderListCount <==========");
 		return (Integer)selectOne("ProductionResultDAO.selectProductionOrderListCount", searchVO);
 	}
 
 	// 생산실적 TPR601 nextId 가져오기
 	public String selectProdResultNextId() throws Exception {
+		log.info("==========> selectProdResultNextId <==========");
 		return (String)selectOne("ProductionResultDAO.selectProdResultNextId");
 	}
 
 	// 생산실적 시퀀스 가져오기 PROD_SEQ
 	public int selectProdSeq(ProdResultInsertDto params) throws Exception {
+		log.info("==========> selectProdSeq <==========");
 		return (Integer)selectOne("ProductionResultDAO.selectProdSeq", params);
 	}
 
 	// 생산실적 TPR605 nextId 가져오기
 	public String selectProdResultBadNextId() throws Exception {
+		log.info("==========> selectProdResultBadNextId <==========");
 		return (String)selectOne("ProductionResultDAO.selectProdResultBadNextId");
 	}
 
 	// 생산실적 등록
 	public void insertProductionResult(ProdResultInsertDto dto) throws Exception {
+		log.info("==========> insertProductionResult <==========");
 		insert("ProductionResultDAO.insertProductionResult", dto);
 	}
 
 	// 생산실적 수정
 	public void updateProductionResult(ProdResultUpdateDto dto) throws Exception {
+		log.info("==========> updateProductionResult <==========");
 		update("ProductionResultDAO.updateProductionResult", dto);
 	}
 
 	// 생산실적 삭제
 	public void deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
+		log.info("==========> deleteProductionResult <==========");
 		delete("ProductionResultDAO.deleteProductionResult", dto);
 	}
 
 	// 생산실적 ERP IF 전송용 조회 (TPR601 + TPR504 연계정보)
 	public ProdResultErpLinkRow selectProductionResultForErp(ProdResultDetailParent key) throws Exception {
+		log.info("==========> selectProductionResultForErp <==========");
 		return (ProdResultErpLinkRow) selectOne("ProductionResultDAO.selectProductionResultForErp", key);
 	}
 
 	// 생산실적 작업자 TPR601W nextId 가져오기
 	public String selectProdResultWorkerNextId() throws Exception {
+		log.info("==========> selectProdResultWorkerNextId <==========");
 		return (String)selectOne("ProductionResultDAO.selectProdResultWorkerNextId");
 	}
 
 	// 생산실적 시퀀스 가져오기 PROD_SEQ
 	public int selectProdResultWorkerSeq(ProdResultWorkerDto dto) throws Exception {
+		log.info("==========> selectProdResultWorkerSeq <==========");
 		return (Integer)selectOne("ProductionResultDAO.selectProdResultWorkerSeq", dto);
 	}
 
 	// 생산실적 -작업자 등록
 	public void insertProductionResultWorker(ProdResultWorkerDto dto) throws Exception {
+		log.info("==========> insertProductionResultWorker <==========");
 		insert("ProductionResultDAO.insertProductionResultWorker", dto);
 	}
 
 	// 생산실적 -작업자 삭제 (오버로드)
 	public void deleteProductionResultWorker(ProdResultDetailParent dto) throws Exception {
+		log.info("==========> deleteProductionResultWorker <==========");
 		delete("ProductionResultDAO.deleteProductionResultWorker", dto);
 	}
 
 	// 생산실적 -작업자 삭제 (오버로드)
 	public void deleteProductionResultWorker(ProdResultDeleteDto dto) throws Exception {
+		log.info("==========> deleteProductionResultWorker <==========");
 		delete("ProductionResultDAO.deleteProductionResultWorker", dto);
 	}
 
 	// 생산실적 - 불량 상세 등록
 	public void insertBadDetail(ProdResultBadDetailDto dto) throws Exception {
+		log.info("==========> insertBadDetail <==========");
 		insert("ProductionResultDAO.insertBadDetail", dto);
 	}
 
 	// 생산실적 - 불량 상세 삭제
 	public void deleteBadDetails(ProdResultDetailParent dto) throws Exception {
+		log.info("==========> deleteBadDetails <==========");
 		delete("ProductionResultDAO.deleteBadDetails", dto);
 	}
 
 	// 생산실적 - 설비상태
 	public void deleteProductionResultEquipStatus(ProdResultDetailParent dto) throws Exception {
+		log.info("==========> deleteProductionResultEquipStatus <==========");
 		delete("ProductionResultDAO.deleteProductionResultEquipStatus", dto);
 	}
 
 	// 생산실적 -투입자재 삭제
 	public void deleteProductionResultMaterial(ProdResultDetailParent dto) throws Exception {
+		log.info("==========> deleteProductionResultMaterial <==========");
 		delete("ProductionResultDAO.deleteProductionResultMaterial", dto);
 	}
 
 	// 생산실적 등록 후 TPR504 ORDER_FLAG UPDATE
 	public void updateProdOrderOrderFlag(ProdResultOrderFlagDto dto) throws Exception {
+		log.info("==========> updateProdOrderOrderFlag <==========");
 		update("ProductionResultDAO.updateProdOrderOrderFlag", dto);
 	}
 
 	//생산실적 detail 목록 조회
 	public List<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception {
+		log.info("==========> selectProductionResultDetailList <==========");
 		return selectList("ProductionResultDAO.selectProductionResultDetailList", dto);
 	}
 
 	//생산실적 detail 목록 조회
 	public List<ProdResultBadDetailDto> selectBadDetails(ProdResultBaseDetailDto dto) throws Exception {
+		log.info("==========> selectBadDetails <==========");
 		return selectList("ProductionResultDAO.selectBadDetails", dto);
 	}
 }

@@ -12,6 +12,7 @@ import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,6 +42,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	@Override
 	public ListResult<ProdResultOrderRow> selectProductionOrderList(ProdResultSearchDto dto) throws Exception {
 
+		log.info("==========> selectProductionOrderList <==========");
 
 		List<ProdResultOrderRow> list = productionResultDAO.selectProductionOrderList(dto);
 		int resultCnt = productionResultDAO.selectProductionOrderListCount(dto);
@@ -48,9 +50,14 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		return new ListResult<>(list, resultCnt);
 	}
 
+	// 생산실적 저장
 	@Override
 	@Transactional
-	public void insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception {
+	public String insertProductionResult(List<ProdResultInsertDto> resultList) throws Exception {
+		log.info("==========> insertProductionResult <==========");
+
+		List<String> erpFailReasons = new ArrayList<>();
+
 		for(ProdResultInsertDto dto : resultList){
 			String tpr601Id = dto.getTpr601Id();
 			if (tpr601Id.toLowerCase().startsWith("new-")) {
@@ -72,14 +79,19 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 				saveProductionResultBadDetails(dto);
 
 
-				// ERP IF 전송 (A) - 실패해도 MES 저장은 유지
+				// ERP IF 전송 (A) - 실패해도 MES 저장은 유지. sendProdResultToErp는 예외를 던지지 않고 boolean만 반환하므로 결과를 직접 확인한다.
 				try {
 					ProdResultErpLinkRow row = productionResultDAO.selectProductionResultForErp(dto);
-					erpIfService.sendProdResultToErp(buildAddIfDto(
+					boolean erpSendSuccess = erpIfService.sendProdResultToErp(buildAddIfDto(
 							row, dto.getProdQty(), dto.getGoodQty(), dto.getBadQty(),
 							dto.getProdStime(), dto.getProdEtime(), dto.getWorkerCodes()));
+					if (!erpSendSuccess) {
+						log.warn("생산실적 ERP 전송 실패 - tpr601Id={}", dto.getTpr601Id());
+						erpFailReasons.add("ERP 전송에 실패했습니다. 관리자에게 문의하세요.");
+					}
 				} catch (Exception e) {
 					log.warn("생산실적 ERP 전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+					erpFailReasons.add(e.getMessage());
 				}
 
 
@@ -96,11 +108,17 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			}
 
 		}
+
+		return erpFailReasons.isEmpty() ? null : String.join("; ", erpFailReasons);
 	}
 
+	// 생산실적 수정
 	@Override
 	@Transactional
-	public void updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception {
+	public String updateProductionResult(List<ProdResultUpdateDto> resultList) throws Exception {
+		log.info("==========> updateProductionResult <==========");
+
+		List<String> erpFailReasons = new ArrayList<>();
 
 		for(ProdResultUpdateDto  dto : resultList){
 
@@ -117,31 +135,48 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 			// 🔥 3. 불량 DELETE → INSERT (추가)
 			saveProductionResultBadDetails(dto);
 
-			// ERP IF 전송: 기존 실적 취소(D) 후 재생성(A) - 각각 독립적으로 실패를 격리
+			// ERP IF 전송: 기존 실적 취소(D) 후 재생성(A) - 각각 독립적으로 실패를 격리.
+			// sendProdResultToErp는 예외를 던지지 않고 boolean만 반환하므로 결과를 직접 확인한다.
 			try {
-				erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow));
+				if (!erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow))) {
+					log.warn("생산실적 ERP 취소전송 실패 - tpr601Id={}", dto.getTpr601Id());
+					erpFailReasons.add("ERP 전송에 실패했습니다. 관리자에게 문의하세요.");
+				}
 			} catch (Exception e) {
 				log.warn("생산실적 ERP 취소전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+				erpFailReasons.add(e.getMessage());
 			}
 			try {
-				erpIfService.sendProdResultToErp(buildAddIfDto(
+				if (!erpIfService.sendProdResultToErp(buildAddIfDto(
 						beforeRow, dto.getProdQty(), dto.getGoodQty(), dto.getBadQty(),
-						dto.getProdStime(), dto.getProdEtime(), dto.getWorkerCodes()));
+						dto.getProdStime(), dto.getProdEtime(), dto.getWorkerCodes()))) {
+					log.warn("생산실적 ERP 재생성전송 실패 - tpr601Id={}", dto.getTpr601Id());
+					erpFailReasons.add("ERP 전송에 실패했습니다. 관리자에게 문의하세요.");
+				}
 			} catch (Exception e) {
 				log.warn("생산실적 ERP 재생성전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+				erpFailReasons.add(e.getMessage());
 			}
 
 			// TPR601M DELETE ALL -> INSERT
 		}
+
+		return erpFailReasons.isEmpty() ? null : String.join("; ", erpFailReasons);
 	}
 
 	// 생산실적 삭제
 	@Override
 	@Transactional
-	public void deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
+	public String deleteProductionResult(ProdResultDeleteDto dto) throws Exception {
+		log.info("==========> deleteProductionResult <==========");
 
-		// ERP D 전송을 위해 삭제 전 값 확보
-		ProdResultErpLinkRow beforeRow = productionResultDAO.selectProductionResultForErp(dto);
+		// ERP D 전송을 위해 삭제 전 값 확보 - 실패해도 MES 삭제는 유지
+		ProdResultErpLinkRow beforeRow = null;
+		try {
+			beforeRow = productionResultDAO.selectProductionResultForErp(dto);
+		} catch (Exception e) {
+			log.warn("생산실적 ERP 연계정보 조회 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+		}
 
 		// 1. 실적별 불량 상세 삭제 TPR605
 		productionResultDAO.deleteBadDetails(dto);
@@ -158,19 +193,24 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 		// 4. 실적 삭제 TPR601
 		productionResultDAO.deleteProductionResult(dto);
 
-		// ERP IF 전송 (D) - 실패해도 MES 삭제는 유지
-		try {
-			erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow));
-		} catch (Exception e) {
-			log.warn("생산실적 ERP 삭제전송 실패 - tpr601Id={}", dto.getTpr601Id(), e);
+		// ERP IF 전송 (D) - 실패해도 MES 삭제는 유지. sendProdResultToErp는 예외를 던지지 않고 boolean만 반환하므로 결과를 직접 확인한다.
+		if (beforeRow != null) {
+			boolean erpSendSuccess = erpIfService.sendProdResultToErp(buildDeleteIfDto(beforeRow));
+			if (!erpSendSuccess) {
+				log.warn("생산실적 ERP 삭제전송 실패 - tpr601Id={}", dto.getTpr601Id());
+				return "ERP 전송에 실패했습니다. 관리자에게 문의하세요.";
+			}
 		}
 
+		return null;
 	}
 
 
-
+	// 생산실적 detail 목록 조회
 	@Override
 	public ListResult<ProdResultRow> selectProductionResultDetailList(ProdResultDto dto) throws Exception {
+		log.info("==========> selectProductionResultDetailList <==========");
+
 		List<ProdResultRow> list = productionResultDAO.selectProductionResultDetailList(dto);
 
 		return new ListResult<>(list, 0);
@@ -179,6 +219,8 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 	// 불량 상세 목록 조회
 	@Override
 	public ListResult<ProdResultBadDetailDto> selectBadDetails(ProdResultBaseDetailDto dto) throws Exception {
+		log.info("==========> selectBadDetails <==========");
+
 		List<ProdResultBadDetailDto> list = productionResultDAO.selectBadDetails(dto);
 
 		return new ListResult<>(list, 0);
@@ -187,6 +229,8 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	// 생산실적 작업자 저장
 	private void saveProductionResultWorkers(ProdResultDetailParent parent) throws Exception {
+		log.info("==========> saveProductionResultWorkers <==========");
+
 		List<String> workers = parent.getWorkerCodes();
 		if (workers == null || workers.isEmpty()) return;
 
@@ -214,6 +258,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	// 생산실적 불량 상세 저장
 	private void saveProductionResultBadDetails(ProdResultDetailParent parent) throws Exception {
+		log.info("==========> saveProductionResultBadDetails <==========");
 
 		List<ProdResultBadDetailDto> badList = parent.getBadDetails();
 
@@ -258,7 +303,7 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 		ErpIFProdResultDto dto = new ErpIFProdResultDto();
 		dto.setWorkingTag("A");
-		dto.setRegEmpId("SYSTEM");
+		dto.setRegEmpId(row.getOpmanCode());
 		dto.setMesIfKey(row.getTpr601Id());
 		dto.setWorkDate(row.getProdplanDate());
 		dto.setWorkOrderSeq(row.getWorkorderSeq());
@@ -281,9 +326,10 @@ public class EgovProductionResultServiceImpl extends EgovAbstractServiceImpl imp
 
 	// ERP IF 'D'(삭제/취소) 페이로드 구성 - 조회 시점의 기존 값을 그대로 사용
 	private ErpIFProdResultDto buildDeleteIfDto(ProdResultErpLinkRow row) {
+
 		ErpIFProdResultDto dto = new ErpIFProdResultDto();
 		dto.setWorkingTag("D");
-		dto.setRegEmpId("SYSTEM");
+		dto.setRegEmpId(row.getOpmanCode());
 		dto.setMesIfKey(row.getTpr601Id());
 		dto.setWorkDate(row.getProdplanDate());
 		dto.setWorkOrderSeq(row.getWorkorderSeq());

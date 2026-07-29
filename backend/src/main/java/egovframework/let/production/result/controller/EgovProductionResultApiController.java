@@ -113,13 +113,16 @@ public class EgovProductionResultApiController {
 			detail.setOpmanCode(user.getUniqId());
 		}
 
-		productionResultService.insertProductionResult(details);
+		String erpFailReason = productionResultService.insertProductionResult(details);
 
 		Map<String, Object> resultMap = new HashMap<>();
-		resultMap.put("message", "생산실적이 등록되었습니다.");
 		resultMap.put("user", user);
+		resultMap.put("erpFailReason", erpFailReason);
 
-		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS);
+		String message = erpFailReason != null
+				? "실적 등록은 성공했지만 ERP 전송에 실패했습니다. (" + erpFailReason + ")"
+				: "생산실적이 등록되었습니다.";
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
 	}
 
 	/**
@@ -152,8 +155,13 @@ public class EgovProductionResultApiController {
 				detail.setOpmanCode(user.getUniqId());
 			}
 
-			productionResultService.updateProductionResult(details);
-			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 수정이 완료되었습니다.");
+			String erpFailReason = productionResultService.updateProductionResult(details);
+			resultMap.put("erpFailReason", erpFailReason);
+
+			String message = erpFailReason != null
+					? "실적 변경은 성공했지만 ERP 전송에 실패했습니다. (" + erpFailReason + ")"
+					: "생산실적 수정이 완료되었습니다.";
+			return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
 
 		} catch (IllegalStateException e) {
 			return resultVoHelper.buildFromMap(resultMap, ResponseCode.INPUT_CHECK_ERROR, e.getMessage());
@@ -183,12 +191,16 @@ public class EgovProductionResultApiController {
 			@RequestBody ProdResultDeleteDto detail,
 			@Parameter(hidden = true) @AuthenticationPrincipal LoginVO user) throws Exception {
 
-		productionResultService.deleteProductionResult(detail);
+		String erpFailReason = productionResultService.deleteProductionResult(detail);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("user", user);
+		resultMap.put("erpFailReason", erpFailReason);
 
-		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산실적 삭제가 완료되었습니다.");
+		String message = erpFailReason != null
+				? "실적 삭제는 성공했지만 ERP 전송에 실패했습니다. (" + erpFailReason + ")"
+				: "생산실적 삭제가 완료되었습니다.";
+		return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, message);
 	}
 
 	/**
