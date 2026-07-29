@@ -200,7 +200,7 @@
     <select id="selectProdSeq"
             parameterType="map"
             resultType="int">
-        SELECT COUNT(*)+1
+        SELECT ISNULL(MAX(PROD_SEQ), 0)+1
         FROM TPR601
         WHERE FACTORY_CODE = #{factoryCode}
         AND PRODPLAN_DATE = #{prodplanDate}
