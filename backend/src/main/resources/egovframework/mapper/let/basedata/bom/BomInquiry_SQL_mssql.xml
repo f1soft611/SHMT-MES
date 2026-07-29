@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BomInquiryDAO">
+
+    <!-- BOM 조회용 품목 검색 (품목코드/품번/품목명) -->
+    <select id="BomInquiryDAO.selectBomItems" parameterType="map" resultType="egovframework.let.basedata.bom.domain.model.BomItemSearchRow">
+        SELECT TOP 50
+            MATERIAL_ID   AS ITEM_SEQ,
+            MATERIAL_CODE AS ITEM_NO,
+            MATERIAL_NAME AS ITEM_NAME,
+            MATERIAL_SPEC AS ITEM_SPEC
+        FROM TCO403
+        WHERE FACTORY_CODE = #{factoryCode}
+          AND ISNULL(DELETE_FLAG, '') != '1'
+          AND (
+                MATERIAL_ID   LIKE '%' + #{keyword} + '%'
+             OR MATERIAL_CODE LIKE '%' + #{keyword} + '%'
+             OR MATERIAL_NAME LIKE '%' + #{keyword} + '%'
+          )
+        ORDER BY MATERIAL_CODE
+    </select>
+
+    <!-- 루트 품목을 기준으로 최신 차수(BOM_REV/PROC_REV) BOM 트리를 재귀적으로 조회 -->
+    <select id="BomInquiryDAO.selectBomTreeRows" parameterType="int" resultType="egovframework.let.basedata.bom.domain.model.BomTreeRow">
+        ;WITH LATEST_REV AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (PARTITION BY ITEM_SEQ ORDER BY BOM_REV DESC, PROC_REV DESC) AS RN
+            FROM TCO501
+        ),
+        BOM_TREE AS (
+            SELECT *, 0 AS DEPTH, CAST('|' + CAST(ITEM_SEQ AS VARCHAR(20)) + '|' AS VARCHAR(MAX)) AS VISITED_PATH
+            FROM LATEST_REV
+            WHERE RN = 1 AND ITEM_SEQ = #{itemSeq}
+
+            UNION ALL
+
+            SELECT C.*, B.DEPTH + 1, B.VISITED_PATH + CAST(C.ITEM_SEQ AS VARCHAR(20)) + '|'
+            FROM BOM_TREE B
+            INNER JOIN LATEST_REV C
+                ON C.ITEM_SEQ = B.MAT_ITEM_SEQ AND C.RN = 1
+            WHERE B.VISITED_PATH NOT LIKE '%|' + CAST(C.ITEM_SEQ AS VARCHAR(20)) + '|%'
+        )
+        SELECT
+            T.DEPTH,
+            T.ITEM_SEQ,
+            ITEM.MATERIAL_CODE AS ITEM_NO,
+            ITEM.MATERIAL_NAME AS ITEM_NAME,
+            T.PROC_SEQ,
+            T.SERL,
+            T.MAT_ITEM_SEQ,
+            MAT.MATERIAL_CODE AS MAT_ITEM_NO,
+            MAT.MATERIAL_NAME AS MAT_ITEM_NAME,
+            MAT.MATERIAL_SPEC AS MAT_ITEM_SPEC,
+            T.NEED_QTY_NUMERATOR,
+            T.NEED_QTY_DENOMINATOR,
+            UNIT_CODE.CODE_NM AS UNIT_NAME,
+            T.SM_DELV_TYPE
+        FROM BOM_TREE T
+        LEFT JOIN TCO403 ITEM ON CAST(T.ITEM_SEQ AS VARCHAR) = ITEM.MATERIAL_ID AND ISNULL(ITEM.DELETE_FLAG, '') != '1'
+        LEFT JOIN TCO403 MAT ON CAST(T.MAT_ITEM_SEQ AS VARCHAR) = MAT.MATERIAL_ID AND ISNULL(MAT.DELETE_FLAG, '') != '1'
+        LEFT JOIN MES_CCMMNDETAIL_CODE UNIT_CODE ON UNIT_CODE.CODE_ID = 'COM007' AND MAT.UNIT = UNIT_CODE.CODE
+        ORDER BY T.DEPTH, T.PROC_SEQ, T.SERL
+        OPTION (MAXRECURSION 0)
+    </select>
+
+</mapper>
