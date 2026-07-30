@@ -8,6 +8,7 @@ const URL = {
   PROCESS_MANAGEMENT: '/base/process', //공정 관리
   EQUIPMENT_MANAGEMENT: '/base/equipment', //설비 관리
   ITEM_MANAGEMENT: '/base/item', //품목 관리
+  BOM_INQUIRY: '/base/bom', //BOM 조회
   PRODUCTION_PLAN: '/prod/plan', //생산계획 수립
   PRODUCTION_ORDERS: '/prod/orders', //생산지시
   PRODUCTION_RESULTS: '/prod/results', //생산실적

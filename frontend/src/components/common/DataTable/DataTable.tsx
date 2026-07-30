@@ -4,6 +4,7 @@ import {
   DataGrid,
   GridColDef,
   GridPaginationModel,
+  GridRowParams,
   GridToolbarContainer,
   GridValidRowModel,
   GridRowIdGetter,
@@ -22,6 +23,7 @@ export interface DataTableProps<
   onPaginationModelChange?: (model: GridPaginationModel) => void;
   pageSizeOptions?: number[];
   onRefresh?: () => void;
+  onRowClick?: (params: GridRowParams<T>) => void;
   toolbarRightSlot?: React.ReactNode; // 우측 커스텀 액션 (엑셀, 필터 등)
   emptyMessage?: string;
 }
@@ -57,6 +59,7 @@ const DataTable = <T extends GridValidRowModel>({
   onPaginationModelChange,
   pageSizeOptions = [10, 25, 50],
   onRefresh,
+  onRowClick,
   toolbarRightSlot,
   emptyMessage = '데이터가 없습니다',
 }: DataTableProps<T>) => {
@@ -109,6 +112,7 @@ const DataTable = <T extends GridValidRowModel>({
         paginationModel={paginationModel || defaultPagination}
         {...(onPaginationModelChange ? { onPaginationModelChange } : {})}
         pageSizeOptions={pageSizeOptions}
+        {...(onRowClick ? { onRowClick } : {})}
         slots={{
           toolbar: () => (
             <DefaultToolbar
