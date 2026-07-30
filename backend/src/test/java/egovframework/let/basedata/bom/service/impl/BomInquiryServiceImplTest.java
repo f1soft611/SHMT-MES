@@ -27,7 +27,7 @@ class BomInquiryServiceImplTest {
         BomTreeRow row = new BomTreeRow();
         row.setDepth("01");
         row.setItemSeq(100);
-        row.setItemNo("PRD-100");
+        row.setItemCode("PRD-100");
         row.setItemName("제품A");
         row.setMatItemSeq(200);
         row.setMatItemNo("MAT-200");
