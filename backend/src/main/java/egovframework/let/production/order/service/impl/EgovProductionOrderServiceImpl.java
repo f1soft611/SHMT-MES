@@ -396,8 +396,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 				row.setLotNo(lotNo);
 				if ("Y".equals(row.getPlanFlag())) {
 					planLotNo = lotNo;
-				} else {
-					planLotNo = null;
 				}
 				row.setProdplanDetailId(plan.getProdplanDetailId());
 				row.setOrderSeqno(plan.getOrderSeqno());
@@ -455,13 +453,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 						planLotNo
 				);
 			}
-
-//			updatePlanLotNo(
-//					plan.getProdplanDate(),
-//					plan.getProdplanSeq(),
-//					plan.getProdworkSeq(),
-//					prodCode
-//			);
 
 		}
 

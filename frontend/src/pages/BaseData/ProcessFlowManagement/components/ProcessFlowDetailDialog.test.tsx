@@ -1,15 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ProcessFlowDetailDialog from './ProcessFlowDetailDialog';
 
-const mockShowToast = jest.fn();
+const mockShowToast = vi.fn();
 let mockOnDetailDialogExited: (() => void) | undefined;
 
-jest.mock('../../../../components/common/Feedback/ToastProvider', () => ({
+vi.mock('../../../../components/common/Feedback/ToastProvider', () => ({
   useToast: () => ({ showToast: mockShowToast }),
 }));
 
-jest.mock('@mui/material', () => {
-  const actual = jest.requireActual('@mui/material');
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual<typeof import('@mui/material')>('@mui/material');
   const ActualDialog = actual.Dialog;
 
   return {
@@ -18,8 +18,16 @@ jest.mock('@mui/material', () => {
       slotProps,
       ...props
     }: React.ComponentProps<typeof ActualDialog>) => {
+      const transitionSlotProps =
+        typeof slotProps?.transition === 'function'
+          ? slotProps.transition(props)
+          : slotProps?.transition;
+
       if (props.maxWidth === 'xl') {
-        mockOnDetailDialogExited = slotProps?.transition?.onExited;
+        const onExited = transitionSlotProps?.onExited;
+        mockOnDetailDialogExited = onExited
+          ? () => onExited(document.createElement('div'))
+          : undefined;
       }
       return <ActualDialog {...props} slotProps={slotProps} />;
     },
@@ -29,12 +37,12 @@ jest.mock('@mui/material', () => {
 const mockSession = {
   flow: { processFlowId: 'PF-1', processFlowCode: 'FLOW-1', processFlowName: '흐름' },
   tabIndex: 0 as 0 | 1,
-  setTabIndex: jest.fn(),
+  setTabIndex: vi.fn(),
   processDirty: false,
   itemDirty: false,
   hasDirtyChanges: false,
   isSaving: false,
-  discardAll: jest.fn(),
+  discardAll: vi.fn(),
 };
 const mockProcess = {
   rows: [],
@@ -42,13 +50,13 @@ const mockProcess = {
   isLoading: false,
   isSaving: false,
   error: null,
-  add: jest.fn(),
-  remove: jest.fn(),
-  updateSeq: jest.fn(),
-  selectPlan: jest.fn(),
-  toggleLast: jest.fn(),
-  save: jest.fn().mockResolvedValue(true),
-  retry: jest.fn(),
+  add: vi.fn(),
+  remove: vi.fn(),
+  updateSeq: vi.fn(),
+  selectPlan: vi.fn(),
+  toggleLast: vi.fn(),
+  save: vi.fn().mockResolvedValue(true),
+  retry: vi.fn(),
 };
 const mockItem = {
   rows: [],
@@ -59,27 +67,27 @@ const mockItem = {
   isAppliedItemsFetching: false,
   isSaving: false,
   error: null,
-  add: jest.fn(),
-  remove: jest.fn(),
-  save: jest.fn().mockResolvedValue(true),
-  retry: jest.fn(),
-  setCatalogParams: jest.fn(),
+  add: vi.fn(),
+  remove: vi.fn(),
+  save: vi.fn().mockResolvedValue(true),
+  retry: vi.fn(),
+  setCatalogParams: vi.fn(),
 };
 
-jest.mock('../detail/ProcessFlowDetailProvider', () => ({
+vi.mock('../detail/ProcessFlowDetailProvider', () => ({
   ProcessFlowDetailProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
-jest.mock('../detail/DetailSessionContext', () => ({
+vi.mock('../detail/DetailSessionContext', () => ({
   useDetailSessionContext: () => mockSession,
 }));
-jest.mock('../detail/ProcessDraftContext', () => ({
+vi.mock('../detail/ProcessDraftContext', () => ({
   useProcessDraftContext: () => mockProcess,
 }));
-jest.mock('../detail/ItemDraftContext', () => ({
+vi.mock('../detail/ItemDraftContext', () => ({
   useItemDraftContext: () => mockItem,
 }));
-jest.mock('./ProcessFlowProcessTab', () => () => <div>process-tab</div>);
-jest.mock('./ProcessFlowItemTab', () => () => <div>item-tab</div>);
+vi.mock('./ProcessFlowProcessTab', () => ({ default: () => <div>process-tab</div> }));
+vi.mock('./ProcessFlowItemTab', () => ({ default: () => <div>item-tab</div> }));
 
 type SaveResults = {
   process?: boolean;
@@ -101,14 +109,14 @@ const renderDialog = (
   Object.assign(mockProcess, {
     dirty: mockSession.processDirty,
     isSaving: mockSession.isSaving,
-    save: jest.fn().mockResolvedValue(saveResults.process ?? true),
+    save: vi.fn().mockResolvedValue(saveResults.process ?? true),
   });
   Object.assign(mockItem, {
     dirty: mockSession.itemDirty,
     isSaving: mockSession.isSaving,
-    save: jest.fn().mockResolvedValue(saveResults.item ?? true),
+    save: vi.fn().mockResolvedValue(saveResults.item ?? true),
   });
-  const onClose = jest.fn();
+  const onClose = vi.fn();
 
   render(
     <ProcessFlowDetailDialog

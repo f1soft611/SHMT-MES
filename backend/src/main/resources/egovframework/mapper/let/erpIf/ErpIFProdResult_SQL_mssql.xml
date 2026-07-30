@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ErpIFProdResultDAO">
+
+    <insert id="insertErpIFProdResult"
+            parameterType="egovframework.let.production.result.domain.model.ErpIFProdResultDto">
+        INSERT INTO SHM_IF_TPDSFCWorkReport(
+            IDX,
+            WorkingTag,
+            RegEmpID,
+            RegDateTime,
+            ERPProcYn,
+            ERPProcDateTime,
+            Status,
+            Result,
+            MESIFKey,
+            WorkDate,
+            WorkOrderSeq,
+            WorkOrderSerl,
+            WorkOrderNo,
+            DeptSeq,
+            EmpSeq,
+            WorkCenterSeq,
+            ItemSeq,
+            UnitSeq,
+            ProdQty,
+            OKQty,
+            BadQty,
+            WorkStartTime,
+            WorkEndTime,
+            WorkerQty,
+            LotNo
+        )
+        VALUES (
+                   #{mesIfKey},
+                   #{workingTag},
+                   #{regEmpId},
+                   GETDATE(),
+                   'N',
+                   NULL,
+                   NULL,
+                   NULL,
+                   #{mesIfKey},
+                   #{workDate},
+                   #{workOrderSeq},
+                   #{workOrderSerl},
+                   #{workOrderNo},
+                   #{deptSeq},
+                   #{empSeq},
+                   #{workCenterSeq},
+                   #{itemSeq},
+                   #{unitSeq},
+                   #{prodQty},
+                   #{okQty},
+                   #{badQty},
+                   #{workStartTime},
+                   #{workEndTime},
+                   #{workerQty},
+                   #{lotNo}
+               )
+    </insert>
+
+</mapper>

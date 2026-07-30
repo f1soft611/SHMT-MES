@@ -17,28 +17,28 @@ const mockCatalogItems = [
   { itemId: 'I-1', itemCode: 'ITEM-1', itemName: '품목 1' },
   { itemId: 'I-NEW', itemCode: 'ITEM-NEW', itemName: '신규 품목' },
 ];
-const mockSaveItemsMutateAsync = jest.fn();
+const mockSaveItemsMutateAsync = vi.fn();
 let mockItemsIsFetching = false;
 let mockItemCatalogIsFetching = false;
 
 Object.defineProperty(globalThis, 'crypto', {
-  value: { randomUUID: jest.fn(() => 'generated-row-id') },
+  value: { randomUUID: vi.fn(() => 'generated-row-id') },
   configurable: true,
 });
 
-jest.mock('./useProcessFlowDetailQueries', () => ({
+vi.mock('./useProcessFlowDetailQueries', () => ({
   useProcessFlowDetailQueries: (_open: boolean, flowId: string) => ({
-    processes: { data: flowId === 'PF-2' ? [mockProcessTwo] : [mockProcessOne], isLoading: false, error: null, refetch: jest.fn() },
-    items: { data: flowId === 'PF-2' ? [mockItemTwo] : [mockItemOne], isLoading: false, isFetching: mockItemsIsFetching, error: null, refetch: jest.fn() },
-    processCatalog: { data: { result: { resultList: [] } }, isLoading: false, error: null, refetch: jest.fn() },
-    itemCatalog: { data: { result: { resultList: mockCatalogItems, resultCnt: mockCatalogItems.length } }, isLoading: false, isFetching: mockItemCatalogIsFetching, error: null, refetch: jest.fn() },
+    processes: { data: flowId === 'PF-2' ? [mockProcessTwo] : [mockProcessOne], isLoading: false, error: null, refetch: vi.fn() },
+    items: { data: flowId === 'PF-2' ? [mockItemTwo] : [mockItemOne], isLoading: false, isFetching: mockItemsIsFetching, error: null, refetch: vi.fn() },
+    processCatalog: { data: { result: { resultList: [] } }, isLoading: false, error: null, refetch: vi.fn() },
+    itemCatalog: { data: { result: { resultList: mockCatalogItems, resultCnt: mockCatalogItems.length } }, isLoading: false, isFetching: mockItemCatalogIsFetching, error: null, refetch: vi.fn() },
   }),
 }));
-jest.mock('./useProcessFlowDetailMutations', () => ({
-  useSaveProcessesMutation: () => ({ mutateAsync: jest.fn().mockResolvedValue({ processes: [mockProcessOne] }), isPending: false }),
+vi.mock('./useProcessFlowDetailMutations', () => ({
+  useSaveProcessesMutation: () => ({ mutateAsync: vi.fn().mockResolvedValue({ processes: [mockProcessOne] }), isPending: false }),
   useSaveItemsMutation: () => ({ mutateAsync: mockSaveItemsMutateAsync, isPending: false }),
 }));
-jest.mock('../../../../components/common/Feedback/ToastProvider', () => ({ useToast: () => ({ showToast: jest.fn() }) }));
+vi.mock('../../../../components/common/Feedback/ToastProvider', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 function Probe() {
   const session = useDetailSessionContext();
