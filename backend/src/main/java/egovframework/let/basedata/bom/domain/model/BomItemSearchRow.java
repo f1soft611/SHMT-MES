@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class BomItemSearchRow {
     private int itemSeq;
-    private String itemNo;
+    private String itemCode;
     private String itemName;
     private String itemSpec;
 }

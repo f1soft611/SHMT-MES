@@ -6,12 +6,11 @@ import java.math.BigDecimal;
 
 @Data
 public class BomTreeRow {
-    private int depth;
+    private String depth;
     private int itemSeq;
-    private String itemNo;
+    private String itemCode;
     private String itemName;
     private int procSeq;
-    private int serl;
     private int matItemSeq;
     private String matItemNo;
     private String matItemName;
