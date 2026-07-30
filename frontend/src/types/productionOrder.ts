@@ -16,6 +16,7 @@ export interface ProdPlanSearchParams {
     prodFrom?: string;   // YYYY-MM-DD
     prodTo?: string;     // YYYY-MM-DD
     orderFlag?:string;
+    lastFlag?:string;
     page?: number;
     size?: number;
 }

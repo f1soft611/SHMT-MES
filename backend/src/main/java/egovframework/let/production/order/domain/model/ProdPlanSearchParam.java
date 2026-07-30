@@ -35,6 +35,9 @@ public class ProdPlanSearchParam implements Serializable {
     /** 지시 상태 */
     private String orderFlag;
 
+    /** erp/연동 대상 */
+    private String lastFlag;
+
     /** 페이지 offset */
     private int offset;
 

@@ -304,6 +304,22 @@ const ProdOrderSearchFilter = () => {
             </Select>
           </FormControl>
 
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>ERP I/F 항목</InputLabel>
+            <Select
+                value={search.lastFlag ?? ""}
+                label="ERP I/F 항목"
+                onChange={(e) => onChange("lastFlag", e.target.value)}
+            >
+              <MenuItem value="" sx={{ fontSize: 13 }}>
+                전체
+              </MenuItem>
+              <MenuItem value="Y" sx={{ fontSize: 13 }}>
+                연동 대상
+              </MenuItem>
+            </Select>
+          </FormControl>
+
           <TextField
             size="small"
             sx={{ minWidth: 280 }}

@@ -12,14 +12,6 @@ import {
 } from '../types/productionOrder';
 import { getMockProductionOrders } from './mockData';
 
-// export interface ProductionOrderSearchParams {
-//   page?: number;
-//   size?: number;
-//   status?: string;
-//   dateFrom?: string;
-//   dateTo?: string;
-//   keyword?: string;
-// }
 
 export const productionOrderService = {
   // 생산계획 목록 조회
