@@ -337,7 +337,7 @@
     <select id="selectProdResultWorkerSeq"
             parameterType="egovframework.let.production.result.domain.model.ProdResultWorkerDto"
             resultType="int">
-        SELECT COUNT(*)+1
+        SELECT ISNULL(MAX(WORKER_SEQ), 0) + 1
         FROM TPR601W
         WHERE FACTORY_CODE = #{factoryCode}
           AND PRODPLAN_DATE = #{prodplanDate}
