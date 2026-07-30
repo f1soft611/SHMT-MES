@@ -100,6 +100,8 @@ const PlanCard = memo<PlanCardProps>(
     onGroupClick,
     onOrderClick,
   }) => {
+    const deliveryLabel = getDeliveryLabel(plan.deliveryDate);
+
     const handleGroupBadgeClick = (e: React.MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
 
@@ -237,6 +239,21 @@ const PlanCard = memo<PlanCardProps>(
                     fontWeight: 600,
                   }}
                 />
+                {deliveryLabel && (
+                  <Chip
+                    label={deliveryLabel}
+                    size="small"
+                    color={
+                      isDeliveryDday(plan.deliveryDate) ? 'warning' : 'default'
+                    }
+                    variant="outlined"
+                    sx={{
+                      fontWeight: 700,
+                      borderStyle: 'dashed',
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
                 {!!plan.workerName?.trim() && (
                   <Chip
                     label={plan.workerName}
@@ -279,41 +296,56 @@ const PlanCard = memo<PlanCardProps>(
                   />
                 )}
                 {plan.customerName && (
-                  <Chip
-                    label={
-                      plan.additionalCustomers &&
-                      plan.additionalCustomers.length > 0
-                        ? `${plan.customerName} 외${plan.additionalCustomers.length}`
-                        : plan.customerName
-                    }
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
+                  <Box
                     sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0,
+                      width: '100%',
                       maxWidth: '100%',
-                      height: 'auto',
-                      alignSelf: 'flex-start',
-                      '& .MuiChip-label': {
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden',
-                        display: 'block',
-                      },
-                      cursor: plan.additionalCustomers?.length
-                        ? 'pointer'
-                        : 'default',
+                      flexBasis: '100%',
+                      minWidth: 0,
                     }}
-                    onClick={() => {
-                      if (
-                        plan.additionalCustomers &&
-                        plan.additionalCustomers.length > 0
-                      ) {
-                        alert(
-                          `거래처 목록:\n- ${plan.customerName}\n- ${plan.additionalCustomers.join('\n- ')}`,
-                        );
-                      }
-                    }}
-                  />
+                  >
+                    {plan.customerName && (
+                      <Chip
+                        label={
+                          plan.additionalCustomers &&
+                          plan.additionalCustomers.length > 0
+                            ? `${plan.customerName} 외${plan.additionalCustomers.length}`
+                            : plan.customerName
+                        }
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                        sx={{
+                          maxWidth: '100%',
+                          width: '100%',
+                          height: 'auto',
+                          alignSelf: 'flex-start',
+                          '& .MuiChip-label': {
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'ellipsis',
+                            overflow: 'hidden',
+                            display: 'block',
+                          },
+                          cursor: plan.additionalCustomers?.length
+                            ? 'pointer'
+                            : 'default',
+                        }}
+                        onClick={() => {
+                          if (
+                            plan.additionalCustomers &&
+                            plan.additionalCustomers.length > 0
+                          ) {
+                            alert(
+                              `거래처 목록:\n- ${plan.customerName}\n- ${plan.additionalCustomers.join('\n- ')}`,
+                            );
+                          }
+                        }}
+                      />
+                    )}
+                  </Box>
                 )}
               </Box>
             </Box>
@@ -459,6 +491,81 @@ const getQuantityCheckCode = (plan: ProductionPlanData): string =>
   plan.itemDisplayCode?.trim() ||
   plan.itemCode?.trim() ||
   '';
+
+const DELIVERY_DDAY_THRESHOLD_DAYS = 7;
+
+const toUtcDayNumber = (date: Date): number =>
+  Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) /
+      (1000 * 60 * 60 * 24),
+  );
+
+// D-day is based on calendar days only (weekends/holidays are included).
+const getCalendarDayDiff = (fromDate: Date, toDate: Date): number =>
+  toUtcDayNumber(toDate) - toUtcDayNumber(fromDate);
+
+const parseDeliveryDate = (deliveryDate?: string): Date | null => {
+  if (!deliveryDate?.trim()) {
+    return null;
+  }
+
+  const normalized = deliveryDate.trim();
+
+  if (/^\d{8}$/.test(normalized)) {
+    const year = Number(normalized.slice(0, 4));
+    const month = Number(normalized.slice(4, 6)) - 1;
+    const day = Number(normalized.slice(6, 8));
+    const parsed = new Date(year, month, day);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const [year, month, day] = normalized
+      .split('-')
+      .map((value) => Number(value));
+    const parsed = new Date(year, month - 1, day);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(normalized);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getDeliveryLabel = (deliveryDate?: string): string | null => {
+  const parsedDeliveryDate = parseDeliveryDate(deliveryDate);
+
+  if (!parsedDeliveryDate) {
+    return null;
+  }
+
+  const mm = String(parsedDeliveryDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(parsedDeliveryDate.getDate()).padStart(2, '0');
+
+  const diffDays = getCalendarDayDiff(new Date(), parsedDeliveryDate);
+
+  if (diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS) {
+    return diffDays === 0
+      ? `D-Day (${mm}-${dd})`
+      : `D-${diffDays} (${mm}-${dd})`;
+  }
+
+  return `${mm}-${dd}`;
+};
+
+const isDeliveryDday = (deliveryDate?: string): boolean => {
+  const parsedDeliveryDate = parseDeliveryDate(deliveryDate);
+
+  if (!parsedDeliveryDate) {
+    return false;
+  }
+
+  const diffDays = getCalendarDayDiff(new Date(), parsedDeliveryDate);
+
+  return diffDays >= 0 && diffDays <= DELIVERY_DDAY_THRESHOLD_DAYS;
+};
 
 interface EquipmentRowProps {
   equipment: Equipment;
@@ -855,13 +962,16 @@ const VirtualizedRowItem = ({
 }: RowComponentProps<VirtualizedRowItemData>) => {
   const equipment = equipments[index];
   const equipmentCode = equipment.equipCd || '';
+  const virtualizedDayTemplate = visibleDayColumns
+    .map((column) => `${column.dayColWidth}px`)
+    .join(' ');
 
   return (
     <Box
       style={style}
       sx={{
         display: 'grid',
-        gridTemplateColumns: `${equipmentColWidth}px repeat(${visibleDayColumns.length}, minmax(120px, 1fr))`,
+        gridTemplateColumns: `${equipmentColWidth}px ${virtualizedDayTemplate}`,
         borderBottom: '1px solid',
         borderColor: 'divider',
         bgcolor: index % 2 === 0 ? 'white' : 'grey.50',
@@ -1011,6 +1121,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       const dateStr = formatDate(day, 'YYYY-MM-DD');
       const totalPlans = getTotalPlansForDate(dateStr);
       const totalQty = getTotalQtyForDate(dateStr);
+      const hasAnyPlanInDate = plans.some((plan) => plan.date === dateStr);
 
       return [
         {
@@ -1020,7 +1131,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
           isWeekendDay: isWeekend(day),
           totalPlans,
           totalQty,
-          dayColWidth: totalPlans > 0 ? dayColMinWidth : emptyDayColWidth,
+          dayColWidth: hasAnyPlanInDate ? dayColMinWidth : emptyDayColWidth,
         },
       ];
     });
@@ -1033,9 +1144,17 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
     getTotalQtyForDate,
     isSameDay,
     isWeekend,
+    plans,
     visibleDays,
     weekDays,
   ]);
+
+  const tableMinWidth = useMemo(
+    () =>
+      equipmentColWidth +
+      visibleDayColumns.reduce((sum, column) => sum + column.dayColWidth, 0),
+    [equipmentColWidth, visibleDayColumns],
+  );
 
   useEffect(() => {
     const container = tableContainerRef.current;
@@ -1253,6 +1372,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       p: hasPlans ? cellPadding : 0.25,
       borderRight: '1px solid',
       borderColor: 'divider',
+      minWidth: dayColWidth,
       width: dayColWidth,
       maxWidth: dayColWidth,
     }),
@@ -1382,6 +1502,8 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
           size={compactMode ? 'small' : 'medium'}
           sx={{
             tableLayout: 'fixed',
+            minWidth: tableMinWidth,
+            width: 'max-content',
             ...(isEmptyState && { height: '100%' }),
           }}
         >
