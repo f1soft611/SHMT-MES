@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Paper, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import ProtectedRoute from '../../../components/auth/ProtectedRoute';
 import PageHeader from '../../../components/common/PageHeader/PageHeader';
 import { useBomInquiry } from './hooks/useBomInquiry';
