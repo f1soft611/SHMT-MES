@@ -19,6 +19,7 @@ import WorkplaceManagement from './pages/BaseData/WorkplaceManagement';
 import ProcessManagement from './pages/BaseData/ProcessManagement';
 import EquipmentManagement from './pages/BaseData/EquipmentManagement';
 import ItemManagement from './pages/BaseData/ItemManagement';
+import BomInquiry from './pages/BaseData/BomInquiry';
 import ProductionPlan from './pages/ProductionPlan';
 import ProductionOrder from './pages/ProdOrder';
 import ProductionResult from './pages/ProdResult';
@@ -102,6 +103,10 @@ function App() {
                           <Route
                             path={URL.ITEM_MANAGEMENT}
                             element={<ItemManagement />}
+                          />
+                          <Route
+                            path={URL.BOM_INQUIRY}
+                            element={<BomInquiry />}
                           />
                           <Route
                             path={URL.PRODUCTION_PLAN}

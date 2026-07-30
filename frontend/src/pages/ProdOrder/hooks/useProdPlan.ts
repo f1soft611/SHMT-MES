@@ -129,6 +129,10 @@ export function useProdPlan() {
         });
       }
 
+      if (name === 'orderFlag') {
+        next.lastFlag = value === 'ORDERED' ? 'Y' : '';
+      }
+
       return next;
     });
   };
