@@ -1,19 +1,17 @@
 export interface BomItemSearchRow {
   itemSeq: number;
-  itemNo: string;
+  itemCode: string;
   itemName: string;
   itemSpec: string | null;
 }
 
-export interface BomTreeNode {
-  key: string;
-  nodeType: 'PROCESS' | 'MATERIAL';
+export interface BomTreeRow {
+  depth: string;
   itemSeq: number;
-  label: string;
-  itemNo?: string | null;
-  itemSpec?: string | null;
-  procSeq?: number | null;
-  needQty?: number | null;
-  unitName?: string | null;
-  children: BomTreeNode[];
+  itemCode: string;
+  itemName: string;
+  matItemSeq: number;
+  matItemNo: string;
+  matItemName: string;
+  matItemSpec: string | null;
 }

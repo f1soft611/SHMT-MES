@@ -11,7 +11,10 @@ const BomInquiryPage: React.FC = () => {
   const {
     search,
     searchResults,
+    searchTotalCount,
     searchLoading,
+    paginationModel,
+    onPaginationModelChange,
     selectItem,
     treeNodes,
     treeLoading,
@@ -26,12 +29,19 @@ const BomInquiryPage: React.FC = () => {
 
         <Stack direction="row" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            <BomSearchResultGrid rows={searchResults} loading={searchLoading} onSelect={selectItem} />
+            <BomSearchResultGrid
+              rows={searchResults}
+              loading={searchLoading}
+              rowCount={searchTotalCount}
+              paginationModel={paginationModel}
+              onPaginationModelChange={onPaginationModelChange}
+              onSelect={selectItem}
+            />
           </Box>
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-            <Paper sx={{ height: '100%', p: 2, overflow: 'auto' }}>
+          <Box sx={{ flex: 2, minHeight: 0, overflow: 'auto' }}>
+            <Box sx={{ flex: 2, minHeight: 0 }}>
               <BomTreePanel nodes={treeNodes} loading={treeLoading} />
-            </Paper>
+            </Box>
           </Box>
         </Stack>
       </Box>
