@@ -478,20 +478,6 @@ interface VisibleDayColumn {
   dayColWidth: number;
 }
 
-const shouldExcludeFromQuantityTotal = (itemCode?: string): boolean => {
-  const normalizedItemCode = itemCode?.toUpperCase() ?? '';
-
-  return (
-    normalizedItemCode.startsWith('F') || normalizedItemCode.startsWith('I')
-  );
-};
-
-const getQuantityCheckCode = (plan: ProductionPlanData): string =>
-  plan.lotNo?.trim() ||
-  plan.itemDisplayCode?.trim() ||
-  plan.itemCode?.trim() ||
-  '';
-
 const DELIVERY_DDAY_THRESHOLD_DAYS = 7;
 
 const toUtcDayNumber = (date: Date): number =>
@@ -720,13 +706,9 @@ const EquipmentRow = memo<EquipmentRowProps>(
         {visibleDayColumns.map(({ dateStr, isWeekendDay, dayColWidth }) => {
           const selectionCellKey = `${equipmentCode}::${dateStr}`;
           const dayPlans = getPlansForDateAndEquipment(dateStr, equipmentCode);
-          const dayPlansForTotal = dayPlans.filter(
-            (plan) =>
-              !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
-          );
           const hasPlans = dayPlans.length > 0;
-          const dayTotalCount = dayPlansForTotal.length;
-          const dayTotalQty = dayPlansForTotal.reduce(
+          const dayTotalCount = dayPlans.length;
+          const dayTotalQty = dayPlans.reduce(
             (sum, plan) => sum + (plan.plannedQty ?? 0),
             0,
           );
@@ -1003,9 +985,7 @@ const VirtualizedRowItem = ({
           column.dateStr,
           equipmentCode,
         );
-        const dayTotalCount = dayPlans.filter(
-          (plan) => !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
-        ).length;
+        const dayTotalCount = dayPlans.length;
         return (
           <Box
             key={`${equipmentCode}-${column.dateStr}`}
@@ -1304,14 +1284,9 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
           equipment.equipCd || '',
         );
 
-        totalCount += dayPlans.filter(
-          (plan) => !shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan)),
-        ).length;
+        totalCount += dayPlans.length;
         totalQty += dayPlans.reduce(
-          (sum, plan) =>
-            shouldExcludeFromQuantityTotal(getQuantityCheckCode(plan))
-              ? sum
-              : sum + (plan.plannedQty ?? 0),
+          (sum, plan) => sum + (plan.plannedQty ?? 0),
           0,
         );
       });
