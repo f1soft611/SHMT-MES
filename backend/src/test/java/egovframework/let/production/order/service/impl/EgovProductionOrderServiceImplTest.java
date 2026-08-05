@@ -299,6 +299,34 @@ class EgovProductionOrderServiceImplTest {
         verify(productionOrderDAO, times(2)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
     }
 
+    @Test
+    void deleteProductionOrder_skipsErpIfWhenErpWorkOrderValuesMissing() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdOrderDeleteDto dto = new ProdOrderDeleteDto();
+        dto.setProdplanDate("20260805");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+
+        ProdOrderRow neverSyncedRow = new ProdOrderRow();
+        neverSyncedRow.setProdplanDate("20260805");
+        neverSyncedRow.setProdplanSeq(1);
+        neverSyncedRow.setProdworkSeq(1);
+        neverSyncedRow.setProdorderId("ORDER-NEVER-SYNCED");
+        neverSyncedRow.setLastFlag("Y");
+        // erpWorkOrderSeq / erpWorkOrderSerl 미설정 (null) = ERP 미연동 상태
+
+        when(productionOrderDAO.selectProdResultCount(any(ProdOrderDeleteDto.class))).thenReturn(0);
+        when(productionOrderDAO.selectProdOrdersByPlanId(any(ProdOrderSearchParam.class)))
+                .thenReturn(Collections.singletonList(neverSyncedRow));
+
+        service.deleteProductionOrder(dto);
+
+        verify(erpIfService, never()).sendProdOrderToErp(any());
+        verify(productionOrderDAO, times(1)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
+    }
+
     private ProdOrderInsertDto order(String planFlag, String lotNo) {
         ProdOrderInsertDto dto = new ProdOrderInsertDto();
         dto.setProdplanDate("20260724");

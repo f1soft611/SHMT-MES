@@ -296,9 +296,10 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			rowDto.setErpWorkOrderSeq(row.getErpWorkOrderSeq());
 			rowDto.setErpWorkOrderSerl(row.getErpWorkOrderSerl());
 
-			// ERP IF DTO 전송 (D) - LAST_FLAG(I/F연동) = 'Y' 인 공정만 연동 (생성 시 필터와 동일 기준)
+			// ERP IF DTO 전송 (D) - LAST_FLAG(I/F연동) = 'Y' 이고 ERP 연동 이력(WorkOrderSeq/Serl)이 있는 공정만 연동
 			boolean isLastProcess = "Y".equals(row.getLastFlag());
-			if (isLastProcess) {
+			boolean hasErpWorkOrder = row.getErpWorkOrderSeq() != null && row.getErpWorkOrderSerl() != null;
+			if (isLastProcess && hasErpWorkOrder) {
 				try {
 					ErpIFProdOrderDto erpDto = convertDeleteToIfDto(rowDto);
 					boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
