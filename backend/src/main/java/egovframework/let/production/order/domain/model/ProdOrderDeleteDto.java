@@ -14,5 +14,8 @@ public class ProdOrderDeleteDto {
 
     private String prodorderId; // i/f 연동 위해 필요함
 
+    private Integer erpWorkOrderSeq;    // erp i/f 삭제 연동시 필수값
+    private Integer erpWorkOrderSerl;   // erp i/f 삭제 연동시 필수값
+
     private String opmanCode;
 }
