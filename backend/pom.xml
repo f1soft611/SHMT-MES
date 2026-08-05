@@ -17,6 +17,8 @@
 	</licenses>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<spring.maven.artifact.version>5.3.37</spring.maven.artifact.version>
 		<org.egovframe.rte.version>4.3.0</org.egovframe.rte.version>
         <spring.profiles.active>dev</spring.profiles.active>
@@ -478,9 +480,9 @@
 		    <plugin>
       	    	<groupId>org.springframework.boot</groupId>
             	<artifactId>spring-boot-maven-plugin</artifactId>
-            	<!-- <configuration>
-                	<executable>true</executable>
-            	</configuration> -->
+            	<configuration>
+            		<jvmArguments>-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8</jvmArguments>
+            	</configuration>
             </plugin>
 
 			<plugin>

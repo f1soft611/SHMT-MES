@@ -343,7 +343,7 @@ describe('useProdResultDetail - handleSave (신규/수정 분리 저장)', () =>
     });
   });
 
-  it('변경사항이 없으면 저장을 호출하지 않고 info 토스트를 띄운다', async () => {
+  it('변경사항이 없으면 저장을 호출하지 않고 warning 토스트를 띄운다', async () => {
     const { result } = await setup(makeParentRow());
 
     let saved: boolean | undefined;
@@ -355,7 +355,7 @@ describe('useProdResultDetail - handleSave (신규/수정 분리 저장)', () =>
     expect(productionResultService.updateProdResult).not.toHaveBeenCalled();
     expect(productionResultService.createProdResult).not.toHaveBeenCalled();
     expect(mockShowToast).toHaveBeenCalledWith(
-      expect.objectContaining({ severity: 'info', message: '저장할 변경사항이 없습니다.' })
+      expect.objectContaining({ severity: 'warning', message: '저장할 변경사항이 없습니다.' })
     );
   });
 
@@ -425,6 +425,30 @@ describe('useProdResultDetail - handleSave (신규/수정 분리 저장)', () =>
     expect(productionResultService.createProdResult).not.toHaveBeenCalled();
     expect(mockShowToast).toHaveBeenCalledWith(
       expect.objectContaining({ severity: 'error', message: '수정 중 오류가 발생했습니다.' })
+    );
+  });
+});
+
+describe('useProdResultDetail - handleDeleteRow (실적 삭제)', () => {
+  it('삭제 성공 후 목록을 재조회한다', async () => {
+    (productionResultService.deleteProdResult as Mock).mockResolvedValue({
+      data: { resultCode: 200, resultMessage: '삭제되었습니다' },
+    });
+    (productionResultService.getProdResultDetails as Mock).mockResolvedValue({
+      result: { resultList: [makeDetailRow({ tpr601Id: 'EXIST-1' })] },
+    });
+
+    const { result } = await setup(makeParentRow());
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleDeleteRow(result.current.rows[0]);
+    });
+
+    // mount 시 1회 + 삭제 후 1회
+    expect(productionResultService.getProdResultDetails).toHaveBeenCalledTimes(2);
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'success', message: '삭제되었습니다' })
     );
   });
 });

@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {GridPaginationModel} from "@mui/x-data-grid";
 import dayjs from 'dayjs';
 import { productionResultService } from '../../../services/productionResultService';
 import { useToast } from '../../../components/common/Feedback/ToastProvider';
 import {
-  ProdResultOrderRow,
   ProductionResultSearchForm,
 } from '../../../types/productionResult';
 
 const SESSION_KEY = 'prod-result-search';
+// 생산실적 저장/수정/삭제 후 메인 그리드를 새로고침할 때 이 키로 invalidateQueries 호출
+export const prodOrderListQueryKey = 'prodOrders' as const;
 
 function getDefaultSearch(): ProductionResultSearchForm {
   return {
@@ -43,12 +45,6 @@ export function useProdOrder() {
   });
   const [filter, setFilter] = useState<any>({});
 
-  // 데이터 상태
-  const [rows, setRows] = useState<ProdResultOrderRow[]>([]);
-  const [rowCount, setRowCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-
-
   /** ======================
    *  데이터그리드 필터링
    *  ====================== */
@@ -73,10 +69,12 @@ export function useProdOrder() {
 
   /** ======================
    *  생산지시 목록 조회 API
+   *  - 실적 저장/수정/삭제 성공 시 queryClient.invalidateQueries({queryKey: [prodOrderListQueryKey]})
+   *    로 다른 화면(useProdResultDetail)에서 이 조회를 새로고침할 수 있다.
    *  ====================== */
-  const fetchList = async () => {
-    setLoading(true);
-    try {
+  const listQuery = useQuery({
+    queryKey: [prodOrderListQueryKey, searchParams, filter, paginationModel],
+    queryFn: async () => {
       const params = {
         ...searchParams,
         ...filter,
@@ -84,7 +82,6 @@ export function useProdOrder() {
         size: paginationModel.pageSize,
       };
       const response = await productionResultService.getProdOrders(params);
-
       const list = response.result?.resultList ?? [];
 
       // 숫자 필드 정규화
@@ -93,19 +90,21 @@ export function useProdOrder() {
         PROD_QTY: Number(r.PROD_QTY ?? 0),
       }));
 
-      setRows(rows);
-      setRowCount(response.result?.resultCnt ?? 0);
-    } catch (_err: any) {
-      showToast({
-        message: '생산실적 목록 조회 실패',
-        severity: 'error',
-      });
-      setRows([]);
-      setRowCount(0);
-    } finally {
-      setLoading(false);
+      return { rows, rowCount: response.result?.resultCnt ?? 0 };
+    },
+    enabled: Boolean(searchParams),
+  });
+
+  useEffect(() => {
+    if (listQuery.isError) {
+      showToast({ message: '생산실적 목록 조회 실패', severity: 'error' });
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listQuery.isError]);
+
+  const rows = listQuery.data?.rows ?? [];
+  const rowCount = listQuery.data?.rowCount ?? 0;
+  const loading = listQuery.isFetching;
 
   const onPaginationChange = (model: GridPaginationModel) => {
     setPaginationModel(model);
@@ -164,7 +163,6 @@ export function useProdOrder() {
       return;
     }
 
-    setLoading(true);
     const toYYYYMMDD = (v: string) => v.replaceAll('-', '');
     const model = { ...paginationModel, page: 0 };
 
@@ -175,19 +173,6 @@ export function useProdOrder() {
     });
     setPaginationModel(model);
   };
-
-
-  /** ======================
-   *  조회 트리거
-   *  - 검색 실행
-   *  - 페이지 변경
-   *  - 페이지 사이즈 변경
-   *  ====================== */
-  useEffect(() => {
-    if (!searchParams) return;
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationModel, searchParams]);
 
   return {
     search,
