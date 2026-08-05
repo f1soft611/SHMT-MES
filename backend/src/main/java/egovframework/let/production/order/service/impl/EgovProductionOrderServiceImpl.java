@@ -811,7 +811,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setOrderQty(src.getOrderQty());
 
 		dto.setDeptSeq(0);
-		dto.setEmpSeq(0);
+		if ("admin".equals(src.getOpmanCode())) {
+			dto.setEmpSeq(0);
+		} else {
+			dto.setEmpSeq(Integer.parseInt(src.getOpmanCode()));
+		}
+
 		dto.setProcRev("");
 		dto.setRemark(src.getBigo());
 
@@ -839,22 +844,21 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		// 처리구분
 		dto.setWorkingTag("D");
 
-		// 등록자
-		dto.setRegEmpId("SYSTEM");
+		dto.setWorkOrderSeq(src.getErpWorkOrderSeq());		// 삭제시 필수값
+		dto.setWorkOrderSerl(src.getErpWorkOrderSerl());	// 삭제시 필수값
 
-		// MES 연동키
-		dto.setMesIfKey(src.getProdorderId());
 
-		dto.setWorkOrderSeq(src.getErpWorkOrderSeq());
-		dto.setWorkOrderSerl(src.getErpWorkOrderSerl());
+		// 나머지는 필수값이 아님 (여기부터)
+		dto.setRegEmpId(src.getOpmanCode()); 	// 등록자
 
-		// 기본값
-		dto.setFactUnit(1);
+		dto.setMesIfKey(src.getProdorderId());	// MES 연동키
+
+		dto.setFactUnit(0);
 		dto.setWorkOrderNo(src.getLotNo());
 		dto.setWorkOrderDate(src.getProdplanDate()); // YYYYMMDD
 
 		dto.setProdPlanSeq(src.getProdplanSeq());
-		dto.setWorkCenterSeq(1);          // 고정 or 매핑
+		dto.setWorkCenterSeq(0);       //
 		dto.setGoodItemSeq(src.getProdCodeId());
 		dto.setProcSeq(0);
 		dto.setProdUnitSeq(0);
@@ -865,6 +869,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setEmpSeq(0);
 		dto.setProcRev("");
 		dto.setRemark("");
+		// 나머지는 필수값이 아님 (여기까지)
 
 		return dto;
 	}
@@ -881,8 +886,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 		dto.setMesIfKey(row.getProdorderId());
 
-		dto.setWorkOrderSeq(0);
-		dto.setWorkOrderSerl(0);
+		dto.setWorkOrderSeq(row.getErpWorkOrderSeq());
+		dto.setWorkOrderSerl(row.getErpWorkOrderSerl());
 
 		dto.setFactUnit(1);
 		dto.setWorkOrderNo(row.getLotNo());
@@ -898,7 +903,12 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setOrderQty(row.getOrderQty());
 
 		dto.setDeptSeq(0);
-		dto.setEmpSeq(0);
+		if (opmanCode == null || opmanCode.trim().isEmpty() || "admin".equals(opmanCode)) {
+			dto.setEmpSeq(0);
+		} else {
+			dto.setEmpSeq(Integer.parseInt(opmanCode));
+		}
+//		dto.setEmpSeq(0);
 		dto.setProcRev("");
 		dto.setRemark(row.getBigo());
 
