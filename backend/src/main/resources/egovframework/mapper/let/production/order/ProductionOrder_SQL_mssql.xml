@@ -696,8 +696,10 @@
 	<update id="updateErpResultByProdorderId"
 	        parameterType="egovframework.let.production.order.domain.model.ErpIFProdOrderResultDto">
 		UPDATE TPR504
-		SET ERPProcYn       = #{erpProcYn},
-		    ERPProcDateTime = #{erpProcDateTime},
+		SET ERPProcYn       	= #{erpProcYn},
+		    ERPProcDateTime 	= #{erpProcDateTime},
+		    ERPWorkOrderSeq		= #{workOrderSeq},
+		    ERPWorkOrderSerl	= #{workOrderSerl},
 		    ERPStatus       = #{status},
 		    ERPResult       = #{result}
 		WHERE PRODORDER_ID = #{mesIfKey}

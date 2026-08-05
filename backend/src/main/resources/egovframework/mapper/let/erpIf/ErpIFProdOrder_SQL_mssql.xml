@@ -134,6 +134,8 @@
         SELECT MESIFKey        AS mesIfKey,
         ERPProcYn       AS erpProcYn,
         CONVERT(VARCHAR(20), ERPProcDateTime, 120) AS erpProcDateTime,
+        WorkOrderSerl   AS workOrderSeq,
+        WorkOrderSerl   AS workOrderSerl,
         Status          AS status,
         Result          AS result
         FROM SHM_IF_TPDSFCWorkOrder
