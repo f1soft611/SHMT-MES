@@ -723,7 +723,9 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	 */
 	private List<ErpItem> selectErpItems(String fromDate, String toDate) {
 		String sql = "SELECT CompanySeq, ItemNo, ItemSeq, ItemName, Spec, " +
-				"UnitSeq, UnitName, AssetSeq, AssetName, LastUserSeq, LastDateTime " +
+				"UnitSeq, UnitName, AssetSeq, AssetName, " +
+				"ItemClassLSeq, ItemClassMSeq, ItemClassSSeq, " +
+				"LastUserSeq, LastDateTime " +
 				"FROM SHM_IF_VIEW_TDAItem " +
 				"WHERE CONVERT(VARCHAR(10), LastDateTime, 120) BETWEEN ? AND ? " +  // 날짜 범위 필터
 				"ORDER BY ItemSeq";
@@ -747,6 +749,9 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			item.setUnitName(rs.getString("UnitName"));
 			item.setAssetSeq(rs.getInt("AssetSeq"));
 			item.setAssetName(rs.getString("AssetName"));
+			item.setItemClassLSeq(rs.getString("ItemClassLSeq"));
+			item.setItemClassMSeq(rs.getString("ItemClassMSeq"));
+			item.setItemClassSSeq(rs.getString("ItemClassSSeq"));
 			item.setLastUserSeq(rs.getInt("LastUserSeq"));
 			item.setLastDateTime(rs.getTimestamp("LastDateTime"));
 			return item;
