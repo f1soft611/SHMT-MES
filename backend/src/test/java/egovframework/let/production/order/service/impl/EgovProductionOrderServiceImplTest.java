@@ -272,6 +272,8 @@ class EgovProductionOrderServiceImplTest {
         lastProcessRow.setProdworkSeq(1);
         lastProcessRow.setProdorderId("ORDER-LAST");
         lastProcessRow.setLastFlag("Y");
+        lastProcessRow.setErpWorkOrderSeq(501);
+        lastProcessRow.setErpWorkOrderSerl(1);
 
         ProdOrderRow normalProcessRow = new ProdOrderRow();
         normalProcessRow.setProdplanDate("20260805");
@@ -290,6 +292,9 @@ class EgovProductionOrderServiceImplTest {
         ArgumentCaptor<ErpIFProdOrderDto> erpCaptor = ArgumentCaptor.forClass(ErpIFProdOrderDto.class);
         verify(erpIfService, times(1)).sendProdOrderToErp(erpCaptor.capture());
         assertThat(erpCaptor.getValue().getMesIfKey()).isEqualTo("ORDER-LAST");
+        assertThat(erpCaptor.getValue().getWorkingTag()).isEqualTo("D");
+        assertThat(erpCaptor.getValue().getWorkOrderSeq()).isEqualTo(501);
+        assertThat(erpCaptor.getValue().getWorkOrderSerl()).isEqualTo(1);
 
         verify(productionOrderDAO, times(2)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
     }

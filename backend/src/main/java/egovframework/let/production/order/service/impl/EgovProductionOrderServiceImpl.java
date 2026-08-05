@@ -293,6 +293,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			rowDto.setLotNo(row.getLotNo());
 			rowDto.setProdorderId(row.getProdorderId());
 			rowDto.setProdCodeId(row.getProdCodeId());
+			rowDto.setErpWorkOrderSeq(row.getErpWorkOrderSeq());
+			rowDto.setErpWorkOrderSerl(row.getErpWorkOrderSerl());
 
 			// ERP IF DTO 전송 (D) - LAST_FLAG(I/F연동) = 'Y' 인 공정만 연동 (생성 시 필터와 동일 기준)
 			boolean isLastProcess = "Y".equals(row.getLastFlag());
@@ -842,8 +844,8 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		// MES 연동키
 		dto.setMesIfKey(src.getProdorderId());
 
-		dto.setWorkOrderSeq(src.getProdworkSeq());
-		dto.setWorkOrderSerl(src.getProdworkSeq());
+		dto.setWorkOrderSeq(src.getErpWorkOrderSeq());
+		dto.setWorkOrderSerl(src.getErpWorkOrderSerl());
 
 		// 기본값
 		dto.setFactUnit(1);
