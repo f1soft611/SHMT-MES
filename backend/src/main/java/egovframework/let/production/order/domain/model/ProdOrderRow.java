@@ -81,4 +81,7 @@ public class ProdOrderRow implements Serializable {
 
     private int orderSeqno;
     private int orderHistno;
+
+    private Integer erpWorkOrderSeq;
+    private Integer erpWorkOrderSerl;
 }
