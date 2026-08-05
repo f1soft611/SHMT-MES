@@ -10,6 +10,7 @@ export interface Process {
   processType?: string;
   erpProcessMapping?: string;
   erpProcessName?: string;
+  packingFlag?: string;
   equipmentIntegrationYn?: string;
   status?: string;
   useYn?: string;
@@ -24,13 +25,12 @@ export interface ProcessType {
   processType?: string;
   erpProcessMapping?: string;
   erpProcessName?: string;
+  packingFlag?: string;
   equipmentIntegrationYn?: string;
   status?: string;
   useYn?: string;
   sortOrder?: number;
 }
-
-
 
 export interface WorkplaceProcess {
   workplaceProcessId?: string;

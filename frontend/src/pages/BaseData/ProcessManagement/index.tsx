@@ -53,6 +53,7 @@ const processSchema: yup.ObjectSchema<Process> = yup.object({
   processType: yup.string(),
   erpProcessMapping: yup.string(),
   erpProcessName: yup.string(),
+  packingFlag: yup.string().required('포장공정 여부는 필수입니다.'),
   equipmentIntegrationYn: yup.string().required('설비연동 여부는 필수입니다.'),
   status: yup.string().required('상태는 필수입니다.'),
   useYn: yup.string().required('사용 여부는 필수입니다.'),
@@ -106,6 +107,7 @@ const ProcessManagement: React.FC = () => {
       description: '',
       processType: '',
       erpProcessMapping: '',
+      packingFlag: 'N',
       equipmentIntegrationYn: 'N',
       status: 'ACTIVE',
       useYn: 'Y',
@@ -231,6 +233,7 @@ const ProcessManagement: React.FC = () => {
       description: '',
       processType: '',
       erpProcessMapping: '',
+      packingFlag: 'N',
       equipmentIntegrationYn: 'N',
       status: 'ACTIVE',
       useYn: 'Y',
@@ -318,6 +321,8 @@ const ProcessManagement: React.FC = () => {
   const getStatusLabel = (status: string) =>
     status === 'ACTIVE' ? '활성' : '비활성';
   const getUseYnLabel = (useYn?: string) => (useYn === 'N' ? '미사용' : '사용');
+  const getPackingLabel = (packingFlag?: string) =>
+    packingFlag === 'Y' ? '포장' : '일반';
 
   const columns: GridColDef[] = [
     {
@@ -338,6 +343,19 @@ const ProcessManagement: React.FC = () => {
       headerName: '공정 타입',
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'packingFlag',
+      headerName: '포장공정여부',
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={getPackingLabel(params.value)}
+          color={params.value === 'Y' ? 'secondary' : 'default'}
+          size="small"
+        />
+      ),
     },
     {
       field: 'equipmentIntegrationYn',
@@ -760,6 +778,23 @@ const ProcessManagement: React.FC = () => {
                     />
                   }
                   label="설비연동공정"
+                />
+              )}
+            />
+            <Controller
+              name="packingFlag"
+              control={processControl}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={field.value === 'Y'}
+                      onChange={(e) =>
+                        field.onChange(e.target.checked ? 'Y' : 'N')
+                      }
+                    />
+                  }
+                  label="포장공정"
                 />
               )}
             />

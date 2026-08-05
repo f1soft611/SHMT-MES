@@ -67,6 +67,21 @@ public class ErpItem implements Serializable {
 	private String assetName;
 
 	/**
+	 * 대분류 코드 (ItemClassLSeq)
+	 */
+	private String itemClassLSeq;
+
+	/**
+	 * 중분류 코드 (ItemClassMSeq)
+	 */
+	private String itemClassMSeq;
+
+	/**
+	 * 소분류 코드 (ItemClassSSeq)
+	 */
+	private String itemClassSSeq;
+
+	/**
 	 * 최종수정자내부코드 (LastUserSeq)
 	 */
 	private Integer lastUserSeq;
