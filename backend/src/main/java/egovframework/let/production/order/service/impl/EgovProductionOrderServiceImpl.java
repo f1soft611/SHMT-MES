@@ -294,14 +294,19 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			rowDto.setProdorderId(row.getProdorderId());
 			rowDto.setProdCodeId(row.getProdCodeId());
 
-			try {
-				ErpIFProdOrderDto erpDto = convertDeleteToIfDto(rowDto);
-				boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
-				if (!erpSendSuccess) {
-					log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodorderId={}", row.getProdorderId());
+			// ERP IF DTO 전송 (D) - LAST_FLAG(I/F연동) = 'Y' 인 공정만 연동 (생성 시 필터와 동일 기준)
+			boolean isLastProcess = "Y".equals(row.getLastFlag());
+			if (isLastProcess) {
+				try {
+					ErpIFProdOrderDto erpDto = convertDeleteToIfDto(rowDto);
+					boolean erpSendSuccess = erpIfService.sendProdOrderToErp(erpDto);
+					if (!erpSendSuccess) {
+						log.warn("[ERP IF][PROD ORDER][D] send failed but MES delete will continue. prodorderId={}", row.getProdorderId());
+					}
+				} catch (Exception e) {
+					log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodorderId={}", row.getProdorderId(), e);
 				}
-			} catch (Exception e) {
-				log.warn("[ERP IF][PROD ORDER][D] 전송 실패. prodorderId={}", row.getProdorderId(), e);
+
 			}
 
 			productionOrderDAO.deleteProductionOrder(rowDto);

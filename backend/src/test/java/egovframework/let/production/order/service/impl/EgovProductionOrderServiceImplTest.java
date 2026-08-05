@@ -256,6 +256,44 @@ class EgovProductionOrderServiceImplTest {
         assertThat(erpIfFailed).isTrue();
     }
 
+    @Test
+    void deleteProductionOrder_sendsErpIfOnlyForLastFlagRows() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdOrderDeleteDto dto = new ProdOrderDeleteDto();
+        dto.setProdplanDate("20260805");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+
+        ProdOrderRow lastProcessRow = new ProdOrderRow();
+        lastProcessRow.setProdplanDate("20260805");
+        lastProcessRow.setProdplanSeq(1);
+        lastProcessRow.setProdworkSeq(1);
+        lastProcessRow.setProdorderId("ORDER-LAST");
+        lastProcessRow.setLastFlag("Y");
+
+        ProdOrderRow normalProcessRow = new ProdOrderRow();
+        normalProcessRow.setProdplanDate("20260805");
+        normalProcessRow.setProdplanSeq(1);
+        normalProcessRow.setProdworkSeq(1);
+        normalProcessRow.setProdorderId("ORDER-NORMAL");
+        normalProcessRow.setLastFlag("N");
+
+        when(productionOrderDAO.selectProdResultCount(any(ProdOrderDeleteDto.class))).thenReturn(0);
+        when(productionOrderDAO.selectProdOrdersByPlanId(any(ProdOrderSearchParam.class)))
+                .thenReturn(Arrays.asList(lastProcessRow, normalProcessRow));
+        when(erpIfService.sendProdOrderToErp(any())).thenReturn(true);
+
+        service.deleteProductionOrder(dto);
+
+        ArgumentCaptor<ErpIFProdOrderDto> erpCaptor = ArgumentCaptor.forClass(ErpIFProdOrderDto.class);
+        verify(erpIfService, times(1)).sendProdOrderToErp(erpCaptor.capture());
+        assertThat(erpCaptor.getValue().getMesIfKey()).isEqualTo("ORDER-LAST");
+
+        verify(productionOrderDAO, times(2)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
+    }
+
     private ProdOrderInsertDto order(String planFlag, String lotNo) {
         ProdOrderInsertDto dto = new ProdOrderInsertDto();
         dto.setProdplanDate("20260724");
