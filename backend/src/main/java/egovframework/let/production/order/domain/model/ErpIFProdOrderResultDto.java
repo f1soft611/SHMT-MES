@@ -13,6 +13,6 @@ public class ErpIFProdOrderResultDto {
     private Integer workOrderSeq;
     private Integer workOrderSerl;
 
-    private String status;              // ERP처리상태
-    private String result;              // ERP처리결과
+    private String status;              // ERP 처리상태
+    private String result;              // ERP 처리결과
 }

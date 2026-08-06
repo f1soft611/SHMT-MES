@@ -538,7 +538,8 @@
 	<!-- TPR301M ORDER_FLAG UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
-	<update id="updateProdPlanOrderFlag" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+	<update id="updateProdPlanOrderFlag"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
 		UPDATE TPR301 SET ORDER_FLAG = #{orderFlag}
 		WHERE FACTORY_CODE = '000001'
 		AND PRODPLAN_DATE = #{prodplanDate}
@@ -546,7 +547,8 @@
 		AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
-	<update id="updateProdPlanOrderFlag2" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+	<update id="updateProdPlanOrderFlag2"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
 		UPDATE TPR301M SET ORDER_FLAG = #{orderFlag}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
@@ -556,7 +558,8 @@
 	<!-- TPR301M LOTNO UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
-	<update id="updateProdPlanLotNo" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+	<update id="updateProdPlanLotNo"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
 		UPDATE TPR301 SET LOT_NO = #{lotNo}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
@@ -564,15 +567,33 @@
 		  AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
-	<update id="updateProdPlanLotNo2" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+	<update id="updateProdPlanLotNo2"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
 		UPDATE TPR301M SET ITEM_LOT_NO = #{lotNo}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 	</update>
+
+	<!-- 생산지시 삭제요청시 mes에서는 order_flag만 선 변경	-->
+	<update id="deleteReqProductionOrder"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
+		UPDATE TPR504 SET ORDER_FLAG = 'D',
+						  ERPProcYn = 'D',
+						  OPTIME2 = GETDATE(),
+						  OPMAN_CODE2 = #{opmanCode}
+		WHERE FACTORY_CODE = '000001'
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
+		AND PRODWORK_SEQ = #{prodworkSeq}
+		<if test="prodorderId != null and prodorderId != ''">
+			AND TPR504ID = #{prodorderId}
+		</if>
+	</update>
 	
 	<!-- 생산지시 삭제	-->
-	<update id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
+	<update id="deleteProductionOrder"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
 		UPDATE TPR504 SET DELETE_FLAG = 1,
 		                  OPTIME2 = GETDATE(),
 		                  OPMAN_CODE2 = #{opmanCode}
@@ -698,13 +719,28 @@
 	<update id="updateErpResultByProdorderId"
 	        parameterType="egovframework.let.production.order.domain.model.ErpIFProdOrderResultDto">
 		UPDATE TPR504
-		SET ERPProcYn       	= #{erpProcYn},
+		SET ERPProcYn       	= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{erpProcYn} = 'N' THEN TPR504.ERPProcYn
+		    						   	ELSE #{erpProcYn} END,
 		    ERPProcDateTime 	= #{erpProcDateTime},
 		    ERPWorkOrderSeq		= #{workOrderSeq},
 		    ERPWorkOrderSerl	= #{workOrderSerl},
-		    ERPStatus       = #{status},
-		    ERPResult       = #{result}
+		    ERPStatus			= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{erpProcYn} = 'N' THEN NULL
+		                               	ELSE #{status} END,
+		    ERPResult       	= #{result},
+		    DELETE_FLAG			= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{status} = '0' AND #{erpProcYn} = 'Y' THEN 1
+										ELSE TPR504.DELETE_FLAG END
 		WHERE PRODORDER_ID = #{mesIfKey}
 	</update>
+
+	<!-- ERP 결과 동기화: PRODORDER_ID로 소속 생산계획 키 조회 -->
+	<select id="selectProdPlanKeyByProdorderId"
+	        parameterType="string"
+	        resultType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
+		SELECT PRODPLAN_DATE AS prodplanDate,
+		       PRODPLAN_SEQ  AS prodplanSeq,
+		       PRODWORK_SEQ  AS prodworkSeq
+		FROM TPR504
+		WHERE PRODORDER_ID = #{value}
+	</select>
 
 </mapper>

@@ -1,5 +1,6 @@
 package egovframework.let.production.order.service.impl;
 
+import egovframework.com.cmm.exception.BizException;
 import egovframework.let.common.dto.ListResult;
 import egovframework.let.common.idgen.service.EgovConditionalIdService;
 import egovframework.let.production.order.domain.model.*;
@@ -9,6 +10,7 @@ import egovframework.let.scheduler.service.ErpToMesInterfaceService;
 import org.mockito.ArgumentCaptor;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.Test;
@@ -296,11 +298,11 @@ class EgovProductionOrderServiceImplTest {
         assertThat(erpCaptor.getValue().getWorkOrderSeq()).isEqualTo(501);
         assertThat(erpCaptor.getValue().getWorkOrderSerl()).isEqualTo(1);
 
-        verify(productionOrderDAO, times(2)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
+        verify(productionOrderDAO, times(2)).deleteReqProductionOrder(any(ProdOrderDeleteDto.class));
     }
 
     @Test
-    void deleteProductionOrder_skipsErpIfWhenErpWorkOrderValuesMissing() throws Exception {
+    void deleteProductionOrder_throwsWhenLastFlagRowMissingErpWorkOrderValues() throws Exception {
         EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
                 productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
 
@@ -315,16 +317,119 @@ class EgovProductionOrderServiceImplTest {
         neverSyncedRow.setProdworkSeq(1);
         neverSyncedRow.setProdorderId("ORDER-NEVER-SYNCED");
         neverSyncedRow.setLastFlag("Y");
-        // erpWorkOrderSeq / erpWorkOrderSerl 미설정 (null) = ERP 미연동 상태
+        neverSyncedRow.setLotNo("LOT-NEVER-SYNCED");
+        // erpWorkOrderSeq / erpWorkOrderSerl 미설정 (null) = ERP 미연동 상태 -> 취소 불가
 
         when(productionOrderDAO.selectProdResultCount(any(ProdOrderDeleteDto.class))).thenReturn(0);
         when(productionOrderDAO.selectProdOrdersByPlanId(any(ProdOrderSearchParam.class)))
                 .thenReturn(Collections.singletonList(neverSyncedRow));
 
-        service.deleteProductionOrder(dto);
+        assertThatThrownBy(() -> service.deleteProductionOrder(dto))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("LOT-NEVER-SYNCED");
 
         verify(erpIfService, never()).sendProdOrderToErp(any());
-        verify(productionOrderDAO, times(1)).deleteProductionOrder(any(ProdOrderDeleteDto.class));
+        verify(productionOrderDAO, never()).deleteReqProductionOrder(any(ProdOrderDeleteDto.class));
+    }
+
+    @Test
+    void deleteProductionOrder_throwsWhenLastFlagRowHasZeroErpWorkOrderValues() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdOrderDeleteDto dto = new ProdOrderDeleteDto();
+        dto.setProdplanDate("20260805");
+        dto.setProdplanSeq(1);
+        dto.setProdworkSeq(1);
+
+        ProdOrderRow zeroValueRow = new ProdOrderRow();
+        zeroValueRow.setProdplanDate("20260805");
+        zeroValueRow.setProdplanSeq(1);
+        zeroValueRow.setProdworkSeq(1);
+        zeroValueRow.setProdorderId("ORDER-ZERO");
+        zeroValueRow.setLastFlag("Y");
+        zeroValueRow.setErpWorkOrderSeq(0);
+        zeroValueRow.setErpWorkOrderSerl(0);
+        zeroValueRow.setLotNo("LOT-ZERO");
+
+        when(productionOrderDAO.selectProdResultCount(any(ProdOrderDeleteDto.class))).thenReturn(0);
+        when(productionOrderDAO.selectProdOrdersByPlanId(any(ProdOrderSearchParam.class)))
+                .thenReturn(Collections.singletonList(zeroValueRow));
+
+        assertThatThrownBy(() -> service.deleteProductionOrder(dto))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("LOT-ZERO");
+
+        verify(erpIfService, never()).sendProdOrderToErp(any());
+        verify(productionOrderDAO, never()).deleteReqProductionOrder(any(ProdOrderDeleteDto.class));
+    }
+
+    @Test
+    void syncErpResult_revertsPlanToPlannedWhenNoOrdersRemain() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdPlanKeyDto plan = bulkPlan("20260805", 1, 1, "DETAIL-1");
+
+        when(productionOrderDAO.selectProdorderIdsByPlanKey(plan))
+                .thenReturn(Collections.singletonList("ORDER-DELETED"));
+
+        ErpIFProdOrderResultDto result = new ErpIFProdOrderResultDto();
+        result.setMesIfKey("ORDER-DELETED");
+        when(erpIfService.selectErpResultByMesIfKeys(anyList()))
+                .thenReturn(Collections.singletonList(result));
+        when(productionOrderDAO.updateErpResultByProdorderId(result)).thenReturn(1);
+
+        ProdPlanKeyDto planKey = new ProdPlanKeyDto();
+        planKey.setProdplanDate("20260805");
+        planKey.setProdplanSeq(1);
+        planKey.setProdworkSeq(1);
+        when(productionOrderDAO.selectProdPlanKeyByProdorderId("ORDER-DELETED")).thenReturn(planKey);
+        when(productionOrderDAO.selectProdorderIdsByPlanKey(planKey)).thenReturn(Collections.emptyList());
+
+        int updated = service.syncErpResult(Collections.singletonList(plan));
+
+        assertThat(updated).isEqualTo(1);
+
+        ArgumentCaptor<ProdPlanOrderFlagDto> flagCaptor = ArgumentCaptor.forClass(ProdPlanOrderFlagDto.class);
+        verify(productionOrderDAO).updateProdPlanOrderFlag(flagCaptor.capture());
+        verify(productionOrderDAO).updateProdPlanOrderFlag2(any(ProdPlanOrderFlagDto.class));
+        assertThat(flagCaptor.getValue().getOrderFlag()).isEqualTo("PLANNED");
+        assertThat(flagCaptor.getValue().getProdplanDate()).isEqualTo("20260805");
+
+        ArgumentCaptor<ProdPlanLotNoDto> lotCaptor = ArgumentCaptor.forClass(ProdPlanLotNoDto.class);
+        verify(productionOrderDAO).updateProdPlanLotNo(lotCaptor.capture());
+        verify(productionOrderDAO).updateProdPlanLotNo2(any(ProdPlanLotNoDto.class));
+        assertThat(lotCaptor.getValue().getLotNo()).isEmpty();
+    }
+
+    @Test
+    void syncErpResult_keepsPlanOrderedWhenOrdersRemain() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdPlanKeyDto plan = bulkPlan("20260805", 2, 2, "DETAIL-2");
+
+        when(productionOrderDAO.selectProdorderIdsByPlanKey(plan))
+                .thenReturn(Collections.singletonList("ORDER-A"));
+
+        ErpIFProdOrderResultDto result = new ErpIFProdOrderResultDto();
+        result.setMesIfKey("ORDER-A");
+        when(erpIfService.selectErpResultByMesIfKeys(anyList()))
+                .thenReturn(Collections.singletonList(result));
+
+        ProdPlanKeyDto planKey = new ProdPlanKeyDto();
+        planKey.setProdplanDate("20260805");
+        planKey.setProdplanSeq(2);
+        planKey.setProdworkSeq(2);
+        when(productionOrderDAO.selectProdPlanKeyByProdorderId("ORDER-A")).thenReturn(planKey);
+        when(productionOrderDAO.selectProdorderIdsByPlanKey(planKey))
+                .thenReturn(Arrays.asList("ORDER-A", "ORDER-B"));
+
+        service.syncErpResult(Collections.singletonList(plan));
+
+        verify(productionOrderDAO, never()).updateProdPlanOrderFlag(any(ProdPlanOrderFlagDto.class));
+        verify(productionOrderDAO, never()).updateProdPlanLotNo(any(ProdPlanLotNoDto.class));
     }
 
     private ProdOrderInsertDto order(String planFlag, String lotNo) {
