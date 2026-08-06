@@ -289,7 +289,7 @@ public class EgovProductionOrderApiController {
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
-        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소가 완료되었습니다.");
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "생산지시 일괄 취소요청이 완료되었습니다.");
     }
 
     @ApiResponses(value = {

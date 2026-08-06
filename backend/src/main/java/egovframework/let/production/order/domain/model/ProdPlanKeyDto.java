@@ -4,12 +4,6 @@ import lombok.Data;
 
 @Data
 public class ProdPlanKeyDto {
-    /** 생산계획 id */
-    private String prodplanId;
-
-    /** 생산계획 id */
-    private String prodplanDetailId;
-
     /** 생산계획일 (YYYYMMDD) */
     private String prodplanDate;
 
@@ -18,6 +12,12 @@ public class ProdPlanKeyDto {
 
     /** 생산작업 SEQ */
     private int prodworkSeq;
+
+    /** 생산계획 id */
+    private String prodplanId;
+
+    /** 생산계획 detail id */
+    private String prodplanDetailId;
 
     /** opmanCode */
     private String opmanCode;

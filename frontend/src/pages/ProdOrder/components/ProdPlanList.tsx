@@ -75,7 +75,7 @@ const ProdPlanList = () => {
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
     const getRowId = (row: ProdPlanRow) =>
-        `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}-${row.workSeq ?? 'none'}`;
+        row.prodplanDetailId ?? `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}}`;
 
     const {
         selectionModel,
@@ -295,7 +295,7 @@ const ProdPlanList = () => {
             renderCell: (params) => {
                 const { erpProcYn, erpStatus, erpResult } = params.row;
                 let label = "미전송";
-                let color: "default" | "warning" | "success" | "error" = "default";
+                let color: "default" | "warning" | "success" | "error" | "info" = "default";
 
                 if (erpProcYn === "N") {
                     label = "ERP처리중";
@@ -306,6 +306,9 @@ const ProdPlanList = () => {
                 } else if (erpProcYn === "Y") {
                     label = "전송완료";
                     color = "success";
+                } else if (erpProcYn === "D") {
+                    label = "삭제대기";
+                    color = "info";
                 }
 
                 const chip = <Chip label={label} color={color} size="small" />;
