@@ -75,7 +75,9 @@ const ProdPlanList = () => {
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
     const getRowId = (row: ProdPlanRow) =>
-        row.prodplanDetailId ?? `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}}`;
+        row.prodplanDetailId && row.workSeq != null
+            ? `${row.prodplanDetailId}-${row.workSeq}`
+            : `${row.prodplanDate}-${row.prodplanSeq}-${row.prodworkSeq}`;
 
     const {
         selectionModel,
@@ -221,6 +223,7 @@ const ProdPlanList = () => {
             width: 100,
             headerAlign: "center",
             align: "center",
+            renderCell: (params) => params.row.prodCode || params.row.itemCode,
         },
         {
             field: "prodQty",
