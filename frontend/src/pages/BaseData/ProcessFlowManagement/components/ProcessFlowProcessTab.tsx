@@ -117,7 +117,13 @@ export default function ProcessFlowProcessTab() {
       width: 80,
       headerAlign: 'center',
       align: 'center',
-    //   todo: lastFlag처럼 체크박스로 값 받고 실제 저장까지 (tpr110d테이블에는 ERP_RESULT_FLAG라는 칼럼 생성해 두었음)
+      renderCell: (params) => (
+          <Checkbox
+              name="erpResultFlag"
+              checked={params.row.erpResultFlag === 'Y'}
+              onChange={() => process.toggleErpResult(params.row.rowId)}
+          />
+      ),
     },
   ];
 

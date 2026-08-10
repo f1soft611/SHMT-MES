@@ -15,6 +15,7 @@ export type ProcessFlowProcessDto = {
   seq: number;
   planFlag: Yn;
   lastFlag: Yn;
+  erpResultFlag: Yn;
 };
 
 export type ProcessFlowProcessDraft = Omit<
@@ -48,7 +49,7 @@ export type ApiResult<T> = {
 
 export type SaveFlowProcessesRequest = {
   processes: Array<
-    Pick<ProcessFlowProcessDraft, 'flowProcessCode' | 'seq' | 'planFlag' | 'lastFlag'>
+    Pick<ProcessFlowProcessDraft, 'flowProcessCode' | 'seq' | 'planFlag' | 'lastFlag' | 'erpResultFlag'>
   >;
 };
 
