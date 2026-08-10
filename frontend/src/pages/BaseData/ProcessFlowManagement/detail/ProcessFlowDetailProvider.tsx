@@ -136,12 +136,13 @@ export function ProcessFlowDetailProvider({
     try {
       const result = await saveProcessesAsync({
         processes: processRows.map(
-          ({ flowProcessCode, seq, planFlag, lastFlag, erpResultFlag }) => ({
+          ({ flowProcessCode, seq, planFlag, lastFlag, erpResultFlag, packingFlag }) => ({
             flowProcessCode,
             seq: seq as number,
             planFlag,
             lastFlag,
             erpResultFlag,
+            packingFlag,
           }),
         ),
       });

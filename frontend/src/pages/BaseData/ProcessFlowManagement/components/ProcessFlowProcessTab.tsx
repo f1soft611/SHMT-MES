@@ -96,6 +96,20 @@ export default function ProcessFlowProcessTab() {
         />
       ),
     },
+    {
+      field: 'packingFlag',
+      headerName: '포장공정',
+      width: 80,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <Chip
+          label={params.value === 'Y' ? '포장' : '일반'}
+          color={params.value === 'Y' ? 'primary' : 'default'}
+          size="small"
+        />
+      ),
+    },
     { field: 'seq', headerName: '순서', width: 80, headerAlign: 'center', align: 'center', type: 'number', editable: true },
     {
       field: 'lastFlag',

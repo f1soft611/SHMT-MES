@@ -23,6 +23,7 @@ export interface ProcessFlowProcess {
     equipmentFlag: string;          // 장비연동 여부(Y/N)
     lastFlag: string;                // 마지막 공정 여부(Y/N)
     planFlag: string;               // 계획 공정 여부(Y/N)
+    packingFlag: string;            // 포장공정 여부(Y/N)
     flowProcessCode: string;             // 공정 코드
     flowProcessName: string;            // 공정 명
     processSeq: string;             // 공정별 순서(백엔드 기준)
