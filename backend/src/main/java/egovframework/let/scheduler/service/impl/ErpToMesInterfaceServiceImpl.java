@@ -949,17 +949,22 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 	}
 
 	/**
-	 * 루트 품목의 TCO501 BOM 트리를 삭제하고 ERP에서 재귀적으로 다시 가져와 저장한다.
+	 * 루트 품목의 TCO501 BOM 트리를 ERP에서 다시 가져와, ERP 조회 결과에 포함된 ITEM_SEQ 범위만 삭제한 뒤 재삽입한다.
+	 * (기존 TCO501에 남아있는 트리 구조가 아니라 방금 ERP에서 받아온 데이터를 삭제 기준으로 사용)
 	 * @param rootItemSeq 루트 품목의 ERP ItemSeq
 	 */
 	@Override
 	@Transactional
 	public void resyncTPDROUItemProcMatByRootItem(int rootItemSeq) throws Exception {
-		List<Integer> treeItemSeqs = mesTPDROUItemProcMatInterfaceDAO.selectTPDROUItemProcMatTreeItemSeqs(rootItemSeq);
-		mesTPDROUItemProcMatInterfaceDAO.deleteMesTPDROUItemProcMatByItemSeqs(treeItemSeqs);
-
 		List<egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat> erpList =
 				fetchTPDROUItemProcMatByItemSeq(rootItemSeq);
+
+		List<Integer> treeItemSeqs = erpList.stream()
+				.map(egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat::getItemSeq)
+				.distinct()
+				.collect(java.util.stream.Collectors.toList());
+		mesTPDROUItemProcMatInterfaceDAO.deleteMesTPDROUItemProcMatByItemSeqs(treeItemSeqs);
+
 		for (egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat item : erpList) {
 			java.util.Map<String, Object> param = new java.util.HashMap<>();
 			param.put("CompanySeq", item.getCompanySeq());
