@@ -213,6 +213,7 @@ export function ProcessFlowDetailProvider({
       updateSeq,
       selectPlan,
       toggleLast,
+      toggleErpResult,
       saveProcesses,
       refetchProcesses,
     ],
