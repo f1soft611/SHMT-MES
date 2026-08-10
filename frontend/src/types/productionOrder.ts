@@ -47,6 +47,7 @@ export interface ProdPlanRow {
     itemCode: string;
     itemName: string;
     prodCodeId?: number;
+    prodCode?: string;
     workcenterCode: string;
     workcenterName: string;
     workcenterSeq?: string;
