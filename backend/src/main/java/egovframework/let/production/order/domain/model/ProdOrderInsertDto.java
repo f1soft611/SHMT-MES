@@ -30,6 +30,7 @@ public class ProdOrderInsertDto {
 
     private String lastFlag;
     private String planFlag;
+    private String erpResultFlag;
     private String packingFlag;
 
     private String lotNo;

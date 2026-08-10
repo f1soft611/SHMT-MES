@@ -656,6 +656,7 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
 		dto.setNewWorkorderSeq(row.getTpr110dSeq());
 
+		dto.setErpResultFlag(row.getErpResultFlag());
 		dto.setPackingFlag(row.getPackingFlag());
 
 		return dto;
