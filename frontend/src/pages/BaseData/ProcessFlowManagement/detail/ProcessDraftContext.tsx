@@ -15,6 +15,7 @@ export type ProcessDraftContextValue = {
   updateSeq: (rowId: string, seq: number | null) => void;
   selectPlan: (rowId: string) => void;
   toggleLast: (rowId: string) => void;
+  toggleErpResult: (rowId: string) => void;
   save: () => Promise<boolean>;
   retry: () => Promise<unknown>;
 };

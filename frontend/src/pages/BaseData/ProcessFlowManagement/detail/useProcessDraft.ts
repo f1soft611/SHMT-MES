@@ -58,6 +58,7 @@ export function useProcessDraft(
               seq: nextSeq++,
               planFlag: 'N',
               lastFlag: 'N',
+              erpResultFlag: 'N',
             })),
         ),
       );
@@ -100,6 +101,16 @@ export function useProcessDraft(
     );
   }, [replaceRows]);
 
+    const toggleErpResult = useCallback((rowId: string) => {
+        replaceRows(
+            rowsRef.current.map((row) =>
+                row.rowId === rowId
+                    ? { ...row, erpResultFlag: row.erpResultFlag === 'Y' ? 'N' : 'Y' }
+                    : row,
+            ),
+        );
+    }, [replaceRows]);
+
   const dirty = useMemo(
     () => JSON.stringify(rows) !== JSON.stringify(baseRows),
     [rows, baseRows],
@@ -115,6 +126,7 @@ export function useProcessDraft(
     updateSeq,
     selectPlan,
     toggleLast,
+      toggleErpResult,
     resetCanonical,
     discard,
   };

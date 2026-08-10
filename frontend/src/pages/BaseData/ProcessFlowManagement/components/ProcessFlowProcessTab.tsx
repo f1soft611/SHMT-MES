@@ -27,8 +27,6 @@ export default function ProcessFlowProcessTab() {
   const { showToast } = useToast();
   const [leftSelected, setLeftSelected] = useState<GridRowId[]>([]);
   const [rightSelected, setRightSelected] = useState<GridRowId[]>([]);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
   const [searchDraft, setSearchDraft] = useState({
     searchCnd: '0',
     searchWrd: '',
@@ -36,14 +34,16 @@ export default function ProcessFlowProcessTab() {
   });
   const [searchParams, setSearchParams] = useState(searchDraft);
   const catalog = useProcessCatalogQuery({
-    page,
-    pageSize,
+    page: 0,
+    pageSize: 0,
+    unpaged: true,
     ...searchParams,
   });
   const catalogResult = catalog.data?.result;
   const processRows = catalogResult?.resultList ?? [];
-  const totalCount = Number(catalogResult?.resultCnt ?? 0);
   const error = process.error || (catalog.error instanceof Error ? catalog.error : null);
+  // ponytail: MUI DataGrid(커뮤니티)는 페이징을 완전히 끌 수 없어, 전체 행이 한 페이지에 담기도록 페이지 크기를 맞추고 footer만 숨긴다
+  const leftPageSize = Math.max(processRows.length, 1);
 
   const leftColumns: GridColDef[] = [
     { field: 'processCode', headerName: '공정 코드', width: 100, headerAlign: 'center', align: 'center' },
@@ -111,6 +111,20 @@ export default function ProcessFlowProcessTab() {
         />
       ),
     },
+    {
+      field: 'erpResultFlag',
+      headerName: '실적전송',
+      width: 80,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+          <Checkbox
+              name="erpResultFlag"
+              checked={params.row.erpResultFlag === 'Y'}
+              onChange={() => process.toggleErpResult(params.row.rowId)}
+          />
+      ),
+    },
   ];
 
   const handleAdd = () => {
@@ -157,7 +171,7 @@ export default function ProcessFlowProcessTab() {
             onChange={(e) => setSearchDraft((prev) => ({ ...prev, searchWrd: e.target.value }))}
             onKeyDown={(e) => e.key === 'Enter' && setSearchParams(searchDraft)}
           />
-          <Button variant="contained" startIcon={<SearchIcon />} onClick={() => { setPage(0); setSearchParams(searchDraft); }} sx={{ minWidth: 150 }}>
+            <Button variant="contained" startIcon={<SearchIcon />} onClick={() => setSearchParams(searchDraft)} sx={{ minWidth: 150 }}>
             검색
           </Button>
         </Stack>
@@ -169,34 +183,31 @@ export default function ProcessFlowProcessTab() {
             <Typography variant="subtitle1" fontWeight={600}>전체공정</Typography>
           </Box>
           <DataGrid
-            rows={processRows}
-            columns={leftColumns}
-            getRowId={(row: ProcessType) => row.processId}
-            loading={catalog.isLoading}
-            slotProps={{
-              loadingOverlay: {
-                variant: 'linear-progress',
-                noRowsVariant: 'linear-progress',
-              },
-            }}
-            pagination
-            paginationMode="server"
-            rowCount={totalCount}
-            paginationModel={{ page, pageSize }}
-            onPaginationModelChange={(model) => {
-              setPage(model.pageSize !== pageSize ? 0 : model.page);
-              setPageSize(model.pageSize);
-              setLeftSelected([]);
-            }}
-            pageSizeOptions={[10, 20, 50]}
-            checkboxSelection
-            disableRowSelectionExcludeModel
-            rowSelectionModel={{ type: 'include', ids: new Set(leftSelected) }}
-            onRowSelectionModelChange={(model) => setLeftSelected(Array.from(model.ids))}
-            autoHeight={false}
-            rowHeight={35}
-            columnHeaderHeight={40}
-            sx={{ height: 450, '& .MuiDataGrid-cell': { padding: '0 2px' } }}
+              rows={processRows}
+              columns={leftColumns}
+              getRowId={(row: ProcessType) => row.processId}
+              loading={catalog.isLoading}
+              slotProps={{
+                loadingOverlay: {
+                  variant: 'linear-progress',
+                  noRowsVariant: 'linear-progress',
+                },
+              }}
+              pagination
+              paginationModel={{ page: 0, pageSize: leftPageSize }}
+              onPaginationModelChange={() => {}}
+              pageSizeOptions={[leftPageSize]}
+              hideFooterPagination
+              hideFooter={true}
+              checkboxSelection
+              disableRowSelectionExcludeModel
+              rowSelectionModel={{ type: 'include', ids: new Set(leftSelected) }}
+              onRowSelectionModelChange={(model) => setLeftSelected(Array.from(model.ids))}
+              autoHeight={false}
+              rowHeight={35}
+              columnHeaderHeight={40}
+              sx={{ height: 450, '& .MuiDataGrid-cell': { padding: '0 2px' } }}
+
           />
         </Grid>
         <Grid size={{ xs: 1 }}>

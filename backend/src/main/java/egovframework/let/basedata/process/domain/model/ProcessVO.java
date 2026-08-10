@@ -61,4 +61,8 @@ public class ProcessVO extends Process {
 	/** 페이지당 레코드 개수 */
 	@Schema(description = "레코드 개수")
 	private int recordCountPerPage = 10;
+
+	/** 페이징 없이 전체 조회 여부 */
+	@Schema(description = "true이면 페이징 없이 전체 목록을 조회한다")
+	private boolean unpaged = false;
 }

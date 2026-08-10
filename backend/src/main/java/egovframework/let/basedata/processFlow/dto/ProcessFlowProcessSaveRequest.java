@@ -19,5 +19,6 @@ public class ProcessFlowProcessSaveRequest {
         private Integer seq;
         private String planFlag;
         private String lastFlag;
+        private String erpResultFlag;
     }
 }

@@ -75,9 +75,11 @@ public class EgovProcessApiController {
         );
         paginationInfo.setPageSize(propertyService.getInt("Globals.pageSize"));
 
-        processVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
-        processVO.setLastIndex(paginationInfo.getLastRecordIndex());
-        processVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+        if (!processVO.isUnpaged()) {
+            processVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+            processVO.setLastIndex(paginationInfo.getLastRecordIndex());
+            processVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+        }
 
         Map<String, Object> resultMap = processService.selectProcessList(processVO);
         int totCnt = Integer.parseInt((String)resultMap.get("resultCnt"));

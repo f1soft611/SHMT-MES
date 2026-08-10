@@ -66,6 +66,7 @@ const toProcessFlowProcessDto = (
   seq: Number(row.seq),
   planFlag: row.planFlag,
   lastFlag: row.lastFlag,
+  erpResultFlag: row.erpResultFlag === 'Y' ? 'Y' : 'N',
 });
 
 const withLegacyResult = <T, LegacyRow>(
