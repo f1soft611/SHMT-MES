@@ -89,4 +89,18 @@ describe('ProcessFlowProcessTab', () => {
     });
     expect(container.querySelectorAll('.MuiDataGrid-skeletonLoadingOverlay')).toHaveLength(0);
   });
+
+    it('requests the full unpaged catalog for the left grid', () => {
+        renderLoadingGrids(false);
+
+        expect(mockedUseProcessCatalogQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ unpaged: true }),
+        );
+    });
+
+    it('renders the left grid without pagination controls', () => {
+        const { grids } = renderLoadingGrids(true);
+
+        expect(within(grids[0]).queryByRole('combobox', { name: /rows per page/i })).toBeNull();
+    });
 });

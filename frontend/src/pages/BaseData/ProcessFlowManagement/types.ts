@@ -75,4 +75,5 @@ export type ProcessFlowListParams = {
 
 export type CatalogParams = ProcessFlowListParams & {
   useYn?: string;
+  unpaged?: boolean;
 };
