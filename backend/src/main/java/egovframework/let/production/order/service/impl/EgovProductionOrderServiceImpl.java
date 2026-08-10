@@ -462,7 +462,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	public void bulkCancelProductionOrders(List<ProdPlanKeyDto> plans) throws Exception {
 		if (plans == null || plans.isEmpty()) return;
 
+		Set<String> processedKeys = new HashSet<>();
+
 		for (ProdPlanKeyDto plan : plans) {
+
+			String key = plan.getProdplanDate() + "|" + plan.getProdplanSeq() + "|" + plan.getProdworkSeq();
+
+			if (!processedKeys.add(key)) continue;
+
 			// 1. 생산실적 존재 여부 확인
 			ProdOrderDeleteDto dto = new ProdOrderDeleteDto();
 			dto.setProdplanDate(plan.getProdplanDate());
@@ -643,6 +650,14 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 		dto.setItemOnePerQty(row.getItemOnePerQty());
 		dto.setOrderDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
+		dto.setProdplanDetailId(row.getProdplanDetailId());
+		dto.setWorkCodeId(row.getWorkCodeId());
+		dto.setItemUnitId(row.getItemUnitId());
+		// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
+		dto.setNewWorkorderSeq(row.getTpr110dSeq());
+
+		dto.setPackingFlag(row.getPackingFlag());
+
 		return dto;
 	}
 
@@ -664,18 +679,6 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			dto.setProdorderId(productionOrderDAO.selectProdOrderNextId());
 			// WORK_SEQ 채번
 			dto.setOrderSeq(productionOrderDAO.selectProdOrderWorkSeq(dto));
-			// bulk는 정렬순서 front에서 못받으니 실제 순서로 세팅
-			dto.setNewWorkorderSeq(row.getTpr110dSeq());
-
-			dto.setLotNo(row.getLotNo());
-			dto.setProdplanDetailId(row.getProdplanDetailId());
-
-			dto.setItemCtTime(row.getItemCtTime());
-			dto.setItemOnePerQty(row.getItemOnePerQty());
-
-			// ProdPlanKeyDto 에는 공정시퀀스, 유닛시퀀스 없으니 새로 세팅
-			dto.setWorkCodeId(row.getWorkCodeId());
-			dto.setItemUnitId(row.getItemUnitId());
 
 			// MES insert
 			productionOrderDAO.insertProductionOrder(dto);
@@ -883,13 +886,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 	 * ERP 처리 결과를 TPR504에 반영한다.
 	 * 반영 후 생산지시가 전부 삭제된 생산계획은 TPR301/TPR301M의 ORDER_FLAG를 PLANNED로, LOT_NO를 빈값으로 되돌린다.
 	 */
-	private int applyErpResults(List<ErpIFProdOrderResultDto> results) {
+	private int applyErpResults(List<ErpIFProdOrderResultDto> results) throws Exception {
 		int updated = 0;
 		for (ErpIFProdOrderResultDto r : results) {
 			updated += productionOrderDAO.updateErpResultByProdorderId(r);
 
 			ProdPlanKeyDto planKey = productionOrderDAO.selectProdPlanKeyByProdorderId(r.getMesIfKey());
 			if (planKey != null) {
+				cascadeDeleteToUnlinkedProcesses(planKey);
+
 				int remaining = productionOrderDAO.selectProdorderIdsByPlanKey(planKey).size();
 				if (remaining == 0) {
 					updatePlanOrderFlag(planKey.getProdplanDate(), planKey.getProdplanSeq(), planKey.getProdworkSeq(), "PLANNED");
@@ -898,6 +903,38 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 			}
 		}
 		return updated;
+	}
+
+	/**
+	 * LAST_FLAG='N'(ERP 미연동) 공정은 ERP로 전송되지 않아 결과 동기화로 DELETE_FLAG를 확정받을 수 없다.
+	 * 같은 계획의 ERP 연동공정(LAST_FLAG='Y')이 삭제 요청 중인 것 없이 전부 DELETE_FLAG=1로 확정된 시점에
+	 * 미연동공정도 함께 DELETE_FLAG=1로 확정한다.
+	 */
+	private void cascadeDeleteToUnlinkedProcesses(ProdPlanKeyDto planKey) throws Exception {
+		ProdOrderSearchParam param = new ProdOrderSearchParam();
+		param.setProdplanDate(planKey.getProdplanDate());
+		param.setProdplanSeq(planKey.getProdplanSeq());
+		param.setProdworkSeq(planKey.getProdworkSeq());
+
+		List<ProdOrderRow> remaining = productionOrderDAO.selectProdOrdersByPlanId(param);
+
+		boolean linkedStillPending = remaining.stream()
+				.anyMatch(row -> "Y".equals(row.getLastFlag()) && "D".equals(row.getOrderFlag()));
+		if (linkedStillPending) {
+			return;
+		}
+
+		for (ProdOrderRow row : remaining) {
+			if (!"Y".equals(row.getLastFlag()) && "D".equals(row.getOrderFlag())) {
+				ProdOrderDeleteDto delDto = new ProdOrderDeleteDto();
+				delDto.setProdplanDate(row.getProdplanDate());
+				delDto.setProdplanSeq(row.getProdplanSeq());
+				delDto.setProdworkSeq(row.getProdworkSeq());
+				delDto.setProdorderId(row.getProdorderId());
+				delDto.setOpmanCode(row.getOpmanCode2());
+				productionOrderDAO.deleteProductionOrder(delDto);
+			}
+		}
 	}
 
 

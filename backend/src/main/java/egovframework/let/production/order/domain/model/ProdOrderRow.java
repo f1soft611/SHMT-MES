@@ -33,6 +33,7 @@ public class ProdOrderRow implements Serializable {
 
     private String lastFlag;
     private String planFlag;
+    private String packingFlag;
 
     private String workCode;
     private String workName;

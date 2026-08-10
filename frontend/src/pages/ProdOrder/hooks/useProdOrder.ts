@@ -40,6 +40,7 @@ export const toInsertDto = (row: ProdOrderRow, seq: number): ProdOrderInsertDto 
     itemOnePerQty: row.itemOnePerQty,
     lastFlag: row.lastFlag,
     planFlag: row.planFlag,
+    packingFlag: row.packingFlag,
 
     lotNo: row.lotNo,
     orderQty: row.orderQty,

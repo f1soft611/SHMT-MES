@@ -139,6 +139,7 @@
 					A.ITEM_NAME LIKE CONCAT('%', #{keyword}, '%')
 				OR 	B1.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
 				OR 	M.ITEM_LOT_NO LIKE CONCAT('%', #{keyword}, '%')
+				OR  ERP_INFO2.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
 				)
 			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
@@ -280,6 +281,7 @@
 			C.WORK_ORDER_NM,
 			D.LAST_FLAG,
 		    D.PLAN_FLAG AS PLAN_FLAG,
+		    D.PACKING_FLAG AS PACKING_FLAG,
 			A.PROD_QTY AS ORDER_QTY,
 			CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
 			ISNULL(A.BIGO, '') AS BIGO,
@@ -511,7 +513,8 @@
 		    TPR110D_SEQ,
 			ITEM_CT_TIME,
 			ITEM_ONE_PER_QTY,
-			ORDER_DATE
+			ORDER_DATE,
+		    PACKING_FLAG
 		)
 		VALUES (
 			'000001',
@@ -537,7 +540,8 @@
 			#{tpr110dSeq},
 			#{itemCtTime},
 			#{itemOnePerQty},
-			CONVERT(VARCHAR(8), GETDATE(), 112)
+			CONVERT(VARCHAR(8), GETDATE(), 112),
+		    #{packingFlag}
 		);
 	</insert>
 
