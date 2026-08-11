@@ -17,6 +17,7 @@ public class ErpTPDROUItemProcMat {
     private String BOMRev;          // BOM차수
     private String ProcRev;         // 공정차수
     private int ProcSeq;            // 공정코드
+    private int WorkCenterSeq;      // 작업장코드
     private int Serl;               // 순번
     private int MatItemSeq;         // 자재코드
     private int UnitSeq;            // 단위코드

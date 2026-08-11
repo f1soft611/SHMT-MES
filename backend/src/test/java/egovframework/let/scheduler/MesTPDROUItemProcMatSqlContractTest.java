@@ -36,4 +36,13 @@ public class MesTPDROUItemProcMatSqlContractTest {
         assertThat(xml).contains("DELETE FROM TCO501");
         assertThat(xml).contains("<foreach collection=\"list\" item=\"itemSeq\" open=\"(\" separator=\",\" close=\")\">");
     }
+
+    @Test
+    public void insertAndUpdateIncludeWorkCenterSeq() throws Exception {
+        String xml = mapperXml();
+
+        assertThat(xml).contains("WORKCENTER_SEQ");
+        assertThat(xml).contains("#{WorkCenterSeq}");
+        assertThat(xml).contains("WORKCENTER_SEQ = #{WorkCenterSeq}");
+    }
 }

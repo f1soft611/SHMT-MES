@@ -853,7 +853,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			// 1. ERP 시스템에서 제품별공정별소요자재 정보 조회
 			log.info("ERP 시스템(SHM_IF_VIEW_TPDROUItemProcMat)에서 제품별공정별소요자재 데이터 조회 시작");
 			String sql = "SELECT CompanySeq, ItemSeq, BOMRev, ProcRev, ProcSeq, Serl, " +
-					"MatItemSeq, UnitSeq, NeedQtyNumerator, NeedQtyDenominator, " +
+					"WorkCenterSeq, MatItemSeq, UnitSeq, NeedQtyNumerator, NeedQtyDenominator, " +
 					"SMDelvType, UpperItemSeq, UpperBOMRev, BOMItemSerl, " +
 					"LastUserSeq, LastDateTime " +
 					"FROM SHM_IF_VIEW_TPDROUItemProcMat " +
@@ -874,6 +874,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 					param.put("BOMRev", item.getBOMRev());
 					param.put("ProcRev", item.getProcRev());
 					param.put("ProcSeq", item.getProcSeq());
+					param.put("WorkCenterSeq", item.getWorkCenterSeq());
 					param.put("Serl", item.getSerl());
 					param.put("MatItemSeq", item.getMatItemSeq());
 					param.put("UnitSeq", item.getUnitSeq());
@@ -972,6 +973,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			param.put("BOMRev", item.getBOMRev());
 			param.put("ProcRev", item.getProcRev());
 			param.put("ProcSeq", item.getProcSeq());
+			param.put("WorkCenterSeq", item.getWorkCenterSeq());
 			param.put("Serl", item.getSerl());
 			param.put("MatItemSeq", item.getMatItemSeq());
 			param.put("UnitSeq", item.getUnitSeq());
@@ -1032,6 +1034,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			item.setBOMRev(rs.getString("BOMRev"));
 			item.setProcRev(rs.getString("ProcRev"));
 			item.setProcSeq(rs.getInt("ProcSeq"));
+			item.setWorkCenterSeq(rs.getInt("WorkCenterSeq"));
 			item.setSerl(rs.getInt("Serl"));
 			item.setMatItemSeq(rs.getInt("MatItemSeq"));
 			item.setUnitSeq(rs.getInt("UnitSeq"));
