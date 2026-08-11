@@ -281,6 +281,7 @@
 			C.WORK_ORDER_NM,
 			D.LAST_FLAG,
 		    D.PLAN_FLAG AS PLAN_FLAG,
+		    D.ERP_RESULT_FLAG,
 		    D.PACKING_FLAG AS PACKING_FLAG,
 			A.PROD_QTY AS ORDER_QTY,
 			CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
@@ -514,6 +515,7 @@
 			ITEM_CT_TIME,
 			ITEM_ONE_PER_QTY,
 			ORDER_DATE,
+			ERP_RESULT_FLAG,
 		    PACKING_FLAG
 		)
 		VALUES (
@@ -541,7 +543,8 @@
 			#{itemCtTime},
 			#{itemOnePerQty},
 			CONVERT(VARCHAR(8), GETDATE(), 112),
-		    #{packingFlag}
+			#{erpResultFlag},
+            #{packingFlag}
 		);
 	</insert>
 
