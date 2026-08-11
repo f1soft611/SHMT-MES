@@ -8,6 +8,7 @@ import { useProcessDraftContext } from './ProcessDraftContext';
 const mockProcessOne = {
   flowProcessId: 'FP-1', flowProcessCode: 'PROC-1', flowProcessName: '절단',
   equipmentFlag: 'N' as const, seq: 1, planFlag: 'Y' as const, lastFlag: 'N' as const,
+  erpResultFlag: 'N' as const,
 };
 const mockProcessTwo = { ...mockProcessOne, flowProcessId: 'FP-2' };
 const mockItemOne = { flowItemId: 'FI-1', itemId: 'I-1', itemCode: 'ITEM-1', itemName: '품목 1' };

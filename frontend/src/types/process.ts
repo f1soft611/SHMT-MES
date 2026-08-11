@@ -104,4 +104,5 @@ export interface ProcessSearchParams {
   useYn?: string;
   equipmentIntegrationYn?: string;
   pageIndex?: number;
+  unpaged?: boolean;
 }

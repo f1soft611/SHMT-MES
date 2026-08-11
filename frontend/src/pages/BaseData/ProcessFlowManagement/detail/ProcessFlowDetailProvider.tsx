@@ -80,6 +80,7 @@ export function ProcessFlowDetailProvider({
     updateSeq,
     selectPlan,
     toggleLast,
+      toggleErpResult,
     resetCanonical: resetProcessCanonical,
     discard: discardProcesses,
   } = processDraft;
@@ -135,11 +136,13 @@ export function ProcessFlowDetailProvider({
     try {
       const result = await saveProcessesAsync({
         processes: processRows.map(
-          ({ flowProcessCode, seq, planFlag, lastFlag }) => ({
+          ({ flowProcessCode, seq, planFlag, lastFlag, erpResultFlag, packingFlag }) => ({
             flowProcessCode,
             seq: seq as number,
             planFlag,
             lastFlag,
+            erpResultFlag,
+            packingFlag,
           }),
         ),
       });
@@ -196,6 +199,7 @@ export function ProcessFlowDetailProvider({
       updateSeq,
       selectPlan,
       toggleLast,
+      toggleErpResult,
       save: saveProcesses,
       retry: refetchProcesses,
     }),
@@ -210,6 +214,7 @@ export function ProcessFlowDetailProvider({
       updateSeq,
       selectPlan,
       toggleLast,
+      toggleErpResult,
       saveProcesses,
       refetchProcesses,
     ],
