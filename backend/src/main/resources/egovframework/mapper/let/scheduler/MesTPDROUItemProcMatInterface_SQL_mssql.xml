@@ -23,6 +23,7 @@
             BOM_REV,
             PROC_REV,
             PROC_SEQ,
+            WORKCENTER_SEQ,
             SERL,
             MAT_ITEM_SEQ,
             UNIT_SEQ,
@@ -40,6 +41,7 @@
             #{BOMRev},
             #{ProcRev},
             #{ProcSeq},
+            #{WorkCenterSeq},
             #{Serl},
             #{MatItemSeq},
             #{UnitSeq},
@@ -58,6 +60,7 @@
     <update id="updateMesTPDROUItemProcMat" parameterType="map">
                 UPDATE TCO501
                 SET
+                    WORKCENTER_SEQ = #{WorkCenterSeq},
                         MAT_ITEM_SEQ = #{MatItemSeq},
                         UNIT_SEQ = #{UnitSeq},
                         NEED_QTY_NUMERATOR = #{NeedQtyNumerator},

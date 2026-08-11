@@ -115,6 +115,7 @@ class ErpToMesInterfaceServiceImplTest {
         row.setBOMRev("01");
         row.setProcRev("01");
         row.setProcSeq(10);
+        row.setWorkCenterSeq(5);
         row.setSerl(1);
         row.setMatItemSeq(matItemSeq);
         row.setUnitSeq(1);
