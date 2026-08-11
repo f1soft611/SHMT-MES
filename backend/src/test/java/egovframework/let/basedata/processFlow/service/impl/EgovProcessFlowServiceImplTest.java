@@ -306,12 +306,19 @@ class EgovProcessFlowServiceImplTest {
 
     private ProcessFlowProcessSaveRequest.Entry entry(
             String code, Integer seq, String planFlag, String lastFlag, String erpResultFlag) {
+        return entry(code, seq, planFlag, lastFlag, erpResultFlag, "N");
+    }
+
+    private ProcessFlowProcessSaveRequest.Entry entry(
+            String code, Integer seq, String planFlag, String lastFlag, String erpResultFlag,
+            String packingFlag) {
         ProcessFlowProcessSaveRequest.Entry entry = new ProcessFlowProcessSaveRequest.Entry();
         entry.setFlowProcessCode(code);
         entry.setSeq(seq);
         entry.setPlanFlag(planFlag);
         entry.setLastFlag(lastFlag);
         entry.setErpResultFlag(erpResultFlag);
+        entry.setPackingFlag(packingFlag);
         return entry;
     }
 }
