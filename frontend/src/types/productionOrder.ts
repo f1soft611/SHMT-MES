@@ -116,6 +116,7 @@ export interface ProdOrderRow {
 
     lastFlag:string;
     planFlag:string
+    erpResultFlag: string;
     packingFlag: string;
 
     customerCode:number;
@@ -161,6 +162,7 @@ export interface ProdOrderInsertDto {
     itemOnePerQty:number;
     lastFlag: string;
     planFlag: string;
+    erpResultFlag: string;
     packingFlag: string;
 
     lotNo?: string;
