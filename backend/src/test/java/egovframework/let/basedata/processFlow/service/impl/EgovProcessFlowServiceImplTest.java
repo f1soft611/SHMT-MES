@@ -64,8 +64,8 @@ class EgovProcessFlowServiceImplTest {
         when(processFlowDAO.selectProcessByFlowId("PF-1", "000001")).thenReturn(canonical);
 
         List<ProcessFlowProcessSaveRequest.Entry> entries = Arrays.asList(
-                entry("PROC-A", 1, "Y", "N"),
-                entry("PROC-A", 2, "N", "Y"));
+                entry("PROC-A", 1, "Y", "N", "N"),
+                entry("PROC-A", 2, "N", "Y", "N"));
 
         List<ProcessFlowProcess> result =
                 service.saveProcessFlowProcesses("PF-1", "000001", "user-1", entries);
@@ -81,13 +81,16 @@ class EgovProcessFlowServiceImplTest {
                 .containsExactly("1", "2");
         verify(processFlowDAO).deleteProcessFlowProcess("PF-1", "000001");
         assertThat(result).containsExactlyElementsOf(canonical);
+        assertThat(captor.getAllValues())
+                .extracting(ProcessFlowProcess::getErpResultFlag)
+                .containsExactly("N", "N");
     }
 
     @Test
     void rejectsDuplicateSequenceBeforeDelete() {
         List<ProcessFlowProcessSaveRequest.Entry> entries = Arrays.asList(
-                entry("PROC-A", 1, "Y", "N"),
-                entry("PROC-B", 1, "N", "N"));
+                entry("PROC-A", 1, "Y", "N", "N"),
+                entry("PROC-B", 1, "N", "N", "N"));
 
         assertThatThrownBy(() ->
                 service.saveProcessFlowProcesses("PF-1", "000001", "user-1", entries))
@@ -98,7 +101,7 @@ class EgovProcessFlowServiceImplTest {
     @Test
     void rejectsMoreThanFiveRows() {
         List<ProcessFlowProcessSaveRequest.Entry> six = IntStream.rangeClosed(1, 6)
-                .mapToObj(i -> entry("P-" + i, i, i == 1 ? "Y" : "N", "N"))
+                .mapToObj(i -> entry("P-" + i, i, i == 1 ? "Y" : "N", "N", "N"))
                 .collect(Collectors.toList());
 
         assertThatThrownBy(() ->
@@ -109,8 +112,18 @@ class EgovProcessFlowServiceImplTest {
     @Test
     void rejectsInvalidPlanProcessCount() {
         List<ProcessFlowProcessSaveRequest.Entry> entries = Arrays.asList(
-                entry("PROC-A", 1, "N", "N"),
-                entry("PROC-B", 2, "N", "Y"));
+                entry("PROC-A", 1, "N", "N", "N"),
+                entry("PROC-B", 2, "N", "Y", "N"));
+
+        assertThatThrownBy(() ->
+                service.saveProcessFlowProcesses("PF-1", "000001", "user-1", entries))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    void rejectsInvalidErpResultFlagValue() {
+        List<ProcessFlowProcessSaveRequest.Entry> entries = Arrays.asList(
+                entry("PROC-A", 1, "Y", "N", "X"));
 
         assertThatThrownBy(() ->
                 service.saveProcessFlowProcesses("PF-1", "000001", "user-1", entries))
@@ -292,12 +305,20 @@ class EgovProcessFlowServiceImplTest {
     }
 
     private ProcessFlowProcessSaveRequest.Entry entry(
-            String code, Integer seq, String planFlag, String lastFlag) {
+            String code, Integer seq, String planFlag, String lastFlag, String erpResultFlag) {
+        return entry(code, seq, planFlag, lastFlag, erpResultFlag, "N");
+    }
+
+    private ProcessFlowProcessSaveRequest.Entry entry(
+            String code, Integer seq, String planFlag, String lastFlag, String erpResultFlag,
+            String packingFlag) {
         ProcessFlowProcessSaveRequest.Entry entry = new ProcessFlowProcessSaveRequest.Entry();
         entry.setFlowProcessCode(code);
         entry.setSeq(seq);
         entry.setPlanFlag(planFlag);
         entry.setLastFlag(lastFlag);
+        entry.setErpResultFlag(erpResultFlag);
+        entry.setPackingFlag(packingFlag);
         return entry;
     }
 }

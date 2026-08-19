@@ -42,9 +42,6 @@ export function useProcessDraft(
     (ids: GridRowId[], source: ProcessType[]): ValidationResult => {
       const selected = source.filter((row) => ids.includes(row.processId));
       const current = rowsRef.current;
-      if (current.length + selected.length > 5) {
-        return { ok: false, message: '공정은 최대 5개까지 등록할 수 있습니다.' };
-      }
 
       let nextSeq = Math.max(0, ...current.map((row) => row.seq || 0)) + 1;
       replaceRows(
@@ -58,6 +55,8 @@ export function useProcessDraft(
               seq: nextSeq++,
               planFlag: 'N',
               lastFlag: 'N',
+              erpResultFlag: 'N',
+              packingFlag: row.packingFlag === 'Y' ? 'Y' : 'N',
             })),
         ),
       );
@@ -100,6 +99,16 @@ export function useProcessDraft(
     );
   }, [replaceRows]);
 
+    const toggleErpResult = useCallback((rowId: string) => {
+        replaceRows(
+            rowsRef.current.map((row) =>
+                row.rowId === rowId
+                    ? { ...row, erpResultFlag: row.erpResultFlag === 'Y' ? 'N' : 'Y' }
+                    : row,
+            ),
+        );
+    }, [replaceRows]);
+
   const dirty = useMemo(
     () => JSON.stringify(rows) !== JSON.stringify(baseRows),
     [rows, baseRows],
@@ -115,6 +124,7 @@ export function useProcessDraft(
     updateSeq,
     selectPlan,
     toggleLast,
+      toggleErpResult,
     resetCanonical,
     discard,
   };

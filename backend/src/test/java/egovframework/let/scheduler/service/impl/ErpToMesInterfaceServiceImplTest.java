@@ -19,11 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -120,20 +120,19 @@ class ErpToMesInterfaceServiceImplTest {
     }
 
     @Test
-    @DisplayName("재동기화는 기존 TCO501 트리를 먼저 삭제한 뒤 ERP에서 다시 가져와 신규 삽입만 한다")
+    @DisplayName("재동기화는 ERP에서 가져온 ITEM_SEQ 기준으로 TCO501을 삭제한 뒤 신규 삽입만 한다")
     void resyncTPDROUItemProcMatByRootItem_deletesThenInsertsWithoutUpdate() throws Exception {
-        when(mesTPDROUItemProcMatInterfaceDAO.selectTPDROUItemProcMatTreeItemSeqs(100))
-                .thenReturn(Arrays.asList(100, 20));
         when(erpJdbcTemplate.query(anyString(), any(RowMapper.class), eq(100)))
-                .thenReturn(Collections.singletonList(erpRow(100, 0)));
+                .thenReturn(Arrays.asList(erpRow(100, 20), erpRow(20, 0)));
 
         service.resyncTPDROUItemProcMatByRootItem(100);
 
         InOrder inOrder = inOrder(mesTPDROUItemProcMatInterfaceDAO);
         inOrder.verify(mesTPDROUItemProcMatInterfaceDAO)
                 .deleteMesTPDROUItemProcMatByItemSeqs(Arrays.asList(100, 20));
-        inOrder.verify(mesTPDROUItemProcMatInterfaceDAO).insertMesTPDROUItemProcMat(anyMap());
+        inOrder.verify(mesTPDROUItemProcMatInterfaceDAO, times(2)).insertMesTPDROUItemProcMat(anyMap());
         verify(mesTPDROUItemProcMatInterfaceDAO, never()).updateMesTPDROUItemProcMat(anyMap());
+        verify(mesTPDROUItemProcMatInterfaceDAO, never()).selectTPDROUItemProcMatTreeItemSeqs(anyInt());
     }
 
     @Test

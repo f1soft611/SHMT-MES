@@ -16,8 +16,8 @@ public class ErpIFProdOrderDto {
 
     private String mesIfKey;            // 연동키
 
-    private Integer workOrderSeq;       // 신규 A : 0 / 삭제 D : 0이 아닌 값
-    private Integer workOrderSerl;      // 신규 A : 0 / 삭제 D : 0이 아닌 값
+    private Integer workOrderSeq;       // erp에서 처리 후 update되는 key값
+    private Integer workOrderSerl;      // erp에서 처리 후 update되는 key값
 
     private Integer factUnit;           // default 1
 

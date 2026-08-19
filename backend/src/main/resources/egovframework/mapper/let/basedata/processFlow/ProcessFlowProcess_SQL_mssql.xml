@@ -12,7 +12,9 @@
         <result property="processSeq" column="WORK_SEQ"/>
         <result property="equipmentFlag" column="EQUIPMENT_FLAG"/>
         <result property="lastFlag" column="LAST_FLAG"/>
+        <result property="erpResultFlag" column="ERP_RESULT_FLAG"/>
         <result property="planFlag" column="PLAN_FLAG"/>
+        <result property="packingFlag" column="PACKING_FLAG"/>
 
         <result property="regUserId" column="OPMAN_CODE"/>
         <result property="regDt" column="OPTIME"/>
@@ -58,7 +60,9 @@
             A.WORK_SEQ,
             ISNULL(B.EQUIPMENT_INTEGRATION_YN, '') AS EQUIPMENT_FLAG,
             A.LAST_FLAG,
+            A.ERP_RESULT_FLAG,
             A.PLAN_FLAG,
+            A.PACKING_FLAG,
             A.OPTIME,
             A.OPMAN_CODE,
             A.OPTIME2,
@@ -92,7 +96,9 @@
             SEQ,
             WORK_SEQ,
             LAST_FLAG,
+            ERP_RESULT_FLAG,
             PLAN_FLAG,
+            PACKING_FLAG,
             OPTIME,
             OPMAN_CODE
         ) VALUES (  #{factoryCode},
@@ -103,7 +109,9 @@
                      #{seq},
                      #{processSeq},
                      #{lastFlag},
+                     #{erpResultFlag},
                      #{planFlag},
+                     #{packingFlag},
                     GETDATE(),
                     #{regUserId}
                  )

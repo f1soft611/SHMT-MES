@@ -72,7 +72,7 @@
 			AND USE_YN = #{useYn}
 		</if>
 		ORDER BY SORT_ORDER ASC, OPTIME DESC
-		<if test="firstIndex != null and recordCountPerPage != null">
+		<if test="unpaged == false">
 			OFFSET #{firstIndex} ROWS
 			FETCH NEXT #{recordCountPerPage} ROWS ONLY
 		</if>

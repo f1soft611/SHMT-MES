@@ -33,6 +33,8 @@ public class ProdOrderRow implements Serializable {
 
     private String lastFlag;
     private String planFlag;
+    private String erpResultFlag;
+    private String packingFlag;
 
     private String workCode;
     private String workName;
@@ -75,10 +77,15 @@ public class ProdOrderRow implements Serializable {
 
     private Integer rstCnt;           // 실적 건수
     private Integer tpr110dSeq;
+
     private String workcenterSeq;
+
     private String equipmentIntegrationYn;  // 설비연동 유무
     private String orderDate;               // yyyyMMdd
 
     private int orderSeqno;
     private int orderHistno;
+
+    private Integer erpWorkOrderSeq;
+    private Integer erpWorkOrderSerl;
 }

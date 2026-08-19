@@ -27,8 +27,11 @@ public class ProdOrderInsertDto {
     private String equipmentCode;
     private Integer itemCtTime;
     private Integer itemOnePerQty;
+
     private String lastFlag;
     private String planFlag;
+    private String erpResultFlag;
+    private String packingFlag;
 
     private String lotNo;
     private int orderQty;

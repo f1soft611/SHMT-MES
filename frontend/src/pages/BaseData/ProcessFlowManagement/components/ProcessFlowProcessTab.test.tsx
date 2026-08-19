@@ -1,5 +1,5 @@
 import type { MockedFunction } from 'vitest';
-import { render, within } from '@testing-library/react';
+import { fireEvent, render, within } from '@testing-library/react';
 import ProcessFlowProcessTab from './ProcessFlowProcessTab';
 import { useProcessDraftContext } from '../detail/ProcessDraftContext';
 import { useProcessCatalogQuery } from '../detail/useProcessFlowDetailQueries';
@@ -22,6 +22,7 @@ const mockedUseProcessDraftContext = useProcessDraftContext as MockedFunction<
 const mockedUseProcessCatalogQuery = useProcessCatalogQuery as MockedFunction<
   typeof useProcessCatalogQuery
 >;
+const mockToggleErpResult = vi.fn();
 
 const renderLoadingGrids = (withRows: boolean) => {
   mockedUseProcessDraftContext.mockReturnValue({
@@ -35,6 +36,7 @@ const renderLoadingGrids = (withRows: boolean) => {
           seq: 1,
           planFlag: 'Y',
           lastFlag: 'N',
+            erpResultFlag: 'N',
         }]
       : [],
     dirty: false,
@@ -46,6 +48,7 @@ const renderLoadingGrids = (withRows: boolean) => {
     updateSeq: vi.fn(),
     selectPlan: vi.fn(),
     toggleLast: vi.fn(),
+      toggleErpResult: mockToggleErpResult,
     save: vi.fn().mockResolvedValue(true),
     retry: vi.fn().mockResolvedValue(undefined),
   } as unknown as ReturnType<typeof useProcessDraftContext>);
@@ -89,4 +92,29 @@ describe('ProcessFlowProcessTab', () => {
     });
     expect(container.querySelectorAll('.MuiDataGrid-skeletonLoadingOverlay')).toHaveLength(0);
   });
+
+    it('requests the full unpaged catalog for the left grid', () => {
+        renderLoadingGrids(false);
+
+        expect(mockedUseProcessCatalogQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ unpaged: true }),
+        );
+    });
+
+    it('renders the left grid without pagination controls', () => {
+        const { grids } = renderLoadingGrids(true);
+
+        expect(within(grids[0]).queryByRole('combobox', { name: /rows per page/i })).toBeNull();
+    });
+
+    it('toggles erpResultFlag when the 실적전송 checkbox is clicked', () => {
+        mockToggleErpResult.mockClear();
+        const { grids } = renderLoadingGrids(true);
+
+        const cell = grids[1].querySelector('[data-field="erpResultFlag"]') as HTMLElement;
+        const checkbox = within(cell).getByRole('checkbox');
+        fireEvent.click(checkbox);
+
+        expect(mockToggleErpResult).toHaveBeenCalledWith('applied-1');
+    });
 });

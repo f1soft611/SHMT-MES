@@ -23,6 +23,7 @@
 			   B1.MATERIAL_CODE AS ITEM_CODE,
 			   A.ITEM_NAME,
 			   ERP_INFO.PROD_CODE AS PROD_CODE_ID,
+			   ERP_INFO2.MATERIAL_CODE as PROD_CODE,
 			   A.WORKCENTER_CODE,
 			   C.WORKCENTER_NAME,
 			   C.ERP_WORKPLACE_MAPPING WORKCENTER_SEQ,
@@ -108,6 +109,11 @@
 			ON  A.PRODPLAN_DATE = ERP_INFO.PRODPLAN_DATE
 			AND A.PRODPLAN_SEQ  = ERP_INFO.PRODPLAN_SEQ
 			AND A.PRODWORK_SEQ  = ERP_INFO.PRODWORK_SEQ
+
+		LEFT JOIN TCO403 ERP_INFO2
+			ON ERP_INFO2.MATERIAL_ID = ERP_INFO.PROD_CODE
+		    AND ISNULL(ERP_INFO2.DELETE_FLAG, '') != '1'
+
 		WHERE 1=1
 		    AND CONVERT(date, A.OPTIME, 112) BETWEEN #{dateFrom} AND #{dateTo}
 			<if test="prodFrom != null and prodFrom != ''">
@@ -133,6 +139,7 @@
 					A.ITEM_NAME LIKE CONCAT('%', #{keyword}, '%')
 				OR 	B1.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
 				OR 	M.ITEM_LOT_NO LIKE CONCAT('%', #{keyword}, '%')
+				OR  ERP_INFO2.MATERIAL_CODE LIKE CONCAT('%', #{keyword}, '%')
 				)
 			</if>
 		ORDER BY A.PRODPLAN_DATE, A.PRODPLAN_SEQ, A.PRODWORK_SEQ
@@ -274,6 +281,8 @@
 			C.WORK_ORDER_NM,
 			D.LAST_FLAG,
 		    D.PLAN_FLAG AS PLAN_FLAG,
+		    D.ERP_RESULT_FLAG,
+		    D.PACKING_FLAG AS PACKING_FLAG,
 			A.PROD_QTY AS ORDER_QTY,
 			CAST(F.NEED_QTY_NUMERATOR/F.NEED_QTY_DENOMINATOR AS DECIMAL(19,2)) AS LABORCOST,
 			ISNULL(A.BIGO, '') AS BIGO,
@@ -284,13 +293,12 @@
 			'' AS PRODORDER_ID,
 			0 AS ORDER_SEQ,
 			D.SEQ AS TPR110D_SEQ,
-			WC.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ,
+			F.WORKCENTER_SEQ AS WORKCENTER_SEQ,
 			D1.EQUIPMENT_INTEGRATION_YN,
 			A11.ORDER_SEQNO AS ORDER_SEQNO,
 			A11.ORDER_HISTNO AS ORDER_HISTNO
 		FROM TPR301 A
-		    LEFT JOIN TPR101 WC
-			ON A.WORKCENTER_CODE = WC.WORKCENTER_CODE
+
 		    LEFT JOIN TPR301M A1
 			ON A.FACTORY_CODE = A1.FACTORY_CODE
 			AND A.PRODPLAN_DATE = A1.PRODPLAN_DATE
@@ -337,8 +345,7 @@
 		AND A.PRODPLAN_DATE = #{prodplanDate}
 		AND A.PRODPLAN_SEQ = #{prodplanSeq}
 		AND A.PRODWORK_SEQ = #{prodworkSeq}
-		--AND A2.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')
-		--AND (F1.MATERIAL_FLAG IN ('PRODUCT', 'HALF_PRODUCT')  OR D.SEQ = 1) --
+		AND ISNULL(F1.ITEM_KIND3, '') NOT IN ('2001022','2001042','2001043','2001044','2001045')
 		ORDER BY A.PRODPLAN_DATE, CAST(A.PRODPLAN_SEQ AS INT), CAST(A.PRODWORK_SEQ AS INT), CAST(D.SEQ AS INT), CAST(D.WORK_SEQ AS INT)
 	</select>
 
@@ -394,7 +401,9 @@
 			ROW_NUMBER() OVER(PARTITION BY A.TPR110D_SEQ ORDER BY A.WORKORDER_SEQ) AS COPY_ROW,
 			H.ERP_WORKPLACE_MAPPING AS WORKCENTER_SEQ,
 			B.EQUIPMENT_INTEGRATION_YN,
-			A.ORDER_DATE
+			A.ORDER_DATE,
+			A.ERPWorkOrderSeq AS erpWorkOrderSeq,
+			A.ERPWorkOrderSerl AS erpWorkOrderSerl
 		FROM TPR504 A
 			LEFT JOIN TCO403 A1
 			ON A.ITEM_CODE = A1.MATERIAL_ID
@@ -503,7 +512,9 @@
 		    TPR110D_SEQ,
 			ITEM_CT_TIME,
 			ITEM_ONE_PER_QTY,
-			ORDER_DATE
+			ORDER_DATE,
+			ERP_RESULT_FLAG,
+		    PACKING_FLAG
 		)
 		VALUES (
 			'000001',
@@ -529,14 +540,17 @@
 			#{tpr110dSeq},
 			#{itemCtTime},
 			#{itemOnePerQty},
-			CONVERT(VARCHAR(8), GETDATE(), 112)
+			CONVERT(VARCHAR(8), GETDATE(), 112),
+			#{erpResultFlag},
+            #{packingFlag}
 		);
 	</insert>
 
 	<!-- TPR301M ORDER_FLAG UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
-	<update id="updateProdPlanOrderFlag" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+	<update id="updateProdPlanOrderFlag"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
 		UPDATE TPR301 SET ORDER_FLAG = #{orderFlag}
 		WHERE FACTORY_CODE = '000001'
 		AND PRODPLAN_DATE = #{prodplanDate}
@@ -544,7 +558,8 @@
 		AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
-	<update id="updateProdPlanOrderFlag2" parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
+	<update id="updateProdPlanOrderFlag2"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanOrderFlagDto">
 		UPDATE TPR301M SET ORDER_FLAG = #{orderFlag}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
@@ -554,7 +569,8 @@
 	<!-- TPR301M LOTNO UPDATE
 	1. 생산지시 저장 후 update
 	2. 생산지시 삭제 후 update	-->
-	<update id="updateProdPlanLotNo" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+	<update id="updateProdPlanLotNo"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
 		UPDATE TPR301 SET LOT_NO = #{lotNo}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
@@ -562,15 +578,33 @@
 		  AND PRODWORK_SEQ = #{prodworkSeq}
 	</update>
 
-	<update id="updateProdPlanLotNo2" parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
+	<update id="updateProdPlanLotNo2"
+			parameterType="egovframework.let.production.order.domain.model.ProdPlanLotNoDto">
 		UPDATE TPR301M SET ITEM_LOT_NO = #{lotNo}
 		WHERE FACTORY_CODE = '000001'
 		  AND PRODPLAN_DATE = #{prodplanDate}
 		  AND PRODPLAN_SEQ = #{prodplanSeq}
 	</update>
+
+	<!-- 생산지시 삭제요청시 mes에서는 order_flag만 선 변경	-->
+	<update id="deleteReqProductionOrder"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
+		UPDATE TPR504 SET ORDER_FLAG = 'D',
+						  ERPProcYn = 'D',
+						  OPTIME2 = GETDATE(),
+						  OPMAN_CODE2 = #{opmanCode}
+		WHERE FACTORY_CODE = '000001'
+		AND PRODPLAN_DATE = #{prodplanDate}
+		AND PRODPLAN_SEQ = #{prodplanSeq}
+		AND PRODWORK_SEQ = #{prodworkSeq}
+		<if test="prodorderId != null and prodorderId != ''">
+			AND TPR504ID = #{prodorderId}
+		</if>
+	</update>
 	
 	<!-- 생산지시 삭제	-->
-	<update id="deleteProductionOrder" parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
+	<update id="deleteProductionOrder"
+			parameterType="egovframework.let.production.order.domain.model.ProdOrderDeleteDto">
 		UPDATE TPR504 SET DELETE_FLAG = 1,
 		                  OPTIME2 = GETDATE(),
 		                  OPMAN_CODE2 = #{opmanCode}
@@ -696,11 +730,28 @@
 	<update id="updateErpResultByProdorderId"
 	        parameterType="egovframework.let.production.order.domain.model.ErpIFProdOrderResultDto">
 		UPDATE TPR504
-		SET ERPProcYn       = #{erpProcYn},
-		    ERPProcDateTime = #{erpProcDateTime},
-		    ERPStatus       = #{status},
-		    ERPResult       = #{result}
+		SET ERPProcYn       	= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{erpProcYn} = 'N' THEN TPR504.ERPProcYn
+		    						   	ELSE #{erpProcYn} END,
+		    ERPProcDateTime 	= #{erpProcDateTime},
+		    ERPWorkOrderSeq		= #{workOrderSeq},
+		    ERPWorkOrderSerl	= #{workOrderSerl},
+		    ERPStatus			= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{erpProcYn} = 'N' THEN NULL
+		                               	ELSE #{status} END,
+		    ERPResult       	= #{result},
+		    DELETE_FLAG			= CASE 	WHEN TPR504.ORDER_FLAG = 'D' AND #{status} = '0' AND #{erpProcYn} = 'Y' THEN 1
+										ELSE TPR504.DELETE_FLAG END
 		WHERE PRODORDER_ID = #{mesIfKey}
 	</update>
+
+	<!-- ERP 결과 동기화: PRODORDER_ID로 소속 생산계획 키 조회 -->
+	<select id="selectProdPlanKeyByProdorderId"
+	        parameterType="string"
+	        resultType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
+		SELECT PRODPLAN_DATE AS prodplanDate,
+		       PRODPLAN_SEQ  AS prodplanSeq,
+		       PRODWORK_SEQ  AS prodworkSeq
+		FROM TPR504
+		WHERE PRODORDER_ID = #{value}
+	</select>
 
 </mapper>

@@ -184,6 +184,8 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 			row.setProcessSeq(String.valueOf(processSeq));
 			row.setPlanFlag(entry.getPlanFlag());
 			row.setLastFlag(entry.getLastFlag());
+			row.setErpResultFlag(entry.getErpResultFlag());
+			row.setPackingFlag(entry.getPackingFlag());
 			row.setRegUserId(userId);
 			processFlowDAO.insertProcessFlowProcess(row);
 		}
@@ -204,7 +206,9 @@ public class EgovProcessFlowServiceImpl extends EgovAbstractServiceImpl implemen
 				planCount++;
 			}
 			if (!Arrays.asList("Y", "N").contains(entry.getLastFlag()) ||
-					!Arrays.asList("Y", "N").contains(entry.getPlanFlag())) {
+					!Arrays.asList("Y", "N").contains(entry.getPlanFlag()) ||
+					!Arrays.asList("Y", "N").contains(entry.getErpResultFlag()) ||
+					!Arrays.asList("Y", "N").contains(entry.getPackingFlag())) {
 				throw new BizException("공정 플래그 값이 올바르지 않습니다.");
 			}
 		}

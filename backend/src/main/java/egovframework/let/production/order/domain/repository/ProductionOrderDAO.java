@@ -123,6 +123,13 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         update("ProductionOrderDAO.updateProdPlanLotNo2", dto);
     }
 
+    // 생산지시] erp에 삭제요청시 mes 내에서는 order_flag만 선 변경
+    public void deleteReqProductionOrder(ProdOrderDeleteDto dto) throws Exception {
+        log.info("==========> deleteReqProductionOrder <==========");
+        update("ProductionOrderDAO.deleteReqProductionOrder", dto);
+
+    }
+
     // 생산지시] 생산지시 삭제
     public void deleteProductionOrder(ProdOrderDeleteDto dto) throws Exception {
         log.info("==========> deleteProductionOrder <==========");
@@ -181,5 +188,11 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
     public int updateErpResultByProdorderId(ErpIFProdOrderResultDto dto) {
         log.info("==========> updateErpResultByProdorderId <==========");
         return update("ProductionOrderDAO.updateErpResultByProdorderId", dto);
+    }
+
+    // ERP 결과 동기화: PRODORDER_ID로 소속 생산계획 키 조회
+    public ProdPlanKeyDto selectProdPlanKeyByProdorderId(String prodorderId) {
+        log.info("==========> selectProdPlanKeyByProdorderId <==========");
+        return selectOne("ProductionOrderDAO.selectProdPlanKeyByProdorderId", prodorderId);
     }
 }

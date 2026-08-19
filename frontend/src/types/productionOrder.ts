@@ -47,6 +47,7 @@ export interface ProdPlanRow {
     itemCode: string;
     itemName: string;
     prodCodeId?: number;
+    prodCode?: string;
     workcenterCode: string;
     workcenterName: string;
     workcenterSeq?: string;
@@ -112,8 +113,12 @@ export interface ProdOrderRow {
     lotNo: string;
     orderQty: number;
     bigo: string;
+
     lastFlag:string;
-    planFlag:string;
+    planFlag:string
+    erpResultFlag: string;
+    packingFlag: string;
+
     customerCode:number;
     copyRow:number;
     opmanCode2: string;
@@ -157,6 +162,8 @@ export interface ProdOrderInsertDto {
     itemOnePerQty:number;
     lastFlag: string;
     planFlag: string;
+    erpResultFlag: string;
+    packingFlag: string;
 
     lotNo?: string;
     orderQty: number;

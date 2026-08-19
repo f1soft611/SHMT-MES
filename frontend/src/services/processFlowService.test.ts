@@ -44,6 +44,7 @@ describe('processFlowService', () => {
               seq: '1',
               planFlag: 'Y',
               lastFlag: 'N',
+              erpResultFlag: 'N',
             },
           ],
         },
