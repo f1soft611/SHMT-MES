@@ -447,6 +447,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"      JoinItem.DelvDate, " +
 						"      JoinItem.LastUserSeq, " +
 						"      JoinItem.LastDateTime, " +
+						"      JoinItem.Remark, " +
 
 						// Join 된 Item (제품/반제품 둘 다)
 						"      JoinItem.ReqType, " +
@@ -476,6 +477,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.Remark, '') AS Remark, " +
 						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
 						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           PRI.ItemSeq AS JoinItemSeq, " +
@@ -506,6 +508,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.Remark, '') AS Remark, " +
 						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
 						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           C.ItemSeq AS JoinItemSeq, " +
@@ -541,6 +544,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 						"           PRI.DelvDate, " +
 						"           PRI.LastUserSeq, " +
 						"           PRI.LastDateTime, " +
+						"           ISNULL(PRI.Remark, '') AS Remark, " +
 						"           ISNULL(PRI.ReqType, '') AS ReqType, " +
 						"           ISNULL(PRI.ReqTypeName, '') AS ReqTypeName, " +
 						"           C2.ItemSeq AS JoinItemSeq, " +
@@ -600,6 +604,7 @@ public class ErpToMesInterfaceServiceImpl implements ErpToMesInterfaceService {
 			prodReq.setDelvDate(rs.getString("DelvDate"));
 			prodReq.setLastUserSeq(rs.getInt("LastUserSeq"));
 			prodReq.setLastDateTime(rs.getTimestamp("LastDateTime"));
+			prodReq.setRemark(rs.getString("Remark"));
 
 			// 반제품 정보 매핑
 			prodReq.setSemiItemSeq(rs.getObject("SemiItemSeq") != null ? rs.getInt("SemiItemSeq") : null);

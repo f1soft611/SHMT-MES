@@ -36,4 +36,17 @@ public class ProductionOrderSqlContractTest {
 
         assertThat(selectFlowProcess).contains("D.PLAN_FLAG AS PLAN_FLAG");
     }
+
+    @Test
+    public void productionPlanInsertPersistsRemarkInMasterAndDetail() throws Exception {
+        Path mapper = Paths.get(
+                "src/main/resources/egovframework/mapper/let/production/plan/ProductionPlan_SQL_mssql.xml");
+        String xml = new String(Files.readAllBytes(mapper), StandardCharsets.UTF_8);
+
+        assertThat(xml).contains("INSERT INTO TPR301M (");
+        assertThat(xml).contains("INSERT INTO TPR301 (");
+        assertThat(xml).contains("BIGO,");
+        assertThat(xml).contains("#{remark}");
+        assertThat(xml).contains("TOTAL_GROUP_COUNT,");
+    }
 }

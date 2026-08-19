@@ -114,4 +114,37 @@ describe('mapWeeklyEquipmentPlans', () => {
     expect(result[1].groupSeq).toBeUndefined();
     expect(result[1].totalGroupCount).toBeUndefined();
   });
+
+  it('계획 매핑 시 비고(remark) 값이 유지된다', () => {
+    const response: WeeklyEquipmentPlanResponse = {
+      equipmentPlans: [
+        {
+          equipmentCode: 'EQ-01',
+          equipmentName: '설비1',
+          equipmentId: 'SYS-01',
+          weeklyPlans: {
+            '2026-05-19': [
+              {
+                prodplanId: 'PLAN-004',
+                prodplanDate: '20260519',
+                prodplanSeq: 1,
+                itemCode: 'ITEM-03',
+                itemName: '품목3',
+                plannedQty: 80,
+                remark: '생산의뢰 비고',
+                orderNo: 'LRMA-24934',
+                orderSeqno: 46311,
+                orderHistno: 2,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = mapWeeklyEquipmentPlans(response, 'WP001');
+
+    expect(result).toHaveLength(1);
+    expect(result[0].remark).toBe('생산의뢰 비고');
+  });
 });

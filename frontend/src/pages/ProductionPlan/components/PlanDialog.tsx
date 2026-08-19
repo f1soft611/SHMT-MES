@@ -329,6 +329,7 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
       customerName: customerNames[0],
       additionalCustomers: uniqueCustomers.slice(1),
       deliveryDate: firstRequest.deliveryDate || '',
+      remark: firstRequest.remark || '',
       createDays: 1,
     };
 
