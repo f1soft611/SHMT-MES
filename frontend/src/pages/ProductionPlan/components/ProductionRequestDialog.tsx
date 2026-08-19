@@ -604,6 +604,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
               workplaceCode: workplaceCode,
               planStatus: '1',
               totalPlanQty: remainingPlanQty,
+              remark: item.remark || '',
               useYn: 'Y',
             },
             details: [
@@ -624,6 +625,7 @@ const ProductionRequestDialog: React.FC<ProductionRequestDialogProps> = ({
                 customerCode: item.customerCode || '',
                 customerName: item.customerName || '',
                 deliveryDate: item.deliveryDate || '', // 납기일 추가
+                remark: item.remark || '',
                 useYn: 'Y',
               },
             ],

@@ -1,6 +1,8 @@
 package egovframework.let.scheduler.service.impl;
 
+import egovframework.let.scheduler.domain.model.ErpProductionRequest;
 import egovframework.let.scheduler.domain.model.ErpTPDROUItemProcMat;
+import egovframework.let.scheduler.domain.repository.MesProdReqInterfaceDAO;
 import egovframework.let.scheduler.domain.repository.MesTPDROUItemProcMatInterfaceDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +42,9 @@ class ErpToMesInterfaceServiceImplTest {
     @Mock
     private MesTPDROUItemProcMatInterfaceDAO mesTPDROUItemProcMatInterfaceDAO;
 
+    @Mock
+    private MesProdReqInterfaceDAO mesProdReqInterfaceDAO;
+
     private ErpToMesInterfaceServiceImpl service;
 
     @BeforeEach
@@ -48,6 +53,38 @@ class ErpToMesInterfaceServiceImplTest {
         ReflectionTestUtils.setField(service, "erpJdbcTemplate", erpJdbcTemplate);
         ReflectionTestUtils.setField(
                 service, "mesTPDROUItemProcMatInterfaceDAO", mesTPDROUItemProcMatInterfaceDAO);
+        ReflectionTestUtils.setField(service, "mesProdReqInterfaceDAO", mesProdReqInterfaceDAO);
+    }
+
+    @Test
+    @DisplayName("생산의뢰 연동은 ERP Remark를 MES BIGO로 전달한다")
+    void syncProductionRequests_keepsRemarkForMesBigo() throws Exception {
+        ErpProductionRequest req = new ErpProductionRequest();
+        req.setProdReqNo("PR-1001");
+        req.setProdReqSeq(1);
+        req.setSerl(1);
+        req.setReqDate("20260608");
+        req.setCustSeq(10);
+        req.setDeptSeq(11);
+        req.setEmpSeq(12);
+        req.setItemSeq(20);
+        req.setItemNo("A100");
+        req.setItemName("품목A");
+        req.setSpec("SPEC");
+        req.setUnitSeq(1);
+        req.setQty(BigDecimal.valueOf(3));
+        req.setEndDate("20260610");
+        req.setDelvDate("20260612");
+        req.setRemark("특별지시");
+        when(erpJdbcTemplate.query(anyString(), any(RowMapper.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Collections.singletonList(req));
+        when(mesProdReqInterfaceDAO.selectMesProdReqCount(req)).thenReturn(0);
+
+        service.syncProductionRequests("2026-06-01", "2026-06-30");
+
+        ArgumentCaptor<ErpProductionRequest> captor = ArgumentCaptor.forClass(ErpProductionRequest.class);
+        verify(mesProdReqInterfaceDAO).insertMesProdReq(captor.capture());
+        assertThat(captor.getValue().getRemark()).isEqualTo("특별지시");
     }
 
     @Test
