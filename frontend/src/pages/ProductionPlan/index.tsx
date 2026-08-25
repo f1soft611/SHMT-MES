@@ -868,6 +868,17 @@ const ProductionPlan: React.FC = () => {
       : '';
     const resolvedProcessCode = mappedProcessCode || data.processCode;
     const resolvedProcessName = mappedProcessName || data.processName;
+    const isDirectItem = data.itemInputType === 'DIRECT';
+    const directGroupId =
+      data.directGroupId ||
+      (isDirectItem
+        ? `DG-${data.date.replace(/-/g, '')}-${
+            (data.itemCode || data.itemName || 'DIRECT')
+              .toUpperCase()
+              .replace(/[^A-Z0-9]/g, '')
+              .slice(0, 12) || 'DIRECT'
+          }`
+        : undefined);
 
     if (dialogMode === 'create') {
       try {
@@ -880,6 +891,8 @@ const ProductionPlan: React.FC = () => {
             )?.workplaceName,
             remark: data.remark,
             createDays: data.createDays || 1,
+            itemInputType: isDirectItem ? 'DIRECT' : 'NORMAL',
+            directGroupId,
           },
           details: [
             {
@@ -908,6 +921,8 @@ const ProductionPlan: React.FC = () => {
               deliveryDate: data.deliveryDate
                 ? data.deliveryDate.replace(/-/g, '')
                 : undefined,
+              itemInputType: isDirectItem ? 'DIRECT' : 'NORMAL',
+              directGroupId,
             },
           ],
           references: references || [],

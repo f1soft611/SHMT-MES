@@ -37,6 +37,8 @@ export interface ProductionPlan {
   createDays?: number;
   planGroupId?: string;
   groupSeq?: number;
+  itemInputType?: 'DIRECT' | 'NORMAL';
+  directGroupId?: string;
 }
 
 export interface ProductionPlanMaster {
@@ -53,6 +55,8 @@ export interface ProductionPlanMaster {
   createDays?: number;
   planGroupId?: string;
   totalGroupCount?: number;
+  itemInputType?: 'DIRECT' | 'NORMAL';
+  directGroupId?: string;
 }
 
 export interface ProductionPlanRequest {

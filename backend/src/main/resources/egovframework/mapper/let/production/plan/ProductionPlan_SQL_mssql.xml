@@ -12,6 +12,8 @@
 		<result property="createDays" column="CREATE_DAYS"/>
 		<result property="planGroupId" column="PLAN_GROUP_ID"/>
 		<result property="totalGroupCount" column="TOTAL_GROUP_COUNT"/>
+		<result property="itemInputType" column="ITEM_INPUT_TYPE"/>
+		<result property="directGroupId" column="DIRECT_GROUP_ID"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
 		<result property="opmanCode2" column="OPMAN_CODE2"/>
@@ -38,6 +40,8 @@
 		<result property="planGroupId" column="PLAN_GROUP_ID"/>
 		<result property="groupSeq" column="GROUP_SEQ"/>
 		<result property="createDays" column="CREATE_DAYS"/>
+		<result property="itemInputType" column="ITEM_INPUT_TYPE"/>
+		<result property="directGroupId" column="DIRECT_GROUP_ID"/>
 		<result property="remark" column="BIGO"/>
 		<result property="opmanCode" column="OPMAN_CODE"/>
 		<result property="optime" column="OPTIME"/>
@@ -64,20 +68,24 @@
 		    CREATE_DAYS,
 		    PLAN_GROUP_ID,
 		    TOTAL_GROUP_COUNT,
+		    ITEM_INPUT_TYPE,
+		    DIRECT_GROUP_ID,
 			OPMAN_CODE,
 			OPTIME
 		)
 		VALUES (
 		   #{factoryCode},
-		   #{planDate},  -- 오늘 날짜 8자리(yyyyMMdd)
-		   #{prodPlanSeq},  -- selectKey로 미리 조회한 값 사용
+		   #{planDate},
+		   #{prodPlanSeq},
 		   #{prodPlanId},
 		   'PLANNED',
 		   #{createDays},
 		   #{planGroupId},
 		   #{totalGroupCount},
+		   #{itemInputType, jdbcType=VARCHAR},
+		   #{directGroupId, jdbcType=VARCHAR},
 		   #{opmanCode},
-		   GETDATE()                               -- 현재시간
+		   GETDATE()
 	   	);
 	</insert>
 
@@ -104,6 +112,8 @@
 		    PLAN_GROUP_ID,
 		    GROUP_SEQ,
 		    CREATE_DAYS,
+		    ITEM_INPUT_TYPE,
+		    DIRECT_GROUP_ID,
 			BIGO,
 			ORDER_FLAG,
 			OPMAN_CODE,
@@ -118,7 +128,7 @@
 				WHERE FACTORY_CODE = #{factoryCode}
 				  AND PRODPLAN_DATE = #{prodPlanDate}
 				  AND PRODPLAN_SEQ = #{prodPlanSeq}
-			),                                      -- 오늘 날짜의 순번 +1
+			),
 			#{prodPlanId},
 			#{prodPlanDetailId},
 			#{planDate},
@@ -133,8 +143,10 @@
 			#{workerName},
 			#{deliveryDate},
 			#{planGroupId},
-			#{groupSeq},
+			1,
 			#{createDays},
+			#{itemInputType, jdbcType=VARCHAR},
+			#{directGroupId, jdbcType=VARCHAR},
 			#{remark},
 			'PLANNED',
 			#{opmanCode},
@@ -154,6 +166,8 @@
 			CREATE_DAYS,
 			PLAN_GROUP_ID,
 			TOTAL_GROUP_COUNT,
+			ITEM_INPUT_TYPE,
+			DIRECT_GROUP_ID,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
 			OPMAN_CODE2,
@@ -195,6 +209,8 @@
 			PLAN_GROUP_ID,
 			GROUP_SEQ,
 			CREATE_DAYS,
+			ITEM_INPUT_TYPE,
+			DIRECT_GROUP_ID,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -248,6 +264,8 @@
 			PLAN_GROUP_ID,
 			GROUP_SEQ,
 			CREATE_DAYS,
+			ITEM_INPUT_TYPE,
+			DIRECT_GROUP_ID,
 			BIGO,
 			USE_YN,
 			OPMAN_CODE,
@@ -295,6 +313,8 @@
 			PLAN_GROUP_ID,
 			GROUP_SEQ,
 			CREATE_DAYS,
+			ITEM_INPUT_TYPE,
+			DIRECT_GROUP_ID,
 			BIGO,
 			OPMAN_CODE,
 			CONVERT(VARCHAR(19), OPTIME, 120) AS OPTIME,
@@ -327,6 +347,8 @@
 			WORKER_NAME = #{workerName},
 			PROD_DATE = #{planDate},
 			DELIVERY_DATE = #{deliveryDate},
+			ITEM_INPUT_TYPE = #{itemInputType, jdbcType=VARCHAR},
+			DIRECT_GROUP_ID = #{directGroupId, jdbcType=VARCHAR},
 			BIGO = #{remark},
 			OPMAN_CODE2 = #{opmanCode2},
 			OPTIME2 = GETDATE()
@@ -505,6 +527,8 @@
 				PLAN_GROUP_ID,
 				GROUP_SEQ,
 				CREATE_DAYS,
+				ITEM_INPUT_TYPE,
+				DIRECT_GROUP_ID,
 				ORDER_FLAG,
 				BIGO
 			FROM TPR301
@@ -602,8 +626,10 @@
 			D.DELIVERY_DATE,
 			D.PLAN_GROUP_ID AS planGroupId,
 			D.GROUP_SEQ AS groupSeq,
-			D.CREATE_DAYS AS createDays,
-			M.TOTAL_GROUP_COUNT AS totalGroupCount,
+			COALESCE(D.CREATE_DAYS, M.CREATE_DAYS) AS createDays,
+			COALESCE(D.ITEM_INPUT_TYPE, M.ITEM_INPUT_TYPE) AS itemInputType,
+			COALESCE(D.DIRECT_GROUP_ID, M.DIRECT_GROUP_ID) AS directGroupId,
+			COALESCE(M.TOTAL_GROUP_COUNT, D.CREATE_DAYS, 1) AS totalGroupCount,
 			D.ORDER_FLAG AS orderFlag,
 			COALESCE(C.FIRST_CUSTOMER_CODE, '') AS CUSTOMER_CODE,
 			CASE

@@ -116,6 +116,16 @@ public class ProductionPlanWeeklyDTO {
          * 품목코드 (시퀀스/ID)
          */
         private String itemCode;
+
+        /**
+         * 품목 입력 타입 (DIRECT/NORMAL)
+         */
+        private String itemInputType;
+
+        /**
+         * 직접품목 그룹 식별자
+         */
+        private String directGroupId;
         
         /**
          * 품목 표시 코드 (실제 품목코드)

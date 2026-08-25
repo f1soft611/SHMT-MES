@@ -90,6 +90,15 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		int createDays = master.getCreateDays() != null ? master.getCreateDays() : 1;
 		master.setCreateDays(createDays);
 		master.setTotalGroupCount(createDays);
+		if (!StringUtils.hasText(master.getItemInputType())) {
+			master.setItemInputType(createDays > 1 ? "DIRECT" : "NORMAL");
+		}
+		if (createDays > 1 && !StringUtils.hasText(master.getDirectGroupId()) && StringUtils.hasText(master.getPlanGroupId())) {
+			master.setDirectGroupId(master.getPlanGroupId());
+		}
+		if (!StringUtils.hasText(master.getItemInputType())) {
+			master.setItemInputType("NORMAL");
+		}
 
 		// 원본 상세 1건 기준으로 총 계획수량 설정
 		ProductionPlan basePlan = planList.get(0);
@@ -107,45 +116,29 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 		// 마스터 등록 (여기서 selectKey로 prodPlanSeq가 설정됨)
 		productionPlanDAO.insertProductionPlanMaster(master);
 
-		// 마스터 insert 후 prodPlanSeq를 사용하여 상세 레코드 생성
-		List<ProductionPlan> expandedPlans = new ArrayList<>();
-		BigDecimal accumulated = BigDecimal.ZERO;
-
-		for (int i = 0; i < createDays; i++) {
-			ProductionPlan plan = new ProductionPlan();
-			BeanUtils.copyProperties(basePlan, plan);
-
-			// TPR301용 별도 ID 생성 (PLD로 시작)
-			String planDetailId = egovProdPlanDetailIdgenService.getNextStringId();
-
-			LocalDate currentDate = startDate.plusDays(i);
-			plan.setPlanDate(currentDate.format(BASIC_DATE_FORMATTER));
-			plan.setProdPlanDate(master.getProdPlanDate());
-			plan.setProdPlanSeq(master.getProdPlanSeq()); // 이제 selectKey로 설정된 값 사용
-			plan.setProdPlanId(planId); // TPR301M의 ID (PL)
-			plan.setProdPlanDetailId(planDetailId); // TPR301 전용 ID (PLD)
-			plan.setFactoryCode(master.getFactoryCode());
-			plan.setPlanGroupId(planId);
-			plan.setGroupSeq(i + 1);
-			plan.setCreateDays(createDays);
-			plan.setOpmanCode(master.getOpmanCode());
-			plan.setDeliveryDate(defaultDeliveryDate);
-
-			// 마지막 건에 나머지 보정
-			if (i == createDays - 1) {
-				plan.setPlannedQty(totalQty.subtract(accumulated));
-			} else {
-				plan.setPlannedQty(dailyQty);
-				accumulated = accumulated.add(dailyQty);
-			}
-
-			expandedPlans.add(plan);
+		ProductionPlan plan = new ProductionPlan();
+		BeanUtils.copyProperties(basePlan, plan);
+		String planDetailId = egovProdPlanDetailIdgenService.getNextStringId();
+		plan.setPlanDate(master.getPlanDate());
+		plan.setProdPlanDate(master.getProdPlanDate());
+		plan.setProdPlanSeq(master.getProdPlanSeq());
+		plan.setProdPlanId(planId);
+		plan.setProdPlanDetailId(planDetailId);
+		plan.setFactoryCode(master.getFactoryCode());
+		plan.setPlanGroupId(planId);
+		plan.setGroupSeq(1);
+		plan.setCreateDays(createDays);
+		if (!StringUtils.hasText(plan.getItemInputType())) {
+			plan.setItemInputType(createDays > 1 ? "DIRECT" : "NORMAL");
 		}
-
-		// 상세 등록 (확장된 N건)
-		for (ProductionPlan plan : expandedPlans) {
-			productionPlanDAO.insertProductionPlan(plan);
+		if (createDays > 1 && !StringUtils.hasText(plan.getDirectGroupId()) && StringUtils.hasText(plan.getPlanGroupId())) {
+			plan.setDirectGroupId(plan.getPlanGroupId());
 		}
+		plan.setOpmanCode(master.getOpmanCode());
+		plan.setDeliveryDate(defaultDeliveryDate);
+		plan.setPlannedQty(totalQty);
+
+		productionPlanDAO.insertProductionPlan(plan);
 
 		// 주문연결(TPR301R) 저장 - references가 있는 경우
 		if (references != null && !references.isEmpty()) {
@@ -472,7 +465,11 @@ public class EgovProductionPlanServiceImpl extends EgovAbstractServiceImpl imple
 					egovframework.let.production.plan.domain.model.ProductionPlanWeeklyDTO.DailyPlan.builder()
 						.prodplanId((String) row.get("prodplanId"))
 						.prodplanDate(planDate)
-						.prodplanSeq((Integer) row.get("planSeq"))					.prodworkSeq(row.get("prodworkSeq") != null ? ((Number) row.get("prodworkSeq")).intValue() : null)						.itemCode((String) row.get("itemCode"))
+						.prodplanSeq((Integer) row.get("planSeq"))
+						.prodworkSeq(row.get("prodworkSeq") != null ? ((Number) row.get("prodworkSeq")).intValue() : null)
+						.itemCode((String) row.get("itemCode"))
+						.itemInputType((String) row.get("itemInputType"))
+						.directGroupId((String) row.get("directGroupId"))
 						.itemDisplayCode((String) row.get("itemDisplayCode"))
 						.itemName((String) row.get("itemName"))
 						.lotNo((String) row.get("lotNo"))

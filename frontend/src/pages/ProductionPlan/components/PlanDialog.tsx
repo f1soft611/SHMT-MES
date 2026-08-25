@@ -256,16 +256,26 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
     setSelectedRequests([]);
     setSelectedItem(item);
 
+    const itemCode =
+      (item as any).itemId || (item as any).id || (item as any).itemCode || '';
+    const directGroupId = `DG-${new Date()
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, '')}-${
+      (itemCode || item.itemName || 'DIRECT')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 12) || 'DIRECT'
+    }`;
+
     const updates = {
-      itemCode:
-        (item as any).itemId ||
-        (item as any).id ||
-        (item as any).itemCode ||
-        '',
+      itemCode,
       itemDisplayCode: (item as any).itemCode || '',
       itemName: item.itemName || '',
       plannedQty: 1,
       createDays: 1,
+      itemInputType: 'DIRECT' as const,
+      directGroupId,
       orderNo: undefined,
       orderSeqno: undefined,
       orderHistno: undefined,

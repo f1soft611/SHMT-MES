@@ -46,6 +46,8 @@ export interface ServiceProductionPlan {
   planGroupId?: string;
   groupSeq?: number;
   totalGroupCount?: number;
+  itemInputType?: 'DIRECT' | 'NORMAL';
+  directGroupId?: string;
   // 생산지시 상태
   orderFlag?: string;
   // 행 단위 실적 존재 여부 (주간 조회 시 백엔드에서 반환: 1=있음, 0=없음)
@@ -88,6 +90,29 @@ const normalizeOrderFlag = (
   return undefined;
 };
 
+export const distributePlanQtyByCreateDays = (
+  planDate: string,
+  totalQty: number,
+  createDays: number,
+): Array<{ date: string; qty: number }> => {
+  const safeDays = Math.max(1, Number(createDays) || 1);
+  const safeQty = Number(totalQty) || 0;
+  const baseQty = Math.floor(safeQty / safeDays);
+  const remainder = safeQty % safeDays;
+  const baseDate = planDate.includes('-') ? planDate : normalizeDate(planDate);
+
+  return Array.from({ length: safeDays }, (_, index) => {
+    const currentDate = new Date(baseDate);
+    currentDate.setDate(currentDate.getDate() + index);
+    const qty = index === 0 ? baseQty + remainder : baseQty;
+
+    return {
+      date: currentDate.toISOString().slice(0, 10),
+      qty,
+    };
+  });
+};
+
 export const toProductionPlanData = (
   plan: ServiceProductionPlan,
   extras?: {
@@ -102,6 +127,36 @@ export const toProductionPlanData = (
   const planNo = plan.planNo || plan.prodplanId;
   const planSeq = plan.planSeq || plan.prodplanSeq;
   const planDate = plan.planDate || plan.prodplanDate || '';
+  const createDays = Number(plan.createDays ?? 1) || 1;
+  const rawItemInputType =
+    (plan as any).itemInputType ?? (plan as any).ITEM_INPUT_TYPE ?? undefined;
+  const normalizedItemInputType = rawItemInputType
+    ? String(rawItemInputType).trim().toUpperCase()
+    : '';
+  const rawDirectGroupId =
+    (plan as any).directGroupId ?? (plan as any).DIRECT_GROUP_ID ?? undefined;
+  const legacyPlanGroupId =
+    plan.planGroupId || (plan as any).PLAN_GROUP_ID || undefined;
+  const hasLegacyDirectMeta =
+    createDays > 1 &&
+    !!legacyPlanGroupId &&
+    (!normalizedItemInputType || normalizedItemInputType === 'NORMAL');
+  const normalizedDirectGroupId =
+    rawDirectGroupId != null && String(rawDirectGroupId).trim() !== ''
+      ? String(rawDirectGroupId).trim()
+      : hasLegacyDirectMeta && legacyPlanGroupId
+        ? String(legacyPlanGroupId).trim()
+        : undefined;
+  const derivedItemInputType =
+    normalizedItemInputType === 'DIRECT'
+      ? 'DIRECT'
+      : normalizedItemInputType === 'NORMAL'
+        ? hasLegacyDirectMeta
+          ? 'DIRECT'
+          : 'NORMAL'
+        : hasLegacyDirectMeta
+          ? 'DIRECT'
+          : 'NORMAL';
 
   return {
     id: `${planNo || 'NEW'}-${
@@ -119,6 +174,16 @@ export const toProductionPlanData = (
     equipmentName: extras?.equipmentName || plan.equipmentName,
     shift: plan.shift ?? undefined,
     remark: plan.remark ?? undefined,
+    itemInputType: derivedItemInputType,
+    directGroupId: normalizedDirectGroupId,
+    displayQtyByDate:
+      createDays > 1 && plan.plannedQty != null
+        ? distributePlanQtyByCreateDays(
+            planDate || new Date().toISOString().slice(0, 10),
+            Number(plan.plannedQty),
+            createDays,
+          )
+        : undefined,
     orderNo: plan.orderNo ?? undefined,
     orderSeqno: plan.orderSeqno ?? undefined,
     orderHistno: plan.orderHistno ?? undefined,
@@ -225,5 +290,92 @@ export const mapWeeklyEquipmentPlans = (
     });
   });
 
-  return list;
+  const directGroupCounts = new Map<string, number>();
+  list.forEach((plan) => {
+    if (plan.itemInputType === 'DIRECT' && plan.directGroupId) {
+      const count = directGroupCounts.get(plan.directGroupId) ?? 0;
+      directGroupCounts.set(plan.directGroupId, count + 1);
+    }
+  });
+
+  const expandedDirectPlans: ProductionPlanData[] = [];
+
+  list.forEach((plan) => {
+    const createDays = Number(plan.createDays ?? 1) || 1;
+    const directGroupCount =
+      plan.itemInputType === 'DIRECT' && plan.directGroupId
+        ? (directGroupCounts.get(plan.directGroupId) ?? 1)
+        : 1;
+    const isSingleDirectPlan =
+      plan.itemInputType === 'DIRECT' &&
+      !!plan.directGroupId &&
+      createDays > 1 &&
+      directGroupCount === 1;
+
+    if (!isSingleDirectPlan) {
+      expandedDirectPlans.push(plan);
+      return;
+    }
+
+    const distributed = distributePlanQtyByCreateDays(
+      plan.date || new Date().toISOString().slice(0, 10),
+      Number(plan.plannedQty ?? 0),
+      createDays,
+    );
+
+    distributed.forEach((segment, index) => {
+      expandedDirectPlans.push({
+        ...plan,
+        date: segment.date,
+        plannedQty: segment.qty,
+        isDirectItemGroup: true,
+        directGroupId: plan.directGroupId,
+        groupSeq: index + 1,
+        totalGroupCount: createDays,
+        displayQtyByDate: distributed,
+      });
+    });
+  });
+
+  const directList = expandedDirectPlans.filter(
+    (plan) => !!plan.directGroupId && plan.itemInputType === 'DIRECT',
+  );
+
+  const groupedDirectIndexes = new Map<string, number[]>();
+  directList.forEach((plan, index) => {
+    if (!plan.directGroupId) {
+      return;
+    }
+
+    const existing = groupedDirectIndexes.get(plan.directGroupId) ?? [];
+    existing.push(index);
+    groupedDirectIndexes.set(plan.directGroupId, existing);
+  });
+
+  groupedDirectIndexes.forEach((indexes, directGroupId) => {
+    if (indexes.length < 2) {
+      indexes.forEach((index) => {
+        expandedDirectPlans[index] = {
+          ...expandedDirectPlans[index],
+          directGroupId,
+          isDirectItemGroup: true,
+          groupSeq: 1,
+          totalGroupCount: 1,
+        };
+      });
+      return;
+    }
+
+    indexes.forEach((index, groupIndex) => {
+      expandedDirectPlans[index] = {
+        ...expandedDirectPlans[index],
+        directGroupId,
+        isDirectItemGroup: true,
+        groupSeq: groupIndex + 1,
+        totalGroupCount: indexes.length,
+      };
+    });
+  });
+
+  return expandedDirectPlans;
 };
