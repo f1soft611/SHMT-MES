@@ -74,6 +74,12 @@ public class ProductionPlanMaster implements Serializable {
 	@Schema(description = "작업장 코드")
 	private String workplaceCode = "";
 
+	@Schema(description = "품목 입력 타입 (DIRECT/NORMAL)")
+	private String itemInputType = "NORMAL";
+
+	@Schema(description = "직접품목 그룹 식별자")
+	private String directGroupId = "";
+
 	@Schema(description = "작업장명")
 	private String workplaceName = "";
 

@@ -67,6 +67,12 @@ public class ProductionPlan implements Serializable {
 	@Schema(description = "품목코드")
 	private String itemCode = "";
 
+	@Schema(description = "품목 입력 타입 (DIRECT/NORMAL)")
+	private String itemInputType = "NORMAL";
+
+	@Schema(description = "직접품목 그룹 식별자")
+	private String directGroupId = "";
+
 	@Schema(description = "품목명")
 	private String itemName = "";
 

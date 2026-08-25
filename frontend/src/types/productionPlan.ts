@@ -13,6 +13,10 @@ export interface ProductionPlanData {
   equipmentName?: string;
   shift?: string; // DAY / NIGHT 등
   remark?: string;
+  itemInputType?: 'DIRECT' | 'NORMAL';
+  directGroupId?: string;
+  isDirectItemGroup?: boolean;
+  displayQtyByDate?: Array<{ date: string; qty: number }>;
   // 생성일수/묶음 정보
   createDays?: number;
   planGroupId?: string;

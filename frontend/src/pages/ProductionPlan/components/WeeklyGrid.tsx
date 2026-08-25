@@ -110,6 +110,11 @@ const PlanCard = memo<PlanCardProps>(
         return;
       }
 
+      if (plan.directGroupId) {
+        onGroupClick(plan.directGroupId);
+        return;
+      }
+
       if (plan.planGroupId) {
         onGroupClick(plan.planGroupId);
         return;
@@ -192,7 +197,9 @@ const PlanCard = memo<PlanCardProps>(
                     label={
                       isOrderSplit && plan.orderNo
                         ? `의뢰:${plan.orderNo} (${groupSeq}/${groupTotal})`
-                        : `🔗 ${groupSeq}/${groupTotal}`
+                        : plan.directGroupId
+                          ? `직접품목:${plan.directGroupId} (${groupSeq}/${groupTotal})`
+                          : `🔗 ${groupSeq}/${groupTotal}`
                     }
                     size="small"
                     variant={
@@ -831,14 +838,22 @@ const EquipmentRow = memo<EquipmentRowProps>(
                       {dayPlans.map((plan) => {
                         const groupTotal =
                           plan.totalGroupCount || plan.createDays || 1;
+                        const isDirectGroupSplit =
+                          !!plan.directGroupId &&
+                          (plan.isDirectItemGroup || groupTotal > 1);
                         const isOrderSplit =
                           !!plan.splitByOrder &&
                           groupTotal > 1 &&
                           !!plan.orderNo;
                         const isGroupSplit =
-                          !isOrderSplit && !!plan.planGroupId && groupTotal > 1;
-                        const isGrouped = isGroupSplit || isOrderSplit;
+                          !isOrderSplit &&
+                          !isDirectGroupSplit &&
+                          !!plan.planGroupId &&
+                          groupTotal > 1;
+                        const isGrouped =
+                          isGroupSplit || isOrderSplit || isDirectGroupSplit;
                         const groupColorKey =
+                          plan.directGroupId ||
                           plan.planGroupId ||
                           (isOrderSplit && plan.orderNo
                             ? `order:${plan.orderNo}`
@@ -849,7 +864,9 @@ const EquipmentRow = memo<EquipmentRowProps>(
                             : null;
 
                         const isGroupActive =
-                          isGrouped && plan.planGroupId === activeGroupId;
+                          isGrouped &&
+                          (plan.directGroupId === activeGroupId ||
+                            plan.planGroupId === activeGroupId);
 
                         const isOrderActive =
                           !!plan.orderNo && plan.orderNo === activeOrderNo;
