@@ -893,7 +893,9 @@
 		<if test="reqType != null and reqType != ''">
 			AND T.REQ_TYPE = #{reqType}
 		</if>
-		<!-- 반제품 자동 제외: 동일 주문 그룹의 제품(ITEM_FLAG='2')이 이미 계획 할당된 경우 반제품(ITEM_FLAG='4') 제외 -->
+		<!-- 제품만 조회 -->
+		AND T.ITEM_FLAG = '2'
+		<!-- 반제품 자동 제외: 동일 주문 그룹의 제품(ITEM_FLAG='2')이 이미 계획 할당된 경우 반제품(ITEM_FLAG='4') 제외
 		AND NOT (
 			T.ITEM_FLAG = '4'
 			AND EXISTS (
@@ -916,6 +918,7 @@
 				  AND P.ITEM_FLAG    = '2'
 			)
 		)
+		-->
 		ORDER BY T.ORDER_NO DESC, T.ORDER_SEQNO, T.ORDER_HISTNO, T.ITEM_FLAG ASC
 		OFFSET #{firstIndex} ROWS
 		FETCH NEXT #{recordCountPerPage} ROWS ONLY
