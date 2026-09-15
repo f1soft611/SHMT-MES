@@ -351,12 +351,14 @@ public class EgovProductionOrderApiController {
     })
     @PostMapping("/stop-work")
     public ResultVO stopWork(
-            @RequestBody StopWorkDto dto,
+            @RequestBody List<ProdPlanKeyDto> plans,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        dto.setOpmanCode(user.getUniqId());
-        productionOrderService.stopWork(dto);
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
+        }
+        productionOrderService.stopWork(plans);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
