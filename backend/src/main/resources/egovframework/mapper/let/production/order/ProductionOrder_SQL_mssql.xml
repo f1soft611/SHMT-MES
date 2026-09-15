@@ -657,12 +657,11 @@
 	</select>
 
 
-	<!-- 작업중단 — TPR504 지시 행 전체 ORDER_FLAG='STOPPED' 처리 (삭제 제외), PROD_QYT UPDATE -->
+	<!-- 작업중단 — TPR504 지시 행 전체 ORDER_FLAG='STOPPED' 처리 (삭제 제외) -->
 	<update id="stopWorkTpr504"
-	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+	        parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
 		UPDATE TPR504
 		SET    ORDER_FLAG  = 'STOPPED',
-			   PROD_QTY    = #{prodQty},
 		       OPMAN_CODE2 = #{opmanCode},
 		       OPTIME2     = GETDATE()
 		WHERE  FACTORY_CODE  = '000001'
@@ -672,12 +671,11 @@
 		  AND  ISNULL(DELETE_FLAG, 0) != 1
 	</update>
 
-	<!-- 작업중단 — TPR301 계획 행 ORDER_FLAG='STOPPED' + PROD_QTY 변경 -->
+	<!-- 작업중단 — TPR301 계획 행 ORDER_FLAG='STOPPED' -->
 	<update id="stopWorkTpr301"
-	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+	        parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
 		UPDATE TPR301
 		SET    ORDER_FLAG  = 'STOPPED',
-		       PROD_QTY    = #{prodQty},
 		       OPMAN_CODE2 = #{opmanCode},
 		       OPTIME2     = GETDATE()
 		WHERE  FACTORY_CODE  = '000001'
@@ -688,7 +686,7 @@
 
 	<!-- 작업중단 — TPR301M 마스터 행 ORDER_FLAG='STOPPED' -->
 	<update id="stopWorkTpr301M"
-	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+	        parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
 		UPDATE TPR301M
 		SET    ORDER_FLAG  = 'STOPPED',
 		       OPMAN_CODE2 = #{opmanCode},
@@ -698,12 +696,11 @@
 		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
 	</update>
 
-	<!-- 작업중단 — TPR301R 수주 연계 ORDER_QTY='STOPPED' -->
+	<!-- 작업중단 — TPR301R 수주 연계행 처리자/시각 기록 (수량 변경 없음) -->
 	<update id="stopWorkTpr301R"
-	        parameterType="egovframework.let.production.order.domain.model.StopWorkDto">
+	        parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
 		UPDATE TPR301R
-		SET    ORDER_QTY   = #{prodQty},
-		       OPMAN_CODE2 = #{opmanCode},
+		SET    OPMAN_CODE2 = #{opmanCode},
 		       OPTIME2     = GETDATE()
 		WHERE  FACTORY_CODE  = '000001'
 		  AND  PRODPLAN_DATE = #{prodplanDate}
