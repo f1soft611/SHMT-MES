@@ -133,6 +133,9 @@ export const productionOrderService = {
   // 작업중단 처리
   stopWork: (data: StopWorkDto) => apiClient.post('/api/production-orders/stop-work', data),
 
+  // 중단작업지시 재개처리
+  resumeWork: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/resume-work', data),
+
   // ERP IF 재전송 (ERP에 없는 공정 데이터만)
   resendErpIf: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/erp-if-resend', data),
 
