@@ -154,28 +154,46 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         return (Integer)selectOne("ProductionOrderDAO.selectProdPlanOrderedCount", dto);
     }
 
-    /** 작업중단 — TPR504 지시 행 ORDER_FLAG='S' */
-    public void stopWorkTpr504(StopWorkDto dto) throws Exception {
+    /** 작업중단 — TPR504 지시 행 ORDER_FLAG='STOPPED' */
+    public void stopWorkTpr504(ProdPlanKeyDto dto) throws Exception {
         log.info("==========> stopWorkTpr504 <==========");
         update("ProductionOrderDAO.stopWorkTpr504", dto);
     }
 
-    /** 작업중단 — TPR301 계획 행 ORDER_FLAG='STOPPED' + PROD_QTY */
-    public void stopWorkTpr301(StopWorkDto dto) throws Exception {
+    /** 작업중단 — TPR301 계획 행 ORDER_FLAG='STOPPED' */
+    public void stopWorkTpr301(ProdPlanKeyDto dto) throws Exception {
         log.info("==========> stopWorkTpr301 <==========");
         update("ProductionOrderDAO.stopWorkTpr301", dto);
     }
 
     /** 작업중단 — TPR301M 마스터 행 ORDER_FLAG='STOPPED' */
-    public void stopWorkTpr301M(StopWorkDto dto) throws Exception {
+    public void stopWorkTpr301M(ProdPlanKeyDto dto) throws Exception {
         log.info("==========> stopWorkTpr301M <==========");
         update("ProductionOrderDAO.stopWorkTpr301M", dto);
     }
 
-    /** 작업중단 — TPR301R 수주연동행 ORDER_QTY UPDATE */
-    public void stopWorkTpr301R(StopWorkDto dto) throws Exception {
+    /** 작업중단 — TPR301R 수주연동행 처리자/시각 기록 (수량 변경 없음) */
+    public void stopWorkTpr301R(ProdPlanKeyDto dto) throws Exception {
         log.info("==========> stopWorkTpr301R <==========");
         update("ProductionOrderDAO.stopWorkTpr301R", dto);
+    }
+
+    /** 작업재개 — TPR504 지시 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr504(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr504 <==========");
+        update("ProductionOrderDAO.resumeWorkTpr504", dto);
+    }
+
+    /** 작업재개 — TPR301 계획 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr301(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr301 <==========");
+        update("ProductionOrderDAO.resumeWorkTpr301", dto);
+    }
+
+    /** 작업재개 — TPR301M 마스터 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr301M(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr301M <==========");
+        update("ProductionOrderDAO.resumeWorkTpr301M", dto);
     }
 
     // ERP 결과 동기화: 생산계획 키로 PRODORDER_ID 목록 조회

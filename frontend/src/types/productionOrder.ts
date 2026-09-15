@@ -220,11 +220,3 @@ export interface ProdPlanKeyDto {
     orderSeqno?: number;
     orderHistno?: number;
 }
-
-
-export interface StopWorkDto {
-    prodplanDate: string;   // YYYYMMDD
-    prodplanSeq: number;
-    prodworkSeq: number;
-    prodQty: number;        // 변경수량
-}
