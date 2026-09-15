@@ -94,6 +94,7 @@ const ProdPlanList = () => {
     const {
         handleBulkOrder,
         handleBulkCancel,
+        handleBulkResume,
         bulkLoading
     } = useBulkProdOrder(selectedRows, clear, onReload);
 
@@ -106,6 +107,8 @@ const ProdPlanList = () => {
         handleClose: handleStopWorkClose,
         handleConfirm: handleStopWorkConfirm,
     } = useStopWorkDialog(selectedRows, clear, onReload);
+
+    const [resumeConfirmOpen, setResumeConfirmOpen] = useState(false);
 
     const onClickBulkCancel = () => {
         if (selectedRows.length === 0) {
@@ -361,6 +364,8 @@ const ProdPlanList = () => {
                                         selectedCount={selectionModel.ids.size}
                                         canStop={selectedRows.length === 1 && selectedRows[0].orderFlag === "ORDERED"}
                                         onStopWork={handleStopWorkOpen}
+                                        canResume={selectedRows.length > 0 && selectedRows[0].orderFlag === "STOPPED"}
+                                        onResumeWork={() => setResumeConfirmOpen(true)}
                                     />
                                 ),
                             }}
@@ -400,6 +405,18 @@ const ProdPlanList = () => {
                 onOrderQtyChange={setOrderQty}
                 onClose={handleStopWorkClose}
                 onConfirm={handleStopWorkConfirm}
+            />
+
+            <ConfirmDialog
+                open={resumeConfirmOpen}
+                title="작업 재개"
+                message={`선택한 ${selectedRows.length}건의 작업을 재개하시겠습니까?`}
+                onConfirm={async () => {
+                    await handleBulkResume();
+                    setResumeConfirmOpen(false);
+                }}
+                onClose={() => setResumeConfirmOpen(false)}
+                loading={bulkLoading}
             />
 
             <ConfirmDialog
