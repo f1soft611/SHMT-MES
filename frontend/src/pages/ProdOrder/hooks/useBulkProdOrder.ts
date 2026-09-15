@@ -117,9 +117,64 @@ export function useBulkProdOrder(
         }
     };
 
+    // 일괄 재개
+    const handleBulkResume = async () => {
+        // useSameFlagSelection이 선택 항목의 orderFlag를 동일하게 강제하므로
+        // 하나라도 STOPPED이면 전부 STOPPED다. 필터는 방어적 코드로 유지한다.
+        const targets = selectedRows.filter(
+            row => row.orderFlag === "STOPPED"
+        );
+
+        if (targets.length === 0) {
+            showToast({
+                message: "재개할 작업이 없습니다.",
+                severity: "warning",
+            });
+            clear();
+            return;
+        }
+
+        const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanId: row.prodplanId,
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId,
+        }));
+
+        try {
+            setBulkLoading(true);
+            const response = await productionOrderService.resumeWork(payload);
+
+            if (response.data.resultCode !== 200) {
+                showToast({
+                    message: response.data.resultMessage ?? "재개 실패",
+                    severity: "error",
+                });
+                return;
+            }
+
+            showToast({
+                message: response.data.resultMessage ?? "작업 재개가 완료되었습니다.",
+                severity: "success",
+            });
+
+            clear();
+            onReload();
+        } catch (e) {
+            showToast({
+                message: "서버 오류가 발생했습니다.",
+                severity: "error",
+            });
+        } finally {
+            setBulkLoading(false);
+        }
+    };
+
     return {
         handleBulkOrder,
         handleBulkCancel,
+        handleBulkResume,
         bulkLoading,
     };
 }
