@@ -707,11 +707,11 @@
 		  AND  PRODPLAN_SEQ  = #{prodplanSeq}
 	</update>
 
-	<!-- 작업재개 — TPR504 지시 행 ORDER_FLAG='ORDERED' (STOPPED 상태만 대상) -->
+	<!-- 작업재개 — TPR504 지시 행 ORDER_FLAG='O' (STOPPED 상태만 대상) -->
 	<update id="resumeWorkTpr504"
 	        parameterType="egovframework.let.production.order.domain.model.ProdPlanKeyDto">
 		UPDATE TPR504
-		SET    ORDER_FLAG  = 'ORDERED',
+		SET    ORDER_FLAG  = 'O',
 		       OPMAN_CODE2 = #{opmanCode},
 		       OPTIME2     = GETDATE()
 		WHERE  FACTORY_CODE  = '000001'
