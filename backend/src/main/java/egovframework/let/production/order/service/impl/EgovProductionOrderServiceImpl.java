@@ -949,5 +949,15 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	}
 
+	@Override
+	@Transactional
+	public void resumeWork(List<ProdPlanKeyDto> plans) throws Exception {
+		for (ProdPlanKeyDto plan : plans) {
+			productionOrderDAO.resumeWorkTpr504(plan);
+			productionOrderDAO.resumeWorkTpr301(plan);
+			productionOrderDAO.resumeWorkTpr301M(plan);
+		}
+	}
+
 
 }

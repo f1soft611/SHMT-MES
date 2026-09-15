@@ -77,6 +77,34 @@ class EgovProductionOrderServiceImplTest {
     }
 
     @Test
+    void resumeWork_updatesTpr504Tpr301Tpr301MForEachPlanInOrder() throws Exception {
+        EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
+                productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
+
+        ProdPlanKeyDto plan1 = new ProdPlanKeyDto();
+        plan1.setProdplanDate("20260915");
+        plan1.setProdplanSeq(1);
+        plan1.setProdworkSeq(1);
+        plan1.setOpmanCode("EMP1");
+
+        ProdPlanKeyDto plan2 = new ProdPlanKeyDto();
+        plan2.setProdplanDate("20260915");
+        plan2.setProdplanSeq(2);
+        plan2.setProdworkSeq(1);
+        plan2.setOpmanCode("EMP1");
+
+        service.resumeWork(Arrays.asList(plan1, plan2));
+
+        InOrder inOrder = inOrder(productionOrderDAO);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr504(plan1);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr301(plan1);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr301M(plan1);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr504(plan2);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr301(plan2);
+        inOrder.verify(productionOrderDAO).resumeWorkTpr301M(plan2);
+    }
+
+    @Test
     void bulkCreateProductionOrders_resyncsBomForEachPlan() throws Exception {
         EgovProductionOrderServiceImpl service = new EgovProductionOrderServiceImpl(
                 productionOrderDAO, erpIfService, egovConditionalIdService, erpToMesInterfaceService);
