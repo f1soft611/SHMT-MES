@@ -49,4 +49,22 @@ public class ProductionOrderSqlContractTest {
         assertThat(xml).contains("#{remark}");
         assertThat(xml).contains("TOTAL_GROUP_COUNT,");
     }
+
+    @Test
+    public void resumeWorkSqlSetsOrderFlagBackToOrderedGuardedByStoppedState() throws Exception {
+        Path mapper = Paths.get(
+                "src/main/resources/egovframework/mapper/let/production/order/ProductionOrder_SQL_mssql.xml");
+        String xml = new String(Files.readAllBytes(mapper), StandardCharsets.UTF_8);
+
+        assertThat(xml).contains("<update id=\"resumeWorkTpr504\"");
+        assertThat(xml).contains("<update id=\"resumeWorkTpr301\"");
+        assertThat(xml).contains("<update id=\"resumeWorkTpr301M\"");
+
+        int start = xml.indexOf("<update id=\"resumeWorkTpr504\"");
+        int end = xml.indexOf("<update id=\"resumeWorkTpr301M\"");
+        String resumeSection = xml.substring(start, end);
+
+        assertThat(resumeSection).contains("ORDER_FLAG  = 'ORDERED'");
+        assertThat(resumeSection).contains("ORDER_FLAG    = 'STOPPED'");
+    }
 }
