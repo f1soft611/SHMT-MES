@@ -171,10 +171,63 @@ export function useBulkProdOrder(
         }
     };
 
+    // 일괄 중단
+    const handleBulkStop = async () => {
+        const targets = selectedRows.filter(
+            row => row.orderFlag === "ORDERED"
+        );
+
+        if (targets.length === 0) {
+            showToast({
+                message: "중단할 작업이 없습니다.",
+                severity: "warning",
+            });
+            clear();
+            return;
+        }
+
+        const payload: ProdPlanKeyDto[] = targets.map(row => ({
+            prodplanId: row.prodplanId,
+            prodplanDate: row.prodplanDate,
+            prodplanSeq: row.prodplanSeq,
+            prodworkSeq: row.prodworkSeq,
+            prodplanDetailId: row.prodplanDetailId,
+        }));
+
+        try {
+            setBulkLoading(true);
+            const response = await productionOrderService.stopWork(payload);
+
+            if (response.data.resultCode !== 200) {
+                showToast({
+                    message: response.data.resultMessage ?? "중단 실패",
+                    severity: "error",
+                });
+                return;
+            }
+
+            showToast({
+                message: response.data.resultMessage ?? "작업중단 처리가 완료되었습니다.",
+                severity: "success",
+            });
+
+            clear();
+            onReload();
+        } catch (e) {
+            showToast({
+                message: "서버 오류가 발생했습니다.",
+                severity: "error",
+            });
+        } finally {
+            setBulkLoading(false);
+        }
+    };
+
     return {
         handleBulkOrder,
         handleBulkCancel,
         handleBulkResume,
+        handleBulkStop,
         bulkLoading,
     };
 }

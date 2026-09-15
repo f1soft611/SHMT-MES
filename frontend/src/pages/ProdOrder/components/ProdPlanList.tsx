@@ -17,8 +17,6 @@ import ConfirmDialog from "../../../components/common/Feedback/ConfirmDialog";
 import BulkSaveToolbar from "./BulkSaveToolbar";
 import { useBulkProdOrder } from "../hooks/useBulkProdOrder";
 import {useProdOrderStore} from "../store/useProdOrderStore";
-import { useStopWorkDialog } from '../hooks/useStopWorkDialog';
-import StopWorkDialog from './StopWorkDialog';
 
 function ProductionActionCell({
     row,
@@ -95,18 +93,11 @@ const ProdPlanList = () => {
         handleBulkOrder,
         handleBulkCancel,
         handleBulkResume,
+        handleBulkStop,
         bulkLoading
     } = useBulkProdOrder(selectedRows, clear, onReload);
 
-    const {
-        open: stopWorkOpen,
-        orderQty,
-        isLoading: stopWorkLoading,
-        setOrderQty,
-        handleOpen: handleStopWorkOpen,
-        handleClose: handleStopWorkClose,
-        handleConfirm: handleStopWorkConfirm,
-    } = useStopWorkDialog(selectedRows, clear, onReload);
+    const [stopConfirmOpen, setStopConfirmOpen] = useState(false);
 
     const [resumeConfirmOpen, setResumeConfirmOpen] = useState(false);
 
@@ -362,8 +353,8 @@ const ProdPlanList = () => {
                                         onBulkOrder={handleBulkOrder}
                                         onBulkCancel={onClickBulkCancel}
                                         selectedCount={selectionModel.ids.size}
-                                        canStop={selectedRows.length === 1 && selectedRows[0].orderFlag === "ORDERED"}
-                                        onStopWork={handleStopWorkOpen}
+                                        canStop={selectedRows.length > 0 && selectedRows[0].orderFlag === "ORDERED"}
+                                        onStopWork={() => setStopConfirmOpen(true)}
                                         canResume={selectedRows.length > 0 && selectedRows[0].orderFlag === "STOPPED"}
                                         onResumeWork={() => setResumeConfirmOpen(true)}
                                     />
@@ -397,14 +388,16 @@ const ProdPlanList = () => {
                 <CardActions sx={{ display: 'none' }} />
             </Card>
 
-            <StopWorkDialog
-                open={stopWorkOpen}
-                row={selectedRows[0] ?? null}
-                orderQty={orderQty}
-                isLoading={stopWorkLoading}
-                onOrderQtyChange={setOrderQty}
-                onClose={handleStopWorkClose}
-                onConfirm={handleStopWorkConfirm}
+            <ConfirmDialog
+                open={stopConfirmOpen}
+                title="작업 중단"
+                message={`선택한 ${selectedRows.length}건의 작업을 중단하시겠습니까?`}
+                onConfirm={async () => {
+                    await handleBulkStop();
+                    setStopConfirmOpen(false);
+                }}
+                onClose={() => setStopConfirmOpen(false)}
+                loading={bulkLoading}
             />
 
             <ConfirmDialog

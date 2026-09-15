@@ -8,7 +8,7 @@ import {
   ProdOrderSearchParam, ProdOrderUpdateDto, ProdPlanKeyDto,
   ProdPlanPageResult,
   ProdPlanRow,
-  ProdPlanSearchParams, StopWorkDto
+  ProdPlanSearchParams
 } from '../types/productionOrder';
 import { getMockProductionOrders } from './mockData';
 
@@ -130,8 +130,8 @@ export const productionOrderService = {
   // 생산지시 일괄 취소
   bulkCancelProductionOrders: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/bulk-cancel', data),
 
-  // 작업중단 처리
-  stopWork: (data: StopWorkDto) => apiClient.post('/api/production-orders/stop-work', data),
+  // 작업중단 처리(벌크)
+  stopWork: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/stop-work', data),
 
   // 중단작업지시 재개처리
   resumeWork: (data: ProdPlanKeyDto[]) => apiClient.post('/api/production-orders/resume-work', data),
