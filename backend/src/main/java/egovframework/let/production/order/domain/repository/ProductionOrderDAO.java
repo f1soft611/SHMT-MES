@@ -178,6 +178,24 @@ public class ProductionOrderDAO extends EgovAbstractMapper {
         update("ProductionOrderDAO.stopWorkTpr301R", dto);
     }
 
+    /** 작업재개 — TPR504 지시 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr504(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr504 <==========");
+        update("ProductionOrderDAO.resumeWorkTpr504", dto);
+    }
+
+    /** 작업재개 — TPR301 계획 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr301(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr301 <==========");
+        update("ProductionOrderDAO.resumeWorkTpr301", dto);
+    }
+
+    /** 작업재개 — TPR301M 마스터 행 ORDER_FLAG='ORDERED' */
+    public void resumeWorkTpr301M(ProdPlanKeyDto dto) throws Exception {
+        log.info("==========> resumeWorkTpr301M <==========");
+        update("ProductionOrderDAO.resumeWorkTpr301M", dto);
+    }
+
     // ERP 결과 동기화: 생산계획 키로 PRODORDER_ID 목록 조회
     public List<String> selectProdorderIdsByPlanKey(ProdPlanKeyDto dto) {
         log.info("==========> selectProdorderIdsByPlanKey <==========");
