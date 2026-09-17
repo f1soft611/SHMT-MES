@@ -962,7 +962,10 @@ const PlanDialog: React.FC<PlanDialogProps> = ({
                                 label="생성일수"
                                 disabled={dialogMode !== 'create'}
                               >
-                                {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                                {Array.from(
+                                  { length: 14 },
+                                  (_, index) => index + 1,
+                                ).map((day) => (
                                   <MenuItem key={day} value={day}>
                                     {day}일
                                   </MenuItem>
