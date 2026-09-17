@@ -941,12 +941,23 @@ public class EgovProductionOrderServiceImpl extends EgovAbstractServiceImpl impl
 
 	@Override
 	@Transactional
-	public void stopWork(StopWorkDto dto) throws Exception {
-		productionOrderDAO.stopWorkTpr504(dto);
-		productionOrderDAO.stopWorkTpr301(dto);
-		productionOrderDAO.stopWorkTpr301M(dto);
-		productionOrderDAO.stopWorkTpr301R(dto);
+	public void stopWork(List<ProdPlanKeyDto> plans) throws Exception {
+		for (ProdPlanKeyDto plan : plans) {
+			productionOrderDAO.stopWorkTpr504(plan);
+			productionOrderDAO.stopWorkTpr301(plan);
+			productionOrderDAO.stopWorkTpr301M(plan);
+			productionOrderDAO.stopWorkTpr301R(plan);
+		}
+	}
 
+	@Override
+	@Transactional
+	public void resumeWork(List<ProdPlanKeyDto> plans) throws Exception {
+		for (ProdPlanKeyDto plan : plans) {
+			productionOrderDAO.resumeWorkTpr504(plan);
+			productionOrderDAO.resumeWorkTpr301(plan);
+			productionOrderDAO.resumeWorkTpr301M(plan);
+		}
 	}
 
 

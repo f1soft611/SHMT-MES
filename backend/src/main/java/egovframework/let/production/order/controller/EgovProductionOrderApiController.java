@@ -351,15 +351,38 @@ public class EgovProductionOrderApiController {
     })
     @PostMapping("/stop-work")
     public ResultVO stopWork(
-            @RequestBody StopWorkDto dto,
+            @RequestBody List<ProdPlanKeyDto> plans,
             @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
     ) throws Exception {
 
-        dto.setOpmanCode(user.getUniqId());
-        productionOrderService.stopWork(dto);
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
+        }
+        productionOrderService.stopWork(plans);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("user", user);
         return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "작업중단 처리가 완료되었습니다.");
+    }
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "처리 성공"),
+            @ApiResponse(responseCode = "403", description = "인가된 사용자가 아님")
+    })
+    @PostMapping("/resume-work")
+    public ResultVO resumeWork(
+            @RequestBody List<ProdPlanKeyDto> plans,
+            @Parameter(hidden = true) @AuthenticationPrincipal LoginVO user
+    ) throws Exception {
+
+        for (ProdPlanKeyDto dto : plans) {
+            dto.setOpmanCode(user.getUniqId());
+        }
+
+        productionOrderService.resumeWork(plans);
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("user", user);
+        return resultVoHelper.buildFromMap(resultMap, ResponseCode.SUCCESS, "작업 재개가 완료되었습니다.");
     }
 }

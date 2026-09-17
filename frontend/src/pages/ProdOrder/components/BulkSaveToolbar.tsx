@@ -4,6 +4,7 @@ import {
     Save as SaveIcon,
     Delete as DeleteIcon,
     Stop as StopIcon,
+    RestartAlt as RestartAltIcon,
 } from "@mui/icons-material";
 
 interface Props {
@@ -12,9 +13,19 @@ interface Props {
     selectedCount?: number;
     canStop?: boolean;
     onStopWork?: () => void;
+    canResume?: boolean;
+    onResumeWork?: () => void;
 }
 
-const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel, selectedCount = 0, canStop = false, onStopWork }: Props) => {
+const BulkSaveToolbar = ({
+                             onBulkOrder,
+                             onBulkCancel,
+                             selectedCount = 0,
+                             canStop = false,
+                             onStopWork,
+                             canResume = false,
+                             onResumeWork,
+                         }: Props) => {
     return (
         <GridToolbarContainer
             sx={{
@@ -38,6 +49,17 @@ const BulkSaveToolbar = ({ onBulkOrder, onBulkCancel, selectedCount = 0, canStop
                         onClick={onStopWork}
                     >
                         작업 중단
+                    </Button>
+
+                    <Button
+                        startIcon={<RestartAltIcon />}
+                        variant="contained"
+                        size="small"
+                        color="success"
+                        disabled={!canResume}
+                        onClick={onResumeWork}
+                    >
+                        작업 재개
                     </Button>
 
                     <Button
