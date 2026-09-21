@@ -42,6 +42,7 @@ import {
   shouldUseEquipmentRowVirtualization,
   shouldUpdateScrollMetrics,
 } from './weeklyGridPerformance';
+import { getDirectItemGroupLabel } from '../../../utils/productionPlanMapper';
 
 type ChipColor =
   | 'default'
@@ -198,7 +199,13 @@ const PlanCard = memo<PlanCardProps>(
                       isOrderSplit && plan.orderNo
                         ? `의뢰:${plan.orderNo} (${groupSeq}/${groupTotal})`
                         : plan.directGroupId
-                          ? `직접품목:${plan.directGroupId} (${groupSeq}/${groupTotal})`
+                          ? getDirectItemGroupLabel({
+                              date: plan.date,
+                              plannedQty: plan.plannedQty,
+                              displayQtyByDate: plan.displayQtyByDate,
+                              groupSeq: plan.groupSeq,
+                              totalGroupCount: plan.totalGroupCount,
+                            })
                           : `🔗 ${groupSeq}/${groupTotal}`
                     }
                     size="small"

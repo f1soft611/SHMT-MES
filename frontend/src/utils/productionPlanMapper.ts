@@ -113,6 +113,63 @@ export const distributePlanQtyByCreateDays = (
   });
 };
 
+export const getDirectItemGroupLabel = ({
+  date,
+  plannedQty,
+  displayQtyByDate,
+  groupSeq,
+  totalGroupCount,
+}: {
+  date?: string;
+  plannedQty?: number;
+  displayQtyByDate?: Array<{ date: string; qty: number }>;
+  groupSeq?: number;
+  totalGroupCount?: number;
+}): string => {
+  const orderedDates = (displayQtyByDate ?? [])
+    .map((entry) => entry.date)
+    .filter(Boolean)
+    .sort();
+
+  const startDate = orderedDates[0] || date;
+  const endDate = orderedDates[orderedDates.length - 1] || date;
+
+  const formatDateLabel = (value?: string): string => {
+    if (!value) {
+      return '';
+    }
+
+    const [year, month, day] = value.split('-');
+    if (!year || !month || !day) {
+      return value;
+    }
+
+    return `${String(Number(month)).padStart(2, '0')}/${String(Number(day)).padStart(2, '0')}`;
+  };
+
+  const distributedTotal = (displayQtyByDate ?? []).reduce(
+    (sum, entry) => sum + (Number(entry.qty) || 0),
+    0,
+  );
+  const qty =
+    distributedTotal > 0 ? distributedTotal : Number(plannedQty ?? 0) || 0;
+  const totalLabel = `${qty.toLocaleString('ko-KR')}개`;
+  const splitLabel =
+    groupSeq && totalGroupCount && totalGroupCount > 1
+      ? ` (${groupSeq}/${totalGroupCount})`
+      : '';
+
+  if (!startDate || !endDate) {
+    return `${totalLabel}${splitLabel}`;
+  }
+
+  if (startDate === endDate) {
+    return `${formatDateLabel(startDate)} / ${totalLabel}${splitLabel}`;
+  }
+
+  return `${formatDateLabel(startDate)}~${formatDateLabel(endDate)} / ${totalLabel}${splitLabel}`;
+};
+
 export const toProductionPlanData = (
   plan: ServiceProductionPlan,
   extras?: {

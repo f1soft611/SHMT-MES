@@ -2,6 +2,7 @@ import {
   mapWeeklyEquipmentPlans,
   WeeklyEquipmentPlanResponse,
   distributePlanQtyByCreateDays,
+  getDirectItemGroupLabel,
 } from './productionPlanMapper';
 
 describe('mapWeeklyEquipmentPlans', () => {
@@ -161,6 +162,61 @@ describe('mapWeeklyEquipmentPlans', () => {
       { date: '2026-08-02', qty: 333 },
       { date: '2026-08-03', qty: 333 },
     ]);
+  });
+
+  it('직접품목 그룹은 날짜 범위와 총 수량 형식으로 표시한다', () => {
+    expect(
+      getDirectItemGroupLabel({
+        date: '2026-09-15',
+        plannedQty: 40000,
+        displayQtyByDate: [
+          { date: '2026-09-15', qty: 10000 },
+          { date: '2026-09-16', qty: 10000 },
+          { date: '2026-09-17', qty: 10000 },
+          { date: '2026-09-18', qty: 10000 },
+        ],
+      }),
+    ).toBe('09/15~09/18 / 40,000개');
+
+    expect(
+      getDirectItemGroupLabel({
+        date: '2026-09-15',
+        plannedQty: 5000,
+        displayQtyByDate: [{ date: '2026-09-15', qty: 5000 }],
+      }),
+    ).toBe('09/15 / 5,000개');
+  });
+
+  it('직접품목은 분할 수량 합계와 1/3 형식 배치를 함께 표시한다', () => {
+    expect(
+      getDirectItemGroupLabel({
+        date: '2026-09-15',
+        plannedQty: 10000,
+        displayQtyByDate: [
+          { date: '2026-09-15', qty: 10000 },
+          { date: '2026-09-16', qty: 10000 },
+          { date: '2026-09-17', qty: 10000 },
+          { date: '2026-09-18', qty: 10000 },
+        ],
+        groupSeq: 1,
+        totalGroupCount: 3,
+      }),
+    ).toBe('09/15~09/18 / 40,000개 (1/3)');
+
+    expect(
+      getDirectItemGroupLabel({
+        date: '2026-09-15',
+        plannedQty: 10000,
+        displayQtyByDate: [
+          { date: '2026-09-15', qty: 10000 },
+          { date: '2026-09-16', qty: 10000 },
+          { date: '2026-09-17', qty: 10000 },
+          { date: '2026-09-18', qty: 10000 },
+        ],
+        groupSeq: 2,
+        totalGroupCount: 3,
+      }),
+    ).toBe('09/15~09/18 / 40,000개 (2/3)');
   });
 
   it('직접품목은 동일한 directGroupId를 기준으로 묶어서 표시한다', () => {
